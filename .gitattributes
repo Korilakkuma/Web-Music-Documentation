@@ -1,0 +1,4 @@
+*.js   linguist-vendored
+*.mjs  linguist-vendored
+
+*.json linguist-vendored
