@@ -1,0 +1,17 @@
+{
+  "extends": [
+    "markuplint:recommended"
+  ],
+  "nodeRules": [
+    {
+      "selector": "html",
+      "rules": {
+        "invalid-attr": {
+          "options": {
+            "allowAttrs": ["prefix"]
+          }
+        }
+      }
+    }
+  ]
+}
