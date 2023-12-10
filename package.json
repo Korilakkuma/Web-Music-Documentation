@@ -16,7 +16,7 @@
     "fix": "run-p fix:html fix:css",
     "format:check": "prettier --check 'docs/**/*.{html,css}'",
     "format": "prettier --write 'docs/**/*.{html,css}'",
-    "dev": "",
+    "dev": "node server.js",
     "build": "",
     "release:patch": "npm version patch --message 'v%s' && git push && git push origin --tags",
     "release:minor": "npm version minor --message 'v%s' && git push && git push origin --tags",
@@ -38,9 +38,11 @@
   },
   "homepage": "https://korilakkuma.github.io/Web-Music-Documentation/",
   "devDependencies": {
+    "connect": "^3.7.0",
     "markuplint": "^3.15.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.1.0",
+    "serve-static": "^1.15.0",
     "stylelint": "^16.0.1",
     "stylelint-config-recess-order": "^4.4.0",
     "stylelint-config-standard": "^35.0.0"
