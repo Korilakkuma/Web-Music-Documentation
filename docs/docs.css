@@ -1,0 +1,94 @@
+@charset "UTF-8";
+
+:root {
+  --base-margin: 16px;
+  --base-font-size: 16px;
+  --white: #fff;
+  --gray-lightest: #fafafa;
+  --gray-lighter: #ccc;
+  --gray-light: #666;
+  --gray: #333;
+  --black-light: #212121;
+  --black: #000;
+  --transparent: rgb(0 0 0 / 0%);
+}
+
+body {
+  min-width: 375px;
+  max-width: 1280px;
+  margin: 0 auto;
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+  font-size: var(--base-font-size);
+  line-height: 1.5;
+  color: var(--gray);
+  background-color: var(--gray-lightest);
+}
+
+main {
+  margin: 0 24px;
+  overflow-x: hidden; /* HACK: prevent from layout shifting if mobile size as fallback style */
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  padding: 0;
+  margin: var(--base-margin) 0;
+}
+
+h1 {
+  font-size: 28px;
+}
+
+h2 {
+  font-size: 24px;
+}
+
+h3 {
+  font-size: 20px;
+}
+
+h4,
+h5,
+h6 {
+  font-size: 18px;
+}
+
+p {
+  padding: 0;
+  margin: var(--base-margin) 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+ul > li,
+ol > li {
+  padding: 4px 0;
+  margin: 0 0 0 var(--base-margin);
+}
+
+ul > li {
+  list-style-type: circle;
+}
+
+ol > li {
+  list-style-type: decimal;
+}
+
+a {
+  color: var(--gray);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--gray-lighter);
+}
