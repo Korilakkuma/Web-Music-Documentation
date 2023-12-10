@@ -83,6 +83,13 @@ ol > li {
   list-style-type: decimal;
 }
 
+article {
+  padding: 0 var(--base-margin);
+  margin: var(--base-margin) 0;
+  border: 2px dashed var(--gray-light);
+  border-radius: 8px;
+}
+
 a {
   color: var(--gray);
   text-decoration: underline;
