@@ -22,6 +22,45 @@
     <link rel="stylesheet" href="docs.css" type="text/css" media="all" />
   </head>
   <body>
-    <main id="document-top"></main>
+    <main id="document-top">
+      <h1>Web Music ドキュメント</h1>
+      <section id="section-about-web-music">
+        <h2>Web Music</h2>
+        <p>
+          <strong>Web Music</strong> とは, Web (ブラウザ) をプラットフォームにした音楽アプリケーション, そして, そのような Web
+          アプリケーションを実装するために必要となる, クライアントサイド JavaScript API (ブラウザ API) の総称です. これは, 一般的な技術用語ではなく,
+          技術マーケティング的な造語です.
+        </p>
+        <p>具体的には, 以下のような, クライアントサイド JavaScript API の総称です.</p>
+        <ul>
+          <li><a href="https://www.w3.org/TR/webaudio/" target="_blank" rel="noopener noreferrer">Web Audio API</a></li>
+          <li><a href="https://html.spec.whatwg.org/multipage/media.html" target="_blank" rel="noopener noreferrer">HTMLMediaElement (HTMLAudioElement)</a></li>
+          <li><a href="https://www.w3.org/TR/webrtc/" target="_blank" rel="noopener noreferrer">WebRTC</a></li>
+          <li><a href="https://www.w3.org/TR/webmidi/" target="_blank" rel="noopener noreferrer">Web MIDI API</a></li>
+          <li><a href="https://www.w3.org/TR/webcodecs/" target="_blank" rel="noopener noreferrer">WebCodecs API</a></li>
+          <li><a href="https://www.w3.org/TR/mediasession/" target="_blank" rel="noopener noreferrer">Media Session</a></li>
+        </ul>
+        <p>
+          本サイト制作開始時点の 2023 年時点で Web Audio API と WebRTC に関しては, <b>W3C recommendation</b>, HTMLMediaElement に関しては,
+          <b>HTML Living Standard</b> (2019 年 6 月以降, HTML や DOM に関わる仕様策定は <abbr title="World Wide Web Consortium">W3C</abbr> ではなく
+          <abbr title="Web Hypertext Application Technology Working Group">WHATWG</abbr> が仕様策定の主体になることが決定されたので, HTMLMediaElement は HTML
+          Living Standard です) となっており, モダンブラウザであれば利用することが可能です (ただし, クライアントサイド JavaScript の宿命ではありますが, OS
+          やブラウザによって挙動が異なることは少なからずあるので, 移植性まで考慮すると, そのためのクロスブラウザ対応の問題は必要となります).
+          これらのクライアントサイド JavaScript API は 2010 年代前半ごろは, <b>HTML5</b> というバズワード化したカテゴリに分類される API でした. 現在は, HTML5
+          という仕様, あるいは, 用語が定着したからか, HTML5 というワードが使われることはほぼなくなりました. したがって, Web Music に関係する API も,
+          膨大なクライアントサイド JavaScript API のうちのいくつかです (という認識が一般的と言えます).
+        </p>
+        <article id="section-web-browser-javascript">
+          <h3>クライアントサイド JavaScript とは ?</h3>
+          <p>
+            クライアントサイド JavaScript とは, JavaScript の仕様の標準である ECMAScript (JavaScript の実行コンテキストに依存しない言語仕様. これに準拠している
+            JavaScript のコードであれば, Web ブラウザでも, Node.js でも, ブラウザ拡張でも使うことができます) と, 実行コンテキスト
+            (広義な意味でのプラットフォーム) である Web ブラウザで実行する場合にのみアクセス可能な API です (例えば, Web Music の API は Node.js
+            で使うことはできません. また, Web ブラウザでも Web Workers が生成したスレッドでは, メインスレッド (UI スレッド)
+            と実行コンテキストが異なるので使うことができません).
+          </p>
+        </article>
+      </section>
+    </main>
   </body>
 </html>
