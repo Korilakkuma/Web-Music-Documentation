@@ -59,6 +59,50 @@
           </p>
         </article>
       </section>
+      <section id="section-web-audio-api-overview">
+        <h2>Web Audio API</h2>
+        <p>
+          Web Music のなかで, もっともコアな API が <strong>Web Audio API</strong> です. 言い換えると, Web
+          をプラットフォームとした音楽アプリケーションを制作するほとんどの場合で必要になる API ということです. なぜなら,
+          <code>HTMLAudioElement</code> はオーディオファイルを再生するための API で, 高度なオーディオ処理をすることはできず (厳密には,
+          <a href="https://egonelbre.com/project/jsfx/" target="_blank" rel="noopener noreferrer">jsfx</a>
+          のようにハッキーな実装をすることでエフェクトをかけるぐらいは可能ですが, 仕様のユースケースとして想定されている使い方ではありません),
+          リアルタイム性やインタラクティブ性も考慮された API ではないからです (厳密には, 考慮された経緯もあって,
+          <code>Audio</code> コンストラクタが定義されています). また, Web Music として, Web MIDI API や WebRTC を使う場合, 実際のオーディオ処理は Web Audio API
+          が実行することになります.
+        </p>
+        <section id="section-web-music-history">
+          <h3>Web Music の歴史</h3>
+          <p>
+            古くは, IE (Internet Explorer) が独自に, <code>bgsound</code> というタグを実装しており, ブラウザでオーディオをファイルを再生することが可能でした
+            (現在の <code>HTMLAudioElement</code> に相当するタグと言えます). その後, Java アプレットや ActionScript (Flash) によって, 現在の Web Audio API
+            で実現できているような高度なオーディオ処理が可能となりました.
+          </p>
+          <p>
+            しかし, これらは特定のベンダーに依存し, また, ブラウザの拡張機能 (プラグイン) という位置づけでした. Web 2.0 (もっと言えば, Ajax) を機にブラウザでも,
+            ネイティブアプリケーションに近いアプリケーションが実装されてくるようになると, これまで拡張機能 (オーディオ処理だけでなく,
+            ストレージやローカルファイルへのアクセス, ソケットなど) に頼っていたような機能をブラウザ標準で (クライアントサイド JavaScript API で)
+            実現できる流れが 2010 年ごろから活発になりました (このころ, HTML5 という位置づけで仕様策定され, モダンブラウザで実装されるようになりました).
+            そういった流れのなかで, Web Audio API も仕様策定されて現在に至っています (<a
+              href="https://www.w3.org/TR/2011/WD-webaudio-20111215/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >草案 (Working Draft) が 2011 年 12 月 15 日 に公開</a
+            >. <a href="https://www.w3.org/TR/webaudio/" target="_blank" rel="noopener noreferrer">2021 年 6 月 17 日に勧告</a> (W3C recommendation
+            で現在の最新バージョン)).
+          </p>
+        </section>
+        <article id="section-about-audio-data-api">
+          <h3>Audio Data API</h3>
+          <p>
+            厳密な歴史を記載すると, Web Audio API より先に Firefox で,
+            <a href="https://wiki.mozilla.org/Audio_Data_API" target="_blank" rel="noopener noreferrer">Audio Data API</a> というブラウザ Audio API
+            が実装されていました. <code>HTMLAudioElement</code> の拡張という位置づけであり, 出力するオーディオデータを直接演算する API がメインでした (Web Audio
+            API の <code>ScriptProcessorNode</code> に相当する API). 間もなくして, Web Audio API に統一される方針となり, Firefox も Web Audio API
+            のサポートを開始したので現在は削除されています.
+          </p>
+        </article>
+      </section>
     </main>
   </body>
 </html>
