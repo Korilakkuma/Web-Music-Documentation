@@ -123,6 +123,96 @@
           </p>
         </article>
       </section>
+      <section id="section-about-document">
+        <h2>このサイトに関して</h2>
+        <p>
+          このサイト (ドキュメント) の目的は, Web Music, その中核となる Web Audio API について解説しますが, W3C
+          が公開している仕様のすべてを解説するわけではありません. また, JavaScript の言語仕様の解説は, サイトの目的ではないこともご了承ください (ただし, Web
+          Audio API を使う上で, 必要となってくるクライアントサイド JavaScript API に関しては必要に応じて解説をします (例. <code>File API</code>,
+          <code>Fetch API</code> など).
+        </p>
+        <p>このサイトは W3C が公開している仕様にとって代わるものではなく, Web Audio API の仕様の理解を補助するリファレンスサイトと位置づけてください.</p>
+        <p>
+          デスクトップブラウザでは少なくなりましたが, モバイルブラウザでは仕様とブラウザの実装に差異があり,
+          仕様では定義されているのに動作しないということもあります. その場合には, 開発者ツールなどを活用して,
+          実装されているプロパティやメソッドを確認してみてください.
+        </p>
+        <section id="section-about-sample-code">
+          <h3>解説の JavaScript コードに関して</h3>
+          <p>
+            <b>ECMAScript 2015</b> 以降の仕様に準拠したコードで記載します. また, ビルドツールなどを必要としないように, TypeScript
+            での記述やモジュール分割などもしません (端的には, コピペすればブラウザコンソールなどで実行できるようなサンプルコード, あるいは,
+            コード片を記載します). 具体的には, 以下のような構文を使います.
+          </p>
+          <ul>
+            <li><code>const</code>, <code>let</code> による変数宣言</li>
+            <li>Template Strings</li>
+            <li>アロー関数</li>
+            <li>クラス</li>
+            <li><code>Promise</code>, または, <code>async</code>/<code>await</code></li>
+          </ul>
+          <p>
+            Web Audio API のコードも仕様で推奨されているコードを基本的に記載します (例えば, <code>AudioNode</code> インスタンスを生成する場合,
+            コンストラクタ形式が推奨されているので, そちらを使います). ただし, 現時点であまりにも実装の乖離が大きい場合は, フォールバック的な解説として,
+            実装として動作するコードを記載します.
+          </p>
+        </section>
+        <section id="section-recommendation-browsers">
+          <h3>推奨ブラウザ</h3>
+          <p>
+            閲覧自体は, モダンブラウザであれば特に問題ありませんが, 実際のサンプルコードを動作させることを考慮すると, デスクトップブラウザ, 特に, Web Audio API
+            の仕様に準拠している <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer">Google Chrome</a> もしくは
+            <a href="https://www.mozilla.org/ja/firefox/" target="_blank" rel="noopener noreferrer">Mozilla Firefox</a> (いずれも最新バージョン) を推奨します
+            (Google Chrome の場合, より高度な
+            <a href="https://web.dev/articles/profiling-web-audio-apps-in-chrome" target="_blank" rel="noopener noreferrer">Web Audio API 専用のプロファイラ</a
+            >があるのでおすすめです).
+          </p>
+        </section>
+        <section id="section-prerequisite">
+          <h3>前提知識と経験</h3>
+          <p>
+            前提知識としては, ECMAScript 2015 以降の JavaScript の言語仕様を理解していることと, Web ブラウザを実行環境にした JavaScript による Web
+            アプリケーションを実装した経験ぐらいです. Web Audio API は, ユースケースにおいて想定されるオーディオ信号処理を抽象化しているので,
+            オーディオ信号処理に対する理解がなくても, それなりのアプリケーションは制作できます (アプリケーションの仕様しだいでは不要になるぐらいです). もちろん,
+            オーディオ信号処理の理解や Web 以外のプラットフォームでのオーディオプログラミングの経験 (特に, GUI
+            で必要なリアルタイム性のオーディオプログラミングの経験) があれば, それは Web Audio API を理解するうえで活きます. Web Audio API
+            が標準でサポートしないようなオーディオ処理を実現したいケースではむしろ必要になります.
+          </p>
+          <p>
+            また, 音楽理論に対する知識も不要です. Web Audio API はユースケースとして, 音楽用途に限定していないからです. したがって, このサイトでは,
+            アプリケーションによっては必要になるドメイン知識として位置づけます (もちろん, ユースケースとして, 音楽用途も想定されているので, Web
+            をプラットフォームにした音楽アプリケーションを制作する場合には必要となるケースが多いでしょう).
+          </p>
+          <p>
+            このサイトでは, オーディオ信号処理や音楽理論など必要に応じて解説します. Web Audio API が解説の中心ではありますが, Web Music
+            アプリケーションを制作するための標準ドキュメントとなることを目指すからです (オーディオ信号処理や音楽理論を深入りする場合は,
+            それぞれ最適なドキュメントや書籍がたくさんあるのでそちらを参考にしてください).
+          </p>
+        </section>
+        <article id="section-skeptical">
+          <h4>Web Audio API に対する懐疑的な意見</h4>
+          <p>
+            Web Audio API は, 他のプラットフォームのオーディオ API と比較すると, やや奇怪な API 設計であったり, 仕様策定されたころの JavaScript の事情と, 現代の
+            JavaScript の事情が様変わりしたりしたことから, 懐疑的な意見もあります (参考
+            <a href="https://zenn.dev/okuoku/articles/13c39882596c92" target="_blank" rel="noopener noreferrer">WebAudioは何故あんな事になっているのか</a>).
+            しかしながら, この記事でも述べられているように,
+            <q>実はWebAudioはオーディオAPIのオープンスタンダードとしては唯一生き残っている存在と言える。</q> これはたしかで, その点において学ぶ意義はあります.
+            音楽アプリケーションとして Web をプラットフォームにする場合は必須となるでしょう.
+          </p>
+        </article>
+        <section id="section-contribution-to-document">
+          <h3>Issue と Pull Requests</h3>
+          <p>
+            プロローグの最後に, このサイト (ドキュメント) はオープンソースとして
+            <a href="https://github.com/Korilakkuma/Web-Music-Documentation" target="_blank" rel="noopener noreferrer">GitHub</a> に公開しています.
+            このサイトのオーナーも完璧に理解しているわけではないので, 間違いもあるかと思います. その場合には, GitHub に
+            <a href="https://github.com/Korilakkuma/Web-Music-Documentation/issues" target="_blank" rel="noopener noreferrer">issue</a> を作成したり,
+            <a href="https://github.com/Korilakkuma/Web-Music-Documentation/pulls" target="_blank" rel="noopener noreferrer">Pull Requests</a>
+            を送っていただいたりすると大変ありがたいです.
+          </p>
+          <p>それでは, Web Music の未来を一緒に開拓していきましょう !</p>
+        </section>
+      </section>
     </main>
   </body>
 </html>
