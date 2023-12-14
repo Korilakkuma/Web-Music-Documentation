@@ -99,3 +99,15 @@ a {
 a:hover {
   color: var(--gray-lighter);
 }
+
+q {
+  display: block;
+  margin: var(--base-margin) 0;
+  color: var(--gray-light);
+}
+
+q::before {
+  display: inline-block;
+  margin-right: 4px;
+  content: ">";
+}
