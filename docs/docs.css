@@ -102,3 +102,10 @@ q::before {
   margin-right: 4px;
   content: ">";
 }
+
+code {
+  padding: 2px 4px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  background-color: #eee;
+  border-radius: 4px;
+}
