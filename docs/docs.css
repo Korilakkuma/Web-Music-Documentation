@@ -118,3 +118,7 @@ code {
   background-color: #eee;
   border-radius: 4px;
 }
+
+.copy-to-clipboard-button {
+  cursor: pointer;
+}
