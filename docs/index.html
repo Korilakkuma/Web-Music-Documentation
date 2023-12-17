@@ -216,6 +216,86 @@
           <p>それでは, Web Music の未来を一緒に開拓していきましょう !</p>
         </section>
       </section>
+      <section id="section-getting-started">
+        <h2>Getting Started</h2>
+        <section id="section-audio-context">
+          <h3>AudioContext</h3>
+          <p>
+            Web Audio API を使うためには, <code>AudioContext</code> クラスのコンストラクタを呼び出して,
+            <code>AudioContext</code> インスタンスを生成する必要があります. <code>AudioContext</code> インスタンスが Web Audio API
+            で可能なオーディオ処理の起点になるからです. <code>AudioContext</code> インスタンスを生成することで, Web Audio API
+            が定義するプロパティやメソッドにアクセス可能になるわけです.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();</code></pre>
+          <p>
+            何らかの理由で, レガシーブラウザ (特に, モバイルブラウザ) もサポートしなければならない場合, ベンダープレフィックスつきの
+            <code>webkitAudioContext</code> もフォールバックとして設定しておくとよいでしょう (少なくとも, デスクトップブラウザでは不要な処理で,
+            これから将来においては確実に不要になる処理ではありますが).
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">window.AudioContext = window.AudioContext || window.webkitAudioContext;
+
+const context = new AudioContext();</code></pre>
+          <p><code>AudioContext</code> インスタンスをコンソールにダンプしてみます.</p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+console.dir(context);</code></pre>
+          <p>
+            <code>AudioContext</code> インスタンスに様々なプロパティやメソッドが実装されていることがわかるかと思います. このドキュメントではこれらを
+            (すべてではありませんが) メインに解説していくことになります. また, このように実装を把握することで, 仕様と実装の乖離を調査することにも役立ちます.
+          </p>
+          <img src="images/audio-context.png" alt="AudioContext" width="1232" height="770" loading="lazy" />
+          <p>
+            Web Audio API でオーディオ処理を実装するうえで意識することはほとんどありませんが, <code>AudioContext</code> は <code>BaseAudioContext</code> を拡張
+            (継承) したクラスであることもわかります.
+          </p>
+          <img src="images/base-audio-context.png" alt="BaseAudioContext" width="1232" height="770" loading="lazy" />
+          <section id="section-autoplay-policy">
+            <h4>Autoplay Policy 対策</h4>
+            <p>
+              Web Audio API に限ったことではないですが, ページが開いたときに, ユーザーが意図しない音を聞かせるのはよくないという観点から (つまり, UX
+              上好ましくないという観点から), ブラウザでオーディオを再生する場合,
+              <a href="https://developer.chrome.com/blog/autoplay#web_audio" target="_blank" rel="noopener noreferrer">Autoplay Policy</a>
+              という制限がかかります. これを解除するためには, <b>ユーザーインタラクティブなイベント</b> 発火後に
+              <code>AudioContext</code> インスタンスを生成するか, もしくは, <code>AudioContext</code> インスタンスの <code>resume</code> メソッドを実行して
+              <code>AudioContextState</code> を <code>&apos;running&apos;</code> に変更する必要があります. これをしないと, オーディオを鳴らすことができません.
+              また, <code>decodeAudioData</code> など一部のメソッドが Autoplay Policy 解除まで実行されなくなります. ユーザーインタラクティブなイベントとは,
+              <code>click</code>, <code>mousedown</code> や <code>touchstart</code> などユーザーが明示的に操作することによって発火するイベントのことです.
+              したがって, <code>load</code> イベントや <code>mousemove</code> など, 多くのケースにおいてユーザが明示的に操作するわけではないようなイベントでは
+              Autoplay Policy の制限を解除することはできません.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">document.addEventListener(&apos;click&apos;, () =&gt; {
+  const context = new AudioContext();
+});</code></pre>
+            <p>
+              <code>resume</code> メソッドで解除する場合 (この場合, コンソールには警告メッセージが表示されますが, Autoplay Policy
+              は解除できるので無視して問題ありません).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+document.addEventListener(&apos;click&apos;, async () =&gt; {
+  await context.resume();
+});</code></pre>
+            <p>
+              <b>これ以降のセクションでは, 本質的なコードを表記したいので, Autoplay Policy は解除されている状態を前提とします.</b>
+            </p>
+          </section>
+        </section>
+      </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/line-numbers/prism-line-numbers.min.js"></script>
