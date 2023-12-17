@@ -110,6 +110,12 @@ code {
   border-radius: 4px;
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+  margin: var(--base-margin) 0 0;
+}
+
 .copy-to-clipboard-button {
   cursor: pointer;
 }
