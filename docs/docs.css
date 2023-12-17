@@ -119,6 +119,11 @@ code {
   border-radius: 4px;
 }
 
+img {
+  max-width: 100%;
+  height: auto;
+}
+
 .copy-to-clipboard-button {
   cursor: pointer;
 }
