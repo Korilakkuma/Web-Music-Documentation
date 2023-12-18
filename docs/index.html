@@ -295,6 +295,98 @@ document.addEventListener(&apos;click&apos;, async () =&gt; {
             </p>
           </section>
         </section>
+        <section id="section-audio-node">
+          <h3>AudioNode</h3>
+          <p>
+            Web Audio API におけるオーディオ処理の基本は, <code>AudioNode</code> クラスのインスタンス生成と <code>AudioNode</code> がもつ
+            <code>connect</code> メソッドで <code>AudioNode</code> インスタンスを接続していくことです. <code>AudioNode</code> クラスは,
+            それ自身のインスタンスを生成することはできず, <code>AudioNode</code> を拡張 (継承) したサブクラスのインスタンスを生成して, オーディオ処理に使います.
+            <code>AudioNode</code> はその役割を大きく 3 つに分類することができます.
+          </p>
+          <ul>
+            <li>サウンドの入力点となる <code>AudioNode</code> のサブクラス (<code>OscillatorNode</code>, <code>AudioBufferSourceNode</code> など)</li>
+            <li>サウンドの出力点となる <code>AudioNode</code> のサブクラス (<code>AudioDestinationNode</code>)</li>
+            <li>
+              音響特徴量を変化させる <code>AudioNode</code> のサブクラス (<code>GainNode</code>, <code>DelayNode</code>, <code>BiquadFilterNode</code> など)
+            </li>
+          </ul>
+          <p>
+            現実世界のオーディオ機器に例えると, サウンドの入力点に相当する <code>AudioNode</code> のサブクラスが, マイクロフォンや楽器, 楽曲データなどに相当,
+            サウンドの出力点に相当する <code>AudioNode</code> のサブクラスが. スピーカーやイヤホンなどに相当, そして, 音響特徴量を変化させる
+            <code>AudioNode</code> のサブクラスがエフェクターやボイスチェンジャーなどが相当します.
+          </p>
+          <p>
+            これらの, <code>AudioNode</code> のサブクラスを使うためには, <b>コンストラクタ呼び出し</b>, または,
+            <b><code>AudioContext</code> インスタンスに実装されているファクトリメソッド</b> 呼び出す必要があります (ただし, サウンドの出力点となる
+            <code>AudioDestinationNode</code> は <code>AudioContext</code> インスタンスの <code>destination</code> プロパティでインスタンスとして使えるので,
+            コンストラクタ呼び出しやファクトリメソッドは定義されていません).
+          </p>
+          <p>例えば, 入力として, オシレーター (<code>OscillatorNode</code>) を使う場合, コンストラクタ呼び出しの実装だと以下のようになります.</p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);</code></pre>
+          <p>
+            インスタンス生成時には, その <code>AudioNode</code> のサブクラスに定義されているパラメータ (<code>OscillatorNode</code> の場合,
+            <code>OscillatorOptions</code>) を指定することも可能です.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 880 });</code></pre>
+          <p>ファクトリメソッドでインスタンス生成する場合, 以下のようになります.</p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = context.createOscillator();</code></pre>
+          <p>
+            コンストラクタ呼び出しによる, <code>AudioNode</code> のサブクラスのインスタンス生成は, Web Audio API の初期には仕様策定されておらず,
+            <code>AudioContext</code> インスタンスに実装されているファクトリメソッド呼び出す実装のみでした. インスタンス生成時に,
+            パラメータを変更可能なことから, どちらかと言えば, コンストラクタ呼び出しによるインスタンス生成が推奨されているぐらいですが,
+            ファクトリメソッドが将来非推奨になることはなく, また, 初期の仕様には仕様策定されていなかったことから,
+            <b>レガシーブラウザの場合, コンストラクタ呼び出しが実装されていない場合もあります</b>. したがって, サポートするブラウザが多い場合は,
+            ファクトリメソッドを, サポートするブラウザが限定的であれば, コンストラクタ呼び出しを使うのが現実解と言えるでしょう.
+          </p>
+          <section id="section-connect-audio-node">
+            <h4>connect メソッド (AudioNode の接続)</h4>
+            <p>
+              現実世界の音響機器では, 入力と出力, あるいは, 音響変化も接続することで, その機能を果たします. 例えば, エレキギターであれば,
+              サウンド入力を担うギターとサウンド出力を担うアンプ (厳密にはスピーカー) は, 単体ではその機能を果たしません.
+              シールド線などで接続することによって機能します.
+            </p>
+            <p>
+              このことは, Web Audio API の世界も同じです. (<code>AudioContext</code> インスタンスを生成して,) サウンド入力点となる
+              <code>AudioNode</code> のサブクラスのインスタンス (先ほどのコード例だと, <code>OscillatorNode</code> インスタンス) と, サウンド出力点となる
+              <code>AudioDestinationNode</code> インスタンスを生成しただけではその機能を果たしません. 少なくとも,
+              サウンド入力点と出力点を接続する処理が必要となります (さらに, Web Audio API が定義する様々なノードと接続することで, 高度なオーディオ処理を実現する
+              API として真価を発揮します).
+            </p>
+            <p>
+              Web Audio API のアーキテクチャは, 現実世界における音響機器のアーキテクチャと似ています. このことは, Web Audio API
+              の理解を進めていくとなんとなく実感できるようになると思います.
+            </p>
+            <p>
+              Web Audio APIにおいて「接続」の役割を担うのが, <code>AudioNode</code> がもつ <b><code>connect</code> メソッド</b>です. 実装としては,
+              <code>AudioNode</code> サブクラスのインスタンスの, <code>connect</code> メソッドを呼び出します. このメソッドの第 1 引数には, 接続先となる
+              <code>AudioNode</code> のサブクラスのインスタンスを指定します.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);</code></pre>
+          </section>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
