@@ -234,6 +234,42 @@ console.dir(context);</code></pre>
             (継承) したクラスであることもわかります.
             <img src="images/base-audio-context.png" alt="BaseAudioContext" width="1232" height="770" loading="lazy" />
           </p>
+          <section id="section-autoplay-policy">
+            <h4>Autoplay Policy 対策</h4>
+            <p>
+              Web Audio API に限ったことではないですが, ページが開いたときに, ユーザーが意図しない音を聞かせるのはよくないという観点から (つまり, UX
+              上好ましくないという観点から), ブラウザでオーディオを再生する場合,
+              <a href="https://developer.chrome.com/blog/autoplay#web_audio" target="_blank" rel="noopener noreferrer">Autoplay Policy</a>
+              という制限がかかります. これを解除するためには, <b>ユーザーインタラクティブなイベント</b> 発火後に
+              <code>AudioContext</code> インスタンスを生成するか, もしくは, <code>AudioContext</code> インスタンスの <code>resume</code> メソッドを実行して
+              <code>AudioContextState</code> を <code>&apos;running&apos;</code> に変更する必要があります. これをしないと, オーディオを鳴らすことができません.
+              また, <code>decodeAudioData</code> など一部のメソッドが Autoplay Policy 解除まで実行されなくなります. ユーザーインタラクティブなイベントとは,
+              <code>click</code>, <code>mousedown</code> や <code>touchstart</code> などユーザーが明示的に操作することによって発火するイベントのことです.
+              したがって, <code>load</code> イベントや <code>mousemove</code> など, 多くのケースにおいてユーザが明示的に操作するわけではないようなイベントでは
+              Autoplay Policy の制限を解除することはできません.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">document.addEventListener(&apos;click&apos;, () =&gt; {
+  const context = new AudioContext();
+});</code></pre>
+            <p>
+              <code>resume</code> メソッドで解除する場合 (この場合, コンソールには警告メッセージが表示されますが, Autoplay Policy
+              は解除できるので無視して問題ありません).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+document.addEventListener(&apos;click&apos;, async () =&gt; {
+  await context.resume();
+});</code></pre>
+            <p>
+              <b>これ以降のセクションでは, 本質的なコードを表記したいので, Autoplay Policy は解除されている状態を前提とします.</b>
+            </p>
+          </section>
         </section>
       </section>
     </main>
