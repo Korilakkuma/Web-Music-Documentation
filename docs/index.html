@@ -385,6 +385,39 @@ const oscillator = new OscillatorNode(context);
 
 // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
 oscillator.connect(context.destination);</code></pre>
+            <p>
+              サウンドの入力点と出力点を接続し, 最小の構成を実装できました. しかし, まだ音は出せません. なぜなら,
+              サウンドを開始するための音源スイッチをオンにしていないからです. 現実世界の音響機器も同じです. 現実世界がそうであるように, Web Audio API
+              においても, 音源のスイッチをオン, オフする必要があります. そのためには, <code>OscillatorNode</code> クラスがもつ
+              <b><code>start</code> メソッド</b>, <b><code>stop</code> メソッド</b> を呼び出します.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// Start immediately
+oscillator.start(0);
+
+// Stop after 2.5 sec
+oscillator.stop(context.currentTime + 2.5);</code></pre>
+            <p>
+              <code>start</code> メソッドの引数に <code>0</code> を指定していますが, これはメソッドが呼ばれたら, 即時にサウンドを開始します.
+              <code>stop</code> メソッドの引数には, <code>AudioContext</code> インスタンスの <b><code>currentTime</code></b> プロパティに
+              <code>2.5</code> を加算した値を指定していますが, これは, <code>stop</code> メソッドを実行してから, 2.5
+              秒後に停止することをスケジューリングしています (詳細は, のちほどのセクションで Web Audio API におけるスケジューリングとして解説しますが,
+              <code>AudioContext</code> インスタンスの <code>currentTime</code> は,
+              <b><code>AudioContext</code> インスタンスが生成されてからの経過時間を秒単位で計測した値</b>が格納されています. より厳密には,
+              <b><code>AudioContextState</code> が <code>&apos;running&apos;</code> である状態での経過秒数</b>となります). <code>stop</code> メソッドの引数も
+              <code>0</code> を指定すれば即時にサウンドを停止します. ちなみに, <code>start</code> メソッド, <code>stop</code> メソッドもデフォルト値は
+              <code>0</code> なので, 引数を省略して呼び出した場合, 即時にサウンドを開始, 停止します.
+            </p>
+            <p>これで, とりあえず, ブラウザ (Web) で音を鳴らすことができました !</p>
           </section>
         </section>
       </section>
