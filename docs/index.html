@@ -420,6 +420,134 @@ oscillator.stop(context.currentTime + 2.5);</code></pre>
             <p>これで, とりあえず, ブラウザ (Web) で音を鳴らすことができました !</p>
           </section>
         </section>
+        <section id="section-audio-param">
+          <h3>AudioParam</h3>
+          <p>
+            サウンドの入力点と出力点を生成して, それらを接続するだけでは, 元の入力音をそのまま出力するだけなので高度なオーディオ処理はできません. むしろ, Web
+            Audio API において重要なのは, この入力と出力の間に, 音響変化をさせる <code>AudioNode</code> を接続することです. 音響変化をさせるためには,
+            音響変化のためのパラメータを取得・設定したり, 周期的に変化させたり (LFO) できる必要があります. Web Audio API において, その役割を担うのが
+            <b><code>AudioParam</code></b> クラスです. <code>AudioNode</code> が現実世界の音響機器と例えをしましたが, それに従うと,
+            <code>AudioParam</code> クラスはノブやスライダーなど音響機器のパラメータを設定するコントローラーのようなものです.
+          </p>
+          <p>
+            <code>AudioParam</code> クラスは直接インスタンス化することはありません. <code>AudioNode</code> のプロパティとして,
+            <code>AudioNode</code> のサブクラスのインスタンスを生成した時点でインスタンス化されているのでプロパティアクセスで参照することが可能です.
+          </p>
+          <p>
+            <code>AudioParam</code> では, 単純なパラメータの取得や設定だけでなく, そのパラメータを周期的に変化させたり (LFO), スケジューリングによって変化させる
+            (エンベロープジェネレーターなど) ことが可能です (ここはオーナーの経験からですが, Web Audio API で高度なオーディオ処理を実装するためには,
+            <code>AudioParam</code> を理解して音響パラメータを制御できるようになるかが非常に重要になっていると思います).
+          </p>
+        </section>
+        <section id="section-gain-node">
+          <h3>GainNode (AudioNode インタンスの生成と接続, AudioParam の取得と設定)</h3>
+          <p>
+            <code>AudioNode</code> と <code>AudioParam</code> の具体的な利用例として, このセクションでは, <b><code>GainNode</code></b> を利用して,
+            パラメータの取得・設定を実装します. <code>GainNode</code> はその命名のとおり, <b>ゲイン</b> (<b>増幅率</b>), つまり, 入力に対する出力の比率 (入力を
+            <code>1</code> としたときに出力の値) を制御するための <code>AudioNode</code> で, Web Audio API におけるオーディオ処理で頻繁に使うことになります.
+            このセクションでは, 単純に, <code>GainNode</code> の <b><code>gain</code></b> プロパティ (<code>AudioParam</code> インスタンス) を参照して,
+            そのパラメータを取得・設定してみます (この実装例では, 音量の制御と考えても問題ありません).
+          </p>
+          <p>
+            <code>GainNode</code> も <code>AudioNode</code> のサブクラスなので, コンストラクタ呼び出し, または, ファクトリメソッドで
+            <code>GainNode</code> インスタンスを生成できます.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const gain = new GainNode(context);</code></pre>
+          <p>
+            コンストラクタ呼び出しで生成する場合, 初期パラメータ (<b><code>GainOptions</code></b> 型) を指定することも可能です.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const gain = new GainNode(context, { gain: 0.5 });</code></pre>
+          <p>ファクトリメソッドで生成する場合.</p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const gain = context.createGain();</code></pre>
+          <p><code>GainNode</code> インスタンスを生成したら, <code>OscillatorNode</code> と <code>AudioDestinationNode</code> の間に接続します.</p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);
+const gain       = new GainNode(context, { gain: 0.5 });
+
+// OscillatorNode (Input) -&gt; GainNode (Master Volume) -&gt; AudioDestinationNode (Output)
+oscillator.connect(gain);
+gain.connect(context.destination);
+
+// Start immediately
+oscillator.start(0);
+
+// Stop after 2.5 sec
+oscillator.stop(context.currentTime + 2.5);</code></pre>
+          <p>これで実際にサウンドを発生させると, 音の大きさが小さく聴こえるはずです.</p>
+          <p>
+            このコードだと, 初期値を変更しているだけなので, 例えば, ユーザー操作によって変更するといったことができないので,
+            インスタンス生成時以外でパラメータを設定したり, 取得したりする場合は, <code>GainNode</code> の <code>gain</code> プロパティを参照します. これは,
+            先ほども記載したように, <code>AudioParam</code> インスタンスです. パラメータの取得や設定をするには, その
+            <b><code>value</code></b> プロパティにアクセスします.
+          </p>
+          <p>簡単な UI として, 以下の HTML があるとします.</p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-html line-numbers">&lt;label for=&quot;range-gain&quot;&gt;gain&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-gain&quot; value=&quot;1&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-gain-value&quot;&gt;1&lt;/span&gt;</code></pre>
+          <p>
+            この <code>input[type=&quot;range&QUOT;]</code> のイベントリスナーで, <code>input[type=&quot;range&QUOT;]</code> で入力された値 (JavaScript の
+            <code>number</code> 型) を <code>gain</code> (<code>AudioParam</code> インスタンス) の <code>value</code> プロパティに設定し, また,
+            その値を取得して, HTML に動的に表示します.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);
+const gain       = new GainNode(context);
+
+// OscillatorNode (Input) -&gt; GainNode (Master Volume) -&gt; AudioDestinationNode (Output)
+oscillator.connect(gain);
+gain.connect(context.destination);
+
+// Start immediately
+oscillator.start(0);
+
+const spanElement = document.getElementById(&apos;print-gain-value&apos;);
+
+document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apos;, (event) =&gt; {
+  gain.value = event.currentTarget.valueAsNumber;
+
+  spanElement.textContent = gain.value;
+});</code></pre>
+          <p>
+            <code>AudioParam</code> のパラメータの取得や設定は, このように, JavaScript のオブジェクトに対するプロパティの getter や setter と同じなので,
+            特に違和感なく理解できるのではないでしょうか (設定に関しては,
+            あとのセクションで解説するパラメータのオートメーションメソッドを利用する方法もあります).
+          </p>
+        </section>
+        <p>
+          <code>AudioNode</code> や <code>AudioParam</code> の接続によって構成されるオーディオデータのルーティングを, Web Audio API の仕様では,
+          <b>オーディオグラフ</b> (<b>Audio Graph</b>) と用語定義しています.
+        </p>
+        <p>
+          このセクションでは, Web Audio API の設計の基本となる (Web Audio API のアーキテクチャを決定づけている), <code>AudioContext</code>,
+          <code>AudioNode</code>, <code>AudioParam</code> の関係性とそのパラメータの取得・設定の実装を解説しました. 以降のセクションでは, ユースケースに応じて,
+          これら 3 つのクラスの詳細についても解説を追加していきます.
+        </p>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
