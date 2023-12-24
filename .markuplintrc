@@ -12,6 +12,12 @@
           }
         }
       }
+    },
+    {
+      "selector": "#MathJax-script",
+      "rules": {
+        "required-attr": ["async"]
+      }
     }
   ]
 }
