@@ -18,6 +18,12 @@
       "rules": {
         "required-element": false
       }
+    },
+    {
+      "selector": "#MathJax-script",
+      "rules": {
+        "required-attr": ["async"]
+      }
     }
   ]
 }
