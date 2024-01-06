@@ -571,6 +571,25 @@ document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apo
             普段聴いている自分の声は骨を媒体にして伝わっている音です.
           </p>
         </section>
+        <section id="section-modeling-sound">
+          <h3>音のモデリング</h3>
+          <p>
+            音をコンピュータで表現するためには, 媒体の振動を数式で表現して, その数式によって導出される数値を 2 進数で表現できる必要があります.
+            音の実体は媒体の振動というのを説明しましたが, この振動を表現するのに適した数学的な関数が, <b>sin 関数</b>です (cos 関数は sin
+            関数の位相の違いでしかないので本質的に同じと考えてもよいでしょう. また, tan 関数は含まれません. その理由は,
+            <span class="math-inline">$\frac{\pi}{2}$</span> や <span class="math-inline">$-\frac{\pi}{2}$</span> で
+            <span class="math-inline">$\infty$</span> や
+            <span class="math-inline">$-\infty$</span> になるので振動を表現するには都合が悪いからと考えてよいでしょう).
+          </p>
+          <p>
+            Web Audio APIでも, <code>OscillatorNode</code> の <code>type</code> プロパティがとりうる値 (<code>OscillatorType</code>) の 1 つとして
+            <code>&#039;sine&#039;</code> が定義されています.
+          </p>
+          <p>
+            音を扱う学問や工学では, この sin 関数が, 音の波 (<b>音波</b>) をモデリングしていることから, <b>正弦波</b> (<b>sin 波</b>) と呼ぶことが多いです.
+            とちらであっても, 実体は同じなのですが, このドキュメントではこれ以降, 慣習にしたがって, 正弦波 (sin 波) と記述することにします.
+          </p>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
