@@ -589,6 +589,93 @@ document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apo
             音を扱う学問や工学では, この sin 関数が, 音の波 (<b>音波</b>) をモデリングしていることから, <b>正弦波</b> (<b>sin 波</b>) と呼ぶことが多いです.
             とちらであっても, 実体は同じなのですが, このドキュメントではこれ以降, 慣習にしたがって, 正弦波 (sin 波) と記述することにします.
           </p>
+          <section id="section-sine-wave">
+            <h3>正弦波 (sin 波)</h3>
+            <p>ここからは少し数学・物理的な話になってきます. 正弦波 (sin 関数) ってどんな形か覚えてらっしゃいますか？</p>
+            <figure>
+              <svg id="svg-figure-sin-function" width="720" height="405" data-a="1.0" data-f="1" />
+              <figcaption>正弦波 (sin 関数)</figcaption>
+            </figure>
+            <p>具体的に解説するためにパラメータを設定します.</p>
+            <figure>
+              <svg
+                id="svg-figure-sin-function-with-parameters-1-1Hz"
+                width="720"
+                height="405"
+                data-parameters="true"
+                data-a="1"
+                data-f="1"
+                data-t="0.0,0.5,1.0"
+              />
+              <figcaption>パラメータつき正弦波 (sin 関数)</figcaption>
+            </figure>
+            <section id="section-amplitude-and-frequency">
+              <h4>振幅と周波数 (周期)</h4>
+              <p>
+                まず, 縦軸に着目してみます. 縦軸のパラメータは, <b>振幅</b>と呼ばれ, 単位はありません. ちなみに, 振幅 <code>1</code> の正弦波と表現した場合,
+                上記のように振幅の最大値が <code>1</code>, 最小値が <code>-1</code>の 正弦波のことを意味しています. 次に, 横軸に着目してみます.
+                横軸のパラメータは, <b>時間</b>を表しています. 縦軸との関係で表現すると, ある時刻における正弦波の振幅値を表した図 (グラフ) と言えます. ここで,
+                パラメータつきの正弦波を見てみます. すると, 山 1 つと谷 1 つを最小の構成として, それが繰り返されている, すなわち,
+                <b>周期性</b>をもつことがわかります. 数学的には, すべての時間
+                <span class="math-inline">$t \left(0 \leqq {t} &lt; \infty \right)$</span> に対して,
+                <span class="math-inline">$f\left(t + L\right) = f\left(t\right)$</span> となる定数が存在するとき,
+                <span class="math-inline">$f\left(t\right)$</span> は周期 <span class="math-inline">$L$</span> の<b>周期関数</b>と定義されます. そして, sin
+                関数は, 周期 <span class="math-inline">$L$</span> としたとき
+                <span class="math-inline">$\sin\left(t + L\right) = \sin\left(t\right)$</span> が成立するので, <b>正弦波 (sin 関数) は周期関数</b>です.
+              </p>
+              <p>
+                この波の最小の構成が発生するために要する時間を<b>周期</b>と呼びます. 例として, 上記の正弦波で考えると, 最小の構成の発生までに
+                <code>1 sec</code> の時間を要しているので, 周期は <code>1 sec</code> となります. この真逆の概念を表す用語が<b>周波数</b>です. すなわち,
+                <code>1 sec</code> の間に, 波の最小の構成が何回発生するか ? ということを表し, 単位は <b>Hz</b> (ヘルツ) です. Hz (ヘルツ) という名前ですが,
+                日本語に翻訳すれば, 何回の「回」に相当するでしょう. 上記の正弦波で考えると. この正弦波は, <code>1 sec</code> の間に最小の構成が
+                <code>1</code> 回発生しているので, 周波数は, <code>1 Hz</code> ということになります.
+              </p>
+              <p>
+                周期と周波数は互いに真逆の概念ですが, これは数学的には, 互いに<b>逆数</b>の関係にあります. すなわち,
+                <b>周期の逆数は周波数を表し, 周波数の逆数は周期を表します</b>. 互いに関係のある値なので, 周期の話をすれば周波数の話も同時にしていることであり,
+                周波数の話をすれば周期の話も同時にしていることになります. ただ, 周波数という用語のほうがよく使われる傾向にあると思うので, このドキュメントでは,
+                周波数の用語を優先的に利用することにします.
+              </p>
+              <p>少し慣れるために, パラメータ (振幅や周波数) を変えた正弦波 (sin 波) を見てましょう.</p>
+              <figure>
+                <svg
+                  id="svg-figure-sin-function-with-parameters-1-2Hz"
+                  width="720"
+                  height="405"
+                  data-parameters="true"
+                  data-a="0.5"
+                  data-f="1"
+                  data-t="0.0,0.5,1.0"
+                />
+                <figcaption>振幅 <code>0.5</code>, 周波数 <code>1 Hz</code> (周期 <code>1 sec</code>) の正弦波 (<code>&apos;sine&apos;</code>)</figcaption>
+              </figure>
+              <figure>
+                <svg
+                  id="svg-figure-sin-function-with-parameters-0.5-1Hz"
+                  width="720"
+                  height="405"
+                  data-parameters="true"
+                  data-a="1"
+                  data-f="2"
+                  data-t="0.0,1.0,2.0"
+                />
+                <figcaption>振幅 <code>1</code>, 周波数 <code>2 Hz</code> (周期 <code>0.5 sec</code>) の正弦波 (<code>&apos;sine&apos;</code>)</figcaption>
+              </figure>
+              <figure>
+                <svg
+                  id="svg-figure-sin-function-with-parameters-1-0.5Hz"
+                  width="720"
+                  height="405"
+                  data-parameters="true"
+                  data-a="1"
+                  data-f="1"
+                  data-t="0.0,1.0,2.0"
+                />
+                <figcaption>振幅 <code>1</code>, 周波数 <code>0.5 Hz</code> (周期 <code>2 sec</code>) の正弦波 (<code>&apos;sine&apos;</code>)</figcaption>
+              </figure>
+            </section>
+            <p>いかがでしたか ? 振幅と周波数は Web Audio API の解説においても頻出する用語なので, ある程度理解しておくと, Web Audio API の理解も進むでしょう.</p>
+          </section>
         </section>
       </section>
     </main>
@@ -607,5 +694,6 @@ document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apo
         }
       };
     </script>
+    <script defer src="docs.js"></script>
   </body>
 </html>
