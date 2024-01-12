@@ -3,6 +3,7 @@
 :root {
   --base-margin: 16px;
   --base-font-size: 16px;
+  --smaller-font-size: 14px;
   --white: #fff;
   --gray-lightest: #fafafa;
   --gray-lighter: #ccc;
@@ -122,6 +123,17 @@ code {
 img {
   max-width: 100%;
   height: auto;
+}
+
+figure {
+  padding: 0;
+  margin: 24px 0;
+}
+
+figcaption {
+  font-size: var(--smaller-font-size);
+  color: var(--gray-light);
+  text-align: center;
 }
 
 .copy-to-clipboard-button {
