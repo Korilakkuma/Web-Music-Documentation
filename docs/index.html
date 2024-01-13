@@ -676,6 +676,60 @@ document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apo
             </section>
             <p>いかがでしたか ? 振幅と周波数は Web Audio API の解説においても頻出する用語なので, ある程度理解しておくと, Web Audio API の理解も進むでしょう.</p>
           </section>
+          <section id="section-synthesizer-waveforms">
+            <h3>基本波形</h3>
+            <p>
+              <code>OscillatorNode</code> の <code>type</code> プロパティ (<code>OscillatorType</code>) の値は, 正弦波を生成する文字列
+              <code>&apos;sine&apos;</code> 以外にも, 矩形波を生成する <code>&apos;square&apos;</code> やノコギリ波を生成する <code>&apos;sawtooth&apos;</code>,
+              三角波を生成する <code>&apos;triangle&apos;</code> があります. 正弦波の形はわかりましたが, それ以外はどのような形をしているのか見てみましょう.
+            </p>
+            <figure>
+              <svg
+                id="svg-figure-square-function-with-parameters-0.5-4Hz"
+                width="720"
+                height="405"
+                data-parameters="true"
+                data-a="0.5"
+                data-f="2"
+                data-t="0.0,0.5,1.0"
+              />
+              <figcaption>振幅 <code>0.5</code>, 周波数 <code>4 Hz</code> (周期 <code>0.25 sec</code>) の矩形波 (<code>&apos;square&apos;</code>)</figcaption>
+            </figure>
+            <figure>
+              <svg
+                id="svg-figure-sawtooth-function-with-parameters-0.5-4Hz"
+                width="720"
+                height="405"
+                data-parameters="true"
+                data-a="0.5"
+                data-f="2"
+                data-t="0.0,0.5,1.0"
+              />
+              <figcaption>
+                振幅 <code>0.5</code>, 周波数 <code>4 Hz</code> (周期 <code>0.25 sec</code>) のノコギリ波 (<code>&apos;sawtooth&apos;</code>)
+              </figcaption>
+            </figure>
+            <figure>
+              <svg
+                id="svg-figure-triangle-function-with-parameters-0.5-4Hz"
+                width="720"
+                height="405"
+                data-parameters="true"
+                data-a="0.5"
+                data-f="2"
+                data-t="0.0,0.5,1.0"
+              />
+              <figcaption>振幅 <code>0.5</code>, 周波数 <code>4 Hz</code> (周期 <code>0.25 sec</code>) の三角波 (<code>&apos;triangle&apos;</code>)</figcaption>
+            </figure>
+            <p>
+              矩形波・ノコギリ波・三角波のいずれも正弦波と同じように, 周期性をもつ波 (関数) であるということです. 周期性をもつので,
+              周波数の概念を適用することができます. そして, 最も重要な点ですが, 周期性をもつ波は周波数の異なる正弦波を合成してできるということです.
+              矩形波・ノコギリ波・三角波はいずれも周期性をもちます. 周期性をもつので,
+              矩形波・ノコギリ波・三角波はいずれも周波数の異なる正弦波を合成して生成することができます. シンセサイザーでも,
+              正弦波・矩形波・ノコギリ波・三角波は基本波形として, サウンド生成のベースとなる波形です. そして, Web Audio API においても, 基本波形はサウンド生成
+              (<code>OscillatorNode</code>) のベースになる波形です.
+            </p>
+          </section>
         </section>
       </section>
     </main>
