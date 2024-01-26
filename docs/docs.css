@@ -84,6 +84,28 @@ ol > li {
   list-style-type: decimal;
 }
 
+dl,
+dd,
+dt {
+  padding: 0;
+  margin: 0;
+}
+
+dl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: var(--base-margin) 0;
+}
+
+dt {
+  font-weight: bold;
+}
+
+dd {
+  margin-left: var(--base-margin);
+}
+
 article {
   padding: 0 var(--base-margin);
   margin: var(--base-margin) 0;
