@@ -11,8 +11,11 @@ const lineCap = 'round';
 const lineJoin = 'miter';
 
 const baseColor = 'rgb(153 153 153)';
+const lightColor = 'rgb(204 204 204)';
 const alphaBaseColor = 'rgba(153 153 153 / 30%)';
 const waveColor = 'rgb(0 0 255)';
+
+const audiocontext = new AudioContext();
 
 const createCoordinateRect = (svg, textPosition, textFontSize) => {
   const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
@@ -338,6 +341,351 @@ const createTriangleFunctionPath = (svg) => {
   }
 };
 
+const createKeyboards = (svg, offsetY = 0) => {
+  const highlights = (svg.getAttribute('data-highlights') ?? '').split(',').map((index) => Number(index));
+
+  [
+    0, 2, 3, 5, 7, 8, 10, 12, 14, 15, 17, 19, 20, 22, 24, 26, 27, 29, 31, 32, 34, 36, 38, 39, 41, 43, 44, 46, 48, 50, 51, 53, 55, 56, 58, 60, 62, 63, 65, 67,
+    68, 70, 72, 74, 75, 77, 79, 80, 82, 84, 86, 87
+  ].forEach((keyboardIndex, index, a) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', `${index * 23}`);
+    rect.setAttribute('y', `${offsetY}`);
+    rect.setAttribute('width', '23');
+    rect.setAttribute('height', '150');
+    rect.setAttribute('stroke-width', '2px');
+    rect.setAttribute('stroke', '#ccc');
+    rect.setAttribute('fill', '#fff');
+
+    if (highlights.includes(keyboardIndex)) {
+      rect.setAttribute('fill', '#eee');
+    }
+
+    svg.appendChild(rect);
+  });
+
+  [1, 4, 6, 9, 11, 13, 16, 18, 21, 23, 25, 28, 30, 33, 35, 37, 40, 42, 45, 47, 49, 52, 54, 57, 59, 61, 64, 66, 69, 71, 73, 76, 78, 81, 83, 85].forEach(
+    (keyboardIndex, index) => {
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', `${(keyboardIndex - index) * 23 - 11 / 2}`);
+      rect.setAttribute('y', `${offsetY}`);
+      rect.setAttribute('width', '11');
+      rect.setAttribute('height', '95');
+      rect.setAttribute('stroke-width', '2px');
+      rect.setAttribute('stroke', '#666');
+      rect.setAttribute('fill', '#000');
+
+      if (highlights.includes(keyboardIndex)) {
+        rect.setAttribute('fill', '#333');
+      }
+
+      svg.appendChild(rect);
+    }
+  );
+};
+
+const createFrequencyandPianoFrequency = (svg) => {
+  const offsetY = 120;
+
+  const width = Number(svg.getAttribute('width'));
+
+  const rect = document.createElementNS(xmlns, 'rect');
+
+  rect.setAttribute('x', '0');
+  rect.setAttribute('y', '28');
+  rect.setAttribute('width', `${width}`);
+  rect.setAttribute('height', '4');
+  rect.setAttribute('fill', baseColor);
+
+  const minFrequency = document.createElementNS(xmlns, 'text');
+
+  minFrequency.textContent = '20 Hz';
+
+  minFrequency.setAttribute('x', '20');
+  minFrequency.setAttribute('y', '20');
+
+  minFrequency.setAttribute('text-anchor', 'middle');
+  minFrequency.setAttribute('stroke', 'none');
+  minFrequency.setAttribute('fill', baseColor);
+  minFrequency.setAttribute('font-size', '14px');
+
+  const maxFrequency = document.createElementNS(xmlns, 'text');
+
+  maxFrequency.textContent = '20000 Hz (20 kHz)';
+
+  maxFrequency.setAttribute('x', '1136');
+  maxFrequency.setAttribute('y', '20');
+
+  maxFrequency.setAttribute('text-anchor', 'middle');
+  maxFrequency.setAttribute('stroke', 'none');
+  maxFrequency.setAttribute('fill', baseColor);
+  maxFrequency.setAttribute('font-size', '14px');
+
+  const minPath = document.createElementNS(xmlns, 'path');
+
+  minPath.setAttribute('d', 'M 12 32 L 0 120');
+  minPath.setAttribute('stroke', lightColor);
+  minPath.setAttribute('stroke-width', '2');
+  minPath.setAttribute('stroke-dasharray', '5,5');
+
+  const maxPath = document.createElementNS(xmlns, 'path');
+
+  maxPath.setAttribute('d', `M ${width / 4} 32 L ${width} 120`);
+  maxPath.setAttribute('stroke', lightColor);
+  maxPath.setAttribute('stroke-width', '2');
+  maxPath.setAttribute('stroke-dasharray', '5,5');
+
+  svg.appendChild(rect);
+  svg.appendChild(minFrequency);
+  svg.appendChild(maxFrequency);
+  svg.appendChild(minPath);
+  svg.appendChild(maxPath);
+
+  createKeyboards(svg, offsetY);
+
+  const pianoMinFrequency = document.createElementNS(xmlns, 'text');
+
+  pianoMinFrequency.textContent = '27.5 Hz';
+
+  pianoMinFrequency.setAttribute('x', '27');
+  pianoMinFrequency.setAttribute('y', `${offsetY + 142}`);
+
+  pianoMinFrequency.setAttribute('text-anchor', 'middle');
+  pianoMinFrequency.setAttribute('stroke', 'none');
+  pianoMinFrequency.setAttribute('fill', baseColor);
+  pianoMinFrequency.setAttribute('font-size', '14px');
+
+  const pianoMaxFrequency = document.createElementNS(xmlns, 'text');
+
+  pianoMaxFrequency.textContent = '4186 Hz';
+
+  pianoMaxFrequency.setAttribute('x', '1166');
+  pianoMaxFrequency.setAttribute('y', `${offsetY + 142}`);
+
+  pianoMaxFrequency.setAttribute('text-anchor', 'middle');
+  pianoMaxFrequency.setAttribute('stroke', 'none');
+  pianoMaxFrequency.setAttribute('fill', baseColor);
+  pianoMaxFrequency.setAttribute('font-size', '14px');
+
+  svg.appendChild(pianoMinFrequency);
+  svg.appendChild(pianoMaxFrequency);
+};
+
+const visualOscillator = (svg) => {
+  const gain = new GainNode(audiocontext);
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 512 });
+
+  const buttonElement = document.getElementById('button-oscillator');
+
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const padding = 32;
+
+  const innerWidth = width - 2 * padding;
+  const innerHeight = height - 2 * padding;
+  const innerBottom = height - padding;
+
+  const middle = innerHeight / 2 + padding;
+
+  const rectTop = document.createElementNS(xmlns, 'rect');
+
+  rectTop.setAttribute('x', padding.toString(10));
+  rectTop.setAttribute('y', (padding - 1).toString(10));
+  rectTop.setAttribute('width', innerWidth.toString(10));
+  rectTop.setAttribute('height', lineWidth.toString(10));
+  rectTop.setAttribute('stroke', 'none');
+  rectTop.setAttribute('fill', alphaBaseColor);
+
+  svg.appendChild(rectTop);
+
+  const rectMiddle = document.createElementNS(xmlns, 'rect');
+
+  rectMiddle.setAttribute('x', padding.toString(10));
+  rectMiddle.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+  rectMiddle.setAttribute('width', innerWidth.toString(10));
+  rectMiddle.setAttribute('height', lineWidth.toString(10));
+  rectMiddle.setAttribute('stroke', 'none');
+  rectMiddle.setAttribute('fill', baseColor);
+
+  svg.appendChild(rectMiddle);
+
+  const rectBottom = document.createElementNS(xmlns, 'rect');
+
+  rectBottom.setAttribute('x', padding.toString(10));
+  rectBottom.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  rectBottom.setAttribute('width', innerWidth.toString(10));
+  rectBottom.setAttribute('height', lineWidth.toString(10));
+  rectBottom.setAttribute('stroke', 'none');
+  rectBottom.setAttribute('fill', alphaBaseColor);
+
+  svg.appendChild(rectBottom);
+
+  [' 1.0', ' 0.0', '-1.0'].forEach((text) => {
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = text;
+
+    yText.setAttribute('x', (padding - 16).toString(10));
+
+    switch (text) {
+      case ' 1.0': {
+        yText.setAttribute('y', (padding - 4).toString(10));
+        break;
+      }
+
+      case ' 0.0': {
+        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
+        break;
+      }
+
+      case '-1.0': {
+        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
+        break;
+      }
+    }
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '16px');
+
+    svg.appendChild(yText);
+  });
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  let timerId = null;
+
+  const drawOscillator = () => {
+    const data = new Float32Array(analyser.fftSize);
+
+    analyser.getFloatTimeDomainData(data);
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0, len = data.length; n < len; n++) {
+      const x = (n / len) * innerWidth + padding;
+      const y = (1 - data[n]) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    timerId = window.setTimeout(drawOscillator, 250);
+  };
+
+  let type = 'sine';
+  let frequency = document.getElementById('range-frequency').valueAsNumber;
+  let detune = document.getElementById('range-detune').valueAsNumber;
+
+  let oscillator = null;
+
+  let currentTime = 0;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      oscillator.stop(0);
+      oscillator = null;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+    oscillator.detune.value = detune;
+
+    // OscillatorNode (Input) -> GainNode -> AnalyserNode -> AudioDestinationNode (Output)
+    oscillator.connect(gain);
+    gain.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    buttonElement.textContent = 'stop';
+
+    drawOscillator();
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+    oscillator = null;
+
+    buttonElement.textContent = 'start';
+
+    if (timerId) {
+      window.clearTimeout(timerId);
+      timerId = null;
+    }
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  document.getElementById('form-oscillator-type').addEventListener('change', (event) => {
+    const radios = event.currentTarget.elements['radio-oscillator-type'];
+
+    for (const radio of radios) {
+      if (radio.checked) {
+        type = radio.value;
+
+        if (oscillator) {
+          oscillator.type = type;
+        }
+
+        break;
+      }
+    }
+  });
+
+  document.getElementById('range-gain').addEventListener('input', (event) => {
+    gain.gain.value = event.currentTarget.valueAsNumber;
+  });
+
+  document.getElementById('range-frequency').addEventListener('input', (event) => {
+    frequency = event.currentTarget.valueAsNumber;
+
+    if (oscillator) {
+      oscillator.frequency.value = frequency;
+    }
+  });
+
+  document.getElementById('range-detune').addEventListener('input', (event) => {
+    detune = event.currentTarget.valueAsNumber;
+
+    if (oscillator) {
+      oscillator.detune.value = detune;
+    }
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -361,3 +709,8 @@ createSawtoothFunctionPath(document.getElementById('svg-figure-sawtooth-function
 
 createCoordinateRect(document.getElementById('svg-figure-triangle-function-with-parameters-0.5-4Hz'));
 createTriangleFunctionPath(document.getElementById('svg-figure-triangle-function-with-parameters-0.5-4Hz'));
+
+createFrequencyandPianoFrequency(document.getElementById('svg-figure-frequency-and-piano-frequency'));
+createKeyboards(document.getElementById('svg-figure-12-equal-temperament'));
+
+visualOscillator(document.getElementById('svg-oscillator'));

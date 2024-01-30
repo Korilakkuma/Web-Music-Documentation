@@ -774,6 +774,121 @@ document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apo
             </dd>
           </dl>
         </section>
+        <section id="section-web-audio-api-relation-to-sound">
+          <h3>Web Audio API と音の関係</h3>
+          <p></p>
+          <section id="section-gain-relation-to-sound">
+            <h4>GainNode の gain プロパティと音の大きさ</h4>
+            <p>
+              <code>GainNode</code>の <code>gain</code> プロパティ (<code>AudioParam</code>) を利用することで, 音の大きさを変えることができます.
+              物理的な視点で見ると, 振幅を操作することによって, 音の大きさを変えています.
+            </p>
+            <img src="images/gain-gain.png" alt="GainNode gain" width="1232" height="770" loading="lazy" />
+          </section>
+          <section id="section-frequency-relation-to-sound">
+            <h4>OscillatorNode の frequency プロパティと音の高さ</h4>
+            <p>
+              <code>OscillatorNode</code> の <code>frequency</code> プロパティ (<code>AudioParam</code>) を利用することで, 音の高さを変えることができます.
+              物理的な視点で見ると, 周波数を操作することによって, 音の高さを変更しています.
+            </p>
+            <img src="images/oscillator-frequency.png" alt="OscillatorNode frequency" width="1232" height="770" loading="lazy" />
+            <p>
+              仕様では, <code>frequency</code> プロパティのとりうる値の範囲は, 負のナイキスト周波数からナイキスト周波数までですが (ナイキスト周波数は,
+              <a href="#section-analog-to-digital-conversion-sampling">サンプリング</a>のセクションで解説しています. ナイキスト周波数について理解がなければ,
+              おおよそ, <code>-20 kHz</code> ~ <code>20 kHz</code> と大雑把に把握していただいて問題ないです),
+              音楽アプリケーションなどで出力する音としてはそこまで設定できてもあまり意味はないでしょう. その理由は,
+              <b>人間が聴きとることが可能な音の周波数の範囲は <code>20 Hz</code> ~ <code>20000 Hz</code> (<code>20 kHz</code>) 程度だからです</b>.
+            </p>
+            <p>
+              さらに, <b>音程</b> (音の高さの差) として知覚可能な周波数の上限, 言い換えると, 音楽として有効な音の周波数はもっと低くなります (ピアノ 88
+              鍵の音域を参照してください).
+            </p>
+            <figure>
+              <svg id="svg-figure-frequency-and-piano-frequency" width="1196" height="282" data-highlights="0,87" />
+              <figcaption>ピアノ 88 鍵と周波数</figcaption>
+            </figure>
+          </section>
+          <section id="section-detune-relation-to-sound">
+            <h4>OscillatorNode の detune プロパティと音の高さ</h4>
+            <p>
+              <code>OscillatorNode</code> の <code>detune</code> プロパティ (<code>AudioParam</code>) を利用することでも, 音の高さを変えることができます.
+              物理的な視点も <code>frequency</code> プロパティと同じです. ただし, <code>detune</code> プロパティは, 音楽的な視点で音の高さを変更します.
+              <code>detune</code> プロパティの用途は, (音楽で言う) 半音よりも小さい範囲で音の高さを調整したり,
+              オクターブ違いの音を生成・合成したりするために利用します. この機能によって, きめ細かいサウンド生成が可能になったり,
+              サウンドを合成する場合において厚みをもたせることが可能になったりします. シンセサイザーのファインチューン機能や, エフェクターの 1
+              種であるオクターバーを実現するためにあると言えるでしょう.
+            </p>
+            <img src="images/oscillator-detune.png" alt="OscillatorNode detune" width="1196" height="770" loading="lazy" />
+            <p>
+              <code>frequency</code> プロパティの単位は Hz (ヘルツ) で, 波が 1 sec の間に何回発生するのかを意味していました. 一方で,
+              <code>detune</code> プロパティの単位は <b>cent</b> (セント) です. これは, 音楽の視点から音の高さをとらえた単位で,
+              <b>1 オクターブの音程を 1200 で等分した値</b>です.
+            </p>
+            <p>
+              1 つ高いラとか, 1 つ低いラのことを, 1 オクターブ高いラ, 1 オクターブ低いラと表現することがあります.
+              音楽的な視点でのオクターブはまさにそういう意味です.
+            </p>
+            <p>
+              オクターブを物理的な視点でみると, <b>周波数比が 1 : 2 の関係にある音程</b>を意味しています. 具体的に説明すると, いわゆる普通のラ (A) (ギターの第 5
+              弦の開放弦) の周波数は <code>440 Hz</code> です (キャリブレーションチューニングなどしている場合は別ですが ...). この音を基準に考えると, 1
+              オクターブ高いラの周波数は <code>880 Hz</code> です. 周波数比が, 440 : 880 = 1 : 2 になります.
+            </p>
+            <p>
+              話を cent に戻すと, この 1 : 2 の音程を 1200 で割った値が <code>1 cent</code> というわけです. なぜ, 1200 ?
+              と疑問に思う方もいらっしゃると思いますが, ピアノをされる方は直感で理解できると思います. ピアノをされない方のために, 1
+              オクターブの音程間にピアノの鍵盤がいくつあるか数えてみましょう. 1 オクターブ間であればいいので, 好きな音から始めてください.
+            </p>
+            <figure>
+              <svg id="svg-figure-12-equal-temperament" width="1196" height="162" data-highlights="39,40,41,42,43,44,45,46,47,48,49,50" />
+              <figcaption>1 オクターブの鍵盤数</figcaption>
+            </figure>
+            <p>
+              数えてみると, <b>12</b> 個の鍵盤があります. 1 オクターブ間の音程を 1200 で割った (1200 分割した) 値が <code>1 cent</code> でしたので, 1
+              オクターブ間の音程を 12 分割すると, <code>100 cent</code> ということになります. つまり, <code>100 cent</code> 値が高くなると,
+              右隣の鍵盤の音の高さに変わるということです.
+            </p>
+            <p>
+              例として, <code>440 Hz</code> のラ (A) の音を <code>100 cent</code> 高くすると, 右隣の鍵盤の ラ# (A#) に, さらに <code>100 cent</code> 高くすると,
+              シ (B) になります. このように, <code>-100 cent</code> ~ <code>100 cent</code> の間の値を設定することによって,
+              半音以下の音の高さの調整が可能になるわけです. また, <code>1200 cent</code>, あるいは, <code>-1200 cent</code> と <code>1200 cent</code>
+              ごとに値を設定することにより, オクターブ単位で調整することも可能です.
+            </p>
+            <p>
+              音楽では, 1 オクターブの音程を 12 等分した周波数比の関係を 12 平均音律と呼びます. 12 平均音律においては, 隣り合う音, つまり, 半音の周波数比は,
+              およそ, 1 : 1.059463 (正確には, 1 : <span class="math-inline">$2^{\left(1 / 12\right)}$</span>) で, これが <code>100 cent</code> となるわけです.
+            </p>
+          </section>
+          <section id="section-type-relation-to-sound">
+            <h4>OscillatorNode の type プロパティと音色</h4>
+            <p>
+              <code>OscillatorNode</code> の <code>type</code> プロパティ (<code>OscillatorType</code>) の値を利用することで, 正弦波だけでなく,
+              矩形波やノコギリ波, 三角波を生成することができます. それによって, 音色を変化させることが可能です. ちなみに,
+              波形の概形は<b>エンベロープ</b>と呼ばれます. <code>OscillatorNode</code> のみで制御可能な範囲では, この
+              <code>type</code> プロパティに応じたエンベロープが音色に大きく影響しています.
+            </p>
+          </section>
+          <p>
+            このセクションのまとめとして, 基本波形, 振幅, 周波数を変化させたときの波形を視覚化するデモとなります. 波形の変化とともに, 知覚する音 (音の 3 要素)
+            の変化を体感してみてください.
+          </p>
+          <div class="app-container">
+            <svg id="svg-oscillator" class="svg-oscillator" width="720" height="240"></svg>
+            <div>
+              <button type="button" id="button-oscillator" class="button-oscillator">start</button>
+              <form id="form-oscillator-type" class="form-oscillator-type">
+                <label><span>sine</span><input type="radio" name="radio-oscillator-type" value="sine" checked /></label>
+                <label><span>square</span><input type="radio" name="radio-oscillator-type" value="square" /></label>
+                <label><span>sawtooth</span><input type="radio" name="radio-oscillator-type" value="sawtooth" /></label>
+                <label><span>triangle</span><input type="radio" name="radio-oscillator-type" value="triangle" /></label>
+              </form>
+              <div class="ranges-oscillator">
+                <label><span>gain</span><input type="range" id="range-gain" value="1" min="0" max="1" step="0.05" /></label>
+                <label><span>frequency</span><input type="range" id="range-frequency" value="440" min="27.5" max="8000" step="0.5" /></label>
+                <label><span>detune</span><input type="range" id="range-detune" value="0" min="-600" max="600" step="1" /></label>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>

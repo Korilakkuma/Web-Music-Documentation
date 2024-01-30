@@ -161,3 +161,41 @@ figcaption {
 .copy-to-clipboard-button {
   cursor: pointer;
 }
+
+.app-container {
+  overflow-x: auto;
+}
+
+.button-oscillator {
+  cursor: pointer;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.form-oscillator-type {
+  display: flex;
+  gap: 16px;
+  margin: 8px 0;
+}
+
+.form-oscillator-type > label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.form-oscillator-type > label > input[type="radio"] {
+  cursor: pointer;
+}
+
+.ranges-oscillator {
+  display: flex;
+  gap: 12px;
+}
+
+.ranges-oscillator > label {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  cursor: pointer;
+}
