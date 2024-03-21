@@ -166,6 +166,10 @@ figcaption {
   overflow-x: auto;
 }
 
+.math-block {
+  overflow: auto hidden;
+}
+
 .button-oscillator {
   cursor: pointer;
   user-select: none;
