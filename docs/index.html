@@ -890,6 +890,199 @@ document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apo
           </div>
         </section>
       </section>
+      <section id="section-oscillator-node">
+        <h2>OscillatorNode</h2>
+        <p>
+          Web Audio API のアーキテクチャを解説するうえで, <code>OscillatorNode</code> は少し説明しましたが, このセクションでは, Web Audio API
+          におけるサウンド生成・合成のベースとなる, <code>OscillatorNode</code> についてその詳細を解説します.
+        </p>
+        <p>
+          シンセサイザーの基本波形の生成・合成, モジュレーション系エフェクターで必須となる LFO (Low-Frequency Oscillator) など, Web Audio API
+          において用途の広い, コアとなる <code>AudioNode</code> です. LFO に関しては, エフェクターのセクションで解説するので,
+          このセクションでは基本波形の生成・合成に関して解説します.
+        </p>
+        <section id="section-oscillator-node-type">
+          <h3>type プロパティ (OscillatorOptions)</h3>
+          <p>
+            ただし, <code>&apos;custom&apos;</code> のみは特殊で, 直接値を設定するとエラーが発生します. これは, <code>OscillatorNode</code> の
+            <code>setPeriodicWave</code> メソッドによって, 自動的に <code>&apos;custom&apos;</code> に設定されます. また, その引数として,
+            <code>AudioContext</code> の <code>createPeriodicWave</code> メソッドで波形テーブルを生成する必要があります. 波形テーブルの生成は,
+            スペクトルや倍音などオーディオ信号処理の知識が必要になるので, 別のセクションで解説します.
+          </p>
+        </section>
+        <section id="section-oscillator-node-frequency-and-detune">
+          <h3>frequency プロパティ (AudioParam) / detune プロパティ (AudioParam)</h3>
+          <p>
+            周波数を制御して音の高さを変更します. <code>frequency プロパティ</code> と <code>detune</code> プロパティを合わせて算出される周波数 (<span
+              class="math-inline"
+              >$f_{\mathrm{computed}}$</span
+            >) は, 仕様では以下のように決定されます.
+          </p>
+          <div class="math-block">$f_{\mathrm{computed}} = \mathrm{frequency} \cdot \mathrm{pow}\left(2, \left(\mathrm{detune} / 1200 \right)\right)$</div>
+          <p>
+            この数式は, <code>frequency</code> は物理的な視点 (Hz) で周波数を制御, <code>detune</code> は音楽的な視点 (cent)
+            で周波数を制御することを意味しています.
+          </p>
+        </section>
+        <section id="section-oscillator-node-start-and-stop">
+          <h3>start メソッド / stop メソッド</h3>
+          <p>
+            <code>OscillatorNode</code> のプロパティを設定して音の高さや音色を制御することはそれほど難しくないかと思います. また, 発音し続けるか, 1 度だけ発音
+            (<code>start</code> メソッド)・停止 (<code>stop</code> メソッド) する場合も直感的に実装可能です. おそらく, 多くの場合, ハマってしまうのが,
+            <code>OscillatorNode</code> の発音と停止を繰り返す場合です.
+          </p>
+          <p>
+            <code>OscillatorNode</code> インスタンスは, 言わば使い捨てなので, 一度発音・停止した <code>OscillatorNode</code> インスタンスは再度, 発音 (停止)
+            することはできません. 例えば, ユーザーインタラクティブな操作で発音・停止を繰り返すような場合, <code>OscillatorNode</code> インスタンスを再生成して,
+            再度 <code>AudioDestinationNode</code> に接続して, <code>start</code> メソッド (<code>stop</code> メソッド) を実行する必要があります.
+          </p>
+          <p>例えば, 以下のコードはボタンをクリックするたびに, 発音・停止することを期待していますが, 2 回目のクリック以降は, 発音されずエラーが発生します.</p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;</code></pre>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+const oscillator = new OscillatorNode(context);
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+  // Start immediately
+  // But, cannot start since the second times ...
+  oscillator.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+  // Stop immediately
+  oscillator.stop(0);
+
+  buttonElement.textContent = &apos;start&apos;;
+});</code></pre>
+          <p>
+            期待する動作, つまり, 発音・停止を繰り返すするには, 一度 <code>start</code>・<code>stop</code>した
+            <code>OscillatorNode</code> インスタンスは破棄して, 再度 <code>OscillatorNode</code> インスタンスを生成します.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+let oscillator = null;
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+  if (oscillator !== null) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context);
+
+  // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(context.destination);
+
+  // Start immediately
+  oscillator.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+  if (oscillator === null) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+
+  // GC (Garbage Collection)
+  oscillator = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});</code></pre>
+          <p>このような仕様なので, <code>start</code> メソッドを続けて呼んだり, <code>stop</code> メソッドを続けて呼んだりしても, エラーが発生します.</p>
+          <p>
+            <b><code>start</code> メソッドと <code>stop</code> メソッドは一対</b>という仕様は, さまざまなプラットフォームのオーディオ API のなかでも Web Audio
+            API 独自の仕様で, ハマりやすい仕様なので注意してください (そもそも, Web ではないプラットフォームのオーディオ API はここまで抽象化されている API
+            すら少ないと思います).
+          </p>
+        </section>
+        <section id="section-oscillator-node-synthesize">
+          <h3>基本波形の合成</h3>
+          <p>
+            基本波形の合成, すなわち, Web Audio API における <code>OscillatorNode</code> の合成は直感的で, 必要なだけ
+            <code>OscillatorNode</code> インスタンスを生成して, (最後の) 接続先として <code>AudioDestinationNode</code> を指定するだけです.
+          </p>
+          <p>
+            ただし, そのまま合成 (接続) してしまうと, 振幅が大きくなりすぎて, 音割れが発生してしまうので, <code>GainNode</code> を接続して振幅を調整しています
+            (逆に, この音割れ (クリッピング) をエフェクトとして使うのが歪み系エフェクターです). もしくは,
+            <code>DynamicsCompressorNode</code> を接続して振幅を制御して, 意図しない音割れを防ぐこともできます (ただし, 厳密には,
+            コンプレッサーは振幅の小さい音も相対的に大きくするので, 物理的にはまったく同じではありません).
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+// C major chord
+let oscillatorC = null;
+let oscillatorE = null;
+let oscillatorG = null;
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+  if ((oscillatorC !== null) || (oscillatorE !== null) || (oscillatorG !== null)) {
+    return;
+  }
+
+  oscillatorC = new OscillatorNode(context, { frequency: 261.6255653005991 });
+  oscillatorE = new OscillatorNode(context, { frequency: 329.6275569128705 });
+  oscillatorG = new OscillatorNode(context, { frequency: 391.9954359817500 });
+
+  const gain = new GainNode(context, { gain: 0.25 });
+
+  // OscillatorNode (Input) -&gt; GainNode -&gt; AudioDestinationNode (Output)
+  oscillatorC.connect(gain);
+  oscillatorE.connect(gain);
+  oscillatorG.connect(gain);
+  gain.connect(context.destination);
+
+  // Start immediately
+  oscillatorC.start(0);
+  oscillatorE.start(0);
+  oscillatorG.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+  if ((oscillatorC === null) || (oscillatorE === null) || (oscillatorG === null)) {
+    return;
+  }
+
+  // Stop immediately
+  oscillatorC.stop(0);
+  oscillatorE.stop(0);
+  oscillatorG.stop(0);
+
+  // GC (Garbage Collection)
+  oscillatorC = null;
+  oscillatorE = null;
+  oscillatorG = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});</code></pre>
+        </section>
+      </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/line-numbers/prism-line-numbers.min.js"></script>
