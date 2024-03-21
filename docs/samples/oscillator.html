@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>OscillatorNode | AudioParam</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      main {
+        margin: 24px;
+        font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+        font-size: 16px;
+      }
+
+      dl {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      dt {
+        display: flex;
+        gap: 4px;
+      }
+
+      #select-type {
+        cursor: pointer;
+        padding: 4px 8px;
+        font-size: 18px;
+      }
+
+      input[type="range"] {
+        cursor: ew-resize;
+        width: 100%;
+      }
+
+      #print-frequency-value,
+      #print-detune-value {
+        min-width: 60px;
+        text-align: right;
+      }
+
+      #button-oscillator {
+        cursor: pointer;
+        padding: 8px 16px;
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <dl>
+        <dt><label for="select-type">type</label></dt>
+        <dd>
+          <select id="select-type">
+            <option value="sine" selected>sine</option>
+            <option value="square">square</option>
+            <option value="sawtooth">sawtooth</option>
+            <option value="triangle">triangle</option>
+          </select>
+        </dd>
+        <dt><label for="range-frequency">frequency</label><span id="print-frequency-value">440</span><span>Hz</span></dt>
+        <dd><input type="range" id="range-frequency" value="440" min="20" max="20000" step="0.5" /></dd>
+        <dt><label for="range-detune">detune</label><span id="print-detune-value">0</span><span>cent</span></dt>
+        <dd><input type="range" id="range-detune" value="0" min="-1200" max="1200" step="1" /></dd>
+      </dl>
+      <button id="button-oscillator" type="button">start</button>
+    </main>
+    <script>
+      const context = new AudioContext();
+
+      let oscillator = null;
+
+      let type = "sine";
+      let frequency = 440;
+      let detune = 0;
+
+      document.addEventListener("click", async () => {
+        if (context.state !== "running") {
+          await context.resume();
+        }
+      });
+
+      document.getElementById("button-oscillator").addEventListener("click", (event) => {
+        if (oscillator === null) {
+          oscillator = new OscillatorNode(context);
+
+          oscillator.type = type;
+          oscillator.frequency.value = frequency;
+          oscillator.detune.value = detune;
+
+          // OscillatorNode (Input) -> AudioDestinationNode (Output)
+          oscillator.connect(context.destination);
+
+          // Start immediately
+          oscillator.start(0);
+
+          event.currentTarget.textContent = "stop";
+        } else {
+          // Stop immediateloooy
+          oscillator.stop(0);
+
+          oscillator = null;
+
+          event.currentTarget.textContent = "start";
+        }
+      });
+
+      document.getElementById("select-type").addEventListener("change", (event) => {
+        type = event.currentTarget.value;
+
+        if (oscillator) {
+          oscillator.type = type;
+        }
+      });
+
+      document.getElementById("range-frequency").addEventListener("input", (event) => {
+        frequency = event.currentTarget.valueAsNumber;
+
+        document.getElementById("print-frequency-value").textContent = frequency;
+
+        if (oscillator) {
+          oscillator.frequency.value = frequency;
+        }
+      });
+
+      document.getElementById("range-detune").addEventListener("input", (event) => {
+        detune = event.currentTarget.valueAsNumber;
+
+        document.getElementById("print-detune-value").textContent = detune;
+
+        if (oscillator) {
+          oscillator.detune.value = detune;
+        }
+      });
+    </script>
+  </body>
+</html>

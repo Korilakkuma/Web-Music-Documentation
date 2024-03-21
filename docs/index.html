@@ -806,6 +806,35 @@ document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apo
           </section>
         </section>
       </section>
+      <section id="section-oscillator-node">
+        <h2>OscillatorNode</h2>
+        <p>
+          Web Audio API のアーキテクチャを解説するうえで, <code>OscillatorNode</code> は少し説明しましたが, このセクションでは, Web Audio API
+          におけるサウンド生成・合成のベースとなる, <code>OscillatorNode</code> についてその詳細を解説します.
+        </p>
+        <section id="section-oscillator-node-type">
+          <h3>type プロパティ (OscillatorOptions)</h3>
+          <p></p>
+          <p>
+            ただし, <code>&apos;custom&apos;</code> のみは特殊で, 直接値を設定するとエラーが発生します. これは, <code>OscillatorNode</code> の
+            <code>setPeriodicWave</code> メソッドによって, 自動的に <code>&apos;custom&apos;</code> に設定されます. また, その引数として,
+            <code>AudioContext</code> の <code>createPeriodicWave</code> メソッドで波形テーブルを生成する必要があります. 波形テーブルの生成は,
+            スペクトルや倍音などオーディオ信号処理の知識が必要になるので, 別のセクションで解説します.
+          </p>
+        </section>
+        <section id="section-oscillator-node-frequency">
+          <h3>frequency プロパティ (AudioParam)</h3>
+          <p></p>
+        </section>
+        <section id="section-oscillator-node-frequency">
+          <h3>detune プロパティ (AudioParam)</h3>
+          <p></p>
+        </section>
+        <section id="section-oscillator-node-frequency">
+          <h3>detune プロパティ (AudioParam)</h3>
+          <p></p>
+        </section>
+      </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/line-numbers/prism-line-numbers.min.js"></script>
