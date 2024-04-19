@@ -73,8 +73,7 @@
             href="https://egonelbre.com/project/jsfx/"
             target="_blank"
             rel="noopener noreferrer"
-            >jsfx</a
-          >
+            >jsfx</a>
           のようにハッキーな実装をすることでエフェクトをかけるぐらいは可能ですが, 仕様のユースケースとして想定されている使い方ではありません),
           リアルタイム性やインタラクティブ性も考慮された API ではないからです (厳密には, 考慮された経緯もあって,
           <code>Audio</code> コンストラクタが定義されています). また, Web Music として, Web MIDI API や WebRTC を使う場合, 実際のオーディオ処理は Web Audio API
@@ -167,8 +166,7 @@
             の仕様に準拠している <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer">Google Chrome</a> もしくは
             <a href="https://www.mozilla.org/ja/firefox/" target="_blank" rel="noopener noreferrer">Mozilla Firefox</a> (いずれも最新バージョン) を推奨します
             (Google Chrome の場合, より高度な
-            <a href="https://web.dev/articles/profiling-web-audio-apps-in-chrome" target="_blank" rel="noopener noreferrer">Web Audio API 専用のプロファイラ</a
-            >があるのでおすすめです).
+            <a href="https://web.dev/articles/profiling-web-audio-apps-in-chrome" target="_blank" rel="noopener noreferrer">Web Audio API 専用のプロファイラ</a>があるのでおすすめです).
           </p>
         </section>
         <section id="section-prerequisite">
@@ -915,8 +913,7 @@ document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apo
           <p>
             周波数を制御して音の高さを変更します. <code>frequency プロパティ</code> と <code>detune</code> プロパティを合わせて算出される周波数 (<span
               class="math-inline"
-              >$f_{\mathrm{computed}}$</span
-            >) は, 仕様では以下のように決定されます.
+              >$f_{\mathrm{computed}}$</span>) は, 仕様では以下のように決定されます.
           </p>
           <div class="math-block">$f_{\mathrm{computed}} = \mathrm{frequency} \cdot \mathrm{pow}\left(2, \left(\mathrm{detune} / 1200 \right)\right)$</div>
           <p>
@@ -1339,8 +1336,7 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
             <code>AudioBufferSourceNode</code> インスタンスは, 言わば使い捨てなので, 一度発音・停止した <code>AudioBufferSourceNode</code> インスタンスは再度,
             発音 (停止) することはできません. 例えば, ユーザーインタラクティブな操作で発音・停止を繰り返すような場合,
             <code>AudioBufferSourceNode</code> インスタンスを再生成して, 再度 <code>AudioDestinationNode</code> に接続して, <code>start</code> メソッド (<code
-              >stop</code
-            >
+              >stop</code>
             メソッド) を実行する必要があります. この仕様は, <code>OscillatorNode</code> とまったく同じです (ただし,
             <code>AudioBuffer</code> インスタンスは使い回すことが可能です).
           </p>
