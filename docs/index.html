@@ -1547,6 +1547,310 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
           </p>
         </section>
       </section>
+      <section id="section-media-element-audio-source-node">
+        <h2>MediaElementAudioSourceNode</h2>
+        <p>
+          Web Audio API において, 楽曲データに対してなんらかのオーディオ信号処理を適用したい場合に利用するのが
+          <b><code>MediaElementAudioSourceNode</code></b> です. 具体的には, <code>HTMLMediaElement</code> (<code>HTMLAudioElement</code> や
+          <code>HTMLVideoElement</code>) のオーディオデータに対するオーディオ信号処理を適用する場合に利用します.
+        </p>
+        <img src="images/media-element-audio-source-node.png" alt="MediaElementAudioSourceNode" width="1232" height="770" loading="lazy" />
+        <p>
+          <code>HTMLMediaElement</code> を音源にするので, <code>MediaElementAudioSourceNode</code> コンストラクタの第 2 引数 (<b
+            ><code>MediaElementAudioSourceOptions</code></b>
+          型) の <b><code>mediaElement</code></b> プロパティ (もしくは, ファクトリメソッドの <code>createMediaElementSource</code> の引数) に,
+          <code>HTMLMediaElement</code> を指定します.
+        </p>
+        <p>
+          また, コンストラクタやファクトリメソッドに指定する <code>HTMLMediaElement</code> が HTML パース時点で,
+          <code>src</code> 属性に指定しているメディアファイルが同一オリジンでない場合, クロスオリジン制限にかかってしまうので,
+          <b><code>crossorigin</code> 属性に <code>&apos;anonymous&apos;</code> を設定</b>しておく必要あります. この属性と値の設定によって,
+          <b>オリジン間リソース共有</b> (<b>CORS</b>: <b>Cross-Origin Resources Sharing</b>) が可能となります (<b
+            ><code>HTMLMediaElement</code> のみで再生する場合は不要です</b>).
+        </p>
+        <pre
+          data-prismjs-copy="クリップボードにコピー"
+          data-prismjs-copy-success="コピーしました"
+        ><code class="language-html line-numbers">&lt;!-- シューベルト 交響曲 第8番 ロ短調 D759 「未完成」 第1楽章 (余談ですが, X JAPAN の「ART OF LIFE」のモチーフになっている楽曲です) --&gt;
+&lt;audio src=&quot;https://korilakkuma.github.io/Web-Music-Documentation/assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&quot; crossorigin="anonymous" controls /&gt;</code></pre>
+        <pre
+          data-prismjs-copy="クリップボードにコピー"
+          data-prismjs-copy-success="コピーしました"
+        ><code class="language-js line-numbers">const context = new AudioContext();
+
+const audioElement = document.querySelector(&apos;audio&apos;);
+
+const source = new MediaElementAudioSourceNode(context, { mediaElement: audioElement });
+
+// If use `createMediaElementSource`
+// const source = context.createMediaElementSource(audioElement);
+
+// MediaElementAudioSourceNode (Input) -&gt; AudioDestinationNode (Output)
+source.connect(context.destination);</code></pre>
+        <p>
+          <code>MediaElementAudioSourceNode</code> インスタンス生成には 2 点注意すべき点があります. 上記のサンプルコードのように,
+          <code>HTMLMediaElement</code> に HTML パース時点で, <code>src</code> 属性にメディアファイルが指定されている場合は, 特に問題ありませんが,
+          インタラクティブに, 例えば, ユーザーのファイルシステムからメディアファイルを選択するような場合,
+          <b><code>HTMLMediaElement</code> の <code>loadstart</code> イベント発火以降にインスタンスを生成する必要があります</b> (逆に, HTML パース時点で
+          <code>src</code> 属性にメディアファイルを指定している場合, <code>loadstart</code> イベントは発火しないので注意が必要です).
+          <code>loadstart</code> イベント以降に発火するイベントであればよいので, <code>canplaythrough</code> イベントハンドラなどで
+          <code>MediaElementAudioSourceNode</code> インスタンスを生成してもよいでしょう.
+        </p>
+        <pre
+          data-prismjs-copy="クリップボードにコピー"
+          data-prismjs-copy-success="コピーしました"
+        ><code class="language-html line-numbers">&lt;input type=&quot;file&quot; /&gt;
+&lt;audio controls /&gt;</code></pre>
+        <pre
+          data-prismjs-copy="クリップボードにコピー"
+          data-prismjs-copy-success="コピーしました"
+        ><code class="language-js line-numbers">const context = new AudioContext();
+
+const inputElement = document.querySelector(&apos;input[type=&quot;file&quot;]&apos;);
+const audioElement = document.querySelector(&apos;audio&apos;);
+
+inputElement.addEventListener(&apos;change&apos;, (event) =&gt; {
+  const file = event.currentTarget.files[0];
+
+  audioElement.src = window.URL.createObjectURL(file);
+});
+
+audioElement.addEventListener(&apos;loadstart&apos;, () =&gt; {
+  const source = new MediaElementAudioSourceNode(context, { mediaElement: audioElement });
+
+  // MediaElementAudioSourceNode (Input) -&gt; AudioDestinationNode (Output)
+  source.connect(context.destination);
+});</code></pre>
+        <p>
+          もう 1 点は, 1 つの <code>HTMLMediaElement</code> に対して 1 つの <code>MediaElementAudioSourceNode</code> インスタンスが対応しているという点です.
+          例えば, <code>HTMLMediaElement</code> の <code>src</code> 属性のみを変更する場合,
+          <code>MediaElementAudioSourceNode</code> インスタンスを再度生成するとエラーが発生します (逆に, 別のオブジェクトとなる
+          <code>HTMLMediaElement</code> を指定する場合, <code>MediaElementAudioSourceNode</code> インスタンスを生成する必要があります).
+        </p>
+        <p>
+          したがって, 先ほどのサンプルコードだと, 2 回以上, ファイルを選択してしまうと, 同じ <code>HTMLAudioElement</code> に対して, 複数回
+          <code>MediaElementAudioSourceNode</code> インスタンスが生成されてエラーが発生してしまうので, 以下のように変更します.
+        </p>
+        <p>
+          また, <code>File API</code> から選択した楽曲データを, <code>HTMLMediaElement</code> の <code>src</code> 属性に指定する場合, Object URL を利用します
+          (<code>FileReader API</code> を使って Data URL を利用しても可能ですが, 実装が増えるだけなので, なんらかの理由がなければ
+          <code>createObjectURL</code> を利用して Object URL を設定するのがよいでしょう).
+        </p>
+        <pre
+          data-prismjs-copy="クリップボードにコピー"
+          data-prismjs-copy-success="コピーしました"
+        ><code class="language-html line-numbers">&lt;input type=&quot;file&quot; /&gt;
+&lt;audio controls /&gt;</code></pre>
+        <pre
+          data-prismjs-copy="クリップボードにコピー"
+          data-prismjs-copy-success="コピーしました"
+        ><code class="language-js line-numbers">const context = new AudioContext();
+
+const inputElement = document.querySelector(&apos;input[type=&quot;file&quot;]&apos;);
+const audioElement = document.querySelector(&apos;audio&apos;);
+
+let source = null;
+
+inputElement.addEventListener(&apos;change&apos;, (event) =&gt; {
+  const file = event.currentTarget.files[0];
+
+  audioElement.src = window.URL.createObjectURL(file);
+
+  // If use Data URL,
+  //
+  // const reader = new FileReader();
+  //
+  // reader.onload = () =&gt; {
+  //   audioElement.src = reader.result;
+  // };
+  //
+  // reader.readAsDataURL(file);
+});
+
+audioElement.addEventListener(&apos;loadstart&apos;, () =&gt; {
+  if (source === null) {
+    source = new MediaElementAudioSourceNode(context, { mediaElement: audioElement });
+  }
+
+  // MediaElementAudioSourceNode (Input) -&gt; AudioDestinationNode (Output)
+  source.connect(context.destination);
+});</code></pre>
+        <section id="section-media-element-audio-source-node-start-and-stop">
+          <h3>再生と停止</h3>
+          <p>
+            <code>MediaElementAudioSourceNode</code> に楽曲データを再生・停止するためのメソッドはありません. 再生や一時停止は, コンストラクタの引数に指定した
+            <code>HTMLMediaElement</code> の <code>play</code> / <code>pause</code> メソッドを実行します. したがって, <code>OscillatorNode</code> や
+            <code>AudioBufferSourceNode</code> のように使い捨てのノードではない, つまり, インスタンスを再度生成して
+            <code>AudioDestinationNode</code> に再度接続する必要もないので, この点は直感的な仕様と言えます.
+          </p>
+          <p>
+            あとは, <code>AudioDestinationNode</code> に接続すれば, 再生・停止することは簡単ですが, これでは
+            <code>HTMLMediaElement</code> をそのまま利用するほうが合理的なので, 簡易例として, オーディオ信号処理を適用していることがわかるように,
+            <code>BiquadFilterNode</code> を利用して Low-Pass Filter (低域通過フィルタ) を使ったサンプルコードです. カットオフ周波数を変更すると,
+            音の輪郭が変わることを確認してみてください (<code>BiquadFilterNode</code> に関しては,
+            <a href="#section-effectors-filter-biquad-filter-node">フィルタのセクション</a>で詳細を解説します).
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-html line-numbers">&lt;label for=&quot;range-cutoff&quot;&gt;cutoff&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-cutoff&quot; value=&quot;4000&quot; min=&quot;350&quot; max=&quot;8000&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-cutoff-value&quot;&gt;4000 Hz&lt;/span&gt;
+&lt;input type=&quot;file&quot; /&gt;
+&lt;audio controls /&gt;</code></pre>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const inputElement = document.querySelector(&apos;input[type=&quot;file&quot;]&apos;);
+const audioElement = document.querySelector(&apos;audio&apos;);
+
+const inputCutoffElement = document.getElementById(&apos;range-cutoff&apos;);
+const spanElement        = document.getElementById(&apos;print-cutoff-value&apos;);
+
+let source = null;
+
+const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 4000 });
+
+inputElement.addEventListener(&apos;change&apos;, (event) =&gt; {
+  const file = event.currentTarget.files[0];
+
+  audioElement.src = window.URL.createObjectURL(file);
+
+  // If use Data URL,
+  //
+  // const reader = new FileReader();
+  //
+  // reader.onload = () =&gt; {
+  //   audioElement.src = reader.result;
+  // };
+  //
+  // reader.readAsDataURL(file);
+});
+
+inputCutoffElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  lowpass.frequency.value = event.currentTarget.valueAsNumber;
+
+  spanElement.textContent = `${lowpass.frequency.value} Hz`;
+});
+
+// UI (by `controls` attribute) plays and pauses media
+audioElement.addEventListener(&apos;loadstart&apos;, () =&gt; {
+  if (source === null) {
+    source = new MediaElementAudioSourceNode(context, { mediaElement: audioElement });
+  }
+
+  // MediaElementAudioSourceNode (Input) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; AudioDestinationNode (Output)
+  source.connect(lowpass);
+  lowpass.connect(context.destination);
+});</code></pre>
+        </section>
+        <section id="section-html-media-element-and-media-element-audio-source-node">
+          <h3>HTMLMediaElement と MediaElementAudioSourceNode</h3>
+          <p>
+            すでにサンプルコードを実行して, お気づきになったかもしれませんが,
+            <code>HTMLMediaElement</code> のプロパティやイベントハンドラはすべて利用することが可能です. <code>volume</code> や <code>muted</code>,
+            <code>playbackRate</code> は再生する楽曲データそのものに影響します. <code>autoplay</code> や <code>loop</code> は再生における UX に影響します. また,
+            実際のプロダクトでは, <code>loadedmetadata</code> イベント, <code>canplaythrough</code>イベント, <code>timeupdate</code> イベント,
+            <code>ended</code> イベントなどで, UI を更新するイベントハンドラを実行することも多いでしょう. このドキュメントですべてを解説することはできないので,
+            <a href="https://html.spec.whatwg.org/multipage/media.html" target="_blank" rel="noopener noreferrer">HTMLMediaElement</a>
+            の仕様などを参考にしてください.
+          </p>
+          <p>
+            よくある実装として, <code>loadedmetadata</code> イベントで <code>duration</code> プロパティ (トータルの再生時間秒数) を取得,
+            <code>timeupdate</code> イベントで <code>currentTime</code> プロパティ (現在の再生位置) を更新,
+            <code>ended</code> イベントで初期表示に戻すというのは Web Audio API に直接関係はありませんが, メディアデータをあつかう Web
+            アプリケーションでは必須になるような実装なので理解しておいて損はないでしょう. また, <code>MediaElementAudioSourceNode</code> の解説に着目するために
+            <code>HTMLMediaElement</code> の <code>controls</code> 属性での UI で再生・一時停止を実装していましたが,
+            再生・停止ボタンも実装したサンプルコードです. コードをご覧になると理解できるかもしれませんが, Web Audio API
+            のコードは変更されていないことにも着目してみてください.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;play&lt;/button&gt;
+&lt;span id=&quot;print-current-time&quot;&gt;00 : 00&lt;/span&gt; / &lt;span id=&quot;print-duration&quot;&gt;00 : 00&lt;/span&gt;
+&lt;input type=&quot;file&quot; /&gt;
+&lt;label for=&quot;range-cutoff&quot;&gt;cutoff&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-cutoff&quot; value=&quot;4000&quot; min=&quot;350&quot; max=&quot;8000&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-cutoff-value&quot;&gt;4000 Hz&lt;/span&gt;
+&lt;audio /&gt;</code></pre>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const inputElement  = document.querySelector(&apos;input[type=&quot;file&quot;]&apos;);
+const audioElement  = document.querySelector(&apos;audio&apos;);
+
+const spanCurrentTimeElement = document.getElementById(&apos;print-current-time&apos;);
+const spanDurationElement    = document.getElementById(&apos;print-duration&apos;);
+const inputCutoffElement     = document.getElementById(&apos;range-cutoff&apos;);
+const spanCutoffElement      = document.getElementById(&apos;print-cutoff-value&apos;);
+
+let source = null;
+
+const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 4000 });
+
+inputElement.addEventListener(&apos;change&apos;, (event) =&gt; {
+  const file = event.currentTarget.files[0];
+
+  audioElement.src = window.URL.createObjectURL(file);
+
+  // If use Data URL,
+  //
+  // const reader = new FileReader();
+  //
+  // reader.onload = () =&gt; {
+  //   audioElement.src = reader.result;
+  // };
+  //
+  // reader.readAsDataURL(file);
+});
+
+inputCutoffElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  lowpass.frequency.value = event.currentTarget.valueAsNumber;
+
+  spanCutoffElement.textContent = `${lowpass.frequency.value} Hz`;
+});
+
+audioElement.addEventListener(&apos;loadstart&apos;, () =&gt; {
+  if (source === null) {
+    source = new MediaElementAudioSourceNode(context, { mediaElement: audioElement });
+  }
+
+  // MediaElementAudioSourceNode (Input) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; AudioDestinationNode (Output)
+  source.connect(lowpass);
+  lowpass.connect(context.destination);
+});
+
+audioElement.addEventListener(&apos;loadedmetadata&apos;, () =&gt; {
+  spanDurationElement.textContent = `${Math.trunc(audioElement.duration / 60).toString(10).slice(0, 2).padStart(2, &apos;0&apos;)} : ${(Math.trunc(audioElement.duration) % 60).toString(10).slice(0, 2).padStart(2, &apos;0&apos;)}`;
+});
+
+audioElement.addEventListener(&apos;timeupdate&apos;, () =&gt; {
+  spanCurrentTimeElement.textContent = `${Math.trunc(audioElement.currentTime / 60).toString(10).slice(0, 2).padStart(2, &apos;0&apos;)} : ${(Math.trunc(audioElement.currentTime) % 60).toString(10).slice(0, 2).padStart(2, &apos;0&apos;)}`;
+});
+
+audioElement.addEventListener(&apos;ended&apos;, () =&gt; {
+  spanCurrentTimeElement.textContent = &apos;00 : 00&apos;;
+});
+
+buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
+  if (audioElement.paused) {
+    await audioElement.play();
+
+    buttonElement.textContent = &apos;pause&apos;;
+  } else {
+    audioElement.pause();
+
+    buttonElement.textContent = &apos;play&apos;;
+  }
+});</code></pre>
+        </section>
+      </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/line-numbers/prism-line-numbers.min.js"></script>
