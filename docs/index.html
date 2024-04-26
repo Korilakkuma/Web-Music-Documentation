@@ -1841,6 +1841,27 @@ buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
 });</code></pre>
         </section>
       </section>
+      <section id="section-scheduling">
+        <h2>スケジューリング</h2>
+        <section id="section-audio-context-current-time">
+          <h3>AudioContext の currentTime プロパティ</h3>
+          <p>
+            Web Audio API におけるスケジューリング (<code>OscillatorNode</code> や <code>AudioBufferSourceNode</code> の <code>start</code> /
+            <code>stop</code> メソッドのスケジューリング, <code>AudioParam</code> のスケジューリング) にはおいて, 基本となる時間が
+            <b><code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティ</b>です. このプロパティは,
+            <b><code>AudioContext</code> インスタンスが生成されてからの経過時間を秒単位で表現します</b> (したがって, 参照するだけの
+            <code>readonly</code> プロパティです). <code>OscillatorNode</code> や <code>AudioBufferSourceNode</code> を即時に発音・停止するために,
+            <code>start</code> / <code>stop</code> メソッドの第 1 引数に <code>0</code> を指定していましたが, 実は, 即時に停止するであれば
+            <code>AudioContext</code> インスタンスの <code>currentTime</code> を指定することでも可能です (即時に発音・停止するのは頻繁にあることなので,
+            デフォルト値 <code>0</code> で即時に発音・停止するように仕様定義されています). つまり, <code>AudioContext</code> インスタンスの
+            <code>currentTime</code> プロパティを基準に, 未来の時間を指定すれば (加算すれば), スケジューリングが可能になるということです.
+          </p>
+          <p>
+            仕様上の詳細を解説をすると, <code>OscillatorNode</code> や <code>AudioBufferSourceNode</code> は <code>AudioNode</code> クラスを継承した
+            <code>AudioScheduledSourceNode</code> クラスを継承しており, <code>start</code> / <code>stop</code> メソッドはこのクラスに定義されているメソッドです
+          </p>
+        </section>
+      </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/line-numbers/prism-line-numbers.min.js"></script>
