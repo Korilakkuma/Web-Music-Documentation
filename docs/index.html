@@ -1851,6 +1851,40 @@ buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
 });</code></pre>
         </section>
       </section>
+      <section id="section-scheduling">
+        <h2>スケジューリング</h2>
+        <section id="section-audio-context-current-time">
+          <h3>AudioContext の currentTime プロパティ</h3>
+          <p>
+            Web Audio API におけるスケジューリング (<code>AudioScheduledSourceNode</code> の <code>start</code> / <code>stop</code> メソッドのスケジューリングや
+            <code>AudioParam</code> のスケジューリング) において, 基本となる時間が
+            <b><code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティ</b>です. <code>currentTime</code> プロパティには,
+            <b><code>AudioContextState</code> が <code>&apos;running&apos;</code> である状態での経過時間が秒単位で格納されています</b> (参照するだけの
+            <code>readonly</code> プロパティです). <code>OscillatorNode</code> や <code>AudioBufferSourceNode</code> を即時に発音・停止するために,
+            <code>start</code> / <code>stop</code> メソッドの第 1 引数に <code>0</code> を指定していましたが, 即時に発音・停止するであれば
+            <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティを指定することでも可能です
+            (即時に発音・停止するのは頻繁にあることなので, デフォルト値 <code>0</code> で即時に発音・停止するように仕様定義されています).
+          </p>
+          <p>
+            つまり, <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティを基準に, 未来の時間を指定すれば (加算すれば),
+            スケジューリングが可能になるということです.
+          </p>
+          <p>
+            仕様上の詳細を解説をすると, <code>OscillatorNode</code> や <code>AudioBufferSourceNode</code> は <code>AudioNode</code> クラスを継承した
+            <code>AudioScheduledSourceNode</code> クラスを継承しており, <code>start</code> / <code>stop</code> メソッドはこのクラスに定義されているメソッドです
+          </p>
+          <article id="section-audio-context-current-time-definition">
+            <h4>currentTime プロパティの時間の定義</h4>
+            <p>
+              Web Audio API が仕様策定された初期のころは, Autoplay Policy の制約もなく, <code>AudioContextState</code> 型もなかったので,
+              <code>currentTime</code> プロパティには, <code>AudioContext</code> インスタンスが生成されてからの経過時間が秒単位で格納されていました. そのあと
+              (2017 年ごろから), モダンブラウザ全般で, Autoplay Policy の導入が始まったことにより, <code>AudioContextState</code> 型も仕様に追加されて,
+              <code>currentTime</code> プロパティには, <code>AudioContextState</code> が
+              <code>&apos;running&apos;</code> である状態での経過時間が秒単位で格納されるように仕様も変わりました.
+            </p>
+          </article>
+        </section>
+      </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/line-numbers/prism-line-numbers.min.js"></script>
