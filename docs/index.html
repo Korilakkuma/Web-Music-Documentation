@@ -1964,6 +1964,92 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
   buttonElement.textContent = &apos;start&apos;;
 });</code></pre>
         </section>
+        <section id="section-audio-buffer-source-node-scheduling">
+          <h3>AudioBufferSourceNode のスケジューリング</h3>
+          <p>
+            <code>OscillatorNode</code> の場合と同様に, スケジューリングを設定することで, 和音をアルペジオのように発音・停止するサンプルコードにしてみました.
+            <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティの値を基準に, スケジュールしたい時間を加算した値を引数に渡すことで,
+            <code>AudioContext</code> インスタンスが生成されてからの経過時間が指定した時間に達すると, 発音・停止します. 1 点異なるのは,
+            <b><code>AudioBufferSourceNode</code> の <code>start</code> メソッドはオーバライドされています</b>. もし,
+            オーディオデータの再生開始位置を指定したい場合は, 第 2 引数に再生開始位置を秒単位で指定, 再生時間を指定する場合は, 第 3 引数に秒単位で指定します (<b
+              ><a href="#section-audio-buffer-source-node-playback-rate-and-detune">再生速度</a>を変更している場合でも影響は受けない</b>ので, 第 2 引数, 第 3 引数は再生速度を <code>1</code> とした場合の値を指定します). どちらも, 任意の引数なので不要であれば省略可能です.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+// C major chord
+let sourceC = null;
+let sourceE = null;
+let sourceG = null;
+
+let buffer = null;
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+  if (buffer === null) {
+    return;
+  }
+
+  sourceC = new AudioBufferSourceNode(context, { buffer });
+  sourceE = new AudioBufferSourceNode(context, { buffer });
+  sourceG = new AudioBufferSourceNode(context, { buffer });
+
+  sourceC.detune.value = 0;
+  sourceE.detune.value = 400;
+  sourceG.detune.value = 700;
+
+  const gain = new GainNode(context, { gain: 0.25 });
+
+  // AudioBufferSourceNode (Input) -&gt; GainNode -&gt; AudioDestinationNode (Output)
+  sourceC.connect(gain);
+  sourceE.connect(gain);
+  sourceG.connect(gain);
+
+  gain.connect(context.destination);
+
+  // Schedule one-shot audio start
+  sourceC.start((context.currentTime + 0.0), 0, sourceC.buffer.duration);
+  sourceE.start((context.currentTime + 0.1), 0, sourceE.buffer.duration);
+  sourceG.start((context.currentTime + 0.2), 0, sourceG.buffer.duration);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+  if ((buffer === null) || (sourceC === null) || (sourceE === null) || (sourceG === null)) {
+    return;
+  }
+
+  // Schedule one-shot audio stop
+  sourceC.stop(context.currentTime + 0.0);
+  sourceE.stop(context.currentTime + 0.1);
+  sourceG.stop(context.currentTime + 0.2);
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then((arrayBuffer) =&gt; {
+    const successCallback = (audioBuffer) =&gt; {
+      buffer = audioBuffer;
+    };
+
+    const errorCallback = (error) =&gt; {
+      // error handling
+    };
+
+    context.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
