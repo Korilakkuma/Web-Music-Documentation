@@ -1902,6 +1902,68 @@ buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
             </dl>
           </article>
         </section>
+        <section id="section-oscillator-node-scheduling">
+          <h3>OscillatorNode のスケジューリング</h3>
+          <p>
+            <code>OscillatorNode</code> のスケジューリングを設定することで, 和音をアルペジオ (分散和音) のように発音・停止するサンプルコードにしてみました.
+            <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティの値を基準に, スケジュールしたい時間を加算した値を引数に渡すことで,
+            <code>AudioContext</code> インスタンスが生成されてからの経過時間が指定した時間に達すると, 発音・停止します.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+// C major chord
+let oscillatorC = null;
+let oscillatorE = null;
+let oscillatorG = null;
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+  if ((oscillatorC !== null) || (oscillatorE !== null) || (oscillatorG !== null)) {
+    return;
+  }
+
+  oscillatorC = new OscillatorNode(context, { frequency: 261.6255653005991 });
+  oscillatorE = new OscillatorNode(context, { frequency: 329.6275569128705 });
+  oscillatorG = new OscillatorNode(context, { frequency: 391.9954359817500 });
+
+  const gain = new GainNode(context, { gain: 0.25 });
+
+  // OscillatorNode (Input) -&gt; GainNode -&gt; AudioDestinationNode (Output)
+  oscillatorC.connect(gain);
+  oscillatorE.connect(gain);
+  oscillatorG.connect(gain);
+  gain.connect(context.destination);
+
+  // Schedule oscillator start
+  oscillatorC.start(context.currentTime + 0.0);
+  oscillatorE.start(context.currentTime + 0.1);
+  oscillatorG.start(context.currentTime + 0.2);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+  if ((oscillatorC === null) || (oscillatorE === null) || (oscillatorG === null)) {
+    return;
+  }
+
+  // Schedule oscillator stop
+  oscillatorC.stop(context.currentTime + 0.0);
+  oscillatorE.stop(context.currentTime + 0.1);
+  oscillatorG.stop(context.currentTime + 0.2);
+
+  // GC (Garbage Collection)
+  oscillatorC = null;
+  oscillatorE = null;
+  oscillatorG = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});</code></pre>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
