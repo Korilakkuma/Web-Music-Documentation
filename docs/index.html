@@ -1883,6 +1883,24 @@ buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
               <code>&apos;running&apos;</code> である状態での経過時間が秒単位で格納されるように仕様も変わりました.
             </p>
           </article>
+          <article id="section-javascript-time">
+            <h4>JavaScript における時間</h4>
+            <dl>
+              <dt><code>Date.now</code></dt>
+              <dd>
+                UNIX 時間 (タイムスタンプとも呼ばれます). 1970 年 1 月 1 日 00 : 00 からの経過時間をミリ秒単位で表します. 音楽のような,
+                時間管理の精度が高く要求されるようなユースケースでは不向きと言えます.
+              </dd>
+              <dt><code>performance.now</code></dt>
+              <dd>
+                <code>DOMHighResTimeStamp</code> 型の時間 (<code>64 bit</code> 浮動小数点数なので, 実体は <code>number</code> 型です) を表現します.
+                詳細な仕様は他のドキュメントを参考にするほうがよいですが (実行コンテキストによって計測時刻が異なるので), ざっくり言うと, 対象の Web
+                ページにアクセスしてからの経過時間をミリ秒単位で表します. hls.js など動画ストリーミングライブラリでは使われているなど (例
+                <a href="https://github.com/video-dev/hls.js/blob/master/src/controller/abr-controller.ts#L179" target="_blank" rel="noopener noreferrer"
+                  >ABR: Adaptive BitRate streaming</a>), <code>Date.now</code> と比較すると, 精度の高い時間と言えます.
+              </dd>
+            </dl>
+          </article>
         </section>
       </section>
     </main>
