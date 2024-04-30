@@ -12,8 +12,9 @@ const lineJoin = 'miter';
 
 const baseColor = 'rgb(153 153 153)';
 const lightColor = 'rgb(204 204 204)';
-const alphaBaseColor = 'rgba(153 153 153 / 30%)';
 const waveColor = 'rgb(0 0 255)';
+const alphaBaseColor = 'rgba(153 153 153 / 30%)';
+const alphaWaveColor = 'rgba(0 0 255 / 30%)';
 
 const audiocontext = new AudioContext();
 
@@ -686,6 +687,360 @@ const visualOscillator = (svg) => {
   });
 };
 
+const createCareer = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const a = 1;
+  const f = 6;
+
+  const w = 2 * Math.PI;
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  let d = '';
+
+  for (let n = 0, len = f * sampleRate; n < len; n++) {
+    const c = a * Math.sin((w * f * n) / sampleRate);
+    const e = a * Math.sin((w * 1 * n) / sampleRate);
+    const v = c * e;
+
+    const x = (n / len) * innerWidth + padding;
+    const y = (1 - v) * (innerHeight / 2) + padding;
+
+    if (n === 0) {
+      d += `M${x + lineWidth / 2} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute('d', d);
+
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+};
+
+const createEnvelope = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const a = 1;
+  const f = 6;
+
+  const w = 2 * Math.PI;
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  let d = '';
+
+  for (let n = 0, len = f * sampleRate; n < len; n++) {
+    const c = a * Math.sin((w * f * n) / sampleRate);
+    const e = a * Math.sin((w * 1 * n) / sampleRate);
+    const v = c * e;
+
+    const x = (n / len) * innerWidth + padding;
+    const y = (1 - v) * (innerHeight / 2) + padding;
+
+    if (n === 0) {
+      d += `M${x + lineWidth / 2} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute('d', d);
+
+  path.setAttribute('stroke', alphaWaveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', '1');
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  const envelopePath = document.createElementNS(xmlns, 'path');
+
+  d = '';
+
+  for (let n = 0, len = f * sampleRate; n < len; n++) {
+    const v = a * Math.sin((w * 1 * n) / sampleRate);
+
+    const x = (n / len) * innerWidth + padding;
+    const y = (1 - v) * (innerHeight / 2) + padding;
+
+    if (n === 0) {
+      d += `M${x + lineWidth / 2} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  envelopePath.setAttribute('d', d);
+
+  envelopePath.setAttribute('stroke', waveColor);
+  envelopePath.setAttribute('fill', 'none');
+  envelopePath.setAttribute('stroke-width', lineWidth.toString(10));
+  envelopePath.setAttribute('stroke-linecap', lineCap);
+  envelopePath.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(envelopePath);
+
+  const invertedEnvelopePath = document.createElementNS(xmlns, 'path');
+
+  d = '';
+
+  for (let n = 0, len = f * sampleRate; n < len; n++) {
+    const v = -1 * a * Math.sin((w * 1 * n) / sampleRate);
+
+    const x = (n / len) * innerWidth + padding;
+    const y = (1 - v) * (innerHeight / 2) + padding;
+
+    if (n === 0) {
+      d += `M${x + lineWidth / 2} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  invertedEnvelopePath.setAttribute('d', d);
+
+  invertedEnvelopePath.setAttribute('stroke', waveColor);
+  invertedEnvelopePath.setAttribute('fill', 'none');
+  invertedEnvelopePath.setAttribute('stroke-width', lineWidth.toString(10));
+  invertedEnvelopePath.setAttribute('stroke-linecap', lineCap);
+  invertedEnvelopePath.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(invertedEnvelopePath);
+};
+
+const visualADSR = (svg) => {
+  const buttonElement = document.getElementById('button-envelopegenerator');
+
+  const envelopegenerator = new GainNode(audiocontext);
+
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const padding = 32;
+
+  const innerWidth = width - 2 * padding;
+  const innerHeight = height - 2 * padding;
+  const innerBottom = height - padding;
+
+  const middle = innerHeight / 2 + padding;
+
+  const rectTop = document.createElementNS(xmlns, 'rect');
+
+  rectTop.setAttribute('x', padding.toString(10));
+  rectTop.setAttribute('y', (padding - 1).toString(10));
+  rectTop.setAttribute('width', innerWidth.toString(10));
+  rectTop.setAttribute('height', lineWidth.toString(10));
+  rectTop.setAttribute('stroke', 'none');
+  rectTop.setAttribute('fill', baseColor);
+
+  svg.appendChild(rectTop);
+
+  const rectMiddle = document.createElementNS(xmlns, 'rect');
+
+  rectMiddle.setAttribute('x', padding.toString(10));
+  rectMiddle.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+  rectMiddle.setAttribute('width', innerWidth.toString(10));
+  rectMiddle.setAttribute('height', lineWidth.toString(10));
+  rectMiddle.setAttribute('stroke', 'none');
+  rectMiddle.setAttribute('fill', baseColor);
+
+  svg.appendChild(rectMiddle);
+
+  const rectBottom = document.createElementNS(xmlns, 'rect');
+
+  rectBottom.setAttribute('x', padding.toString(10));
+  rectBottom.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  rectBottom.setAttribute('width', innerWidth.toString(10));
+  rectBottom.setAttribute('height', lineWidth.toString(10));
+  rectBottom.setAttribute('stroke', 'none');
+  rectBottom.setAttribute('fill', baseColor);
+
+  svg.appendChild(rectBottom);
+
+  ['1.0', '0.5', '0.0'].forEach((text) => {
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = text;
+
+    yText.setAttribute('x', (padding - 16).toString(10));
+
+    switch (text) {
+      case '1.0': {
+        yText.setAttribute('y', (padding - 4).toString(10));
+        break;
+      }
+
+      case '0.5': {
+        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
+        break;
+      }
+
+      case '0.0': {
+        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
+        break;
+      }
+    }
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '16px');
+
+    svg.appendChild(yText);
+  });
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  let attack = document.getElementById('range-attack').valueAsNumber;
+  let decay = document.getElementById('range-decay').valueAsNumber;
+  let sustain = document.getElementById('range-sustain').valueAsNumber;
+  let release = document.getElementById('range-release').valueAsNumber;
+
+  let oscillator = null;
+  let intervalid = null;
+
+  let currentTime = 0;
+
+  let startDrawing = false;
+
+  const drawGain = (t) => {
+    let d = path.getAttribute('d');
+
+    const x = currentTime / t + padding;
+    const y = (1 - envelopegenerator.gain.value) * innerHeight + padding;
+
+    if (currentTime === 0) {
+      path.removeAttribute('d');
+
+      startDrawing = false;
+    }
+
+    if (startDrawing) {
+      d += ` L${x} ${y}`;
+    } else {
+      d = `M${padding} ${padding + innerHeight}`;
+
+      startDrawing = true;
+    }
+
+    path.setAttribute('d', d);
+
+    currentTime = x < padding + innerWidth ? currentTime + t : 0;
+
+    if (envelopegenerator.gain.value >= 1e-3) {
+      return;
+    }
+
+    oscillator.stop(0);
+    oscillator = null;
+
+    if (intervalid !== null) {
+      window.clearInterval(intervalid);
+      intervalid = null;
+    }
+  };
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      oscillator.stop(0);
+      oscillator = null;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    // OscillatorNode (Input) -> GainNode (Envelope Generator) -> AudioDestinationNode (Output)
+    oscillator.connect(envelopegenerator);
+    envelopegenerator.connect(audiocontext.destination);
+
+    const t0 = audiocontext.currentTime;
+    const t1 = t0 + attack;
+    const t2 = decay;
+
+    const t2Level = sustain;
+
+    envelopegenerator.gain.cancelScheduledValues(t0);
+    envelopegenerator.gain.setValueAtTime(0, t0);
+    envelopegenerator.gain.linearRampToValueAtTime(1, t1);
+    envelopegenerator.gain.setTargetAtTime(t2Level, t1, t2);
+
+    oscillator.start(0);
+
+    buttonElement.textContent = 'stop';
+
+    window.clearInterval(intervalid);
+
+    intervalid = window.setInterval(() => {
+      drawGain(25);
+    }, 25);
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    const t3 = audiocontext.currentTime;
+    const t4 = release;
+
+    if (typeof envelopegenerator.gain.cancelAndHoldAtTime === 'function') {
+      envelopegenerator.gain.cancelAndHoldAtTime(t3);
+    } else {
+      const value = envelopegenerator.gain.value;
+
+      envelopegenerator.gain.cancelScheduledValues(t3);
+      envelopegenerator.gain.setValueAtTime(value, t3);
+    }
+
+    envelopegenerator.gain.setTargetAtTime(0, t3, t4);
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  document.getElementById('range-attack').addEventListener('input', (event) => {
+    attack = event.currentTarget.valueAsNumber;
+  });
+
+  document.getElementById('range-decay').addEventListener('input', (event) => {
+    decay = event.currentTarget.valueAsNumber;
+  });
+
+  document.getElementById('range-sustain').addEventListener('input', (event) => {
+    sustain = event.currentTarget.valueAsNumber;
+  });
+
+  document.getElementById('range-release').addEventListener('input', (event) => {
+    release = event.currentTarget.valueAsNumber;
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -713,4 +1068,11 @@ createTriangleFunctionPath(document.getElementById('svg-figure-triangle-function
 createFrequencyandPianoFrequency(document.getElementById('svg-figure-frequency-and-piano-frequency'));
 createKeyboards(document.getElementById('svg-figure-12-equal-temperament'));
 
+createCoordinateRect(document.getElementById('svg-figure-career'));
+createCareer(document.getElementById('svg-figure-career'));
+
+createCoordinateRect(document.getElementById('svg-figure-envelope'));
+createEnvelope(document.getElementById('svg-figure-envelope'));
+
 visualOscillator(document.getElementById('svg-oscillator'));
+visualADSR(document.getElementById('svg-envelopegenerator'));
