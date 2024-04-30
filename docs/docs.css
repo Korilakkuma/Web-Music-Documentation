@@ -203,3 +203,29 @@ figcaption {
   align-items: center;
   cursor: pointer;
 }
+
+.button-envelopegenerator {
+  cursor: pointer;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.ranges-envelopegenerator {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ranges-envelopegenerator > label {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  cursor: ew-resize;
+}
+
+.ranges-envelopegenerator > label > input[type="range"] {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  cursor: ew-resize;
+}
