@@ -2549,6 +2549,44 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
             </div>
           </div>
         </section>
+        <article id="section-audio-param-automation-rate">
+          <h3><code>a-rate</code> と <code>k-rate</code> (<code>AutomationRate</code>)</h3>
+          <p>
+            <code>AudioParam</code> には, <b><code>automationRate</code></b> プロパティがあり, これは <b><code>&apos;a-rate&apos;</code></b> か
+            <b><code>&apos;k-rate&apos;</code></b> の <code>AutomationRate</code> 型で列挙されるどちらかの値が設定されています.
+            <code>&apos;a-rate&apos;</code> は, <b><code>1</code> サンプルごとに値を適用することができる <code>AudioParam</code> です</b>.
+            <code>&apos;k-rate&apos;</code> は,
+            <b><code>128</code> サンプル単位 (render quantum size) で値を適用することができる <code>AudioParam</code> です</b>. <code>AudioParam</code> ごとに,
+            <code>AutomationRate</code> が仕様設定されているので, 重要度としては低くなりますが,
+            <code>&apos;a-rate&apos;</code> のほうがパラメータを変化させるコストはやや高いぐらいに認識しておくとよいかもしれません (<a
+              href="https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process#examples"
+              target="_blank"
+              rel="noopener noreferrer"
+              >実装イメージ</a>. <code>&apos;k-rate&apos;</code> の場合, <code>128</code> サンプルのパラメータの <code>0</code> 番目だけ適用すればよいので最適化しやすい). また,
+            <code>AudioWorkletProcessor</code> クラスで, <code>AudioParam</code> を定義する場合 (<code>parameterDescriptors</code> プロパティ),
+            適切に選択する必要がある場合もあります (デフォルトは, <code>&apos;a-rate&apos;</code>).
+          </p>
+          <p>
+            もっとも, <code>AudioParam</code> のほとんどは <code>&apos;a-rate&apos;</code> です. 現在の仕様では, 以下のリストにある <code>AudioParam</code> が
+            <code>&apos;k-rate&apos;</code> です.
+          </p>
+          <dl>
+            <dt>AudioBufferSourceNode</dt>
+            <dd><code>playbackRate</code>, <code>detune</code></dd>
+            <dt>DynamicsCompressorNode</dt>
+            <dd><code>threshold</code>, <code>knee</code>, <code>ratio</code>, <code>attack</code>, <code>release</code></dd>
+            <dt>PannerNode</dt>
+            <dd><code>panningModel</code> が <code>&apos;HRTF&apos;</code> の場合, <code>&apos;k-rate&apos;</code> のようにふるまう</dd>
+          </dl>
+          <p>
+            <code>128</code> サンプルというのは, Web Audio API における, オーディオ処理のバッファ単位です (仕様では,
+            <b>render quantum size</b> という用語が使われています). 例えば, <code>AudioWorkletProcessor</code> では, <code>128</code> サンプルごとの入力に対して
+            (必要があれば, オーディオ処理を適用して), <code>128</code> サンプル出力します. リアルタイム性が要求されるようなオーディオ API では, 多くは,
+            このような, 仕様で定義されているバッファサイズごとにオーディオ処理を適用する (そして, それを繰り返す) という API になっています (<a
+              href="#section-audio-worklet-processor-render-quantum-size"
+              ><b>Web Audio API 1.1 以降では, 必ずしも <code>128</code> サンプルではないことに注意してください</b></a>).
+          </p>
+        </article>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
