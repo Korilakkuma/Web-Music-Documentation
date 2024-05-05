@@ -2587,6 +2587,114 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
               ><b>Web Audio API 1.1 以降では, 必ずしも <code>128</code> サンプルではないことに注意してください</b></a>).
           </p>
         </article>
+        <section id="section-garbage-collection">
+          <h3>Web Audio API におけるガベージコレクション</h3>
+          <p>
+            Web Audio API においてはこのセクションで解説したようなスケジューリングや,
+            <code>DelayNode</code> などを利用した時に発生する遅延オーディオデータなどがあるので, JavaScript
+            の仕様上のガベージコレクションの対象となるオブジェクトに追加して, いくつかの条件があります.
+          </p>
+          <ul>
+            <li>参照が残っていない</li>
+            <li>処理すべきサウンドデータが残っていない</li>
+            <li>ノードが接続されていない</li>
+            <li>サウンドが停止している</li>
+            <li>スケジューリングが設定されていない</li>
+          </ul>
+          <p>
+            上記 5 つの条件すべてを満たすオブジェクトが, ガベージコレクションの対象となります. ざっくり説明すれば,
+            なにかしらで利用されているオブジェクトはガベージコレクションの対象にならないということです.
+          </p>
+          <section id="section-garbage-collection-no-reference-counting">
+            <h4>参照が残っていない</h4>
+            <p>これに関しては, Web Audio API に限らず, JavaScript, あるいは, ガベージコレクションが実装されているあらゆるプログラミング言語一般的なことです.</p>
+          </section>
+          <section id="section-garbage-collection-no-sound-data">
+            <h4>処理すべきサウンドデータが残っていない</h4>
+            <p>
+              処理すべきサウンドデータが意図せずに残るケースとして, <code>DelayNode</code> や <code>ConvolverNode</code> を利用して,
+              エフェクターであるディレイやリバーブを実装した場合が考えられますが, 実装的には対処する必要はありません. 処理すべきサウンドデータがある場合に,
+              サウンドデータを完了状態にするのは, <code>DelayNode</code> や <code>ConvolverNode</code> の役割であるのと, そもそも,
+              このような場合に処理が残っているサウンドデータを破棄するなどの手段が現状の仕様では存在しないからです.
+            </p>
+          </section>
+          <section id="section-garbage-collection-no-connections">
+            <h4>ノードが接続されていない</h4>
+            <p>
+              不要になった <code>AudioNode</code> インスタンスは, <b><code>disconnect</code></b> メソッドでノードの接続を解除しておくのが律儀ではありますが,
+              参照を破棄することで, 同時にノードの接続も解除されるので, 明示的に実装する必要はありません. ちなみに,
+              <code>disconnect</code> メソッドのユースケースとしては, 例えば,
+              ユーザーインタラクティブな操作などで動的にノードの接続を解除する必要がある場合ぐらいです.
+            </p>
+            <p>以下のコードは, ノード接続状態のまま, 参照を破棄していますが, 同時にノード接続も解除されるのでメモリリークに陥ることはありません.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let oscillator = null;
+
+window.setInterval(() =&gt; {
+  oscillator = new OscillatorNode(context);
+
+  // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(context.destination);
+}, 10);</code></pre>
+          </section>
+          <section id="section-garbage-collection-stop-sound">
+            <h4>サウンドが停止している</h4>
+            <p>
+              以下のコードは, サウンドが発音状態なので, ガベージコレクションが実行されず, メモリがしだいに不足していく例です. その理由は,
+              コールバック関数実行のたびに, 以前のインスタンスへの参照は破棄されますが, それに対応するサウンドが停止していないからです.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let oscillator = null;
+
+window.setInterval(() =&gt; {
+  oscillator = new OscillatorNode(context);
+
+  // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(context.destination);
+
+  oscillator.start(0);
+}, 10);</code></pre>
+          </section>
+          <section id="section-garbage-collection-no-schedulings">
+            <h4>スケジューリングが設定されていない</h4>
+            <p>
+              以下のコードは, 参照を破棄して, サウンドを停止状態にしていますが, 時間が経過するほど,
+              サウンドの開始が少しずつ遅延するようにサウンドスケジューリングしているので, ガベージコレクションの実行もそれにともなって遅れるので,
+              メモリが不足していきます.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let oscillator = null;
+
+let counter = 0;
+
+window.setInterval(() =&gt; {
+  oscillator = new OscillatorNode(context);
+
+  // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(context.destination);
+
+  const startTime = context.currentTime + counter;
+  const stopTime  = startTime + 10;
+
+  oscillator.start(startTime);
+  oscillator.stop(stopTime);
+
+  ++counter;
+}, 10);</code></pre>
+          </section>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
