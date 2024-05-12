@@ -1788,6 +1788,134 @@ buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
 });</code></pre>
         </section>
       </section>
+      <section id="section-media-stream-audio-source-node">
+        <h2>MediaStreamAudioSourceNode</h2>
+        <p>
+          Web Audio API において, マイクロフォンやオーディオインターフェースに入力されたサウンドデータに対して,
+          なんらかのオーディオ信号処理を適用したい場合に利用するのが <b><code>MediaStreamAudioSourceNode</code></b> です. もっと言ってしまえば,
+          <b>WebRTC</b> (<b><code>MediaDevices</code></b> の <b><code>getUserMedia</code></b> メソッドで取得できる <b><code>MediaStream</code></b> インスタンス)
+          で取得したサウンドデータに対するオーディオ信号処理を適用する場合に利用します.
+        </p>
+        <img src="images/media-stream-audio-source-node.png" alt="MediaStreamAudioSourceNode" width="1232" height="770" loading="lazy" />
+        <p>
+          WebRTC の仕様は Web Audio API と同等かそれ以上に膨大ですが, Web Audio API との関係で言えば, <code>MediaDevices</code> の
+          <code>getUserMedia</code> メソッドを理解すれば問題ないでしょう.
+        </p>
+        <p>
+          <code>getUserMedia</code> メソッドの引数には
+          <a href="https://www.w3.org/TR/mediacapture-streams/#dom-mediastreamconstraints" target="_blank" rel="noopener noreferrer">MediaStreamConstraints</a>
+          を指定します (少なくとも, Web Audio API で利用することを想定するので, <code>audio</code> は <code>true</code> にしておきます). 初回実行時は,
+          マイクロフォン (もしくは, 選択したオーディオインターフェース) に対するアクセス許可を求めるダイアログが表示されます. アクセスを許可して問題なければ,
+          戻り値の <code>Promise</code> が <code>fulfilled</code> 状態になります. 成功時の <code>Promise</code> のコールバック関数の引数に
+          <code>MediaStream</code> インスタンスが渡されるので, そのインスタンスを <code>MediaElementAudioSourceNode</code> コンストラクタ
+          (もしくはファクトリメソッドの <code>createMediaStreamSource</code> の引数) に指定します
+        </p>
+        <p>
+          あとは, <code>MediaStreamAudioSourceNode</code> インスタンスを <code>AudioDestinationNode</code> に接続すれば, WebRTC
+          からのサウンドデータを出力することが可能です.
+        </p>
+        <pre
+          data-prismjs-copy="クリップボードにコピー"
+          data-prismjs-copy-success="コピーしました"
+        ><code class="language-js line-numbers">const context = new AudioContext();
+
+const constraints = {
+  audio: true
+};
+
+navigator.mediaDevices.getUserMedia(constraints)
+  .then((stream) =&gt; {
+    const source = new MediaStreamAudioSourceNode(context, { mediaStream: stream });
+
+    // If use `createMediaStreamSource`
+    // const source = context.createMediaStreamSource(stream);
+
+    // MediaStreamAudioSourceNode (Input) -&gt; AudioDestinationNode (Output)
+    source.connect(context.destination);
+
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });
+</code></pre>
+        <p>
+          もちろん, オーディオ信号処理を適用しないのであれば, WebRTC だけを利用するほうが合理的なので, 簡易例として,
+          オーディオ信号処理を適用していることがわかるように, <code>BiquadFilterNode</code> を利用して Low-Pass Filter (低域通過フィルタ)
+          を使ったサンプルコードです. カットオフ周波数を変更すると, 音の輪郭が変わることを確認してみてください (<code>BiquadFilterNode</code> に関しては,
+          別のセクションで詳細を解説します).
+        </p>
+        <pre
+          data-prismjs-copy="クリップボードにコピー"
+          data-prismjs-copy-success="コピーしました"
+        ><code class="language-js line-numbers">const context = new AudioContext();
+
+const constraints = {
+  audio: true
+};
+
+navigator.mediaDevices.getUserMedia(constraints)
+  .then((stream) =&gt; {
+    const source = new MediaStreamAudioSourceNode(context, { mediaStream: stream });
+
+    // If use `createMediaStreamSource`
+    // const source = context.createMediaStreamSource(stream);
+
+    const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 4000 });
+
+    // MediaStreamAudioSourceNode (Input) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; AudioDestinationNode (Output)
+    source.connect(lowpass);
+    lowpass.connect(context.destination);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });
+</code></pre>
+        <section id="section-media-stop-devices">
+          <h3>デバイスの破棄</h3>
+          <p>
+            <code>MediaStreamAudioSourceNode</code> には, オーディオデバイスがらの入力を停止するためのメソッドはありません. デバイスを破棄するには,
+            <code>MediaStream</code> インスタンスの <b><code>getAudioTracks</code></b> メソッドで, オーディオデバイスの実体である
+            <b><code>MediaStreamTrack</code></b> インスタンスの配列を取得します. <code>MediaStreamTrack</code> には, デバイスを破棄するための
+            <b><code>stop</code></b> メソッドが実装されているので, 対象の <code>MediaStreamTrack</code> インスタンスで <code>stop</code> メソッドを実行します
+            (同様に, ビデオデバイスを停止するには <b><code>getVideoTracks</code></b> メソッドで <code>MediaStreamTrack</code> インスタンスの配列を取得します).
+          </p>
+          <img src="images/media-stream.png" alt="MediaStream" width="1232" height="770" loading="lazy" />
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const constraints = {
+  audio: true
+};
+
+navigator.mediaDevices.getUserMedia(constraints)
+  .then((stream) =&gt; {
+    const source = new MediaStreamAudioSourceNode(context, { mediaStream: stream });
+
+    // If use `createMediaStreamSource`
+    // const source = context.createMediaStreamSource(stream);
+
+    const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 4000 });
+
+    // MediaStreamAudioSourceNode (Input) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; AudioDestinationNode (Output)
+    source.connect(lowpass);
+    lowpass.connect(context.destination);
+
+    window.setTimeout(() =&gt; {
+      const audioTracks = stream.getAudioTracks();
+
+      for (const audioTrack of audioTracks) {
+        audioTrack.stop();
+      }
+    }, 10000);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });
+</code></pre>
+        </section>
+      </section>
       <section id="section-scheduling">
         <h2>スケジューリング</h2>
         <section id="section-audio-context-current-time">
