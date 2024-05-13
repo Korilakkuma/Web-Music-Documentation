@@ -2164,6 +2164,28 @@ navigator.mediaDevices.getUserMedia(constraints)
   });</code></pre>
         </section>
       </section>
+      <section id="section-audio-worklet">
+        <h2>AudioWorklet</h2>
+        <p>
+          Web Audio API には, 基本波形のサウンド生成やエフェクター, サウンドの視覚化など高度なサウンド処理をより簡単に実装するために, 様々な
+          <code>AudioNode</code> が定義されています. これらの <code>AudioNode</code> があるおかげで, 内部で実行されているオーディオ信号処理の詳細を知らなくても,
+          高度なサウンド機能の実装が簡単にできるわけです. 例えば, 正弦波の数式を知らなくても,
+          <code>OscillatorNode</code> によって正弦波を生成することができました.
+        </p>
+        <p>
+          Web Audio API が定義する多くの <code>AudioNode</code> は, サウンドデータの実体にアクセスする機能をもちません. なぜなら, <code>AudioNode</code> (と,
+          <code>AudioNode</code> がもつ <code>AudioParam</code>) は, サウンド処理を抽象化する, つまり, 抽象度の高い API として定義されているからです.
+          しかしながら, その代償として, <code>AudioNode</code> の接続と <code>AudioParam</code> の制御では不可能なオーディオ処理も存在してしまいます. 具体的に,
+          現状の仕様では, ノイズ生成, ノイズサプレッサー, ボーカルキャンセラ, ピッチシフターなどは <code>AudioNode</code> の接続と
+          <code>AudioParam</code> の制御のみでは実装できないので, 直接サウンドデータにアクセスできる必要があります.
+        </p>
+        <p>
+          直接サウンドデータにアクセスすることを可能にするのが, (広義の) <b><code>AudioWorklet</code></b> です (狭義には
+          <code>AudioWorklet</code> クラスを意味するので). <code>AudioWorklet</code> は複数の API で構成されており, メインスレッドで
+          <code>AudioNode</code> を継承する <b><code>AudioWorkletNode</code></b>, オーディオスレッド (<b><code>AudioWorkletGlobalScope</code></b>) で直接サウンドデータにアクセスすることを可能にする <b><code>AudioWorkletProcessor</code></b>, メインスレッドからオーディオスレッドのファイルをロードする <code>AudioContext</code> インスタンスがもつ
+          <b><code>AudioWorklet</code></b> インスタンスです.
+        </p>
+      </section>
       <section id="section-scheduling">
         <h2>スケジューリング</h2>
         <section id="section-audio-context-current-time">
