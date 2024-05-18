@@ -2185,6 +2185,39 @@ navigator.mediaDevices.getUserMedia(constraints)
           <code>AudioNode</code> を継承する <b><code>AudioWorkletNode</code></b>, オーディオスレッド (<b><code>AudioWorkletGlobalScope</code></b>) で直接サウンドデータにアクセスすることを可能にする <b><code>AudioWorkletProcessor</code></b>, メインスレッドからオーディオスレッドのファイルをロードする <code>AudioContext</code> インスタンスがもつ
           <b><code>AudioWorklet</code></b> インスタンスです.
         </p>
+        <section id="section-audio-worklet-node">
+          <h3>AudioWorkletNode</h3>
+          <p>
+            メインスレッドで定義されていて, <code>AudioNode</code> クラスを継承しています. <code>AudioWorkletNode</code> を
+            <code>AudioNode</code> に接続することで, <code>AudioWorkletProcessor</code> (の <code>process</code> メソッド)
+            で実装したオーディオ信号処理が適用されて, 次に接続している <code>AudioNode</code> への入力として出力されます.また, <code>AudioNode</code> を
+            <code>AudioWorkletNode</code> に接続することで, <code>AudioWorkletProcessor</code> に入力サウンドデータとして渡して,
+            オーディオ信号処理を適用することも可能です.
+          </p>
+          <p>
+            <code>AudioWorkletNode</code> コンストラクタの第 1 引数には, <code>AudioContext</code> インスタンスを指定し, 第 2 引数には,
+            <code>AudioWorkletGlobalScope</code> (オーディオスレッド) で <code>registerProcessor</code> メソッドで指定した文字列を指定します.
+            <code>AudioWorkletNode</code> インスタンスを生成するのは, <code>AudioWorklet</code> インスタンスの
+            <b><code>addModule</code> メソッド成功後に実行する必要があります</b> (また, 後発な API であるので,
+            ファクトリメソッドによるインスタンス生成も仕様定義されていないことに注意してください).
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+// &apos;./audio-worklets/processor.js&apos; is URL that has subclass that extends `AudioWorkletProcessor`
+context.audioWorklet.addModule(&apos;./audio-worklets/processor.js&apos;)
+  .then(() =&gt; {
+    const processor = new AudioWorkletNode(context, &apos;NoiseGeneratorProcessor&apos;);
+
+    // AudioWorkletNode (Input) -&gt; AudioDestinationNode (Output)
+    processor.connect(context.destination);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+        </section>
       </section>
       <section id="section-scheduling">
         <h2>スケジューリング</h2>
