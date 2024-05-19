@@ -2,8 +2,6 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
 
-    this.processing = false;
-
     this.type = 'whitenoise';
 
     this.b0 = 0;
@@ -17,10 +15,6 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
     this.lastOut = 0;
 
     this.port.onmessage = (event) => {
-      if (typeof event.data.processing === 'boolean') {
-        this.processing = event.data.processing;
-      }
-
       if (event.data.type) {
         this.type = event.data.type;
       }
@@ -28,10 +22,6 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    if (!this.processing) {
-      return true;
-    }
-
     const output = outputs[0];
 
     switch (this.type) {
