@@ -2218,6 +2218,44 @@ context.audioWorklet.addModule(&apos;./audio-worklets/processor.js&apos;)
     // error handling
   });</code></pre>
         </section>
+        <section id="section-audio-worklet-global-scope">
+          <h3>AudioWorkletGlobalScope</h3>
+          <p>
+            AudioWorklet はその API の仕様設計上, メインスレッドとは別のオーディオスレッドを専用に生成することになります.
+            このオーディオスレッドのグローバルスコープが <b><code>AudioWorkletGlobalScope</code></b> です. つまり, メインスレッドにおける
+            <code>Window</code> に相当します. メインスレッドとは別の世界なので, 直接 DOM にはアクセスできなかったり,
+            メインスレッドで使えるようなクライアントサイド JavaScript API が利用できなかったりします. <code>AudioWorkletGlobalScope</code> には,
+            <code>sampleRate</code> プロパティや <code>currentTime</code> プロパティが定義されていますが, これはメインスレッドの
+            <code>AudioContext</code> インスタンスと同値です.
+          </p>
+          <section id="section-audio-worklet-global-scope-register-processor">
+            <h4>registerProcessor メソッド</h4>
+            <p>
+              <code>AudioWorkletGlobalScope</code> で定義されている, 最も重要なメソッドが <b>registerProcessor</b> メソッドです. メインスレッドの
+              <code>AudioWorkletNode</code> と, オーディオスレッドの <code>AudioWorkletProcessor</code> を継承したクラスを関連づける役割をもっているからです. 第
+              1 引数に, <code>AudioWorkletNode</code> のコンストラクタに関連づける文字列を, 第 2 引数に,
+              <code>AudioWorkletProcessor</code> を継承したクラスを指定します (インスタンスではないので注意してください).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/noise-generator.js&apos;
+
+class NoiseGeneratorProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+  }
+
+  process(inputs, outputs, parameters) {
+    // TODO: Audio Signal Processing
+
+    return true;
+  }
+}
+
+registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);</code></pre>
+          </section>
+        </section>
       </section>
       <section id="section-scheduling">
         <h2>スケジューリング</h2>
