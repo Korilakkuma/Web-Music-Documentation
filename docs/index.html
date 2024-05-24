@@ -2718,6 +2718,22 @@ context.audioWorklet.addModule(&apos;./audio-worklets/a-rate.js&apos;)
             </section>
           </section>
         </section>
+        <section id="section-audio-worklet-add-module">
+          <h3>AudioWorklet</h3>
+          <p>
+            すでに, サンプルコードでは利用していますが, <code>AudioContext</code> には <b><code>audioWorklet</code></b> プロパティが定義されており, これは
+            (狭義の) <b><code>AudioWorklet</code></b> インスタンスです. 責務としては, <b><code>addModule</code></b> メソッドを呼び出して,
+            <code>AudioWorkletProcessor</code> のサブクラスを定義したスクリプト (Worklet ファイル) をロードすることです.
+          </p>
+          <p>
+            <code>addModule</code> メソッドは, Web Audio API に依存した仕様ではなく, JavaScript で使える Worklet (例えば, <code>CSS.paintWorklet</code>) が,
+            指定したスクリプト (Worklet ファイル) をロードするために定義されています. <code>addModule</code> メソッドの第 1 引数は スクリプト (Worklet ファイル)
+            の URL 文字列で必須です. また, 第 2 引数は任意で, <code>Fetch API</code> の
+            <a href="https://fetch.spec.whatwg.org/#requests" target="_blank" rel="noopener noreferrer">Request</a> の
+            <a href="https://fetch.spec.whatwg.org/#concept-request-credentials-mode" target="_blank" rel="noopener noreferrer">credentials mode</a>
+            のオブジェクトを指定できます. 戻り値は <code>Promise</code> です. 成功時のコールバック関数の引数はありません.
+          </p>
+        </section>
       </section>
       <section id="section-scheduling">
         <h2>スケジューリング</h2>
