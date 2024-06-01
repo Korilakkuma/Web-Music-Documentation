@@ -2734,6 +2734,518 @@ context.audioWorklet.addModule(&apos;./audio-worklets/a-rate.js&apos;)
             のオブジェクトを指定できます. 戻り値は <code>Promise</code> です. 成功時のコールバック関数の引数はありません.
           </p>
         </section>
+        <section id="section-audio-worklet-examples">
+          <h3>AudioWorklet によるオーディオ信号処理</h3>
+          <p>
+            <code>AudioWorklet</code> は複数の API で構成されているので, 抽象的な解説だけだと理解が難しいかもしれません. このセクションでは,
+            <code>AudioWorklet</code> のユースケースとして想定されるオーディオ信号処理の実装例を紹介して理解のサポートになることを目指します.
+          </p>
+          <section id="section-audio-worklet-examples-noise-generator">
+            <h4>ノイズ生成</h4>
+            <p>
+              すでに, 解説のサンプルコードとして記載していますが, Web Audio API でホワイトノイズやピンクノイズを生成する場合,
+              <code>AudioWorklet</code> を利用する必要があります.
+            </p>
+            <p>
+              ノイズの生成は, 乱数生成がベースになっています. 特に, ホワイトノイズは乱数そのままであり (振幅の調整だけしている),
+              その振幅スペクトルはすべての周波数成分を一様に含んでいます (ノイズ生成の詳細に関しては,
+              <a href="https://noisehack.com/generate-noise-web-audio-api/" target="_blank" rel="noopener noreferrer"
+                >How to Generate Noise with the Web Audio API</a>
+              を参考にしてください).
+            </p>
+            <p>
+              実際に, Web アプリケーションとして実装する場合, ユーザーインタラクティブな操作によって, 発音・停止をさせるケースが多くなるでしょう. そのために,
+              <code>AudioWorkletProcessor</code> を継承したサブクラスで, 発音・停止のフラグを実装しておき, メインスレッドからの
+              <code>postMessage</code> で切り替えるようにします. すでに解説しましたが, <code>process</code> メソッドで, <code>false</code> を返してしまうと,
+              その <code>AudioWorkletProcessor</code> は破棄されるような仕様になっているので, 常に <code>true</code> を返し, 停止中の場合, 出力となる
+              <code>Float32Array</code> にデータを格納しないという実装で停止を実装しています.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;select&gt;
+  &lt;option value=&quot;whitenoise&quot; selected&gt;White Noise&lt;/option&gt;
+  &lt;option value=&quot;pinknoise&quot;&gt;Pink Noise&lt;/option&gt;
+  &lt;option value=&quot;browniannoise&quot;&gt;Brownian Noise&lt;/option&gt;
+&lt;/select&gt;
+</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+// &apos;./audio-worklets/noise-generator.js&apos; is URL that has subclass that extends `AudioWorkletProcessor`
+context.audioWorklet.addModule(&apos;./audio-worklets/noise-generator.js&apos;)
+  .then(() =&gt; {
+    const processor = new AudioWorkletNode(context, &apos;NoiseGeneratorProcessor&apos;);
+
+    // AudioWorkletNode (Input) -&gt; AudioDestinationNode (Output)
+    processor.connect(context.destination);
+
+    document.querySelector(&apos;button[type=&quot;button&quot;]&apos;).addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+      processor.port.postMessage({ processing: true });
+
+      event.currentTarget.textContent = &apos;stop&apos;;
+    });
+
+    document.querySelector(&apos;button[type=&quot;button&quot;]&apos;).addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+      processor.port.postMessage({ processing: false });
+
+      event.currentTarget.textContent = &apos;start&apos;;
+    });
+
+    document.querySelector(&apos;select&apos;).addEventListener(&apos;change&apos;, (event) =&gt; {
+      processor.port.postMessage({ type: event.currentTarget.value });
+    });
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/noise-generator.js&apos;
+
+class NoiseGeneratorProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+
+    this.processing = false;
+
+    this.type = &apos;whitenoise&apos;;
+
+    this.b0 = 0;
+    this.b1 = 0;
+    this.b2 = 0;
+    this.b3 = 0;
+    this.b4 = 0;
+    this.b5 = 0;
+    this.b6 = 0;
+
+    this.lastOut = 0;
+
+    this.port.onmessage = (event) =&gt; {
+      if (typeof event.data.processing === &apos;boolean&apos;) {
+        this.processing = event.data.processing;
+      }
+
+      if (event.data.type) {
+        this.type = event.data.type;
+      }
+    };
+  }
+
+  process(inputs, outputs, parameters) {
+    if (!this.processing) {
+      return true;
+    }
+
+    // channel number is 0, 1, 2 ...
+    // `output` is `[Float32Array, Float32Array, Float32Array ...]`
+    const output = outputs[0];
+
+    switch (this.type) {
+      case &apos;whitenoise&apos;: {
+        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+          const bufferSize = output[channelNumber].length;
+
+          for (let n = 0; n &lt; bufferSize; n++) {
+            output[channelNumber][n] = (2 * Math.random()) - 1;
+          }
+        }
+
+        break;
+      }
+
+      case &apos;pinknoise&apos;: {
+        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+          const bufferSize = output[channelNumber].length;
+
+          for (let n = 0; n &lt; bufferSize; n++) {
+            const white = (2 * Math.random()) - 1;
+
+            this.b0 = (0.99886 * this.b0) + (white * 0.0555179);
+            this.b1 = (0.99332 * this.b1) + (white * 0.0750759);
+            this.b2 = (0.96900 * this.b2) + (white * 0.1538520);
+            this.b3 = (0.86650 * this.b3) + (white * 0.3104856);
+            this.b4 = (0.55000 * this.b4) + (white * 0.5329522);
+            this.b5 = (-0.7616 * this.b5) - (white * 0.0168980);
+
+            output[channelNumber][n] = this.b0 + this.b1 + this.b2 + this.b3 + this.b4 + this.b5 + this.b6 + (white * 0.5362);
+            output[channelNumber][n] *= 0.11;
+
+            this.b6 = white * 0.115926;
+          }
+        }
+
+        break;
+      }
+
+      case &apos;browniannoise&apos;: {
+        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+          const bufferSize = output[channelNumber].length;
+
+          for (let n = 0; n &lt; bufferSize; n++) {
+            const white = (2 * Math.random()) - 1;
+
+            output[channelNumber][n] = (this.lastOut + (0.02 * white)) / 1.02;
+
+            this.lastOut = output[channelNumber][n];
+
+            output[channelNumber][n] *= 3.5;
+          }
+        }
+
+        break;
+      }
+    }
+
+    return true;
+  }
+}
+
+registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);</code></pre>
+          </section>
+          <section id="section-audio-worklet-examples-oscillator">
+            <h4>基本波形生成</h4>
+            <p>
+              基本波形の生成は, <code>OscillatorNode</code> を利用すれば可能ですが, <code>OscillatorNode</code> による波形生成は, いわゆる,
+              <b>フーリエ級数展開</b>にもとづいた波形生成, つまり, 周波数の異なる sin 波の合成によって, 矩形波やノコギリ波, 三角波が生成されています
+              (その証拠として, <a href="#svg-oscillator">波形</a>を確認すると <b>Gibbs の現象</b>が発生していることが確認できます).
+            </p>
+            <p>実は, 基本波形は, 直線を組み合わせることによって (近似した波形を) 生成することも可能です (その場合, Gibbs の現象は発生しなくなります).</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;select&gt;
+  &lt;option value=&quot;sine&quot; selected&gt;Sine&lt;/option&gt;
+  &lt;option value=&quot;square&quot;&gt;Square&lt;/option&gt;
+  &lt;option value=&quot;sawtooth&quot;&gt;Sawtooth&lt;/option&gt;
+  &lt;option value=&quot;triangle&quot;&gt;Triangle&lt;/option&gt;
+&lt;/select&gt;
+&lt;label for=&quot;range-frequency&quot;&gt;frequency&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-frequency&quot; value=&quot;440&quot; min=&quot;20&quot; max=&quot;8000&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-frequency-value&quot;&gt;440 Hz&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+// &apos;./audio-worklets/oscillator.js&apos; is URL that has subclass that extends `AudioWorkletProcessor`
+context.audioWorklet.addModule(&apos;./audio-worklets/oscillator.js&apos;)
+  .then(() =&gt; {
+    const processor = new AudioWorkletNode(context, &apos;OscillatorProcessor&apos;);
+
+    // AudioWorkletNode (Input) -&gt; AudioDestinationNode (Output)
+    processor.connect(context.destination);
+
+    document.querySelector(&apos;button[type=&quot;button&quot;]&apos;).addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+      processor.port.postMessage({ processing: true });
+
+      event.currentTarget.textContent = &apos;stop&apos;;
+    });
+
+    document.querySelector(&apos;button[type=&quot;button&quot;]&apos;).addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+      processor.port.postMessage({ processing: false });
+
+      event.currentTarget.textContent = &apos;start&apos;;
+    });
+
+    document.querySelector(&apos;select&apos;).addEventListener(&apos;change&apos;, (event) =&gt; {
+      processor.port.postMessage({ type: event.currentTarget.value });
+    });
+
+    document.querySelector(&apos;input[type=&quot;range&quot;]&apos;).addEventListener(&apos;input&apos;, (event) =&gt; {
+      processor.port.postMessage({ frequency: event.currentTarget.valueAsNumber });
+
+      document.getElementById(&apos;print-frequency-value&apos;).textContent = `${event.currentTarget.value} Hz`;
+    });
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/oscillator.js&apos;
+
+class OscillatorProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+
+    this.processing = false;
+
+    this.numberOfProcessedSamples = 0;
+
+    this.type      = &apos;sine&apos;;
+    this.frequency = 440;
+
+    this.port.onmessage = (event) =&gt; {
+      if (typeof event.data.processing === &apos;boolean&apos;) {
+        this.processing = event.data.processing;
+      }
+
+      if ((typeof event.data.frequency === &apos;number&apos;) &amp;&amp; (event.data.frequency &gt; 0)) {
+        this.frequency = event.data.frequency;
+      }
+
+      if (event.data.type) {
+        this.type = event.data.type;
+      }
+    };
+  }
+
+  process(inputs, outputs, parameters) {
+    if (!this.processing) {
+      return true;
+    }
+
+    // channel number is 0, 1, 2 ...
+    // `output` is `[Float32Array, Float32Array, Float32Array ...]`
+    const output = outputs[0];
+
+    const numberOfSamplesPer1Hz = sampleRate / this.frequency;
+
+    for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+      const bufferSize = output[channelNumber].length;
+
+      for (let n = 0; n &lt; bufferSize; n++) {
+        switch (this.type) {
+          case &apos;sine&apos;: {
+            output[channelNumber][n] = Math.sin((2 * Math.PI * this.frequency * this.numberOfProcessedSamples) / sampleRate);
+            break;
+          }
+
+          case &apos;square&apos;: {
+            output[channelNumber][n] = (this.numberOfProcessedSamples &lt; (numberOfSamplesPer1Hz / 2)) ? 1 : -1;
+            break;
+          }
+
+          case &apos;sawtooth&apos;: {
+            const a = (2 * this.numberOfProcessedSamples) / numberOfSamplesPer1Hz;
+
+            output[channelNumber][n] = a - 1;
+            break;
+          }
+
+          case &apos;triangle&apos;: {
+            const a = (4 * this.numberOfProcessedSamples) / numberOfSamplesPer1Hz;
+
+            output[channelNumber][n] = (this.numberOfProcessedSamples &lt; (numberOfSamplesPer1Hz / 2)) ? (-1 + a) : (3 - a);
+            break;
+          }
+        }
+
+        if (++this.numberOfProcessedSamples &gt;= numberOfSamplesPer1Hz) {
+          this.numberOfProcessedSamples = 0;
+        }
+      }
+    }
+
+    return true;
+  }
+}
+
+registerProcessor(&apos;OscillatorProcessor&apos;, OscillatorProcessor);</code></pre>
+          </section>
+          <section id="section-audio-worklet-examples-reverse-channel">
+            <h4>リバースチャンネル</h4>
+            <p>
+              左チャンネルからのサウンド出力と右チャンネルからのサウンド出力を反転する単純なエフェクターです (ただし, その原理から,
+              左右チャンネルのサウンドデータが異なる場合にしか効果がありません). 一般的には, オーディオデータに対して適用するので, オーディオデータの準備として
+              <code>AudioBufferSourceNode</code> か <code>MediaElementAudioSourceNode</code> を入力ノードとして,
+              <code>AudioWorkletNode</code> に接続しておきます.
+            </p>
+            <pre data-prismjs-copy="クリップボードにコピー" data-prismjs-copy-success="コピーしました"><code class="language-html line-numbers">&lt;div&gt;
+  &lt;input type=&quot;file&quot; /&gt;
+  &lt;label&gt;Reverse &lt;input type=&quot;checkbox&quot; /&gt;&lt;/label&gt;
+&lt;/div&gt;
+&lt;audio controls /&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+// &apos;./audio-worklets/channel-reverser.js&apos; is URL that has subclass that extends `AudioWorkletProcessor`
+context.audioWorklet.addModule(&apos;./audio-worklets/channel-reverser.js&apos;)
+  .then(() =&gt; {
+    const reverser = new AudioWorkletNode(context, &apos;ChannelReverserProcessor&apos;);
+
+    const inputElement    = document.querySelector(&apos;input[type=&quot;file&quot;]&apos;);
+    const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+    const audioElement    = document.querySelector(&apos;audio&apos;);
+
+    let source = null;
+
+    inputElement.addEventListener(&apos;change&apos;, (event) =&gt; {
+      const file = event.currentTarget.files[0];
+
+      audioElement.src = window.URL.createObjectURL(file);
+    });
+
+    checkboxElement.addEventListener(&apos;click&apos;, (event) =&gt; {
+      reverser.port.postMessage({ reversing: event.currentTarget.checked });
+    });
+
+    audioElement.addEventListener(&apos;loadstart&apos;, () =&gt; {
+      if (source === null) {
+        source = new MediaElementAudioSourceNode(context, { mediaElement: audioElement });
+      }
+
+      // MediaElementAudioSourceNode (Input) -&gt; AudioWorkletNode (Channel Reverser) -&gt; AudioDestinationNode (Output)
+      source.connect(reverser);
+      reverser.connect(context.destination);
+    });
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/channel-reverser.js&apos;
+
+class ChannelReverserProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+
+    this.reversing = false;
+
+    this.port.onmessage = (event) =&gt; {
+      if (typeof event.data.reversing === &apos;boolean&apos;) {
+        this.reversing = event.data.reversing;
+      }
+    };
+  }
+
+  process(inputs, outputs) {
+    const input  = inputs[0];
+    const output = outputs[0];
+
+    if ((input.length === 0) || (output.length === 0)) {
+      return true;
+    }
+
+    if ((input.length !== 2) || (output.length !== 2)) {
+      output[0].set(input[0]);
+      return true;
+    }
+
+    if (this.reversing) {
+      output[0].set(input[1]);
+      output[1].set(input[0]);
+    } else {
+      output[0].set(input[0]);
+      output[1].set(input[1]);
+    }
+
+    return true;
+  }
+}
+
+registerProcessor(&apos;ChannelReverserProcessor&apos;, ChannelReverserProcessor);</code></pre>
+          </section>
+          <section id="section-audio-worklet-examples-vocal-canceler">
+            <h4>ボーカルキャンセラ</h4>
+            <p>
+              一般的に, 音楽のオーディオデータはステレオで, 臨場感あるサウンドになるように, 左チャンネルと右チャンネルの音の大きさを調整しています.
+              ボーカルの聴こえる位置は中央になるように左右のチャンネルを同じ音の大きさで録音し, ギターなどのボーカル以外の楽器音は,
+              左右どちらかの音の大きさを大きくして, 聴こえる位置が左右のどちらかになるように録音されています. このように録音されたオーディオデータであれば,
+              左右のチャンネルのサウンドデータの差分をとることにより, 左右均等に録音されているボーカルの音を取り除くことが可能になります. これが,
+              ボーカルキャンセラです (ただし, その原理から, ドラムなど中央に位置する楽器音も取り除かれてしまいます).
+            </p>
+            <pre data-prismjs-copy="クリップボードにコピー" data-prismjs-copy-success="コピーしました"><code class="language-html line-numbers">&lt;div&gt;
+  &lt;input type=&quot;file&quot; /&gt;
+  &lt;label&gt;Depth &lt;input type=&quot;range&quot; id=&quot;range-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;&lt;label&gt;
+&lt;/div&gt;
+&lt;audio controls /&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+// &apos;./audio-worklets/vocal-canceler.js&apos; is URL that has subclass that extends `AudioWorkletProcessor`
+context.audioWorklet.addModule(&apos;./audio-worklets/vocal-canceler.js&apos;)
+  .then(() =&gt; {
+    const canceler = new AudioWorkletNode(context, &apos;VocalCancelerProcessor&apos;);
+
+    const inputElement = document.querySelector(&apos;input[type=&quot;file&quot;]&apos;);
+    const rangeElement = document.querySelector(&apos;input[type=&quot;range&quot;]&apos;);
+    const audioElement = document.querySelector(&apos;audio&apos;);
+
+    let source = null;
+
+    inputElement.addEventListener(&apos;change&apos;, (event) =&gt; {
+      const file = event.currentTarget.files[0];
+
+      audioElement.src = window.URL.createObjectURL(file);
+    });
+
+    rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+      canceler.port.postMessage({ depth: event.currentTarget.valueAsNumber });
+    });
+
+    audioElement.addEventListener(&apos;loadstart&apos;, () =&gt; {
+      if (source === null) {
+        source = new MediaElementAudioSourceNode(context, { mediaElement: audioElement });
+      }
+
+      // MediaElementAudioSourceNode (Input) -&gt; AudioWorkletNode (Vocal Canceler) -&gt; AudioDestinationNode (Output)
+      source.connect(canceler);
+      canceler.connect(context.destination);
+    });
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/vocal-canceler.js&apos;
+
+class VocalCancelerProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+
+    this.depth = 0;
+
+    this.port.onmessage = (event) =&gt; {
+      if ((typeof event.data.depth === &apos;number&apos;) &amp;&amp; (event.data.depth &gt;= 0)) {
+        this.depth = event.data.depth;
+      }
+    };
+  }
+
+  process(inputs, outputs) {
+    const input  = inputs[0];
+    const output = outputs[0];
+
+    if ((input.length === 0) || (output.length === 0)) {
+      return true;
+    }
+
+    if ((input.length !== 2) || (output.length !== 2)) {
+      output[0].set(input[0]);
+
+      return true;
+    }
+
+    const bufferSize = input[0].length;
+
+    for (let n = 0; n &lt; bufferSize; n++) {
+      output[0][n] = input[0][n] - (this.depth * input[1][n]);
+      output[1][n] = input[1][n] - (this.depth * input[0][n]);
+    }
+
+    return true;
+  }
+}
+
+registerProcessor(&apos;VocalCancelerProcessor&apos;, VocalCancelerProcessor);</code></pre>
+          </section>
+        </section>
       </section>
       <section id="section-scheduling">
         <h2>スケジューリング</h2>
