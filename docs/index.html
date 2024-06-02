@@ -3246,6 +3246,49 @@ class VocalCancelerProcessor extends AudioWorkletProcessor {
 registerProcessor(&apos;VocalCancelerProcessor&apos;, VocalCancelerProcessor);</code></pre>
           </section>
         </section>
+        <article id="section-script-processor-node">
+          <h3>ScriptProcessorNode</h3>
+          <p>
+            <code>AudioWorklet</code> は初期の Web Audio API の仕様定義にはなく, <code>ScriptProcessorNode</code> が仕様定義されていました.
+            <b>メインスレッド</b>で実行される<b>イベントハンドラ</b>によって, サウンド入出力する以外は <code>AudioWorklet</code> と考え方は同じです. しかし,
+            メインスレッドで実行されるので, 不自然な音切れ (いわゆる, プチプチ音) が発生する<b>グリッチ</b> (<b>glitch</b>) や UI
+            がスムーズに動作しなくなる現象である<b>ジャンク</b> (<b>jank</b>), イベントハンドラで実行されることによる<b>遅延</b> (<b>latency</b>) など API
+            自体の根本的な問題がありました.
+          </p>
+          <p>
+            Web Audio API の歴史的には, <code>ScriptProcessorNode</code> の問題を API 設計から解決するために, 後発的に仕様策定されて実装されているのが
+            <code>AudioWorklet</code> です. <code>ScriptProcessorNode</code> は将来的に仕様からも削除される予定なので, 新規に実装するのであればわざわざ
+            <code>ScriptProcessorNode</code> を利用する必要はありませんが, 既存のコードを読む必要があるかもしれないので,
+            正弦波とホワイトノイズをミックスするサンプルコードを記載します.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);
+const processor  = context.createScriptProcessor(0, 2, 2);
+
+oscillator.connect(processor);
+processor.connect(context.destination);
+
+oscillator.start(0);
+
+const bufferSize = processor.bufferSize;
+
+processor.onaudioprocess = (event) =&gt; {
+  const inputLs  = event.inputBuffer.getChannelData(0);
+  const inputRs  = event.inputBuffer.getChannelData(1);
+  const outputLs = event.outputBuffer.getChannelData(0);
+  const outputRs = event.outputBuffer.getChannelData(1);
+
+  for (let n = 0; n &lt; bufferSize; n++) {
+    outputLs[n] = (0.5 * inputLs[n]) + (0.25 * ((2 * Math.random()) - 1));
+    outputRs[n] = (0.5 * inputRs[n]) + (0.25 * ((2 * Math.random()) - 1));
+  }
+};
+</code></pre>
+        </article>
       </section>
       <section id="section-scheduling">
         <h2>スケジューリング</h2>
