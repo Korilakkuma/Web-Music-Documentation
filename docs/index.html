@@ -4135,6 +4135,30 @@ window.setInterval(() =&gt; {
           </section>
         </section>
       </section>
+      <section id="section-audio-signal-processing">
+        <h2>デジタルオーディオ信号処理</h2>
+        <section id="section-analog-to-digital-conversion">
+          <h3>A/D 変換</h3>
+          <p>
+            アナログ信号である音 (媒体の振動) をコンピュータで処理するためには, <code>0</code> と <code>1</code> のみの情報, つまり,
+            デジタル信号に変換する必要があります. この変換処理のことを, <b>A/D変換</b> (<b>Analog to Digital Conversion</b>) と呼びます. A/D 変換は, 大きく 3
+            つの処理があります.
+          </p>
+          <ol>
+            <li>サンプリング (標本化)</li>
+            <li>量子化</li>
+            <li>符号化</li>
+          </ol>
+          <p>
+            サンプリング (標本化) と量子化の処理に共通することは, <b>連続した信号を離散した信号に変換することです</b>. コンピュータでは,
+            <b>連続した値や無限大となる値を扱うことが不可能</b>だからです.
+          </p>
+          <p>
+            <a href="#section-about-sound">「音」</a>のセクションでは, いくつか音の波形のイラストを記載しましたが, それらは常に 2 つの連続した物理量 (次元)
+            をもっていました. <b>時間</b>と<b>振幅</b>です. サンプリング (標本化) と量子化は, これら 2 つの連続した物理量を離散信号に変換する処理となります.
+          </p>
+        </section>
+      </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/line-numbers/prism-line-numbers.min.js"></script>
