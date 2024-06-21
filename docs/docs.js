@@ -13,6 +13,7 @@ const lineJoin = 'miter';
 const baseColor = 'rgb(153 153 153)';
 const lightColor = 'rgb(204 204 204)';
 const waveColor = 'rgb(0 0 255)';
+const lightWaveColor = 'rgb(255 0 255)';
 const alphaBaseColor = 'rgba(153 153 153 / 30%)';
 const alphaWaveColor = 'rgba(0 0 255 / 30%)';
 
@@ -112,7 +113,7 @@ const createCoordinateRect = (svg, textPosition, textFontSize) => {
   }
 };
 
-const createSinFunctionPath = (svg) => {
+const createSinFunctionPath = (svg, strokeColor = waveColor) => {
   const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
   const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
 
@@ -141,7 +142,7 @@ const createSinFunctionPath = (svg) => {
 
   path.setAttribute('d', d);
 
-  path.setAttribute('stroke', waveColor);
+  path.setAttribute('stroke', strokeColor);
   path.setAttribute('fill', 'none');
   path.setAttribute('stroke-width', lineWidth.toString(10));
   path.setAttribute('stroke-linecap', lineCap);
@@ -1041,6 +1042,39 @@ const visualADSR = (svg) => {
   });
 };
 
+const createSampling = (svg, n, showOriginal) => {
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const innerWidth = width - padding * 2;
+  const innerHeight = height - padding * 2;
+  const middle = height / 2;
+
+  createCoordinateRect(svg);
+
+  if (showOriginal) {
+    createSinFunctionPath(svg, alphaWaveColor);
+  }
+
+  const d = (2 * Math.PI) / n;
+
+  for (let rad = 0; rad < 2 * Math.PI; rad += d) {
+    const path = document.createElementNS(xmlns, 'path');
+
+    const v = Math.sin(rad);
+    const x = (rad / d) * (1 / n) * innerWidth + padding;
+    const y = (1 - v) * (innerHeight / 2) + padding;
+
+    path.setAttribute('d', `M${x} ${y} L${x} ${middle}`);
+    path.setAttribute('stroke', lightWaveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', '4');
+    path.setAttribute('stroke-linecap', 'square');
+
+    svg.appendChild(path);
+  }
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -1076,3 +1110,8 @@ createEnvelope(document.getElementById('svg-figure-envelope'));
 
 visualOscillator(document.getElementById('svg-oscillator'));
 visualADSR(document.getElementById('svg-envelopegenerator'));
+
+createSampling(document.getElementById('svg-figure-sampling'), 8, true);
+createSampling(document.getElementById('svg-figure-sampling-theorem-with-aliasing'), 2, true);
+createSampling(document.getElementById('svg-figure-sampling-theorem-without-aliasing'), 3, true);
+createSampling(document.getElementById('svg-figure-sampling-theorem'), 48, true);
