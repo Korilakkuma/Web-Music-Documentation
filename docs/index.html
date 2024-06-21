@@ -4157,6 +4157,92 @@ window.setInterval(() =&gt; {
             <a href="#section-about-sound">「音」</a>のセクションでは, いくつか音の波形のイラストを記載しましたが, それらは常に 2 つの連続した物理量 (次元)
             をもっていました. <b>時間</b>と<b>振幅</b>です. サンプリング (標本化) と量子化は, これら 2 つの連続した物理量を離散信号に変換する処理となります.
           </p>
+          <section id="section-analog-to-digital-conversion-sampling">
+            <h4>サンプリング (標本化)</h4>
+            <p>
+              <b>サンプリング</b> (<b>標本化</b>)は, 時間を離散した値に変換する処理です. 離散信号, すなわち, とびとびの値をとっていくためには,
+              その間隔を決定するパラメータが必要になります. それが, <b>サンプリング周期</b> (<b>標本化周期</b>) です. サンプリング周期の逆数となるパラメータは,
+              <b>標本化周波数</b> (<b>サンプリング周波数</b>) です. 簡単に解説すれば, サンプリング周波数は, <code>1 sec</code> の間に, いくつのサンプル (離散点)
+              をとるか ? ということを意味しています. 例えば, サンプリング周波数が <code>48000 Hz</code> の場合, <code>1 sec</code> の間に
+              <code>48000</code> サンプル (離散点) をとることになります.
+            </p>
+            <figure>
+              <svg id="svg-figure-sampling" width="720" height="405" data-parameters="true" data-a="1" data-f="1" data-t="0.0,0.5,1.0" />
+              <figcaption>
+                <span>サンプリングとサンプリング周波数 (サンプリング周期)</span>
+                <span>1 sec に 8 サンプルあるので, <code>8 Hz</code> (<code>0.125 sec</code>)</span>
+              </figcaption>
+            </figure>
+            <p>
+              サンプリング (標本化) では重要な定理があります. それは, サンプリング周波数の
+              <span class="math-inline">$\frac{1}{2}$</span> 以上の周波数は元のアナログ信号に復元できないという定理です. この定理は,
+              <b>サンプリング定理</b> (<b>標本化定理</b>, <b>シャノンの定理</b>) と呼ばれます. 逆の視点で表現すれば, サンプリング周波数の
+              <span class="math-inline">$\frac{1}{2}$</span> より低い周波数は元のアナログ信号に復元可能ということです. また, サンプリング周波数の
+              <span class="math-inline">$\frac{1}{2}$</span> は, <b>ナイキスト周波数</b>と呼ばれます. サンプリング定理から, 原信号に含まれる最大の周波数成分の
+              <b>2 倍より大きい</b>サンプリング周波数に設定すれば, 元のアナログ信号に復元可能ということになります (実際には, 低域通過フィルタ (Low-Pass Filter)
+              を利用して, 高い周波数成分を除去するプリプロセス処理を施します).
+            </p>
+            <p>
+              サンプリング定理を満たさないサンプリング周波数, すなわち, 原信号に含まれる最大の周波数成分の 2 倍以下のサンプリング周波数でサンプリングすると,
+              <b>折り返し歪み</b> (<b>エイリアス歪み</b>) が発生して, ノイズとして復元されてしまいます.
+            </p>
+            <p>
+              例えば, <code>1 Hz</code> の信号に対して, 2 サンプル (サンプリング周波数 <code>2 Hz</code>, ナイキスト周波数 <code>1 Hz</code>)
+              では原信号に復元できません.
+            </p>
+            <figure>
+              <svg id="svg-figure-sampling-theorem-with-aliasing" width="720" height="405" data-parameters="true" data-a="1" data-f="1" data-t="0.0,0.5,1.0" />
+              <figcaption>
+                <span>サンプリング定理 (折り返し歪みが発生する)</span>
+              </figcaption>
+            </figure>
+            <p>
+              <code>1 Hz</code> の信号に対して, 3 サンプル (サンプリング周波数 <code>3 hz</code>, ナイキスト周波数 <code>1.5 Hz</code>) だと, 精度は低いですが,
+              原信号に復元できます
+            </p>
+            <figure>
+              <svg
+                id="svg-figure-sampling-theorem-without-aliasing"
+                width="720"
+                height="405"
+                data-parameters="true"
+                data-a="1"
+                data-f="1"
+                data-t="0.0,0.5,1.0"
+              />
+              <figcaption>サンプリング定理 (定理を満たす場合)</figcaption>
+            </figure>
+            <p>
+              サンプリングの精度を高くするほど, すなわち,
+              サンプリング周波数を高くするほど元のアナログ信号に対してより精度の高いデジタル信号に変換可能となります. 一方で,
+              データサイズはサンプリング周波数に比例して大きくなってしまいます.
+            </p>
+            <p>
+              以下の図は, 充分なサンプル数 (サンプリング周波数) だと原信号により精度高く復元できること表しています. そのトレードオフとして,
+              サンプル数が多くなるので, データサイズはより大きくなることも表しています.
+            </p>
+            <figure>
+              <svg id="svg-figure-sampling-theorem" width="720" height="405" data-parameters="true" data-a="1" data-f="1" data-t="0.0,0.5,1.0" />
+              <figcaption>サンプリング定理</figcaption>
+            </figure>
+            <p>
+              サンプリング周波数の具体例として, 音楽 CD は <code>44.1 kHz</code> に設定されています. 人間の聴覚が知覚可能な周波数はおよそ
+              <code>20 kHz</code>であることを考慮してサンプリング定理を適用しているからです. さらに音質の高いものだと
+              <code>96 kHz</code> 以上に設定されている音楽データもあります (ハイレゾオーディオのサンプリング周波数). 電話では
+              <code>8 kHz</code> に設定されています. 音声の場合は, 多少音質が損なわれても相手の音声を聴きとることが可能なこと,
+              楽器音ほど高い周波数成分が含まれないこと, リアルタイムに通信するので可能な限りデータサイズを減らす必要があることなどが理由としてあげられます.
+            </p>
+            <p>
+              Web Audio API では, <code>AudioContext</code> インスタンス生成時の引数として, <b><code>AudioContextOptions</code></b> の
+              <b><code>sampleRate</code></b> プロパティで明示的に指定することが可能です. 明示的に指定しない場合, デバイスのサンプリング周波数
+              (<code>44100</code>, <code>48000</code> など) に設定されています.
+            </p>
+            <p>
+              サウンドの視覚化の実装では, サンプリング周波数 (<code>AudioContext</code> インスタンス, または, <code>AudioBuffer</code> インスタンスの
+              <code>sampleRate</code> プロパティ) にアクセスすることはよくあります. したがって, サンプリング周波数が何を意味しているのか ? ということと,
+              サンプリング定理に関して理解しておくと役に立つでしょう.
+            </p>
+          </section>
         </section>
       </section>
     </main>
