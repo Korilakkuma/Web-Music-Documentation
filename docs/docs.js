@@ -12,10 +12,12 @@ const lineJoin = 'miter';
 
 const baseColor = 'rgb(153 153 153)';
 const lightColor = 'rgb(204 204 204)';
+const grayColor = 'rgb(66 66 66)';
 const waveColor = 'rgb(0 0 255)';
 const lightWaveColor = 'rgb(255 0 255)';
 const alphaBaseColor = 'rgba(153 153 153 / 30%)';
 const alphaWaveColor = 'rgba(0 0 255 / 30%)';
+const alphaLightWaveColor = 'rgba(255 0 255 / 30%)';
 
 const audiocontext = new AudioContext();
 
@@ -1075,6 +1077,264 @@ const createSampling = (svg, n, showOriginal) => {
   }
 };
 
+const createQuantization = (svg, bit, fillColor, showOriginal, showSampling) => {
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const innerWidth = width - padding * 2;
+  const innerHeight = height - padding * 2;
+  const middle = height / 2;
+
+  createCoordinateRect(svg, 16, '12px');
+
+  if (showOriginal) {
+    createSinFunctionPath(svg, alphaWaveColor);
+  } else {
+    const t = (svg.getAttribute('data-t') ?? '').split(',');
+
+    t.forEach((sec, index) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = `${sec} sec`;
+
+      text.setAttribute('x', (padding + 24 + (innerWidth / 2) * index).toString(10));
+      text.setAttribute('y', (padding + innerHeight / 2 + 16).toString(10));
+
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '16px');
+
+      svg.appendChild(text);
+    });
+  }
+
+  switch (bit) {
+    case 3: {
+      ['100', '101', '110', '111', '000', '001', '010', '011'].forEach((bit, index) => {
+        const rect = document.createElementNS(xmlns, 'rect');
+
+        rect.setAttribute('x', padding.toString(10));
+        rect.setAttribute('y', ((padding + innerHeight) * (1 - index * 0.105)).toString(10));
+        rect.setAttribute('width', innerWidth.toString(10));
+        rect.setAttribute('height', lineWidth.toString(10));
+        rect.setAttribute('stroke', 'none');
+        rect.setAttribute('fill', lightWaveColor);
+
+        svg.appendChild(rect);
+
+        const text = document.createElementNS(xmlns, 'text');
+
+        text.textContent = bit;
+
+        text.setAttribute('x', (padding / 2 + 12).toString(10));
+        text.setAttribute('y', ((padding + innerHeight) * (1 - index * 0.105)).toString(10));
+
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('stroke', 'none');
+        text.setAttribute('fill', grayColor);
+        text.setAttribute('font-size', '16px');
+
+        svg.appendChild(text);
+      });
+
+      break;
+    }
+
+    case 4: {
+      ['1000', '1010', '1001', '1011', '1100', '1101', '1110', '1111', '0000', '0001', '0010', '0011', '0100', '0101', '0110', '0111'].forEach((bit, index) => {
+        const rect = document.createElementNS(xmlns, 'rect');
+
+        rect.setAttribute('x', padding.toString(10));
+        rect.setAttribute('y', ((padding + innerHeight) * (1 - index * 0.052) - 1).toString(10));
+        rect.setAttribute('width', innerWidth.toString(10));
+        rect.setAttribute('height', lineWidth.toString(10));
+        rect.setAttribute('stroke', 'none');
+        rect.setAttribute('fill', fillColor);
+
+        svg.appendChild(rect);
+
+        const text = document.createElementNS(xmlns, 'text');
+
+        text.textContent = bit;
+
+        text.setAttribute('x', (padding / 2 + 8).toString(10));
+        text.setAttribute('y', ((padding + innerHeight) * (1 - index * 0.052) + 2).toString(10));
+
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('stroke', 'none');
+        text.setAttribute('fill', grayColor);
+        text.setAttribute('font-size', '16px');
+
+        svg.appendChild(text);
+      });
+
+      break;
+    }
+  }
+
+  const n = 16;
+  const d = (2 * Math.PI) / n;
+
+  if (showSampling) {
+    for (let rad = 0; rad < 2 * Math.PI; rad += d) {
+      const path = document.createElementNS(xmlns, 'path');
+      const dpath = document.createElementNS(xmlns, 'path');
+
+      const v = Math.sin(rad);
+      const x = (rad / d) * (1 / n) * innerWidth + padding;
+      const y = (1 - v) * (innerHeight / 2) + padding;
+      const dy = y - 8;
+
+      path.setAttribute('d', `M${x} ${y} L${x} ${middle}`);
+      path.setAttribute('stroke', alphaWaveColor);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke-width', '4');
+      path.setAttribute('stroke-linecap', 'square');
+
+      svg.appendChild(path);
+    }
+  }
+
+  switch (bit) {
+    case 3: {
+      for (let rad = 0, index = 0; rad < 2 * Math.PI; rad += d, index++) {
+        const path = document.createElementNS(xmlns, 'path');
+        const dpath = document.createElementNS(xmlns, 'path');
+
+        const v = Math.sin(rad);
+        const x = (rad / d) * (1 / n) * innerWidth + padding;
+
+        let y = 0;
+
+        switch (index) {
+          case 0:
+          case 8: {
+            y = middle;
+            break;
+          }
+
+          case 1:
+          case 7: {
+            y = (1 - 0.25) * (innerHeight / 2) + padding;
+            break;
+          }
+
+          case 2:
+          case 3:
+          case 4:
+          case 5:
+          case 6: {
+            y = (1 - 0.75) * (innerHeight / 2) + padding - 2;
+            break;
+          }
+
+          case 9:
+          case 15: {
+            y = (1 - 0.75) * (innerHeight / 2) + padding + innerHeight / 2;
+            break;
+          }
+
+          case 10:
+          case 14: {
+            y = (1 - 0.25) * (innerHeight / 2) + padding + innerHeight / 2 - 2;
+            break;
+          }
+
+          case 11:
+          case 12:
+          case 13: {
+            y = innerHeight / 2 + padding + innerHeight / 2;
+            break;
+          }
+        }
+
+        path.setAttribute('d', `M${x} ${y} L${x} ${middle}`);
+        path.setAttribute('stroke', alphaLightWaveColor);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-width', '4');
+        path.setAttribute('stroke-linecap', 'square');
+
+        svg.appendChild(path);
+      }
+
+      break;
+    }
+
+    case 4: {
+      for (let rad = 0, index = 0; rad < 2 * Math.PI; rad += d, index++) {
+        const path = document.createElementNS(xmlns, 'path');
+        const dpath = document.createElementNS(xmlns, 'path');
+
+        const v = Math.sin(rad);
+        const x = (rad / d) * (1 / n) * innerWidth + padding;
+
+        let y = 0;
+
+        switch (index) {
+          case 0:
+          case 8: {
+            y = middle;
+            break;
+          }
+
+          case 1:
+          case 7: {
+            y = (1 - 0.4) * (innerHeight / 2) + padding + 2;
+            break;
+          }
+
+          case 2:
+          case 6: {
+            y = (1 - 0.75) * (innerHeight / 2) + padding - 1;
+            break;
+          }
+
+          case 3:
+          case 4:
+          case 5: {
+            y = padding + 16;
+            break;
+          }
+
+          case 9:
+          case 15: {
+            y = (1 - 0.6) * (innerHeight / 2) + padding + innerHeight / 2 - 6;
+            break;
+          }
+
+          case 10:
+          case 14: {
+            y = (1 - 0.25) * (innerHeight / 2) + padding + innerHeight / 2 - 2;
+            break;
+          }
+
+          case 11:
+          case 13: {
+            y = innerHeight / 2 + padding + innerHeight / 2 - 20;
+            break;
+          }
+
+          case 12: {
+            y = innerHeight / 2 + padding + innerHeight / 2;
+            break;
+          }
+        }
+
+        path.setAttribute('d', `M${x} ${y} L${x} ${middle}`);
+        path.setAttribute('stroke', alphaLightWaveColor);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-width', '4');
+        path.setAttribute('stroke-linecap', 'square');
+
+        svg.appendChild(path);
+      }
+
+      break;
+    }
+  }
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -1115,3 +1375,6 @@ createSampling(document.getElementById('svg-figure-sampling'), 8, true);
 createSampling(document.getElementById('svg-figure-sampling-theorem-with-aliasing'), 2, true);
 createSampling(document.getElementById('svg-figure-sampling-theorem-without-aliasing'), 3, true);
 createSampling(document.getElementById('svg-figure-sampling-theorem'), 48, true);
+
+createQuantization(document.getElementById('svg-figure-quantization'), 3, lightWaveColor, true, true);
+createQuantization(document.getElementById('svg-figure-quantization-bits'), 4, lightWaveColor, false, true);

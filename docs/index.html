@@ -4243,6 +4243,34 @@ window.setInterval(() =&gt; {
               サンプリング定理に関して理解しておくと役に立つでしょう.
             </p>
           </section>
+          <section id="section-analog-to-digital-conversion-quantization">
+            <h4>量子化</h4>
+            <p>
+              <b>量子化</b>は, <b>振幅を離散した値に変換する処理です</b>. サンプリングと同じく, とびとびの値をとっていくためには,
+              その間隔を決定づけるパラメータが必要になります. それが, <b>量子化ビット</b> (<b>量子化精度</b>) です.
+            </p>
+            <p>
+              サンプリングされたアナログ信号は時間軸方向は, 離散化されていますが, 振幅軸の方向は連続したままです. 量子化では,
+              量子化ビットで指定された精度にしたがって, 振幅を整数値に丸める処理を実行します. 例えば, 量子化ビットが <code>2 bit</code> の場合, 4
+              つのステップの値 (<span class="math-inline">$2^{2} = 4$</span>) のいずれかに, <code>3 bit</code> の場合, 8 つのステップの値 (<span
+                class="math-inline"
+                >$2^{3} = 8$</span>) のいずれかに振幅が丸められます.
+            </p>
+            <figure>
+              <svg id="svg-figure-quantization" width="720" height="405" data-parameters="true" data-a="1" data-f="1" data-t="0.0,0.5,1.0" />
+              <figcaption>量子化 (量子化ビット <code>3 bit</code>)</figcaption>
+            </figure>
+            <p>
+              量子化の丸め処理によって生じる誤差を, <code>量子化雑音</code>と呼びます. 量子化ビットが小さいほど, 丸め処理による誤差が大きくなり,
+              原信号への復元も精度が低くなってしまいます. 逆に, 量子化の精度を高くするほど, すなわち, 量子化ビットを大きくするほど, 量子化雑音は少なくなり
+              (誤差が小さくなり), 原信号への復元の精度も高くなりますが, データサイズは量子化ビットに比例して大きくなります.
+            </p>
+            <figure>
+              <svg id="svg-figure-quantization-bits" width="720" height="405" data-parameters="true" data-a="1" data-f="1" data-t="0.0,0.5,1.0" />
+              <figcaption>量子化ビット</figcaption>
+            </figure>
+            <p>音楽 CD での量子化ビットは 16 bit に設定されています. ハイレゾオーディオの量子化ビットは <code>24 bit</code> 以上が必要条件となっています.</p>
+          </section>
         </section>
       </section>
     </main>
