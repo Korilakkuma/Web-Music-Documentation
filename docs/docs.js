@@ -1365,3 +1365,4 @@ createSampling(document.getElementById('svg-figure-sampling-theorem'), 48, true)
 
 createQuantization(document.getElementById('svg-figure-quantization'), 3, 'rgb(255 0 255)', true, true);
 createQuantization(document.getElementById('svg-figure-quantization-bits'), 4, 'rgb(255 0 255)', false, true);
+createQuantization(document.getElementById('svg-figure-coding'), 4, 'rgba(153 153 153 / 30%)', false, false);
