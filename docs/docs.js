@@ -1378,3 +1378,4 @@ createSampling(document.getElementById('svg-figure-sampling-theorem'), 48, true)
 
 createQuantization(document.getElementById('svg-figure-quantization'), 3, lightWaveColor, true, true);
 createQuantization(document.getElementById('svg-figure-quantization-bits'), 4, lightWaveColor, false, true);
+createQuantization(document.getElementById('svg-figure-coding'), 4, alphaBaseColor, false, false);
