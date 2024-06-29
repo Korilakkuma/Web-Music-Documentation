@@ -4271,6 +4271,18 @@ window.setInterval(() =&gt; {
             </figure>
             <p>音楽 CD での量子化ビットは 16 bit に設定されています. ハイレゾオーディオの量子化ビットは <code>24 bit</code> 以上が必要条件となっています.</p>
           </section>
+          <section id="section-analog-to-digital-conversion-coding">
+            <h4>符号化</h4>
+            <p>
+              サンプリングによって, 時間軸方向に離散化し, それぞれのサンプル点を, 量子化によって丸めた整数値に 2 進数を割り当てていきます. 量子化した
+              (整数値に丸めた) 振幅を 2 進数に符号化すると, コンピュータの内部で処理することが可能なデジタル信号となります.
+            </p>
+            <p>サンプリング周波数 <code>16 Hz</code>, 量子化ビット <code>4 bit</code>, 2 の補数方式で符号化した例です.</p>
+            <figure>
+              <svg id="svg-figure-coding" width="720" height="405" data-parameters="true" data-a="1" data-f="1" data-t="0.0,0.5,1.0" />
+              <figcaption>符号化</figcaption>
+            </figure>
+          </section>
         </section>
       </section>
     </main>
