@@ -4283,6 +4283,17 @@ window.setInterval(() =&gt; {
               <figcaption>符号化</figcaption>
             </figure>
           </section>
+          <article id="section-analog-to-digital-conversion-pcm">
+            <h4>PCM (Pulse Code Modulation)</h4>
+            <p>
+              <b>PCM</b> (<b>Pulse Code Modulation</b>) とは, このセクションで解説したように, アナログ信号をデジタル信号に変換する変調方式のことです.
+              厳密に表現すると, このセクションで解説した PCM は, 量子化の幅を均等 (線形的) に取得しているので, <b>Linear PCM</b> です. 量子化の方式によって,
+              <b>log-PCM</b>, <b>DPCM</b> (<b>Differential PCM</b>), <b>ADPCM</b> (<b>Adaptive Differential PCM</b>) などがあります.
+              どれが優れた方式というのはなく, ケースによって使い分けますが, 多くの場合, Linear PCM が使われているので, 単純に PCM と言った場合, Linear PCM
+              を意味することが多いです. Web Audio API でもオーディオデータの実体である <code>AudioBuffer</code> では, <code>32 bit</code> (浮動小数点数) の
+              Linear PCM による値を格納しています.
+            </p>
+          </article>
         </section>
       </section>
     </main>
