@@ -4306,6 +4306,87 @@ window.setInterval(() =&gt; {
             <code>AudioWorklet</code> でオーディオ信号処理を実装したりする場合を想定して, 数式による (厳密な) 解説は最小限にとどめて,
             イラストやコードをベースに, 概念を理解するために役に立つ内容になればと思います.
           </p>
+          <section id="section-fourier-series">
+            <h4>フーリエ級数</h4>
+            <p>
+              <a href="#section-amplitude-and-frequency">周期関数</a>は, 周波数の異なる余弦波と正弦波の級数で近似することができます. この級数が,
+              <b>フーリエ級数</b>であり, 周期関数をフーリエ級数で表現する場合, <b>フーリエ級数展開</b> と呼ばれます.
+              <span class="math-inline">$x\left(t\right)$</span>が, 周期 <span class="math-inline">$T$</span> の場合, フーリエ級数は以下の数式で定義されます.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &f\left(t\right) = \frac{a_{0}}{2} + \sum_{n=1}^{\infty}\left(a_{n}\cos\left(n\frac{2 \pi}{T}t\right) + b_{n}\sin\left(n\frac{2 \pi}{T}t\right)\right) \\
+                  &a_{n} = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f\left(t\right)\cos\left(n\frac{2 \pi}{T}t\right)dt \\
+                  &b_{n} = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f\left(t\right)\sin\left(n\frac{2 \pi}{T}t\right)dt \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              <span class="math-inline">$a_{n}$</span>, <span class="math-inline">$b_{n}$</span> は <b>フーリエ係数</b>で,
+              物理的には各周波数成分の<b>振幅</b>を表しています. また, <span class="math-inline">$\frac{2 \pi}{T} = 2 \pi f$</span> は, <b>角速度</b>
+              <span class="math-inline">$\omega$</span> で定義される場合もあります.
+            </p>
+            <p>
+              厳密には, フーリエ級数が成立する条件は, 周期関数であるだけでは不十分で, <b>ディリクレの条件</b>と合わせて十分条件となります.
+              これを理解するためには, 三角関数の基本的な性質 (高校レベルの数学) や三角関数の直交性などをもとに,
+              <b>リーマン・ルベーグの補助定理</b>や<b>パーセバルの等式</b>などを理解する必要があるので, 数学的な厳密性を理解したい場合は,
+              それぞれ最適なドキュメントを参考にしてください.
+            </p>
+            <p>
+              ここでは, 視覚的に理解するために, 周波数の異なる正弦波の級数で, 矩形波やノコギリ波, 三角波を生成してみます. また, 級数を大きくする
+              (項数を大きくする) ほど, 実際の波形により近似することもわかります.
+            </p>
+            <div class="app-container">
+              <svg id="svg-fourier-series" class="svg-fourier-series" width="720" height="240"></svg>
+              <div class="forms-fourier-series">
+                <button type="button" id="button-plot-fourier-series">Plot</button>
+                <button type="button" id="button-clear-fourier-series">Clear</button>
+                <button type="button" id="button-animation-fourier-series">Animation</button>
+                <label for="select-interval-fourier-series">Interval</label>
+                <select id="select-interval-fourier-series">
+                  <option value="500" selected>500 msec</option>
+                  <option value="60 fps">60 fps</option>
+                  <option value="50">50 msec</option>
+                  <option value="100">100 msec</option>
+                  <option value="250">250 msec</option>
+                </select>
+              </div>
+              <div class="forms-fourier-series">
+                <label for="select-function-fourier-series">Wave Type</label>
+                <select id="select-function-fourier-series">
+                  <option value="square" selected>Square</option>
+                  <option value="sawtooth">Sawtooth</option>
+                  <option value="triangle">Triangle</option>
+                </select>
+                <label>
+                  <span id="output-sum-box-fourier-series">&Sigma; <sub>k</sub> = <span id="output-sum-fourier-series">1</span></span>
+                  <input type="range" id="range-sum-fourier-series" value="1" min="1" max="100" step="1" />
+                </label>
+              </div>
+            </div>
+            <p>
+              余弦波と正弦波で表現されるフーリエ級数に, <b>オイラーの公式</b> (<span class="math-inline">$j$</span> は
+              <span class="math-inline">$j^{2} = -1$</span> となる虚数単位) を適用すると, <b>複素フーリエ級数</b>を導出可能です (つまり, 複素フーリエ級数は,
+              より一般化したフーリエ級数と言えます. さらに一般化を進めると, フーリエ変換となります).
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{align}
+                  &e^{j\theta} = \cos\left(\theta\right) + j\sin\left(\theta\right) \quad (Euler's formula) \\
+                  &f\left(t\right) = \sum_{n=-\infty}^{\infty}c_{n}e^{jn\frac{2 \pi}{T}t} \\
+                  &c_{n} = \frac{1}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f\left(t\right)e^{-jn\frac{2 \pi}{T}t}dt \\
+                \end{align}
+              $
+            </div>
+            <p>
+              物理的な観点で理解すると, 複素フーリエ級数は, 余弦波と正弦波の 2 次元の<b>振動現象</b>であるフーリエ級数を, 3 次元の<b>回転</b>へと拡張します.
+              また, 複素フーリエ級数によって, フーリエ級数の問題点, すなわち, 位相をシフトするとフーリエ係数の値が変化する問題
+              (余弦波と正弦波は位相の違いでしかないので, 原信号が同じでもフーリエ係数が異なることが起きうる) を発展的に解決します.
+            </p>
+          </section>
         </section>
       </section>
     </main>

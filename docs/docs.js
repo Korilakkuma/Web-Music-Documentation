@@ -1335,6 +1335,310 @@ const createQuantization = (svg, bit, fillColor, showOriginal, showSampling) => 
   }
 };
 
+const visualFourierSeries = (svg) => {
+  const N = 44100;
+
+  const RESOLUTION = 3500;
+
+  const plotButtonElement = document.getElementById('button-plot-fourier-series');
+  const clearButtonElement = document.getElementById('button-clear-fourier-series');
+  const animationButtonElement = document.getElementById('button-animation-fourier-series');
+  const intervalSelectElement = document.getElementById('select-interval-fourier-series');
+  const functionSelectElement = document.getElementById('select-function-fourier-series');
+  const rangeElement = document.getElementById('range-sum-fourier-series');
+  const outputTextElement = document.getElementById('output-sum-fourier-series');
+
+  const plotSeries = (svg, series) => {
+    const PADDING = 48;
+
+    const width = Number(svg.getAttribute('width'));
+    const height = Number(svg.getAttribute('height'));
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', PADDING.toString(10));
+    xRect.setAttribute('y', (height / 2 - lineWidth / 2).toString(10));
+    xRect.setAttribute('width', (width - 2 * PADDING).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (width / 2 - lineWidth / 2).toString(10));
+    yRect.setAttribute('y', '0');
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', height.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    const textX = width / 2 - lineWidth / 2 - 20;
+
+    [
+      [' 1.0', 1],
+      [' π/4', Math.PI / 4],
+      [' 0.0', 0],
+      ['-π/4', -(Math.PI / 4)],
+      ['-1.0', -1]
+    ].forEach(([t, v]) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = t;
+
+      text.setAttribute('x', textX.toString(10));
+      text.setAttribute('y', ((1 - v) * ((height - 2 * PADDING) / 2) + PADDING).toString(10));
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-family', 'Roboto');
+      text.setAttribute('font-size', '12px');
+
+      svg.appendChild(text);
+
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', PADDING.toString(10));
+      rect.setAttribute('y', ((1 - v) * ((height - 2 * PADDING) / 2) + PADDING).toString(10));
+      rect.setAttribute('width', (width - 2 * PADDING).toString(10));
+      rect.setAttribute('height', '1');
+      rect.setAttribute('stroke', 'none');
+      rect.setAttribute('fill', alphaBaseColor);
+
+      svg.appendChild(rect);
+    });
+
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('stroke', alphaWaveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    let d = '';
+
+    for (let n = 0; n < N; n++) {
+      const plotX = n * ((width - 2 * PADDING) / N) + PADDING;
+      const y = series[n];
+      const plotY = (1 - y) * ((height - 2 * PADDING) / 2) + PADDING;
+
+      if (n === 0) {
+        d += `M${plotX} ${plotY}`;
+      } else {
+        d += ` L${plotX} ${plotY}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    svg.appendChild(path);
+  };
+
+  const square = () => {
+    const fourierSeries = new Float32Array(N);
+
+    for (let n = 0; n < N; n++) {
+      fourierSeries[n] = 0;
+
+      for (let k = 0; k < K; k++) {
+        const x = n / RESOLUTION;
+        const odd = 2 * k + 1;
+
+        fourierSeries[n] += Math.sin(odd * x) / odd;
+      }
+    }
+
+    return fourierSeries;
+  };
+
+  const sawtooth = () => {
+    const fourierSeries = new Float32Array(N);
+
+    for (let n = 0; n < N; n++) {
+      fourierSeries[n] = 0;
+
+      for (let k = 1; k < K; k++) {
+        const x = n / RESOLUTION;
+
+        fourierSeries[n] += (1 / 4) * (2 * (Math.pow(-1, k + 1) / k) * Math.sin(k * x));
+      }
+    }
+
+    return fourierSeries;
+  };
+
+  const triangle = () => {
+    const fourierSeries = new Float32Array(N);
+
+    for (let n = 0; n < N; n++) {
+      fourierSeries[n] = Math.PI / 2;
+
+      for (let k = 1; k < K; k++) {
+        const x = n / RESOLUTION;
+
+        fourierSeries[n] += (1 / 2) * (((2 * (Math.pow(-1, k) - 1)) / (Math.pow(k, 2) * Math.PI)) * Math.cos(k * x));
+      }
+
+      fourierSeries[n] -= Math.PI / 2;
+    }
+
+    return fourierSeries;
+  };
+
+  const fourierSeries = () => {
+    switch (functionSelectElement.value) {
+      case 'square': {
+        return square();
+      }
+
+      case 'sawtooth': {
+        return sawtooth();
+      }
+
+      case 'triangle': {
+        return triangle();
+      }
+    }
+  };
+
+  let K = rangeElement.valueAsNumber;
+
+  let intervalId = null;
+  let animationId = null;
+
+  plotSeries(svg, fourierSeries());
+
+  plotButtonElement.addEventListener(
+    'click',
+    () => {
+      plotSeries(svg, fourierSeries());
+    },
+    false
+  );
+
+  clearButtonElement.addEventListener(
+    'click',
+    () => {
+      for (const path of svg.querySelectorAll('path')) {
+        svg.removeChild(path);
+      }
+
+      if (intervalId || animationId) {
+        if (intervalId) {
+          window.clearInterval(intervalId);
+          intervalId = null;
+        }
+
+        if (animationId) {
+          window.cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+
+        plotButtonElement.removeAttribute('disabled');
+        animationButtonElement.removeAttribute('disabled');
+        intervalSelectElement.removeAttribute('disabled');
+        functionSelectElement.removeAttribute('disabled');
+        rangeElement.removeAttribute('disabled');
+      }
+    },
+    false
+  );
+
+  animationButtonElement.addEventListener(
+    'click',
+    () => {
+      plotButtonElement.setAttribute('disabled', 'disabled');
+      animationButtonElement.setAttribute('disabled', 'disabled');
+      intervalSelectElement.setAttribute('disabled', 'disabled');
+      functionSelectElement.setAttribute('disabled', 'disabled');
+      rangeElement.setAttribute('disabled', 'disabled');
+
+      K = 1;
+
+      const animate = (auto = false) => {
+        for (const path of svg.querySelectorAll('path')) {
+          svg.removeChild(path);
+        }
+
+        plotSeries(svg, fourierSeries());
+
+        rangeElement.valueAsNumber = K;
+        outputTextElement.textContent = K;
+
+        ++K;
+
+        if (K > 100) {
+          if (intervalId) {
+            window.clearInterval(intervalId);
+            intervalId = null;
+          }
+
+          if (animationId) {
+            window.cancelAnimationFrame(animationId);
+            animationId = null;
+          }
+
+          plotButtonElement.removeAttribute('disabled');
+          animationButtonElement.removeAttribute('disabled');
+          intervalSelectElement.removeAttribute('disabled');
+          functionSelectElement.removeAttribute('disabled');
+          rangeElement.removeAttribute('disabled');
+          return;
+        }
+
+        if (auto) {
+          animationId = window.requestAnimationFrame(() => {
+            animate(auto);
+          });
+        }
+      };
+
+      if (intervalSelectElement.value === '60 fps') {
+        animate(true);
+      } else {
+        const interval = Number(intervalSelectElement.value);
+
+        intervalId = window.setInterval(animate, interval);
+      }
+    },
+    false
+  );
+
+  rangeElement.addEventListener('input', (event) => {
+    K = event.currentTarget.valueAsNumber;
+
+    outputTextElement.textContent = K;
+  });
+
+  rangeElement.addEventListener(
+    'change',
+    (event) => {
+      plotSeries(svg, fourierSeries());
+    },
+    false
+  );
+
+  functionSelectElement.addEventListener(
+    'change',
+    (event) => {
+      if (event.currentTarget.value === 'sinc') {
+        animationButtonElement.setAttribute('disabled', 'disabled');
+        intervalSelectElement.setAttribute('disabled', 'disabled');
+        rangeElement.setAttribute('disabled', 'disabled');
+      } else {
+        animationButtonElement.removeAttribute('disabled');
+        intervalSelectElement.removeAttribute('disabled');
+        rangeElement.removeAttribute('disabled');
+      }
+    },
+    false
+  );
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -1379,3 +1683,5 @@ createSampling(document.getElementById('svg-figure-sampling-theorem'), 48, true)
 createQuantization(document.getElementById('svg-figure-quantization'), 3, lightWaveColor, true, true);
 createQuantization(document.getElementById('svg-figure-quantization-bits'), 4, lightWaveColor, false, true);
 createQuantization(document.getElementById('svg-figure-coding'), 4, alphaBaseColor, false, false);
+
+visualFourierSeries(document.getElementById('svg-fourier-series'));
