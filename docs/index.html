@@ -4387,6 +4387,31 @@ window.setInterval(() =&gt; {
               (余弦波と正弦波は位相の違いでしかないので, 原信号が同じでもフーリエ係数が異なることが起きうる) を発展的に解決します.
             </p>
           </section>
+          <section id="section-fourier-transform">
+            <h4>フーリエ変換</h4>
+            <p>
+              フーリエ級数が周期関数のみ適用可能だったのを, 非周期関数にも適用できるように, さらに拡張したフーリエ級数が<b>フーリエ変換</b>です.
+              フーリエ級数から, フーリエ変換を導出するには, 非周期, つまり, <b>周期を <span class="math-inline">$\infty$</span></b> に拡張して導出します.
+              具体的には, 複素フーリエ級数の係数 <span class="math-inline">$c_{n}$</span> の周期 <span class="math-inline">$T$</span> を
+              <span class="math-inline">$\infty$</span> に拡張すると, 角速度
+              <span class="math-inline">$\omega (= \frac{2 \pi}{T} = 2 \pi f)$</span> が連続的な角速度になることで導出できます (以下は,
+              フーリエ変換と逆フーリエ変換の定義式です).
+            </p>
+            <p>
+              フーリエ変換の厳密な導出を理解するには, <b>デルタ関数</b>や<b>単位階段関数</b>の理解が必要になります (さらに, フーリエ変換では,
+              <b>絶対可積分</b> (<span class="math-inline">$\int_{-\infty}^{\infty}\left|f\left(t\right)\right|dt \lt \infty$</span> ) が必要条件となります.
+              フーリエ級数からフーリエ変換の数学的な導出の詳細に関しては, それぞれ最適なドキュメントを参考にしてください).
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &F\left(f\right) = \int_{-\infty}^{\infty}f\left(t\right)e^{-j2 \pi ft}dt \\
+                  &f\left(t\right) = \frac{1}{2 \pi}\int_{-\infty}^{\infty}F\left(f\right)e^{j2 \pi tf}df \\
+                \end{flalign}
+              $
+            </div>
+          </section>
         </section>
       </section>
     </main>
