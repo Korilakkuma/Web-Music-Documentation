@@ -4411,6 +4411,30 @@ window.setInterval(() =&gt; {
                 \end{flalign}
               $
             </div>
+            <section id="section-spectrum">
+              <h5>スペクトル</h5>
+              <p>
+                フーリエ変換後の関数は, 物理的には<b>スペクトル</b>となります. スペクトルとは, 各周波数成分の振幅や位相を表す波形です (したがって,
+                周波数領域の波形, 周波数ドメインの波形などと表現することもあります). つまり, 2 次元のグラフで考えると, 横軸の次元が周波数となり,
+                縦軸が振幅であれば, <b>振幅スペクトル</b>, 位相であれば, <b>位相スペクトル</b>となります. もう少し厳密に説明すると, フーリエ変換後の関数は,
+                複素数の関数となるので, <b>絶対値</b>を取得すれば振幅スペクトル, <b>偏角</b>を取得すれば位相スペクトルとなります (以下に, 複素数
+                <span class="math-inline">$z = x + jy$</span> を定義した場合の絶対値 <span class="math-inline">$\left|z\right|$</span> と偏角
+                <span class="math-inline">$\theta$</span> を記載します). フーリエ変換後の関数を逆フーリエ変換すると, 元の横軸を時間とした波形となります.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $\left|z\right| = \sqrt{x^{2} + y^{2}} \quad \cos\theta = \frac{x}{\sqrt{x^{2} + y^{2}}} \quad \sin\theta = \frac{y}{\sqrt{x^{2} + y^{2}}} \quad \tan\theta = \left(\frac{\sin\theta}{\cos\theta}\right) \quad \theta = \tan^{-1}\left(\frac{\sin\theta}{\cos\theta}\right) = \tan^{-1}\left(\frac{y}{x}\right)$
+              </div>
+              <p>
+                ちなみに, <b>人間の聴覚は位相スペクトルの違いに鈍感</b>という特性があるので, 一般的に, スペクトルと表現した場合,
+                振幅スペクトルを意味することがほとんどです.
+              </p>
+              <p>
+                音響特徴量は振幅スペクトルにあらわれることが多く, したがって, オーディオ信号処理を適用する場合,
+                周波数領域にて演算を実行することが頻繁にあります. このことが, デジタルオーディオ信号処理において, フーリエ解析 (コンピュータでは,
+                高速フーリエ変換) が中核となる理由です.
+              </p>
+            </section>
           </section>
         </section>
       </section>
