@@ -4436,6 +4436,78 @@ window.setInterval(() =&gt; {
               </p>
             </section>
           </section>
+          <section id="section-discrete-fourier-transform">
+            <h4>離散フーリエ変換 (DFT)</h4>
+            <p>
+              コンピュータで実現する場合, 無限区間の積分は原理上できないので, ある区間で和分を算出する必要があります. これが,
+              <b>離散フーリエ変換</b> (<b>DFT</b>: <b>Discrete Fourier Transform</b>)です (余談ですが, コンピュータにおいて, 積分は和分,
+              微分は差分で実装します).
+            </p>
+            <p>
+              フーリエ変換から, 離散フーリエ変換を導出するには, 周波数 (周期) と, サンプリング周波数 (サンプリング周期) を数列 (離散値) で対応づけます.
+              <span class="math-inline">$f_{s}$</span> は, サンプリング周波数 (<span class="math-inline">$T_{s}$</span> は, サンプリング周期). また,
+              離散フーリエ変換は, 一定のサイズで変換する必要があるので <span class="math-inline">$N$</span> は, 離散フーリエ変換のサンプル数です (Web Audio API
+              では, <code>AnalyserNode</code> の <b><code>fftSize</code></b> プロパティの値に相当します).
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &t = nT_{s} = \frac{n}{f_{s}} \quad (n = 0. 1, 2, \cdots N - 1) \\
+                  &f = k\frac{f_{s}}{N} \quad (k = 0, 1, 2, \cdots N - 1) \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              そして, 積分は和分になるので, これらをフーリエ変換の式に適用して, 変形すると, 離散フーリエ変換と逆離散フーリエ変換の定義式が導出できます.
+              <span class="math-inline">$x\left(n\right)$</span>, および, <span class="math-inline">$X\left(k\right)$</span> は, サンプリングした信号です.
+              数学的には数列, プログラミング的には配列のような順序性をもつ数値のコレクションと考えると理解しやすいかもしれません.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &X\left(k\right) = \sum_{n = 0}^{N - 1}x\left(n\right)e^{-j\frac{2 \pi kn}{N}} \\
+                  &x\left(n\right) = \frac{1}{N}\sum_{k = 0}^{N - 1}X\left(k\right)e^{j\frac{2 \pi nk}{N}} \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              多くのプログラミング言語において, 配列のようなコレクションのインデックスは <code>0</code> から開始するので, 離散フーリエ変換の積和演算の範囲も,
+              <code>0</code> から開始している点と有界となっている点に着目してください.
+            </p>
+            <p>また, <span class="math-inline">$e^{-j\frac{2 \pi n}{N}}$</span> は, <b>回転因子</b> (<b>回転子</b>) と呼ばれ, 以下のように定義されます.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $W^{n} = e^{-j\frac{2 \pi n}{N}} = \cos\left(\frac{2 \pi n}{N}\right) - j\sin\left(\frac{2 \pi n}{N}\right)$
+            </div>
+            <p>回転因子は, 例えば, <span class="math-inline">$N$</span> を <code>8</code> とした場合, 複素平面上の単位円を 8 分割するような回転を表現します.</p>
+            <figure>
+              <svg id="svg-figure-rotation-factors" width="720" height="405" />
+              <figcaption><span class="math-inline">$N = 8$</span> の場合の回転因子</figcaption>
+            </figure>
+            <p>
+              このことから, 回転因子は以下のような性質をもっています (また, 離散フーリエ変換のサイズ <span class="math-inline">$\frac{N}{2}$</span> は,
+              ナイキスト周波数成分のインデックスに相当します).
+            </p>
+            <ul>
+              <li><span class="math-inline">$W^{n + N} = W^{n}$</span></li>
+              <li><span class="math-inline">$W^{n + \frac{N}{2}} = -W^{n}$</span></li>
+            </ul>
+            <p>
+              以下は, 回転因子で定義した離散フーリエ変換と逆離散フーリエ変換です. 高速フーリエ変換では, 回転因子の性質
+              (周期性による対称性や半周期性の負の対称性) を利用して, 各要素の計算量を減らして演算の高速化を実現しています.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &X\left(k\right) = \sum_{n = 0}^{N - 1}x\left(n\right)W^{n} \\
+                  &x\left(n\right) = \frac{1}{N}\sum_{k = 0}^{N - 1}X\left(k\right)W^{-k} \\
+                \end{flalign}
+              $
+            </div>
+          </section>
         </section>
       </section>
     </main>

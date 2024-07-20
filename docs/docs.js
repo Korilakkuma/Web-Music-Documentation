@@ -1639,6 +1639,141 @@ const visualFourierSeries = (svg) => {
   );
 };
 
+const createRotationFactors = (svg) => {
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', (2 * padding).toString(10));
+  xRect.setAttribute('y', (height / 2 - lineWidth / 2).toString(10));
+  xRect.setAttribute('width', (width - 4 * padding).toString(10));
+  xRect.setAttribute('height', lineWidth.toString(10));
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', (width / 2 - lineWidth / 2).toString(10));
+  yRect.setAttribute('y', '24');
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', (height - 24).toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(yRect);
+
+  const realText = document.createElementNS(xmlns, 'text');
+
+  realText.textContent = 'Re';
+
+  realText.setAttribute('x', (width - 2 * padding + 20).toString(10));
+  realText.setAttribute('y', (height / 2 + 8).toString(10));
+  realText.setAttribute('text-anchor', 'middle');
+  realText.setAttribute('stroke', 'none');
+  realText.setAttribute('fill', baseColor);
+  realText.setAttribute('font-size', '20px');
+
+  svg.appendChild(realText);
+
+  const imagText = document.createElementNS(xmlns, 'text');
+
+  imagText.textContent = 'Im';
+
+  imagText.setAttribute('x', (width / 2).toString(10));
+  imagText.setAttribute('y', '20');
+  imagText.setAttribute('text-anchor', 'middle');
+  imagText.setAttribute('stroke', 'none');
+  imagText.setAttribute('fill', baseColor);
+  imagText.setAttribute('font-size', '20px');
+
+  svg.appendChild(imagText);
+
+  const circle = document.createElementNS(xmlns, 'circle');
+
+  circle.setAttribute('cx', (width / 2).toString(10));
+  circle.setAttribute('cy', (height / 2).toString(10));
+  circle.setAttribute('r', '120');
+  circle.setAttribute('stroke', alphaBaseColor);
+  circle.setAttribute('stroke-width', '4');
+  circle.setAttribute('fill', 'none');
+
+  svg.appendChild(circle);
+
+  const innerCircle = document.createElementNS(xmlns, 'circle');
+
+  innerCircle.setAttribute('cx', (width / 2).toString(10));
+  innerCircle.setAttribute('cy', (height / 2).toString(10));
+  innerCircle.setAttribute('r', '60');
+  innerCircle.setAttribute('stroke', lightWaveColor);
+  innerCircle.setAttribute('stroke-width', '4');
+  innerCircle.setAttribute('fill', 'none');
+
+  svg.appendChild(innerCircle);
+
+  const arrow = document.createElementNS(xmlns, 'path');
+
+  arrow.setAttribute(
+    'd',
+    `M${width - 60 - 4 * padding} ${height / 2 - lineWidth / 2} L${width - 60 - 4 * padding - 8} ${height / 2 - lineWidth / 2 - 12} ${width - 60 - 4 * padding + 8} ${height / 2 - lineWidth / 2 - 12}`
+  );
+  arrow.setAttribute('stroke', 'none');
+  arrow.setAttribute('fill', lightWaveColor);
+
+  svg.appendChild(arrow);
+
+  [0, (7 * Math.PI) / 4, (6 * Math.PI) / 4, (5 * Math.PI) / 4, (4 * Math.PI) / 4, (3 * Math.PI) / 4, (2 * Math.PI) / 4, Math.PI / 4].forEach((rad, index) => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    const startX = width / 2;
+    const startY = height / 2;
+
+    const endX = 118 * Math.cos(rad) + startX;
+    const endY = 118 * Math.sin(rad) + startY;
+
+    path.setAttribute('d', `M${startX} ${startY} L${endX} ${endY}`);
+
+    path.setAttribute('stroke', lightColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-dasharray', '5,5');
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    svg.appendChild(path);
+
+    const textW = document.createElementNS(xmlns, `text`);
+    const textN = document.createElementNS(xmlns, `text`);
+
+    textW.textContent = 'W';
+
+    if (index === 0) {
+      textN.textContent = '0';
+    } else {
+      textN.textContent = (8 - index).toString(10);
+    }
+
+    textW.setAttribute('x', endX.toString(10));
+    textW.setAttribute('y', endY.toString(10));
+    textW.setAttribute('text-anchor', 'middle');
+    textW.setAttribute('stroke', 'none');
+    textW.setAttribute('fill', baseColor);
+    textW.setAttribute('font-size', '20px');
+
+    textN.setAttribute('x', (endX + 12).toString(10));
+    textN.setAttribute('y', (endY - 12).toString(10));
+    textN.setAttribute('text-anchor', 'middle');
+    textN.setAttribute('stroke', 'none');
+    textN.setAttribute('fill', baseColor);
+    textN.setAttribute('font-size', '16px');
+
+    svg.appendChild(textW);
+    svg.appendChild(textN);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -1685,3 +1820,5 @@ createQuantization(document.getElementById('svg-figure-quantization-bits'), 4, l
 createQuantization(document.getElementById('svg-figure-coding'), 4, alphaBaseColor, false, false);
 
 visualFourierSeries(document.getElementById('svg-fourier-series'));
+
+createRotationFactors(document.getElementById('svg-figure-rotation-factors'));
