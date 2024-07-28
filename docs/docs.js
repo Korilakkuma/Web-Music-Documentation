@@ -1715,10 +1715,9 @@ const createRotationFactors = (svg) => {
 
   const arrow = document.createElementNS(xmlns, 'path');
 
-  arrow.setAttribute(
-    'd',
-    `M${width - 60 - 4 * padding} ${height / 2 - lineWidth / 2} L${width - 60 - 4 * padding - 8} ${height / 2 - lineWidth / 2 - 12} ${width - 60 - 4 * padding + 8} ${height / 2 - lineWidth / 2 - 12}`
-  );
+  const ax = width - 60 - 4 * padding;
+
+  arrow.setAttribute('d', `M${ax} ${height / 2 - lineWidth / 2} L${ax - 8} ${height / 2 - lineWidth / 2 - 12} ${ax + 8} ${height / 2 - lineWidth / 2 - 12}`);
   arrow.setAttribute('stroke', 'none');
   arrow.setAttribute('fill', lightWaveColor);
 
@@ -1774,6 +1773,1244 @@ const createRotationFactors = (svg) => {
   });
 };
 
+const createAddSymbol = (svg, x, y) => {
+  const addSymbolCircle = document.createElementNS(xmlns, 'circle');
+
+  addSymbolCircle.setAttribute('cx', x.toString(10));
+  addSymbolCircle.setAttribute('cy', y.toString(10));
+  addSymbolCircle.setAttribute('r', '8');
+  addSymbolCircle.setAttribute('stroke', baseColor);
+  addSymbolCircle.setAttribute('stroke-width', lineWidth.toString(10));
+  addSymbolCircle.setAttribute('stroke-linecap', lineCap);
+  addSymbolCircle.setAttribute('stroke-linejoin', lineJoin);
+  addSymbolCircle.setAttribute('fill', 'none');
+
+  svg.appendChild(addSymbolCircle);
+
+  const addSymbol = document.createElementNS(xmlns, 'text');
+
+  addSymbol.textContent = '+';
+
+  addSymbol.setAttribute('x', x.toString(10));
+  addSymbol.setAttribute('y', (y + 6).toString(10));
+
+  addSymbol.setAttribute('text-anchor', 'middle');
+  addSymbol.setAttribute('stroke', 'none');
+  addSymbol.setAttribute('fill', baseColor);
+  addSymbol.setAttribute('font-size', '24px');
+
+  svg.appendChild(addSymbol);
+};
+
+const createSubSymbol = (svg, x, y) => {
+  const subSymbolCircle = document.createElementNS(xmlns, 'circle');
+
+  subSymbolCircle.setAttribute('cx', x.toString(10));
+  subSymbolCircle.setAttribute('cy', y.toString(10));
+  subSymbolCircle.setAttribute('r', '8');
+  subSymbolCircle.setAttribute('stroke', baseColor);
+  subSymbolCircle.setAttribute('stroke-width', lineWidth.toString(10));
+  subSymbolCircle.setAttribute('stroke-linecap', lineCap);
+  subSymbolCircle.setAttribute('stroke-linejoin', lineJoin);
+  subSymbolCircle.setAttribute('fill', 'none');
+
+  svg.appendChild(subSymbolCircle);
+
+  const subSymbol = document.createElementNS(xmlns, 'text');
+
+  subSymbol.textContent = '-';
+
+  subSymbol.setAttribute('x', x.toString(10));
+  subSymbol.setAttribute('y', (y + 14).toString(10));
+
+  subSymbol.setAttribute('text-anchor', 'middle');
+  subSymbol.setAttribute('stroke', 'none');
+  subSymbol.setAttribute('fill', baseColor);
+  subSymbol.setAttribute('font-size', '48px');
+  subSymbol.setAttribute('font-weight', '200');
+
+  svg.appendChild(subSymbol);
+};
+
+const createFFTSymbols = (svg) => {
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const padding = 32;
+
+  createAddSymbol(svg, padding, padding);
+
+  const addSymbolText = document.createElementNS(xmlns, 'text');
+
+  addSymbolText.textContent = '加算器';
+
+  addSymbolText.setAttribute('x', (padding + 42).toString(10));
+  addSymbolText.setAttribute('y', (padding + 6).toString(10));
+
+  addSymbolText.setAttribute('text-anchor', 'middle');
+  addSymbolText.setAttribute('stroke', 'none');
+  addSymbolText.setAttribute('fill', grayColor);
+  addSymbolText.setAttribute('font-size', '16px');
+
+  svg.appendChild(addSymbolText);
+
+  createSubSymbol(svg, 4 * padding, padding);
+
+  const subSymbolText = document.createElementNS(xmlns, 'text');
+
+  subSymbolText.textContent = '減算器';
+
+  subSymbolText.setAttribute('x', (5 * padding + 12).toString(10));
+  subSymbolText.setAttribute('y', (padding + 5).toString(10));
+
+  subSymbolText.setAttribute('text-anchor', 'middle');
+  subSymbolText.setAttribute('stroke', 'none');
+  subSymbolText.setAttribute('fill', grayColor);
+  subSymbolText.setAttribute('font-size', '16px');
+
+  svg.appendChild(subSymbolText);
+
+  const multiplySymbol = document.createElementNS(xmlns, 'path');
+
+  multiplySymbol.setAttribute(
+    'd',
+    `M${7 * padding} ${padding} L${7 * padding} ${padding - 8} L${7 * padding + 12} ${padding} L${7 * padding} ${padding + 8} L${7 * padding} ${padding}`
+  );
+
+  multiplySymbol.setAttribute('stroke', baseColor);
+  multiplySymbol.setAttribute('stroke-width', lineWidth.toString(10));
+  multiplySymbol.setAttribute('stroke-linecap', lineCap);
+  multiplySymbol.setAttribute('stroke-linejoin', lineJoin);
+  multiplySymbol.setAttribute('fill', 'none');
+
+  svg.appendChild(multiplySymbol);
+
+  const multiplySymbolText = document.createElementNS(xmlns, 'text');
+
+  multiplySymbolText.textContent = '乗算器';
+
+  multiplySymbolText.setAttribute('x', (8 * padding + 12).toString(10));
+  multiplySymbolText.setAttribute('y', (padding + 5).toString(10));
+
+  multiplySymbolText.setAttribute('text-anchor', 'middle');
+  multiplySymbolText.setAttribute('stroke', 'none');
+  multiplySymbolText.setAttribute('fill', grayColor);
+  multiplySymbolText.setAttribute('font-size', '16px');
+
+  svg.appendChild(multiplySymbolText);
+
+  const sortIndexPath = document.createElementNS(xmlns, 'path');
+
+  sortIndexPath.setAttribute('d', `M${10 * padding} ${padding} L${12 * padding} ${padding}`);
+
+  sortIndexPath.setAttribute('stroke', baseColor);
+  sortIndexPath.setAttribute('stroke-width', lineWidth.toString(10));
+  sortIndexPath.setAttribute('stroke-dasharray', '5,5');
+  sortIndexPath.setAttribute('stroke-linecap', lineCap);
+  sortIndexPath.setAttribute('stroke-linejoin', lineJoin);
+  sortIndexPath.setAttribute('fill', 'none');
+
+  svg.appendChild(sortIndexPath);
+
+  const sortIndexPathText = document.createElementNS(xmlns, 'text');
+
+  sortIndexPathText.textContent = 'インデックス並び替え';
+
+  sortIndexPathText.setAttribute('x', (14 * padding + 24).toString(10));
+  sortIndexPathText.setAttribute('y', (padding + 5).toString(10));
+
+  sortIndexPathText.setAttribute('text-anchor', 'middle');
+  sortIndexPathText.setAttribute('stroke', 'none');
+  sortIndexPathText.setAttribute('fill', grayColor);
+  sortIndexPathText.setAttribute('font-size', '16px');
+
+  svg.appendChild(sortIndexPathText);
+};
+
+const createFFT4 = (svg) => {
+  const size = 4;
+
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const padding = 16;
+
+  const innerWidth = width - 4 * padding;
+  const innerHeight = height - 2 * padding;
+
+  for (let n = 0; n < size; n++) {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    const x = 2 * padding;
+    const y = padding + n * (innerHeight / size);
+
+    rect.setAttribute('x', x.toString(10));
+    rect.setAttribute('y', y.toString(10));
+    rect.setAttribute('width', innerWidth.toString(10));
+    rect.setAttribute('height', lineWidth.toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rect);
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    const ax = x + innerWidth - 12;
+
+    arrow.setAttribute('d', `M${ax} ${y} L${ax} ${y - 8} ${ax + 12} ${y} L${ax} ${y + 8} ${ax} ${y}`);
+    arrow.setAttribute('stroke', 'none');
+    arrow.setAttribute('fill', baseColor);
+
+    svg.appendChild(arrow);
+
+    const xn = document.createElementNS(xmlns, 'text');
+
+    xn.textContent = `x[${n}]`;
+
+    xn.setAttribute('x', (x - 16).toString(10));
+    xn.setAttribute('y', (y + 5).toString(10));
+    xn.setAttribute('text-anchor', 'middle');
+    xn.setAttribute('stroke', 'none');
+    xn.setAttribute('fill', baseColor);
+    xn.setAttribute('font-size', '16px');
+
+    svg.appendChild(xn);
+
+    const xk = document.createElementNS(xmlns, 'text');
+
+    xk.textContent = `X[${n}]`;
+
+    xk.setAttribute('x', (x + innerWidth + 16).toString(10));
+    xk.setAttribute('y', (y + 5).toString(10));
+    xk.setAttribute('text-anchor', 'middle');
+    xk.setAttribute('stroke', 'none');
+    xk.setAttribute('fill', baseColor);
+    xk.setAttribute('font-size', '16px');
+
+    svg.appendChild(xk);
+
+    for (let stage = 1; stage <= Math.log2(size); stage++) {
+      const elementText = document.createElementNS(xmlns, 'text');
+
+      switch (stage) {
+        case 1: {
+          switch (n) {
+            case 0: {
+              elementText.textContent = '(x[0] + x[2])';
+              break;
+            }
+
+            case 1: {
+              elementText.textContent = '(x[1] + x[3])';
+              break;
+            }
+
+            case 2: {
+              elementText.textContent = '(x[0] - x[2])';
+              break;
+            }
+
+            case 3: {
+              elementText.textContent = '(x[1] - x[3])';
+              break;
+            }
+          }
+
+          elementText.setAttribute('x', (innerWidth / 4 + 24).toString(10));
+          break;
+        }
+
+        case 2: {
+          switch (n) {
+            case 0: {
+              elementText.textContent = '(x[0] + x[2]) + (x[1] + x[3])';
+              break;
+            }
+
+            case 1: {
+              elementText.textContent = '(x[0] + x[2]) - (x[1] + x[3])';
+              break;
+            }
+
+            case 2: {
+              elementText.textContent = '(x[0] - x[2]) + W(x[1] - x[3])';
+              break;
+            }
+
+            case 3: {
+              elementText.textContent = '(x[0] - x[2]) - W(x[1] - x[3])';
+              break;
+            }
+          }
+
+          elementText.setAttribute('x', (2 * (innerWidth / 3) + 48).toString(10));
+          break;
+        }
+      }
+
+      elementText.setAttribute('y', (n * (innerHeight / size) + 12).toString(10));
+      elementText.setAttribute('text-anchor', 'middle');
+      elementText.setAttribute('stroke', 'none');
+      elementText.setAttribute('fill', grayColor);
+      elementText.setAttribute('font-size', '16px');
+
+      svg.appendChild(elementText);
+
+      const xPath = document.createElementNS(xmlns, 'path');
+
+      const startX = x + (stage - 1) * (innerWidth / 2) + stage * 12;
+      const endX = x + stage * (innerWidth / 6) + (stage - 1) * 24;
+
+      switch (stage) {
+        case 1: {
+          switch (n) {
+            case 0: {
+              xPath.setAttribute('d', `M${startX} ${padding} L${endX} ${padding + 2 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 2 * (innerHeight / size));
+              break;
+            }
+
+            case 1: {
+              xPath.setAttribute('d', `M${startX} ${padding + 1 * (innerHeight / size)} L${endX} ${padding + 3 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 3 * (innerHeight / size));
+              break;
+            }
+
+            case 2: {
+              xPath.setAttribute('d', `M${startX} ${padding + 2 * (innerHeight / size)} L${endX} ${padding}`);
+              createAddSymbol(svg, endX, padding);
+              break;
+            }
+
+            case 3: {
+              xPath.setAttribute('d', `M${startX} ${padding + 3 * (innerHeight / size)} L${endX} ${padding + 1 * (innerHeight / size)}`);
+              createAddSymbol(svg, endX, padding + 1 * (innerHeight / size));
+              break;
+            }
+          }
+
+          break;
+        }
+
+        case 2: {
+          switch (n) {
+            case 0: {
+              xPath.setAttribute('d', `M${startX} ${padding} L${endX} ${padding + 1 * (innerHeight / size)}`);
+              createAddSymbol(svg, startX, padding + 1 * (innerHeight / size));
+              break;
+            }
+
+            case 1: {
+              xPath.setAttribute('d', `M${startX} ${padding + 1 * (innerHeight / size)} L${endX} ${padding}`);
+              createSubSymbol(svg, startX, padding);
+              break;
+            }
+
+            case 2: {
+              xPath.setAttribute('d', `M${startX} ${padding + 2 * (innerHeight / size)} L${endX} ${padding + 3 * (innerHeight / size)}`);
+              createAddSymbol(svg, startX, padding + 3 * (innerHeight / size));
+              break;
+            }
+
+            case 3: {
+              xPath.setAttribute('d', `M${startX} ${padding + 3 * (innerHeight / size)} L${endX} ${padding + 2 * (innerHeight / size)}`);
+              createSubSymbol(svg, startX, padding + 2 * (innerHeight / size));
+              break;
+            }
+          }
+
+          break;
+        }
+      }
+
+      xPath.setAttribute('stroke', baseColor);
+      xPath.setAttribute('stroke-width', lineWidth.toString(10));
+      xPath.setAttribute('stroke-linecap', lineCap);
+      xPath.setAttribute('stroke-linejoin', lineJoin);
+      xPath.setAttribute('fill', 'none');
+
+      svg.appendChild(xPath);
+    }
+
+    if (n === 1 || n === 2) {
+      const sortIndexPath = document.createElementNS(xmlns, 'path');
+
+      const startX = x + innerWidth / 2 + 80;
+      const endX = x + innerWidth - 80;
+
+      switch (n) {
+        case 1: {
+          sortIndexPath.setAttribute('d', `M${startX} ${padding + 1 * (innerHeight / size)} L${endX} ${padding + 2 * (innerHeight / size)}`);
+          break;
+        }
+
+        case 2: {
+          sortIndexPath.setAttribute('d', `M${startX} ${padding + 2 * (innerHeight / size)} L${endX} ${padding + 1 * (innerHeight / size)}`);
+          break;
+        }
+      }
+
+      sortIndexPath.setAttribute('stroke', baseColor);
+      sortIndexPath.setAttribute('stroke-width', lineWidth.toString(10));
+      sortIndexPath.setAttribute('stroke-dasharray', '5,5');
+      sortIndexPath.setAttribute('stroke-linecap', lineCap);
+      sortIndexPath.setAttribute('stroke-linejoin', lineJoin);
+      sortIndexPath.setAttribute('fill', 'none');
+
+      svg.appendChild(sortIndexPath);
+    }
+
+    const rotationFactor = document.createElementNS(xmlns, 'path');
+
+    const rx = x + innerWidth / 3 - 12;
+
+    rotationFactor.setAttribute('d', `M${rx} ${y + 1} L${rx} ${y - 8} ${rx + 12} ${y + 1} L${rx} ${y + 8} ${rx} ${y + 1}`);
+    rotationFactor.setAttribute('stroke', baseColor);
+    rotationFactor.setAttribute('stroke-width', lineWidth.toString(10));
+    rotationFactor.setAttribute('fill', 'none');
+
+    svg.appendChild(rotationFactor);
+
+    const w = document.createElementNS(xmlns, 'text');
+
+    switch (n) {
+      case 0: {
+        w.textContent = ' 1';
+        break;
+      }
+
+      case 1: {
+        w.textContent = '-1';
+        break;
+      }
+
+      case 2: {
+        w.textContent = ' 1';
+        break;
+      }
+
+      case 3: {
+        w.textContent = '-W';
+        break;
+      }
+    }
+
+    w.setAttribute('x', (rx + 24).toString(10));
+    w.setAttribute('y', (n * (innerHeight / size) + 12).toString(10));
+    w.setAttribute('text-anchor', 'middle');
+    w.setAttribute('stroke', 'none');
+    w.setAttribute('fill', baseColor);
+    w.setAttribute('font-size', '16px');
+
+    svg.appendChild(w);
+  }
+};
+
+const createFFT8 = (svg) => {
+  const size = 8;
+
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const padding = 16;
+
+  const innerWidth = width - 4 * padding;
+  const innerHeight = height - 2 * padding;
+
+  for (let n = 0; n < size; n++) {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    const x = 2 * padding;
+    const y = padding + n * (innerHeight / size);
+
+    rect.setAttribute('x', x.toString(10));
+    rect.setAttribute('y', y.toString(10));
+    rect.setAttribute('width', innerWidth.toString(10));
+    rect.setAttribute('height', lineWidth.toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rect);
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    const ax = x + innerWidth - 12;
+
+    arrow.setAttribute('d', `M${ax} ${y} L${ax} ${y - 8} ${ax + 12} ${y} L${ax} ${y + 8} ${ax} ${y}`);
+    arrow.setAttribute('stroke', 'none');
+    arrow.setAttribute('fill', baseColor);
+
+    svg.appendChild(arrow);
+
+    const xn = document.createElementNS(xmlns, 'text');
+
+    xn.textContent = `x[${n}]`;
+
+    xn.setAttribute('x', (x - 16).toString(10));
+    xn.setAttribute('y', (y + 5).toString(10));
+    xn.setAttribute('text-anchor', 'middle');
+    xn.setAttribute('stroke', 'none');
+    xn.setAttribute('fill', baseColor);
+    xn.setAttribute('font-size', '16px');
+
+    svg.appendChild(xn);
+
+    const xk = document.createElementNS(xmlns, 'text');
+
+    xk.textContent = `X[${n}]`;
+
+    xk.setAttribute('x', (x + innerWidth + 16).toString(10));
+    xk.setAttribute('y', (y + 5).toString(10));
+    xk.setAttribute('text-anchor', 'middle');
+    xk.setAttribute('stroke', 'none');
+    xk.setAttribute('fill', baseColor);
+    xk.setAttribute('font-size', '16px');
+
+    svg.appendChild(xk);
+
+    for (let stage = 1; stage <= Math.log2(size); stage++) {
+      const elementText = document.createElementNS(xmlns, 'text');
+      const elementTextSuper = document.createElementNS(xmlns, 'text');
+
+      switch (stage) {
+        case 1: {
+          switch (n) {
+            case 0: {
+              elementText.textContent = '(x[0] + x[4])';
+              break;
+            }
+
+            case 1: {
+              elementText.textContent = '(x[1] + x[5])';
+              break;
+            }
+
+            case 2: {
+              elementText.textContent = '(x[2] + x[6])';
+              break;
+            }
+
+            case 3: {
+              elementText.textContent = '(x[3] + x[7])';
+              break;
+            }
+
+            case 4: {
+              elementText.textContent = '(x[0] - x[4])';
+              break;
+            }
+
+            case 5: {
+              elementText.textContent = '(x[1] - x[5])';
+              break;
+            }
+
+            case 6: {
+              elementText.textContent = '(x[2] - x[6])';
+              break;
+            }
+
+            case 7: {
+              elementText.textContent = '(x[3] - x[7])';
+              break;
+            }
+          }
+
+          elementText.setAttribute('x', (innerWidth / 8).toString(10));
+
+          elementTextSuper.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+          elementTextSuper.setAttribute('text-anchor', 'middle');
+          elementTextSuper.setAttribute('stroke', 'none');
+          elementTextSuper.setAttribute('fill', grayColor);
+          elementTextSuper.setAttribute('font-size', '12px');
+
+          svg.appendChild(elementTextSuper);
+          break;
+        }
+
+        case 2: {
+          const x2 = x + innerWidth / 3 + 4;
+
+          switch (n) {
+            case 0: {
+              elementText.textContent = '(x[0] + x[4]) + (x[2] + x[6])';
+
+              elementText.setAttribute('x', x2.toString(10));
+              break;
+            }
+
+            case 1: {
+              elementText.textContent = '(x[1] + x[5]) + (x[3] + x[7])';
+
+              elementText.setAttribute('x', x2.toString(10));
+              break;
+            }
+
+            case 2: {
+              elementText.textContent = '(x[0] + x[4]) - (x[2] + x[6])';
+
+              elementText.setAttribute('x', x2.toString(10));
+              break;
+            }
+
+            case 3: {
+              elementText.textContent = '(x[1] + x[5]) - (x[3] + x[7])';
+
+              elementText.setAttribute('x', x2.toString(10));
+              break;
+            }
+
+            case 4: {
+              elementText.textContent = '(x[0] - x[4]) + W (x[2] - x[6])';
+              elementTextSuper.textContent = '2';
+
+              elementText.setAttribute('x', (x2 + 6).toString(10));
+              elementTextSuper.setAttribute('x', (x2 + 24).toString(10));
+              break;
+            }
+
+            case 5: {
+              elementText.textContent = '(x[1] - x[5]) + W (x[3] - x[7])';
+              elementTextSuper.textContent = '2';
+
+              elementText.setAttribute('x', (x2 + 6).toString(10));
+              elementTextSuper.setAttribute('x', (x2 + 24).toString(10));
+              break;
+            }
+
+            case 6: {
+              elementText.textContent = '(x[0] - x[4]) - W (x[2] - x[6])';
+              elementTextSuper.textContent = '2';
+
+              elementText.setAttribute('x', (x2 + 6).toString(10));
+              elementTextSuper.setAttribute('x', (x2 + 24).toString(10));
+              break;
+            }
+
+            case 7: {
+              elementText.textContent = '(x[1] - x[5]) - W (x[3] - x[7])';
+              elementTextSuper.textContent = '2';
+
+              elementText.setAttribute('x', (x2 + 6).toString(10));
+              elementTextSuper.setAttribute('x', (x2 + 24).toString(10));
+              break;
+            }
+          }
+
+          elementTextSuper.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+          elementTextSuper.setAttribute('text-anchor', 'middle');
+          elementTextSuper.setAttribute('stroke', 'none');
+          elementTextSuper.setAttribute('fill', grayColor);
+          elementTextSuper.setAttribute('font-size', '12px');
+
+          svg.appendChild(elementTextSuper);
+          break;
+        }
+
+        case 3: {
+          const x3 = innerWidth - innerWidth / 3 + 52;
+
+          switch (n) {
+            case 0: {
+              elementText.textContent = '((x[0] + x[4]) + (x[2] + x[6])) + ((x[1] + x[5]) + (x[3] + x[7]))';
+
+              elementText.setAttribute('x', x3.toString(10));
+              break;
+            }
+
+            case 1: {
+              elementText.textContent = '((x[0] + x[4]) + (x[2] + x[6])) - ((x[1] + x[5]) + (x[3] + x[7]))';
+
+              elementText.setAttribute('x', x3.toString(10));
+              break;
+            }
+
+            case 2: {
+              elementText.textContent = '((x[0] + x[4]) - (x[2] + x[6])) + W ((x[1] + x[5]) - (x[3] + x[7]))';
+              elementTextSuper.textContent = '2';
+
+              elementText.setAttribute('x', (x3 + 8).toString(10));
+              elementTextSuper.setAttribute('x', (x3 + 26).toString(10));
+              elementTextSuper.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper.setAttribute('text-anchor', 'middle');
+              elementTextSuper.setAttribute('stroke', 'none');
+              elementTextSuper.setAttribute('fill', grayColor);
+              elementTextSuper.setAttribute('font-size', '12px');
+
+              svg.appendChild(elementTextSuper);
+              break;
+            }
+
+            case 3: {
+              elementText.textContent = '((x[0] + x[4]) - (x[2] + x[6])) - W ((x[1] + x[5]) - (x[3] + x[7]))';
+              elementTextSuper.textContent = '2';
+
+              elementText.setAttribute('x', (x3 + 8).toString(10));
+              elementTextSuper.setAttribute('x', (x3 + 26).toString(10));
+              elementTextSuper.setAttribute('x', (x3 + 26).toString(10));
+              elementTextSuper.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper.setAttribute('text-anchor', 'middle');
+              elementTextSuper.setAttribute('stroke', 'none');
+              elementTextSuper.setAttribute('fill', grayColor);
+              elementTextSuper.setAttribute('font-size', '12px');
+
+              svg.appendChild(elementTextSuper);
+              break;
+            }
+
+            case 4: {
+              elementText.textContent = '((x[0] - x[4]) + W (x[2] - x[6])) + W((x[1] - x[5]) + W (x[3] - x[7]))';
+
+              const elementTextSuper1 = document.createElementNS(xmlns, 'text');
+              const elementTextSuper2 = document.createElementNS(xmlns, 'text');
+
+              elementTextSuper1.textContent = '2';
+              elementTextSuper2.textContent = '2';
+
+              elementText.setAttribute('x', (x3 + 22).toString(10));
+              elementTextSuper1.setAttribute('x', (x3 - 74).toString(10));
+              elementTextSuper2.setAttribute('x', (x3 + 154).toString(10));
+
+              elementTextSuper1.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper1.setAttribute('text-anchor', 'middle');
+              elementTextSuper1.setAttribute('stroke', 'none');
+              elementTextSuper1.setAttribute('fill', grayColor);
+              elementTextSuper1.setAttribute('font-size', '12px');
+
+              elementTextSuper2.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper2.setAttribute('text-anchor', 'middle');
+              elementTextSuper2.setAttribute('stroke', 'none');
+              elementTextSuper2.setAttribute('fill', grayColor);
+              elementTextSuper2.setAttribute('font-size', '12px');
+
+              svg.appendChild(elementTextSuper1);
+              svg.appendChild(elementTextSuper2);
+              break;
+            }
+
+            case 5: {
+              elementText.textContent = '((x[0] - x[4]) + W (x[2] - x[6])) - W((x[1] - x[5]) + W (x[3] - x[7]))';
+
+              const elementTextSuper1 = document.createElementNS(xmlns, 'text');
+              const elementTextSuper2 = document.createElementNS(xmlns, 'text');
+
+              elementTextSuper1.textContent = '2';
+              elementTextSuper2.textContent = '2';
+
+              elementText.setAttribute('x', (x3 + 22).toString(10));
+              elementTextSuper1.setAttribute('x', (x3 - 74).toString(10));
+              elementTextSuper2.setAttribute('x', (x3 + 154).toString(10));
+
+              elementTextSuper1.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper1.setAttribute('text-anchor', 'middle');
+              elementTextSuper1.setAttribute('stroke', 'none');
+              elementTextSuper1.setAttribute('fill', grayColor);
+              elementTextSuper1.setAttribute('font-size', '12px');
+
+              elementTextSuper2.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper2.setAttribute('text-anchor', 'middle');
+              elementTextSuper2.setAttribute('stroke', 'none');
+              elementTextSuper2.setAttribute('fill', grayColor);
+              elementTextSuper2.setAttribute('font-size', '12px');
+
+              svg.appendChild(elementTextSuper1);
+              svg.appendChild(elementTextSuper2);
+              break;
+            }
+
+            case 6: {
+              elementText.textContent = '((x[0] - x[4]) - W (x[2] - x[6])) + W ((x[1] - x[5]) - W (x[3] - x[7]))';
+
+              const elementTextSuper1 = document.createElementNS(xmlns, 'text');
+              const elementTextSuper2 = document.createElementNS(xmlns, 'text');
+              const elementTextSuper3 = document.createElementNS(xmlns, 'text');
+
+              elementTextSuper1.textContent = '2';
+              elementTextSuper2.textContent = '3';
+              elementTextSuper3.textContent = '2';
+
+              elementText.setAttribute('x', (x3 + 24).toString(10));
+              elementTextSuper1.setAttribute('x', (x3 - 74).toString(10));
+              elementTextSuper2.setAttribute('x', (x3 + 42).toString(10));
+              elementTextSuper3.setAttribute('x', (x3 + 154).toString(10));
+
+              elementTextSuper1.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper1.setAttribute('text-anchor', 'middle');
+              elementTextSuper1.setAttribute('stroke', 'none');
+              elementTextSuper1.setAttribute('fill', grayColor);
+              elementTextSuper1.setAttribute('font-size', '12px');
+
+              elementTextSuper2.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper2.setAttribute('text-anchor', 'middle');
+              elementTextSuper2.setAttribute('stroke', 'none');
+              elementTextSuper2.setAttribute('fill', grayColor);
+              elementTextSuper2.setAttribute('font-size', '12px');
+
+              elementTextSuper3.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper3.setAttribute('text-anchor', 'middle');
+              elementTextSuper3.setAttribute('stroke', 'none');
+              elementTextSuper3.setAttribute('fill', grayColor);
+              elementTextSuper3.setAttribute('font-size', '12px');
+
+              svg.appendChild(elementTextSuper1);
+              svg.appendChild(elementTextSuper2);
+              svg.appendChild(elementTextSuper3);
+              break;
+            }
+
+            case 7: {
+              elementText.textContent = '((x[0] - x[4]) - W (x[2] - x[6])) - W ((x[1] - x[5]) - W (x[3] - x[7]))';
+
+              const elementTextSuper1 = document.createElementNS(xmlns, 'text');
+              const elementTextSuper2 = document.createElementNS(xmlns, 'text');
+              const elementTextSuper3 = document.createElementNS(xmlns, 'text');
+
+              elementTextSuper1.textContent = '2';
+              elementTextSuper2.textContent = '3';
+              elementTextSuper3.textContent = '2';
+
+              elementText.setAttribute('x', (x3 + 24).toString(10));
+              elementTextSuper1.setAttribute('x', (x3 - 74).toString(10));
+              elementTextSuper2.setAttribute('x', (x3 + 42).toString(10));
+              elementTextSuper3.setAttribute('x', (x3 + 154).toString(10));
+
+              elementTextSuper1.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper1.setAttribute('text-anchor', 'middle');
+              elementTextSuper1.setAttribute('stroke', 'none');
+              elementTextSuper1.setAttribute('fill', grayColor);
+              elementTextSuper1.setAttribute('font-size', '12px');
+
+              elementTextSuper2.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper2.setAttribute('text-anchor', 'middle');
+              elementTextSuper2.setAttribute('stroke', 'none');
+              elementTextSuper2.setAttribute('fill', grayColor);
+              elementTextSuper2.setAttribute('font-size', '12px');
+
+              elementTextSuper3.setAttribute('y', (padding + n * (innerHeight / size) - 12).toString(10));
+              elementTextSuper3.setAttribute('text-anchor', 'middle');
+              elementTextSuper3.setAttribute('stroke', 'none');
+              elementTextSuper3.setAttribute('fill', grayColor);
+              elementTextSuper3.setAttribute('font-size', '12px');
+
+              svg.appendChild(elementTextSuper1);
+              svg.appendChild(elementTextSuper2);
+              svg.appendChild(elementTextSuper3);
+              break;
+            }
+          }
+
+          break;
+        }
+      }
+
+      elementText.setAttribute('y', (padding + n * (innerHeight / size) - 4).toString(10));
+      elementText.setAttribute('text-anchor', 'middle');
+      elementText.setAttribute('stroke', 'none');
+      elementText.setAttribute('fill', grayColor);
+      elementText.setAttribute('font-size', '16px');
+
+      svg.appendChild(elementText);
+
+      const xPath = document.createElementNS(xmlns, 'path');
+
+      switch (stage) {
+        case 1: {
+          const startX = x + stage * 12;
+          const endX = startX + 88;
+
+          switch (n) {
+            case 0: {
+              xPath.setAttribute('d', `M${startX} ${padding} L${endX} ${padding + 4 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 4 * (innerHeight / size));
+              break;
+            }
+
+            case 1: {
+              xPath.setAttribute('d', `M${startX} ${padding + 1 * (innerHeight / size)} L${endX} ${padding + 5 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 5 * (innerHeight / size));
+              break;
+            }
+
+            case 2: {
+              xPath.setAttribute('d', `M${startX} ${padding + 2 * (innerHeight / size)} L${endX} ${padding + 6 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 6 * (innerHeight / size));
+              break;
+            }
+
+            case 3: {
+              xPath.setAttribute('d', `M${startX} ${padding + 3 * (innerHeight / size)} L${endX} ${padding + 7 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 7 * (innerHeight / size));
+              break;
+            }
+
+            case 4: {
+              xPath.setAttribute('d', `M${startX} ${padding + 4 * (innerHeight / size)} L${endX} ${padding}`);
+              createAddSymbol(svg, endX, padding);
+              break;
+            }
+
+            case 5: {
+              xPath.setAttribute('d', `M${startX} ${padding + 5 * (innerHeight / size)} L${endX} ${padding + 1 * (innerHeight / size)}`);
+              createAddSymbol(svg, endX, padding + 1 * (innerHeight / size));
+              break;
+            }
+
+            case 6: {
+              xPath.setAttribute('d', `M${startX} ${padding + 6 * (innerHeight / size)} L${endX} ${padding + 2 * (innerHeight / size)}`);
+              createAddSymbol(svg, endX, padding + 2 * (innerHeight / size));
+              break;
+            }
+
+            case 7: {
+              xPath.setAttribute('d', `M${startX} ${padding + 7 * (innerHeight / size)} L${endX} ${padding + 3 * (innerHeight / size)}`);
+              createAddSymbol(svg, endX, padding + 3 * (innerHeight / size));
+              break;
+            }
+          }
+
+          break;
+        }
+
+        case 2: {
+          const startX = x + stage * 160;
+          const endX = startX + 88;
+
+          switch (n) {
+            case 0: {
+              xPath.setAttribute('d', `M${startX} ${padding} L${endX} ${padding + 2 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 2 * (innerHeight / size));
+              break;
+            }
+
+            case 1: {
+              xPath.setAttribute('d', `M${startX} ${padding + 1 * (innerHeight / size)} L${endX} ${padding + 3 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 3 * (innerHeight / size));
+              break;
+            }
+
+            case 2: {
+              xPath.setAttribute('d', `M${startX} ${padding + 2 * (innerHeight / size)} L${endX} ${padding}`);
+              createAddSymbol(svg, endX, padding);
+              break;
+            }
+
+            case 3: {
+              xPath.setAttribute('d', `M${startX} ${padding + 3 * (innerHeight / size)} L${endX} ${padding + 1 * (innerHeight / size)}`);
+              createAddSymbol(svg, endX, padding + 1 * (innerHeight / size));
+              break;
+            }
+
+            case 4: {
+              xPath.setAttribute('d', `M${startX} ${padding + 4 * (innerHeight / size)} L${endX} ${padding + 6 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 6 * (innerHeight / size));
+              break;
+            }
+
+            case 5: {
+              xPath.setAttribute('d', `M${startX} ${padding + 5 * (innerHeight / size)} L${endX} ${padding + 7 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 7 * (innerHeight / size));
+              break;
+            }
+
+            case 6: {
+              xPath.setAttribute('d', `M${startX} ${padding + 6 * (innerHeight / size)} L${endX} ${padding + 4 * (innerHeight / size)}`);
+              createAddSymbol(svg, endX, padding + 4 * (innerHeight / size));
+              break;
+            }
+
+            case 7: {
+              xPath.setAttribute('d', `M${startX} ${padding + 7 * (innerHeight / size)} L${endX} ${padding + 5 * (innerHeight / size)}`);
+              createAddSymbol(svg, endX, padding + 5 * (innerHeight / size));
+              break;
+            }
+          }
+
+          break;
+        }
+
+        case 3: {
+          const startX = x + stage * 248;
+          const endX = startX + 88;
+
+          switch (n) {
+            case 0: {
+              xPath.setAttribute('d', `M${startX} ${padding} L${endX} ${padding + 1 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 1 * (innerHeight / size));
+              break;
+            }
+
+            case 1: {
+              xPath.setAttribute('d', `M${startX} ${padding + 1 * (innerHeight / size)} L${endX} ${padding}`);
+              createAddSymbol(svg, endX, padding);
+              break;
+            }
+
+            case 2: {
+              xPath.setAttribute('d', `M${startX} ${padding + 2 * (innerHeight / size)} L${endX} ${padding + 3 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 3 * (innerHeight / size));
+              break;
+            }
+
+            case 3: {
+              xPath.setAttribute('d', `M${startX} ${padding + 3 * (innerHeight / size)} L${endX} ${padding + 2 * (innerHeight / size)}`);
+              createAddSymbol(svg, endX, padding + 2 * (innerHeight / size));
+              break;
+            }
+
+            case 4: {
+              xPath.setAttribute('d', `M${startX} ${padding + 4 * (innerHeight / size)} L${endX} ${padding + 5 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 5 * (innerHeight / size));
+              break;
+            }
+
+            case 5: {
+              xPath.setAttribute('d', `M${startX} ${padding + 5 * (innerHeight / size)} L${endX} ${padding + 4 * (innerHeight / size)}`);
+              createAddSymbol(svg, endX, padding + 4 * (innerHeight / size));
+              break;
+            }
+
+            case 6: {
+              xPath.setAttribute('d', `M${startX} ${padding + 6 * (innerHeight / size)} L${endX} ${padding + 7 * (innerHeight / size)}`);
+              createSubSymbol(svg, endX, padding + 7 * (innerHeight / size));
+              break;
+            }
+
+            case 7: {
+              xPath.setAttribute('d', `M${startX} ${padding + 7 * (innerHeight / size)} L${endX} ${padding + 6 * (innerHeight / size)}`);
+              createAddSymbol(svg, endX, padding + 6 * (innerHeight / size));
+              break;
+            }
+          }
+
+          break;
+        }
+      }
+
+      xPath.setAttribute('stroke', baseColor);
+      xPath.setAttribute('stroke-width', lineWidth.toString(10));
+      xPath.setAttribute('stroke-linecap', lineCap);
+      xPath.setAttribute('stroke-linejoin', lineJoin);
+      xPath.setAttribute('fill', 'none');
+
+      svg.appendChild(xPath);
+
+      const rotationFactor = document.createElementNS(xmlns, 'path');
+
+      switch (stage) {
+        case 1: {
+          const rx = x + innerWidth / 6;
+
+          rotationFactor.setAttribute('d', `M${rx} ${y + 1} L${rx} ${y - 8} ${rx + 12} ${y + 1} L${rx} ${y + 8} ${rx} ${y + 1}`);
+          rotationFactor.setAttribute('stroke', baseColor);
+          rotationFactor.setAttribute('stroke-width', lineWidth.toString(10));
+          rotationFactor.setAttribute('fill', 'none');
+
+          svg.appendChild(rotationFactor);
+
+          const w = document.createElementNS(xmlns, 'text');
+
+          switch (n) {
+            case 0: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 1: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 2: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 3: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 4: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 5: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 6: {
+              w.textContent = 'W';
+              break;
+            }
+
+            case 7: {
+              w.textContent = 'W';
+              break;
+            }
+          }
+
+          w.setAttribute('x', (rx + 20).toString(10));
+          w.setAttribute('y', (n * (innerHeight / size) + 12).toString(10));
+          w.setAttribute('text-anchor', 'middle');
+          w.setAttribute('stroke', 'none');
+          w.setAttribute('fill', baseColor);
+          w.setAttribute('font-size', '16px');
+
+          svg.appendChild(w);
+
+          if (n === 6 || n === 7) {
+            const w_n = document.createElementNS(xmlns, 'text');
+
+            w_n.textContent = '2';
+
+            w_n.setAttribute('x', (rx + 32).toString(10));
+            w_n.setAttribute('y', (n * (innerHeight / size) + 4).toString(10));
+            w_n.setAttribute('text-anchor', 'middle');
+            w_n.setAttribute('stroke', 'none');
+            w_n.setAttribute('fill', baseColor);
+            w_n.setAttribute('font-size', '12px');
+
+            svg.appendChild(w_n);
+          }
+
+          break;
+        }
+
+        case 2: {
+          const rx = x + innerWidth / 3 + 160;
+
+          rotationFactor.setAttribute('d', `M${rx} ${y + 1} L${rx} ${y - 8} ${rx + 12} ${y + 1} L${rx} ${y + 8} ${rx} ${y + 1}`);
+          rotationFactor.setAttribute('stroke', baseColor);
+          rotationFactor.setAttribute('stroke-width', lineWidth.toString(10));
+          rotationFactor.setAttribute('fill', 'none');
+
+          svg.appendChild(rotationFactor);
+
+          const w = document.createElementNS(xmlns, 'text');
+
+          switch (n) {
+            case 0: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 1: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 2: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 3: {
+              w.textContent = 'W';
+
+              const w_n = document.createElementNS(xmlns, 'text');
+
+              w_n.textContent = '2';
+
+              w_n.setAttribute('x', (rx + 32).toString(10));
+              w_n.setAttribute('y', (n * (innerHeight / size) + 4).toString(10));
+              w_n.setAttribute('text-anchor', 'middle');
+              w_n.setAttribute('stroke', 'none');
+              w_n.setAttribute('fill', baseColor);
+              w_n.setAttribute('font-size', '12px');
+
+              svg.appendChild(w_n);
+              break;
+            }
+
+            case 4: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 5: {
+              w.textContent = 'W';
+              break;
+            }
+
+            case 6: {
+              w.textContent = '1';
+              break;
+            }
+
+            case 7: {
+              w.textContent = 'W';
+
+              const w_n = document.createElementNS(xmlns, 'text');
+
+              w_n.textContent = '3';
+
+              w_n.setAttribute('x', (rx + 32).toString(10));
+              w_n.setAttribute('y', (n * (innerHeight / size) + 4).toString(10));
+              w_n.setAttribute('text-anchor', 'middle');
+              w_n.setAttribute('stroke', 'none');
+              w_n.setAttribute('fill', baseColor);
+              w_n.setAttribute('font-size', '12px');
+
+              svg.appendChild(w_n);
+              break;
+            }
+          }
+
+          w.setAttribute('x', (rx + 20).toString(10));
+          w.setAttribute('y', (n * (innerHeight / size) + 12).toString(10));
+          w.setAttribute('text-anchor', 'middle');
+          w.setAttribute('stroke', 'none');
+          w.setAttribute('fill', baseColor);
+          w.setAttribute('font-size', '16px');
+
+          svg.appendChild(w);
+          break;
+        }
+      }
+    }
+
+    if (n !== 0 && n !== 7) {
+      const sortIndexPath = document.createElementNS(xmlns, 'path');
+
+      const startX = innerWidth - 140;
+      const endX = startX + 88;
+
+      switch (n) {
+        case 1: {
+          sortIndexPath.setAttribute('d', `M${startX} ${padding + 1 * (innerHeight / size)} L${endX} ${padding + 4 * (innerHeight / size)}`);
+          break;
+        }
+
+        case 3: {
+          sortIndexPath.setAttribute('d', `M${startX} ${padding + 3 * (innerHeight / size)} L${endX} ${padding + 6 * (innerHeight / size)}`);
+          break;
+        }
+
+        case 4: {
+          sortIndexPath.setAttribute('d', `M${startX} ${padding + 4 * (innerHeight / size)} L${endX} ${padding + 1 * (innerHeight / size)}`);
+          break;
+        }
+
+        case 6: {
+          sortIndexPath.setAttribute('d', `M${startX} ${padding + 6 * (innerHeight / size)} L${endX} ${padding + 3 * (innerHeight / size)}`);
+          break;
+        }
+      }
+
+      sortIndexPath.setAttribute('stroke', baseColor);
+      sortIndexPath.setAttribute('stroke-width', lineWidth.toString(10));
+      sortIndexPath.setAttribute('stroke-dasharray', '5,5');
+      sortIndexPath.setAttribute('stroke-linecap', lineCap);
+      sortIndexPath.setAttribute('stroke-linejoin', lineJoin);
+      sortIndexPath.setAttribute('fill', 'none');
+
+      svg.appendChild(sortIndexPath);
+    }
+  }
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -1822,3 +3059,7 @@ createQuantization(document.getElementById('svg-figure-coding'), 4, alphaBaseCol
 visualFourierSeries(document.getElementById('svg-fourier-series'));
 
 createRotationFactors(document.getElementById('svg-figure-rotation-factors'));
+
+createFFTSymbols(document.getElementById('svg-figure-fft-symbols'));
+createFFT4(document.getElementById('svg-figure-fft-4'));
+createFFT8(document.getElementById('svg-figure-fft-8'));
