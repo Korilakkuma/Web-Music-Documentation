@@ -4508,6 +4508,861 @@ window.setInterval(() =&gt; {
               $
             </div>
           </section>
+          <section id="section-fast-fourier-transform">
+            <h4>高速フーリエ変換 (FFT)</h4>
+            <p>
+              <b>高速フーリエ変換</b> (<b>FFT</b>: <b>Fast Fourier Transform</b>) は, 回転因子の性質を利用して, 離散フーリエ変換では (時間) 計算量を
+              <span class="math-inline">$O\left(N^{2}\right)$</span> 要するのを,
+              <span class="math-inline">$O\left(N\mathrm{log_{2}}N\right)$</span> にまで減らして, コンピュータでのフーリエ変換を高速化するアルゴリズムです.
+              ただし, 回転因子の性質を利用する関係上, <b>フーリエ変換のサイズが 2 の冪乗</b>の場合のみ高速化できるという制約がつきます (この制約に関しては,
+              <code>0</code> 埋め処理などによって, 強制的にフーリエ変換のサイズを 2 の冪乗にするなどして解決できます). Web Audio API においても,
+              <code>AnalyserNode</code> の <code>fftSize</code> プロパティがとりうる値は, すべて 2 の冪乗です.
+            </p>
+            <p>実際に, どのように計算量を削減しているのかを解説していきます.</p>
+            <section id="section-fast-fourier-transform-algorithm">
+              <h5>高速フーリエ変換の導出</h5>
+              <p>離散フーリエ変換の式を行列演算に書き換えます.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &X\left(k\right) = \sum_{n = 0}^{N - 1}x\left(n\right)W^{n} \\
+                  \end{flalign}
+                $
+              </div>
+              <p><span class="math-inline">$N = 4$</span> として, 行列演算に変換します.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{1} \\
+                    X_{2} \\
+                    X_{3} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} & W^{0} & W^{0} \\
+                    W^{0} & W^{1} & W^{2} & W^{3} \\
+                    W^{0} & W^{2} & W^{4} & W^{6} \\
+                    W^{0} & W^{3} & W^{6} & W^{9} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    x_{0} \\
+                    x_{1} \\
+                    x_{2} \\
+                    x_{3} \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>ここで, 回転因子の性質を利用すると, <span class="math-inline">$W^{4} = W^{0}, W^{6} = W^{2}, W^{9} = W^{1}$</span> となるので,</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{1} \\
+                    X_{2} \\
+                    X_{3} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} & W^{0} & W^{0} \\
+                    W^{0} & W^{1} & W^{2} & W^{3} \\
+                    W^{0} & W^{2} & W^{0} & W^{2} \\
+                    W^{0} & W^{3} & W^{2} & W^{1} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    x_{0} \\
+                    x_{1} \\
+                    x_{2} \\
+                    x_{3} \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>ここまでで, 離散フーリエ変換の演算を行列演算に変換することができました.</p>
+              <p>
+                行列演算に変換できたら, 行を偶奇で分割します. 偶数行を行列の上部に入れ替えて, 奇数行を行列の下部に入れ替えます. 変換行列の行を入れ替えるので,
+                出力となる <span class="math-inline">$X_{k}$</span> も行が入れ替わることに注意してください.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{2} \\
+                    X_{1} \\
+                    X_{3} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} & W^{0} & W^{0} \\
+                    W^{0} & W^{2} & W^{0} & W^{2} \\
+                    W^{0} & W^{1} & W^{2} & W^{3} \\
+                    W^{0} & W^{3} & W^{2} & W^{1} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    x_{0} \\
+                    x_{1} \\
+                    x_{2} \\
+                    x_{3} \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>
+                ここで, 回転因子の回転方向を考慮すると, 左上 2 行 2 列の行列と, 右上 2 行 2 列の行列は対称になっている, すなわち,
+                同じ回転方向の回転因子の行列になっています. 同様に, 左下 2 行 2 列の行列と, 右下 2 行 2 列の行列は負の対称になっている, すなわち,
+                回転方向が互いに逆方向の回転因子の行列になっています.
+              </p>
+              <p>これを考慮すると, 行列演算はさらに以下のように変形できます.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{2} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} \\
+                    W^{0} & W^{2} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} + x_{2}) \\
+                    (x_{1} + x_{3}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{1} \\
+                    X_{3} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{1} \\
+                    W^{0} & W^{3} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} - x_{2}) \\
+                    (x_{1} - x_{3}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>この変形によって, 乗算と加算の回数がおよそ半分まで減らすことができました. ここでさらに回転因子の性質を利用すると, 以下のように変形できます.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{2} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} \\
+                    W^{0} & -W^{0} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} + x_{2}) \\
+                    (x_{1} + x_{3}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{1} \\
+                    X_{3} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{1} \\
+                    W^{0} & -W^{1} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} - x_{2}) \\
+                    (x_{1} - x_{3}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>
+                ところで, 行の偶奇を入れ替えたので, 出力となる <span class="math-inline">$X_{k}$</span> の順序が, 入力の順序と一致しなくなります (つまり,
+                ある時間領域の値のスペクトルが一致しなくなります). 実は, 一見するとランダムに並びますが, 規則性があり, 各インデックスを 2 進数で表現した場合の,
+                ビットを上下反転させた関係になっています. この関係を利用して, インデックスの並びを整列するアルゴリズムを<b>ビットリバース</b>と呼びます.
+              </p>
+              <table>
+                <caption>
+                  ビットリバースの対応表 2 ビット (<span class="math-inline">$N = 4$</span>)
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Index</th>
+                    <th scope="col"><span class="math-inline">$x_{n}$</span></th>
+                    <th scope="col"><span class="math-inline">$X_{k}$</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>0</td>
+                    <td>00</td>
+                    <td>00</td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>01</td>
+                    <td>10</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td>10</td>
+                    <td>01</td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td>11</td>
+                    <td>11</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p>同じように, <span class="math-inline">$N = 8$</span> として, 高速フーリエ変換になるように行列演算します.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{1} \\
+                    X_{2} \\
+                    X_{3} \\
+                    X_{4} \\
+                    X_{5} \\
+                    X_{6} \\
+                    X_{7} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} & W^{0}  & W^{0}  & W^{0}  & W^{0}  & W^{0}  & W^{0}  \\
+                    W^{0} & W^{1} & W^{2}  & W^{3}  & W^{4}  & W^{5}  & W^{6}  & W^{7}  \\
+                    W^{0} & W^{2} & W^{4}  & W^{6}  & W^{8}  & W^{10} & W^{12} & W^{14} \\
+                    W^{0} & W^{3} & W^{6}  & W^{9}  & W^{12} & W^{15} & W^{18} & W^{21} \\
+                    W^{0} & W^{4} & W^{8}  & W^{12} & W^{16} & W^{20} & W^{24} & W^{29} \\
+                    W^{0} & W^{5} & W^{10} & W^{15} & W^{20} & W^{25} & W^{30} & W^{35} \\
+                    W^{0} & W^{6} & W^{12} & W^{18} & W^{24} & W^{30} & W^{36} & W^{42} \\
+                    W^{0} & W^{7} & W^{14} & W^{21} & W^{28} & W^{35} & W^{42} & W^{49} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    x_{0} \\
+                    x_{1} \\
+                    x_{2} \\
+                    x_{3} \\
+                    x_{4} \\
+                    x_{5} \\
+                    x_{6} \\
+                    x_{7} \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>回転因子の性質を利用すると,</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{1} \\
+                    X_{2} \\
+                    X_{3} \\
+                    X_{4} \\
+                    X_{5} \\
+                    X_{6} \\
+                    X_{7} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} & W^{0} & W^{0} & W^{0} & W^{0} & W^{0} & W^{0} \\
+                    W^{0} & W^{1} & W^{2} & W^{3} & W^{4} & W^{5} & W^{6} & W^{7} \\
+                    W^{0} & W^{2} & W^{4} & W^{6} & W^{0} & W^{2} & W^{4} & W^{6} \\
+                    W^{0} & W^{3} & W^{6} & W^{1} & W^{4} & W^{7} & W^{2} & W^{5} \\
+                    W^{0} & W^{4} & W^{0} & W^{4} & W^{8} & W^{5} & W^{0} & W^{5} \\
+                    W^{0} & W^{5} & W^{2} & W^{7} & W^{4} & W^{1} & W^{6} & W^{3} \\
+                    W^{0} & W^{6} & W^{4} & W^{2} & W^{0} & W^{6} & W^{4} & W^{2} \\
+                    W^{0} & W^{7} & W^{6} & W^{5} & W^{4} & W^{3} & W^{2} & W^{1} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    x_{0} \\
+                    x_{1} \\
+                    x_{2} \\
+                    x_{3} \\
+                    x_{4} \\
+                    x_{5} \\
+                    x_{6} \\
+                    x_{7} \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>
+                行列演算に変換できたら, 行を偶奇で分割します. 偶数行を行列の上部に入れ替えて, 奇数教を行列の下部に入れ替えます. 変換行列の行を入れ替えるので,
+                出力となる <span class="math-inline">$X_{k}$</span> も行が入れ替わることに注意してください.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{2} \\
+                    X_{4} \\
+                    X_{6} \\
+                    X_{1} \\
+                    X_{3} \\
+                    X_{5} \\
+                    X_{7} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} & W^{0} & W^{0} & W^{0} & W^{0} & W^{0} & W^{0} \\
+                    W^{0} & W^{2} & W^{4} & W^{6} & W^{0} & W^{2} & W^{4} & W^{6} \\
+                    W^{0} & W^{4} & W^{0} & W^{4} & W^{0} & W^{4} & W^{0} & W^{4} \\
+                    W^{0} & W^{6} & W^{4} & W^{2} & W^{0} & W^{6} & W^{4} & W^{2} \\
+                    W^{0} & W^{1} & W^{2} & W^{3} & W^{4} & W^{5} & W^{6} & W^{7} \\
+                    W^{0} & W^{3} & W^{6} & W^{1} & W^{4} & W^{7} & W^{2} & W^{5} \\
+                    W^{0} & W^{5} & W^{2} & W^{7} & W^{4} & W^{1} & W^{6} & W^{3} \\
+                    W^{0} & W^{7} & W^{6} & W^{5} & W^{4} & W^{3} & W^{2} & W^{1} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    x_{0} \\
+                    x_{1} \\
+                    x_{2} \\
+                    x_{3} \\
+                    x_{4} \\
+                    x_{5} \\
+                    x_{6} \\
+                    x_{7} \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>
+                ここで, 回転因子の回転方向を考慮すると, 左上 4 行 4 列の行列と, 右上 4 行 4 列の行列は対称になっている, すなわち,
+                同じ回転方向の回転因子の行列になっています. 同様に, 左下 4 行 4 列の行列と, 右下 4 行 4 列の行列は負の対称になっている, すなわち,
+                回転方向が互いに逆方向の回転因子の行列になっています.
+              </p>
+              <p>これを考慮すると, 行列演算はさらに以下のように変形できます.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{2} \\
+                    X_{4} \\
+                    X_{6} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} & W^{0} & W^{0} \\
+                    W^{0} & W^{2} & W^{4} & W^{6} \\
+                    W^{0} & W^{4} & W^{0} & W^{4} \\
+                    W^{0} & W^{6} & W^{4} & W^{2} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    x_{0} + x_{4} \\
+                    x_{1} + x_{5} \\
+                    x_{2} + x_{6} \\
+                    x_{3} + x_{7} \\
+                  \end{bmatrix}
+                $
+              </div>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{1} \\
+                    X_{3} \\
+                    X_{5} \\
+                    X_{7} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{1} & W^{2} & W^{3} \\
+                    W^{0} & W^{3} & W^{6} & W^{1} \\
+                    W^{0} & W^{5} & W^{2} & W^{7} \\
+                    W^{0} & W^{7} & W^{6} & W^{5} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    x_{0} - x_{4} \\
+                    x_{1} - x_{5} \\
+                    x_{2} - x_{6} \\
+                    x_{3} - x_{7} \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>
+                ここまでの処理によって, <span class="">$N = 8$</span> の高速フーリエ変換を <span class="">$N = 4$</span> に帰着することができたので, 再帰的に
+                <span class="">$N = 4$</span> の場合も, 行の偶奇を入れ替えて回転因子の性質を利用して,
+                <span class="math-inline">$N = 2$</span> の場合の高速フーリエ変換に帰着させます.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{4} \\
+                    X_{2} \\
+                    X_{6} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} & W^{0} & W^{0} \\
+                    W^{0} & W^{4} & W^{0} & W^{4} \\
+                    W^{0} & W^{2} & W^{4} & W^{6} \\
+                    W^{0} & W^{6} & W^{4} & W^{2} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    x_{0} + x_{4} \\
+                    x_{2} + x_{6} \\
+                    x_{1} + x_{5} \\
+                    x_{3} + x_{7} \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>
+                ここで, 回転因子の回転方向を考慮すると, 左上 2 行 2 列の行列と, 右上 2 行 2 列の行列は対称になっている, すなわち,
+                同じ回転方向の回転因子の行列になっています. 同様に, 左下 2 行 2 列の行列と, 右下 2 行 2 列の行列は負の対称になっている, すなわち,
+                回転方向が互いに逆方向の回転因子の行列になっています.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{1} \\
+                    X_{5} \\
+                    X_{3} \\
+                    X_{7} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{1} & W^{2} & W^{3} \\
+                    W^{0} & W^{5} & W^{2} & W^{7} \\
+                    W^{0} & W^{3} & W^{6} & W^{1} \\
+                    W^{0} & W^{7} & W^{6} & W^{5} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    x_{0} - x_{4} \\
+                    x_{2} - x_{6} \\
+                    x_{1} - x_{5} \\
+                    x_{3} - x_{7} \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>
+                こちらも, 回転因子の回転方向を考慮すると, 左上 2 行 2 列の行列と, 右上 2 行 2 列の行列は時計回りに
+                <span class="math-inline">$\frac{2}{8}$</span> 回転, また, 左下 2 行 2 列の行列と, 右下 2 行 2 列の行列は反時計回りに
+                <span class="math-inline">$\frac{2}{8}$</span> 回転しているという対称性があります.
+              </p>
+              <p>これら考慮すると, 行列演算はさらに以下のように変形できます.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{4} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} \\
+                    W^{0} & W^{4} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} + x_{4}) + (x_{2} + x_{6}) \\
+                    (x_{1} + x_{5}) + (x_{3} + x_{7}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{2} \\
+                    X_{6} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{2} \\
+                    W^{0} & W^{6} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} + x_{4}) - (x_{2} + x_{6}) \\
+                    (x_{1} + x_{5}) - (x_{3} + x_{7}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{1} \\
+                    X_{5} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{1} \\
+                    W^{0} & W^{5} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} - x_{4}) + W^{2}(x_{2} - x_{6}) \\
+                    (x_{1} - x_{5}) + W^{2}(x_{3} - x_{7}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{3} \\
+                    X_{7} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{3} \\
+                    W^{0} & W^{7} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} - x_{4}) - W^{2}(x_{2} - x_{6}) \\
+                    (x_{1} - x_{5}) - W^{2}(x_{3} - x_{7}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>ここでさらに回転因子の性質を利用すると, 以下のように変形できます.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{0} \\
+                    X_{4} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{0} \\
+                    W^{0} & -W^{0} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} + x_{4}) + (x_{2} + x_{6}) \\
+                    (x_{1} + x_{5}) + (x_{3} + x_{7}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{2} \\
+                    X_{6} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{2} \\
+                    W^{0} & -W^{2} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} + x_{4}) - (x_{2} + x_{6}) \\
+                    (x_{1} + x_{5}) - (x_{3} + x_{7}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{1} \\
+                    X_{5} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{1} \\
+                    W^{0} & -W^{1} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} - x_{4}) + W^{2}(x_{2} - x_{6}) \\
+                    (x_{1} - x_{5}) + W^{2}(x_{3} - x_{7}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{bmatrix}
+                    X_{3} \\
+                    X_{7} \\
+                  \end{bmatrix}
+                  =
+                  \begin{bmatrix}
+                    W^{0} & W^{3} \\
+                    W^{0} & -W^{3} \\
+                  \end{bmatrix}
+                  \begin{bmatrix}
+                    (x_{0} - x_{4}) - W^{2}(x_{2} - x_{6}) \\
+                    (x_{1} - x_{5}) - W^{2}(x_{3} - x_{7}) \\
+                  \end{bmatrix}
+                $
+              </div>
+              <p>
+                <span class="math-inline">$N = 2$</span> の場合の高速フーリエ変換に帰着できたので, 最後にビットリバースを適用してインデックスを並び替えます.
+              </p>
+              <table>
+                <caption>
+                  ビットリバースの対応表 3 ビット (<span class="math-inline">$N = 8$</span>)
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Index</th>
+                    <th scope="col"><span class="math-inline">$x_{n}$</span></th>
+                    <th scope="col"><span class="math-inline">$X_{k}$</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>0</td>
+                    <td>000</td>
+                    <td>000</td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>001</td>
+                    <td>100</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td>010</td>
+                    <td>010</td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td>011</td>
+                    <td>110</td>
+                  </tr>
+                  <tr>
+                    <td>4</td>
+                    <td>100</td>
+                    <td>001</td>
+                  </tr>
+                  <tr>
+                    <td>5</td>
+                    <td>101</td>
+                    <td>101</td>
+                  </tr>
+                  <tr>
+                    <td>6</td>
+                    <td>110</td>
+                    <td>011</td>
+                  </tr>
+                  <tr>
+                    <td>7</td>
+                    <td>111</td>
+                    <td>111</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p>
+                高速フーリエ変換のサイズを一般化して, <span class="math-inline">$N = 2^{m}$</span> の場合も,
+                <span class="math-inline">$2^{m}, 2^{m - 1}, 2^{m - 2}\cdots 32, 16, 8, 4$</span> と再帰的に高速フーリエ変換を導出することが可能です.
+              </p>
+              <p>
+                同様に, 逆離散フーリエ変換の (時間) 計算量も <span class="math-inline">$O\left(N^{2}\right)$</span> から
+                <span class="math-inline">$O\left(N\mathrm{log_{2}}N\right)$</span> に減らすことができます (<b>逆高速フーリエ変換</b> (<b>IFFT</b>:
+                <b>Inverse Fast Fourier Transform</b>)).
+              </p>
+              <p>
+                このセクションで解説した高速フーリエ変換は, <b>時間間引き型高速フーリエ変換</b>のアルゴリズムとなります (次のセクションで解説する, FFT
+                のバタフライ演算のフロー図において, 左側 (時間領域) から, 右側 (周波数領域) へフローするアルゴリズムです. 逆に, 右側 (周波数領域) から, 左側
+                (時間領域) へフローするアルゴリズムは, <b>周波数間引き型高速フーリエ変換</b>と呼ばれます. しかし, この 2
+                つは高速フーリエ変換と逆高速フーリエ変換の関係にあるだけで, アルゴリズムの本質は同じです).
+              </p>
+            </section>
+            <section id="section-fast-fourier-transform-code">
+              <h5>高速フーリエ変換の実装</h5>
+              <p>
+                離散フーリエ変換の定義式から, 高速フーリエ変換が導出できることはわかりましたが,
+                回転因子の性質や行列の変形をコードに記述するのは少し難しいと思います. そこで, 一般的には,
+                高速フーリエ変換と等価な<b>バタフライ演算</b>のフロー図を考えることで, より実装に近い形式で考えることができます.
+              </p>
+              <figure>
+                <svg id="svg-figure-fft-symbols" width="720" height="88" />
+                <figcaption>バタフライ演算のフロー図の記号</figcaption>
+              </figure>
+              <p><span class="math-inline">$N = 4$</span> の場合の, 高速フーリエ変換の導出をバタフライ演算のフロー図を記載します.</p>
+              <figure>
+                <svg id="svg-figure-fft-4" width="720" height="405" />
+                <figcaption>FFT のサイズ <span class="math-inline">$N = 4$</span> の場合のバタフライ演算のフロー図</figcaption>
+              </figure>
+              <p>同様に, <span class="math-inline">$N = 8$</span> の場合の, 高速フーリエ変換の導出をバタフライ演算のフロー図を記載します.</p>
+              <figure>
+                <svg id="svg-figure-fft-8" width="1600" height="405" />
+                <figcaption>FFT のサイズ <span class="math-inline">$N = 8$</span> の場合のバタフライ演算のフロー図</figcaption>
+              </figure>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">function pow2(n) {
+  return 2 ** n;
+}
+
+/**
+ * FFT
+ *
+ * @param {Float32Array} reals This argument is instance of `Float32Array` for real number.
+ * @param {Float32Array} imags This argument is instance of `Float32Array` for imaginary number.
+ * @param {number} size This argument is FFT size (power of two).
+ */
+function FFT(reals, imags, size) {
+  const indexes = new Uint16Array(size);  // FFT size is `0` between `65535`.
+
+  const numberOfStages = Math.log2(size);
+
+  for (let stage = 1; stage &lt;= numberOfStages; stage++) {
+    for (let i = 0; i &lt; pow2(stage - 1); i++) {
+      const rest = numberOfStages - stage;
+
+      for (let j = 0; j &lt; pow2(rest); j++) {
+        const n = i * pow2(rest + 1) + j;
+        const m = pow2(rest) + n;
+        const w = 2.0 * Math.PI * j * pow2(stage - 1);
+
+        const areal = reals[n];
+        const aimag = imags[n];
+        const breal = reals[m];
+        const bimag = imags[m];
+        const wreal = Math.cos(w / size);
+        const wimag = -1 * Math.sin(w / size);  // Clockwise
+
+        if (stage &lt; numberOfStages) {
+          reals[n] = areal + breal;
+          imags[n] = aimag + bimag;
+          reals[m] = (wreal * (areal - breal)) - (wimag * (aimag - bimag));
+          imags[m] = (wreal * (aimag - bimag)) + (wimag * (areal - breal));
+        } else {
+          reals[n] = areal + breal;
+          imags[n] = aimag + bimag;
+          reals[m] = areal - breal;
+          imags[m] = aimag - bimag;
+        }
+      }
+    }
+  }
+
+  for (let stage = 1; stage &lt;= numberOfStages; stage++) {
+    const rest = numberOfStages - stage;
+
+    for (let i = 0; i &lt; pow2(stage - 1); i++) {
+      indexes[pow2(stage - 1) + i] = indexes[i] + pow2(rest);
+    }
+  }
+
+  for (let k = 0; k &lt; size; k++) {
+    if (indexes[k] &lt;= k) {
+      continue;
+    }
+
+    const real = reals[indexes[k]];
+    const imag = imags[indexes[k]];
+
+    reals[indexes[k]] = reals[k];
+    imags[indexes[k]] = imags[k];
+
+    reals[k] = real;
+    imags[k] = imag;
+  }
+}
+
+/**
+ * IFFT
+ *
+ * @param {Float32Array} reals This argument is instance of `Float32Array` for real number.
+ * @param {Float32Array} imags This argument is instance of `Float32Array` for imaginary number.
+ * @param {number} size This argument is IFFT size (power of two).
+ */
+function IFFT(reals, imags, size) {
+  const indexes = new Uint16Array(size);  // FFT size is `0` between `65535`.
+
+  const numberOfStages = Math.log2(size);
+
+  for (let stage = 1; stage &lt;= numberOfStages; stage++) {
+    for (let i = 0; i &lt; pow2(stage - 1); i++) {
+      const rest = numberOfStages - stage;
+
+      for (let j = 0; j &lt; pow2(rest); j++) {
+        const n = i * pow2(rest + 1) + j;
+        const m = pow2(rest) + n;
+        const w = 2.0 * Math.PI * j * pow2(stage - 1);
+
+        const areal = reals[n];
+        const aimag = imags[n];
+        const breal = reals[m];
+        const bimag = imags[m];
+        const wreal = Math.cos(w / size);
+        const wimag = Math.sin(w / size);  // Counterclockwise
+
+        if (stage &lt; numberOfStages) {
+          reals[n] = areal + breal;
+          imags[n] = aimag + bimag;
+          reals[m] = (wreal * (areal - breal)) - (wimag * (aimag - bimag));
+          imags[m] = (wreal * (aimag - bimag)) + (wimag * (areal - breal));
+        } else {
+          reals[n] = areal + breal;
+          imags[n] = aimag + bimag;
+          reals[m] = areal - breal;
+          imags[m] = aimag - bimag;
+        }
+      }
+    }
+  }
+
+  for (let stage = 1; stage &lt;= numberOfStages; stage++) {
+    const rest = numberOfStages - stage;
+
+    for (let i = 0; i &lt; pow2(stage - 1); i++) {
+      indexes[pow2(stage - 1) + i] = indexes[i] + pow2(rest);
+    }
+  }
+
+  for (let k = 0; k &lt; size; k++) {
+    if (indexes[k] &lt;= k) {
+      continue;
+    }
+
+    const real = reals[indexes[k]];
+    const imag = imags[indexes[k]];
+
+    reals[indexes[k]] = reals[k];
+    imags[indexes[k]] = imags[k];
+
+    reals[k] = real;
+    imags[k] = imag;
+  }
+
+  for (let k = 0; k &lt; size; k++) {
+    reals[k] /= size;
+    imags[k] /= size;
+  }
+}</code></pre>
+              <p>
+                FFT と IFFT の実装上の違いは, 回転因子の回転方向が互いに逆なのと, IFFT の場合 <span class="math-inline">$N$</span> 倍された値になるので,
+                最後に正規化の処理がある点です.
+              </p>
+              <article id="section-fast-fourier-transform-algorithms">
+                <h6>改良された高速フーリエ変換の実装</h6>
+                <p>
+                  記載した FFT / IFFT の実装は <b>Cooley-Tukey 型 FFT</b> をもとに, 少し簡素化して理解しやすくした実装です (実際の Cooley-Tukey 型 FFT は,
+                  分割統治的な再帰呼び出しであったり, 回転因子の演算を事前にテーブルを確保して計算しておいてより高速化していたりします). また,
+                  高速フーリエ変換のアルゴリズム・実装は 1 つではなく, さらに高速化するために基数を利用した実装 (<b>Radix-4 FFT</b>, <b>Radix-8 FFT</b>, さらに,
+                  それらを組み合わせた <b>Split-Radix FFT</b> (加算と乗算のトータルの演算回数が最小となる FFT アルゴリズムです) などがあります) や,
+                  <a href="https://qiita.com/habuyoshiaki/items/68d502c7bc0c35c168ef" target="_blank" rel="noopener noreferrer"
+                    >2 の冪乗でなくても高速フーリエ変換を適用できるアルゴリズム (任意要素数の高速フーリエ変換)</a>
+                  が知られています. アプリケーションの要件では, 上記で記載した FFT / IFFT, あるいは, それらを WebAssembly
+                  で高速化した実装でも十分かもしれませんが, それ以上のパフォーマンスを必要とする場合は, ぜひ適切な FFT / IFFT
+                  のアルゴリズムを調べて実装してみてください.
+                </p>
+              </article>
+            </section>
+          </section>
         </section>
       </section>
     </main>
