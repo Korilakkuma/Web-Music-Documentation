@@ -3011,6 +3011,329 @@ const createFFT8 = (svg) => {
   }
 };
 
+const visualSpectrum = (svgTime, svgSpectrum) => {
+  const gain = new GainNode(audiocontext);
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 16384 });
+
+  analyser.smoothingTimeConstant = 0.3;
+
+  const buttonElement = document.getElementById('button-spectrum');
+
+  const width = Number(svgTime.getAttribute('width'));
+  const height = Number(svgTime.getAttribute('height'));
+
+  const padding = 32;
+
+  const innerWidth = width - 2 * padding;
+  const innerHeight = height - 2 * padding;
+  const innerBottom = height - padding;
+
+  const middle = innerHeight / 2 + padding;
+
+  const rectTop = document.createElementNS(xmlns, 'rect');
+
+  rectTop.setAttribute('x', padding.toString(10));
+  rectTop.setAttribute('y', (padding - 1).toString(10));
+  rectTop.setAttribute('width', innerWidth.toString(10));
+  rectTop.setAttribute('height', lineWidth.toString(10));
+  rectTop.setAttribute('stroke', 'none');
+  rectTop.setAttribute('fill', alphaBaseColor);
+
+  svgTime.appendChild(rectTop);
+
+  const rectMiddle = document.createElementNS(xmlns, 'rect');
+
+  rectMiddle.setAttribute('x', padding.toString(10));
+  rectMiddle.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+  rectMiddle.setAttribute('width', innerWidth.toString(10));
+  rectMiddle.setAttribute('height', lineWidth.toString(10));
+  rectMiddle.setAttribute('stroke', 'none');
+  rectMiddle.setAttribute('fill', baseColor);
+
+  svgTime.appendChild(rectMiddle);
+
+  const rectBottom = document.createElementNS(xmlns, 'rect');
+
+  rectBottom.setAttribute('x', padding.toString(10));
+  rectBottom.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  rectBottom.setAttribute('width', innerWidth.toString(10));
+  rectBottom.setAttribute('height', lineWidth.toString(10));
+  rectBottom.setAttribute('stroke', 'none');
+  rectBottom.setAttribute('fill', alphaBaseColor);
+
+  svgTime.appendChild(rectBottom);
+
+  const rectTopSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectTopSpectrum.setAttribute('x', padding.toString(10));
+  rectTopSpectrum.setAttribute('y', (padding - 1).toString(10));
+  rectTopSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectTopSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectTopSpectrum.setAttribute('stroke', 'none');
+  rectTopSpectrum.setAttribute('fill', alphaBaseColor);
+
+  svgSpectrum.appendChild(rectTopSpectrum);
+
+  const rectMiddleSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectMiddleSpectrum.setAttribute('x', padding.toString(10));
+  rectMiddleSpectrum.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+  rectMiddleSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectMiddleSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectMiddleSpectrum.setAttribute('stroke', 'none');
+  rectMiddleSpectrum.setAttribute('fill', alphaBaseColor);
+
+  svgSpectrum.appendChild(rectMiddleSpectrum);
+
+  const rectBottomSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectBottomSpectrum.setAttribute('x', padding.toString(10));
+  rectBottomSpectrum.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  rectBottomSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectBottomSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectBottomSpectrum.setAttribute('stroke', 'none');
+  rectBottomSpectrum.setAttribute('fill', baseColor);
+
+  svgSpectrum.appendChild(rectBottomSpectrum);
+
+  [' 1.0', ' 0.0', '-1.0'].forEach((text) => {
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = text;
+
+    yText.setAttribute('x', (padding - 16).toString(10));
+
+    switch (text) {
+      case ' 1.0': {
+        yText.setAttribute('y', (padding - 4).toString(10));
+        break;
+      }
+
+      case ' 0.0': {
+        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
+        break;
+      }
+
+      case '-1.0': {
+        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
+        break;
+      }
+    }
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '16px');
+
+    svgTime.appendChild(yText);
+  });
+
+  ['1.0', '0.5', '0.0'].forEach((text) => {
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = text;
+
+    yText.setAttribute('x', (padding - 16).toString(10));
+
+    switch (text) {
+      case '1.0': {
+        yText.setAttribute('y', (padding - 4).toString(10));
+        break;
+      }
+
+      case '0.5': {
+        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
+        break;
+      }
+
+      case '0.0': {
+        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
+        break;
+      }
+    }
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '16px');
+
+    svgSpectrum.appendChild(yText);
+  });
+
+  const pathTime = document.createElementNS(xmlns, 'path');
+
+  pathTime.setAttribute('stroke', waveColor);
+  pathTime.setAttribute('fill', 'none');
+  pathTime.setAttribute('stroke-width', lineWidth.toString(10));
+  pathTime.setAttribute('stroke-linecap', lineCap);
+  pathTime.setAttribute('stroke-linejoin', lineJoin);
+
+  svgTime.appendChild(pathTime);
+
+  const pathSpectrum = document.createElementNS(xmlns, 'path');
+
+  pathSpectrum.setAttribute('stroke', waveColor);
+  pathSpectrum.setAttribute('fill', 'none');
+  pathSpectrum.setAttribute('stroke-width', lineWidth.toString(10));
+  pathSpectrum.setAttribute('stroke-linecap', lineCap);
+  pathSpectrum.setAttribute('stroke-linejoin', lineJoin);
+
+  svgSpectrum.appendChild(pathSpectrum);
+
+  let timerId = null;
+
+  const drawOscillator = () => {
+    const times = new Float32Array(analyser.fftSize);
+    const spectrums = new Uint8Array(analyser.frequencyBinCount);
+
+    analyser.getFloatTimeDomainData(times);
+    analyser.getByteFrequencyData(spectrums);
+
+    pathTime.removeAttribute('d');
+    pathSpectrum.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0, len = times.length / 32; n < len; n++) {
+      const x = (n / len) * innerWidth + padding;
+      const y = (1 - times[n]) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    pathTime.setAttribute('d', d);
+
+    d = '';
+
+    for (let k = 0, len = spectrums.length / 4; k < len; k++) {
+      const x = k * (audiocontext.sampleRate / analyser.fftSize) * (innerWidth / len) + padding;
+      const y = (255 - spectrums[k] * gain.gain.value) * (innerHeight / 255) + padding;
+
+      if (k === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+
+      if (k % 128 === 0) {
+        const hz = document.createElementNS(xmlns, 'text');
+
+        hz.textContent = `${Math.trunc(k * (audiocontext.sampleRate / analyser.fftSize))} Hz`;
+
+        hz.setAttribute('x', x.toString(10));
+        hz.setAttribute('y', (innerHeight + padding + 20).toString(10));
+        hz.setAttribute('text-anchor', 'middle');
+        hz.setAttribute('stroke', 'none');
+        hz.setAttribute('fill', baseColor);
+        hz.setAttribute('font-size', '16px');
+
+        svgSpectrum.appendChild(hz);
+      }
+    }
+
+    pathSpectrum.setAttribute('d', d);
+
+    timerId = window.setTimeout(drawOscillator, 250);
+  };
+
+  let type = 'sine';
+  let frequency = document.getElementById('range-frequency-spectrum').valueAsNumber;
+  let detune = document.getElementById('range-detune-spectrum').valueAsNumber;
+
+  let oscillator = null;
+
+  let currentTime = 0;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      oscillator.stop(0);
+      oscillator = null;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+    oscillator.detune.value = detune;
+
+    // OscillatorNode (Input) -> GainNode -> AnalyserNode -> AudioDestinationNode (Output)
+    oscillator.connect(gain);
+    gain.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    buttonElement.textContent = 'stop';
+
+    drawOscillator();
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+    oscillator = null;
+
+    buttonElement.textContent = 'start';
+
+    if (timerId) {
+      window.clearTimeout(timerId);
+      timerId = null;
+    }
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  document.getElementById('form-oscillator-type-spectrum').addEventListener('change', (event) => {
+    const radios = event.currentTarget.elements['radio-oscillator-type-spectrum'];
+
+    for (const radio of radios) {
+      if (radio.checked) {
+        type = radio.value;
+
+        if (oscillator) {
+          oscillator.type = type;
+        }
+
+        break;
+      }
+    }
+  });
+
+  document.getElementById('range-gain-spectrum').addEventListener('input', (event) => {
+    gain.gain.value = event.currentTarget.valueAsNumber;
+  });
+
+  document.getElementById('range-frequency-spectrum').addEventListener('input', (event) => {
+    frequency = event.currentTarget.valueAsNumber;
+
+    if (oscillator) {
+      oscillator.frequency.value = frequency;
+    }
+  });
+
+  document.getElementById('range-detune-spectrum').addEventListener('input', (event) => {
+    detune = event.currentTarget.valueAsNumber;
+
+    if (oscillator) {
+      oscillator.detune.value = detune;
+    }
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -3063,3 +3386,5 @@ createRotationFactors(document.getElementById('svg-figure-rotation-factors'));
 createFFTSymbols(document.getElementById('svg-figure-fft-symbols'));
 createFFT4(document.getElementById('svg-figure-fft-4'));
 createFFT8(document.getElementById('svg-figure-fft-8'));
+
+visualSpectrum(document.getElementById('svg-time'), document.getElementById('svg-spectrum'));
