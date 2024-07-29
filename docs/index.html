@@ -5368,6 +5368,84 @@ function IFFT(reals, imags, size) {
             <figcaption>フーリエ解析 (フーリエ級数・フーリエ変換) のイメージ</figcaption>
           </figure>
         </section>
+        <section id="section-fundamental-frequency-and-harmonic">
+          <h3>基本周波数と倍音</h3>
+          <p>
+            音響特徴量は振幅スペクトルにあらわれることが多いことから, 音の分析, イコール, スペクトル分析と表現しても過言ではないぐらいです. したがって,
+            このセクションでは スペクトルの基本構造に関して解説したいと思います.
+          </p>
+          <p>
+            周波数成分は, <b>基本周波数</b> (略して <span class="math-inline">$f_{0}$</span> と呼ぶことも多いです) と<b>倍音</b>に分類することができます.
+            最も低い周波数成分を基本周波数と呼び, 基本周波数の整数倍となる周波数成分を倍音と呼びます.
+          </p>
+          <p>
+            <code>OscillatorNode</code> の <code>frequency</code> / <code>detune</code> プロパティは周波数を設定するプロパティ (<code>AudioParam</code>)
+            と解説しましたが, 厳密には, <b>基本周波数を設定するプロパティ</b>です.
+          </p>
+          <p>基本波形を例にとって, 基本周波数と倍音をより具体的に解説します.</p>
+          <p>
+            基本波形の最小単位は正弦波です. 正弦波は倍音をもちません. 基本周波数の成分しかもたないので<b>純音</b>とも呼ばれます. そして,
+            基本周波数と倍音を合成した波形が, 矩形波やノコギリ波, 三角波です.
+          </p>
+          <table>
+            <caption>
+              基本波形における, 基本周波数と倍音
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Wave Type</th>
+                <th scope="col">Spectrum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>正弦波</td>
+                <td>基本周波数成分のみをもつ</td>
+              </tr>
+              <tr>
+                <td>矩形波</td>
+                <td>基本周波数と奇数次の倍音成分をもつ</td>
+              </tr>
+              <tr>
+                <td>ノコギリ波</td>
+                <td>基本周波数と奇数次・偶数次の倍音成分をもつ</td>
+              </tr>
+              <tr>
+                <td>三角波</td>
+                <td>基本周波数と奇数次の倍音成分をもつ (高音域の倍音成分が小さい)</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="app-container">
+            <dl>
+              <dt>Time Domain</dt>
+              <dd><svg id="svg-time" class="svg-time" width="720" height="240"></svg></dd>
+              <dt>Frequency Domain (Spectrum)</dt>
+              <dd><svg id="svg-spectrum" class="svg-spectrum" width="720" height="240"></svg></dd>
+            </dl>
+            <div>
+              <button type="button" id="button-spectrum" class="button-spectrum">start</button>
+              <form id="form-oscillator-type-spectrum" class="form-oscillator-type">
+                <label><span>sine</span><input type="radio" name="radio-oscillator-type-spectrum" value="sine" checked /></label>
+                <label><span>square</span><input type="radio" name="radio-oscillator-type-spectrum" value="square" /></label>
+                <label><span>sawtooth</span><input type="radio" name="radio-oscillator-type-spectrum" value="sawtooth" /></label>
+                <label><span>triangle</span><input type="radio" name="radio-oscillator-type-spectrum" value="triangle" /></label>
+              </form>
+              <div class="ranges-oscillator">
+                <label><span>gain</span><input type="range" id="range-gain-spectrum" value="1" min="0" max="1" step="0.05" /></label>
+                <label><span>frequency</span><input type="range" id="range-frequency-spectrum" value="440" min="27.5" max="1000" step="0.5" /></label>
+                <label><span>detune</span><input type="range" id="range-detune-spectrum" value="0" min="-600" max="600" step="1" /></label>
+              </div>
+            </div>
+          </div>
+          <p>
+            基本波形と同じように, 楽器音や音声も基本周波数と倍音の周波数成分によって構成されています. 厳密には,
+            自然の音は必ずしもこのような整数倍になっていません. しかし, 実はこのことが人工的な音と感じさせない要因ともなっています. また, エフェクターの 1
+            つである, オーバードライブやディストーションは, 本来発生しない倍音を発生させることによって歪みを与えます
+            (オーディオ信号処理における<b>非線形処理</b>によって発生させることができるエフェクターです).
+          </p>
+          <p>また, ホワイトノイズのような雑音はすべての周波数成分を含んでいるので, そのスペクトルは一様になります.</p>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
