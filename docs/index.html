@@ -5447,6 +5447,18 @@ function IFFT(reals, imags, size) {
           <p>また, ホワイトノイズのような雑音はすべての周波数成分を含んでいるので, そのスペクトルは一様になります.</p>
         </section>
       </section>
+      <section id="section-effectors">
+        <h2>エフェクター</h2>
+        <p>
+          このサイトのオーナーはエレキギターを弾くので, オーナー個人的には, オーディオプログラミングの最大の楽しみはエフェクターを実装することだと思っています.
+        </p>
+        <p>
+          Web Audio API のユースケースとしても, エフェクターは考慮されており, <code>GainNode</code>, <code>DelayNode</code>, <code>BiquadFilterNode</code>,
+          <code>WaveShaperNode</code>, <code>DynamicsCompressorNode</code> などによって,
+          エフェクターの原理さえ簡単に理解していれば実装が容易なぐらいに抽象化されています (エフェクターのためにここまで抽象化されているオーディオ API は,
+          現時点でおそらく他にありません).
+        </p>
+      </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/line-numbers/prism-line-numbers.min.js"></script>
