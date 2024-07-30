@@ -249,12 +249,6 @@ table > tbody > tr > td {
   cursor: ew-resize;
 }
 
-.ranges-envelopegenerator > label > input[type="range"] {
-  cursor: ew-resize;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-
 .forms-fourier-series {
   display: flex;
   gap: 12px;
@@ -287,4 +281,21 @@ button[type="button"] {
 :disabled {
   cursor: not-allowed !important;
   opacity: 0.6;
+}
+
+.app-vibrato {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 24px 0;
+}
+
+input[type="range"] {
+  cursor: ew-resize;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+span[id*="print-"] {
+  min-width: 88px;
 }
