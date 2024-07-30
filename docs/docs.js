@@ -3334,6 +3334,97 @@ const visualSpectrum = (svgTime, svgSpectrum) => {
   });
 };
 
+const vibrato = () => {
+  let oscillator = null;
+  let lfo = null;
+  let depth = null;
+
+  let frequency = 440;
+  let depthRate = 0.1;
+  let rateValue = 1;
+
+  const buttonElement = document.getElementById('button-vibrato');
+
+  const rangeFrequencyElement = document.getElementById('range-oscillator-frequency');
+  const rangeDepthElement = document.getElementById('range-lfo-depth');
+  const rangeRateElement = document.getElementById('range-lfo-rate');
+
+  const spanPrintFrequencyElement = document.getElementById('print-oscillator-frequency-value');
+  const spanPrintDepthElement = document.getElementById('print-lfo-depth-value');
+  const spanPrintRateElement = document.getElementById('print-lfo-rate-value');
+
+  const onDown = (event) => {
+    if (oscillator !== null || lfo !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext, { frequency });
+    lfo = new OscillatorNode(audiocontext, { frequency: rateValue });
+    depth = new GainNode(audiocontext, { gain: oscillator.frequency.value * depthRate });
+
+    oscillator.connect(audiocontext.destination);
+
+    lfo.connect(depth);
+    depth.connect(oscillator.frequency);
+
+    oscillator.start(0);
+    lfo.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = (event) => {
+    if (oscillator === null || lfo === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+    lfo.stop(0);
+
+    oscillator = null;
+    lfo = null;
+    depth = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeFrequencyElement.addEventListener('input', (event) => {
+    frequency = event.currentTarget.valueAsNumber;
+
+    if (oscillator && depth) {
+      oscillator.frequency.value = frequency;
+      depth.gain.value = oscillator.frequency.value * depthRate;
+    }
+
+    spanPrintFrequencyElement.textContent = `${Math.trunc(frequency * 10) / 10} Hz`;
+  });
+
+  rangeDepthElement.addEventListener('input', (event) => {
+    depthRate = event.currentTarget.valueAsNumber;
+
+    if (oscillator && depth) {
+      depth.gain.value = oscillator.frequency.value * depthRate;
+    }
+
+    spanPrintDepthElement.textContent = depthRate.toString(10);
+  });
+
+  rangeRateElement.addEventListener('input', (event) => {
+    rateValue = event.currentTarget.valueAsNumber;
+
+    if (lfo) {
+      lfo.frequency.value = rateValue;
+    }
+
+    spanPrintRateElement.textContent = Math.trunc(rateValue).toString(10);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -3388,3 +3479,5 @@ createFFT4(document.getElementById('svg-figure-fft-4'));
 createFFT8(document.getElementById('svg-figure-fft-8'));
 
 visualSpectrum(document.getElementById('svg-time'), document.getElementById('svg-spectrum'));
+
+vibrato();
