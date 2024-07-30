@@ -185,6 +185,12 @@ table > tbody > tr > td {
   border: 1px solid var(--gray-light);
 }
 
+input[type="range"] {
+  cursor: ew-resize;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .copy-to-clipboard-button {
   cursor: pointer;
 }
@@ -289,4 +295,16 @@ button[type="button"] {
 :disabled {
   cursor: not-allowed !important;
   opacity: 0.6;
+}
+
+.app-vibrato {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 24px 0;
+}
+
+span[id*="print-"] {
+  display: inline-block;
+  min-width: 88px;
 }

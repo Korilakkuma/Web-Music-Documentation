@@ -5458,6 +5458,284 @@ function IFFT(reals, imags, size) {
           エフェクターの原理さえ簡単に理解していれば実装が容易なぐらいに抽象化されています (エフェクターのためにここまで抽象化されているオーディオ API は,
           現時点でおそらく他にありません).
         </p>
+        <section id="section-effectors-overview">
+          <h3>エフェクター実装の基本</h3>
+          <p>一方で, 抽象化されているがゆえに, Web Audio API でエフェクターを実装する場合に理解しておくべきことが 2 つあります.</p>
+          <ul>
+            <li>LFO (Low Frequency Oscillator) の実装</li>
+            <li><code>AudioParam</code> への接続</li>
+          </ul>
+          <section id="section-effectors-lfo">
+            <h4>LFO (Low Frequency Oscillator)</h4>
+            <p>
+              エフェクターにはいくつかの種類があり, モジュレーション系と呼ばれるエフェクター (コーラス, フランジャー, フェイザー, トレモロ, ワウなど)
+              を実装するためには, <b>特定のパラメータを時間経過とともに周期的に変化させる必要があります</b>. 具体的には, コーラス / フランジャーは,
+              ディレイタイム (遅延時間) を時間経過とともに周期的に変化させることによって実装可能です. そして,
+              特定のパラメータを時間経過とともに周期的に変化させる機能が <b>LFO</b> (<b>Low Frequency Oscillator</b>) です.
+            </p>
+            <p>
+              LFO の実装は Web Audio API に限ったことではないのですが, <code>OscillatorNode</code> を利用して LFO を実装する場合には, Web Audio API
+              特有のことをもう 1 つ理解している必要があります. それが, <code>AudioParam</code> への接続です.
+            </p>
+          </section>
+          <section id="section-effectors-connect-to-audio-param">
+            <h4>AudioParam への接続</h4>
+            <p>
+              結論から記載すると, <code>AudioNode</code> の <code>connect</code> メソッドはオーバーロードされており, 第 1 引数は
+              <code>AudioNode</code> インスタンスだけでなく, <code>AudioParam</code> インスタンスを指定することも可能です. つまり,
+              <code>OscillatorNode</code> の接続先を <code>AudioParam</code> にすることで,
+              対象のパラメータを時間経過とともに周期的に変化させることが可能になります.
+            </p>
+            <p>
+              また, LFO のソースとなる <code>OscillatorNode</code> に <code>GainNode</code> を接続することで, パラメータの変化量を調整することが可能になります.
+              一般的なエフェクターのパラメータの, <b>Depth</b> は <code>GainNode</code> の <code>gain</code> プロパティの値に, <b>Rate</b> は
+              <code>OscillatorNode</code> の <code>frequency</code> プロパティの値と <code>detune</code> プロパティの値に相当しますプロパティの値に相当します.
+            </p>
+          </section>
+          <section id="section-effectors-vibrato">
+            <h4>LFO の実装例 (ビブラート)</h4>
+            <p>
+              LFO と <code>AudioParam</code> への接続, Depth / Rate の制御を具体的に理解するために, 簡易的なビブラートを実装を記載します. (<code
+                >OscillatorNode</code>
+              の <code>frequency</code> プロパティのデフォルト値である) <code>440 Hz</code> を基準に, Depth で設定した値が Rate の周期で変化することになります.
+              初期値で言うと, <code>440 Hz</code> &plusmn; <code>10 Hz</code> の範囲で, <code>frequency</code> プロパティの値が,
+              <code>1 sec</code> の間に変化することになります.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-lfo-depth&quot;&gt;Depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-lfo-depth&quot; value=&quot;10&quot; min=&quot;0&quot; max=&quot;50&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-lfo-depth-value&quot;&gt;10&lt;/span&gt;
+&lt;label for=&quot;range-lfo-rate&quot;&gt;Rate&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-lfo-rate&quot; value=&quot;1&quot; min=&quot;1&quot; max=&quot;10&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-lfo-rate-value&quot;&gt;1&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let oscillator = null;
+let lfo        = null;
+let depth      = null;
+
+let depthValue = 10;
+let rateValue  = 1;
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+const rangeDepthElement = document.getElementById(&apos;range-lfo-depth&apos;);
+const rangeRateElement  = document.getElementById(&apos;range-lfo-rate&apos;);
+
+const spanPrintDepthElement = document.getElementById(&apos;print-lfo-depth-value&apos;);
+const spanPrintRateElement  = document.getElementById(&apos;print-lfo-rate-value&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+  if ((oscillator !== null) || (lfo !== null)) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context, { frequency: 440 });
+  lfo        = new OscillatorNode(context, { frequency: rateValue });
+  depth      = new GainNode(context, { gain: depthValue });
+
+  // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(context.destination);
+
+  // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; OscillatorNode.frequency (AudioParam)
+  // 440 Hz +- ${depthValue} Hz
+  lfo.connect(depth);
+  depth.connect(oscillator.frequency);
+
+  // Start immediately
+  oscillator.start(0);
+
+  // Start LFO
+  lfo.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+  if ((oscillator === null) || (lfo === null)) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+  lfo.stop(0);
+
+  // GC (Garbage Collection)
+  oscillator = null;
+  lfo        = null;
+  depth      = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  depthValue = event.currentTarget.valueAsNumber;
+
+  if (depth) {
+    depth.gain.value = depthValue;
+  }
+
+  spanPrintDepthElement.textContent = Math.trunc(depthValue).toString(10);
+});
+
+rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  rateValue = event.currentTarget.valueAsNumber;
+
+  if (lfo) {
+    lfo.frequency.value = rateValue;
+  }
+
+  spanPrintRateElement.textContent = Math.trunc(rateValue).toString(10);
+});</code></pre>
+          </section>
+          <section id="section-effectors-general-vibrato">
+            <h4>汎用的な LFO と Depth の制御</h4>
+            <p>
+              基準値と Depth の関係から, パラメータ変化の最小値を考慮しておく必要があるのは, LFO の実装として汎用性に欠けます (先ほどのビブラートの実装だと,
+              基準値を <code>27.5 Hz</code> にした場合, Depth の値によっては, 負数の周波数になってしまいます). より汎用的な LFO にするために,
+              パラメータの変化量を直接 Depth に設定するのではなく, 基準値に対する変化割合を格納する変数を追加して, その比率と基準値から実際の Depth
+              を算出します. このような実装にすることで, 基準値に関わらず, Depth の値は <code>0</code> から <code>1</code> (<code>0 %</code> から
+              <code>100 %</code>) になるのでより汎用的な実装になります, また, 各 <code>AudioParam</code> のパラメータの値の範囲 (<code>AudioParam</code> の
+              <code>minValue</code> / <code>maxValue</code> プロパティにそれぞれ, 最小値と最大値が設定されています)
+              を意図せずに超えてしまうバグも防ぐことができます.
+            </p>
+            <div class="app-container app-vibrato">
+              <button type="button" id="button-vibrato">start</button>
+              <label for="range-oscillator-frequency">OscillatorNode frequency</label>
+              <input type="range" id="range-oscillator-frequency" value="440" min="27.5" max="4000" step="0.5" />
+              <span id="print-oscillator-frequency-value">440 Hz</span>
+              <label for="range-lfo-depth">Depth</label>
+              <input type="range" id="range-lfo-depth" value="0.1" min="0" max="1" step="0.05" />
+              <span id="print-lfo-depth-value">0.1</span>
+              <label for="range-lfo-rate">Rate</label>
+              <input type="range" id="range-lfo-rate" value="1" min="1" max="10" step="1" />
+              <span id="print-lfo-rate-value">1</span>
+            </div>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-oscillator-frequency&quot;&gt;OscillatorNode frequency&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-oscillator-frequency&quot; value=&quot;440&quot; min=&quot;27.5&quot; max=&quot;4000&quot; step=&quot;0.5&quot; /&gt;
+&lt;span id=&quot;print-oscillator-frequency-value&quot;&gt;440&lt;/span&gt;
+&lt;label for=&quot;range-lfo-depth&quot;&gt;Depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-lfo-depth&quot; value=&quot;0.1&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-lfo-depth-value&quot;&gt;10&lt;/span&gt;
+&lt;label for=&quot;range-lfo-rate&quot;&gt;Rate&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-lfo-rate&quot; value=&quot;1&quot; min=&quot;1&quot; max=&quot;10&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-lfo-rate-value&quot;&gt;1&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let oscillator = null;
+let lfo        = null;
+let depth      = null;
+
+let frequency = 440;
+let depthRate = 0.1;
+let rateValue = 1;
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+const rangeFrequencyElement = document.getElementById(&apos;range-oscillator-frequency&apos;);
+const rangeDepthElement     = document.getElementById(&apos;range-lfo-depth&apos;);
+const rangeRateElement      = document.getElementById(&apos;range-lfo-rate&apos;);
+
+const spanPrintFrequencyElement = document.getElementById(&apos;print-oscillator-frequency-value&apos;);
+const spanPrintDepthElement     = document.getElementById(&apos;print-lfo-depth-value&apos;);
+const spanPrintRateElement      = document.getElementById(&apos;print-lfo-rate-value&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+  if ((oscillator !== null) || (lfo !== null)) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context, { frequency });
+  lfo        = new OscillatorNode(context, { frequency: rateValue });
+  depth      = new GainNode(context, { gain: oscillator.frequency.value * depthRate });
+
+  // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(context.destination);
+
+  // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; OscillatorNode.frequency (AudioParam)
+  lfo.connect(depth);
+  depth.connect(oscillator.frequency);
+
+  // Start immediately
+  oscillator.start(0);
+
+  // Start LFO
+  lfo.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+  if ((oscillator === null) || (lfo === null)) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+  lfo.stop(0);
+
+  // GC (Garbage Collection)
+  oscillator = null;
+  lfo        = null;
+  depth      = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeFrequencyElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  frequency = event.currentTarget.valueAsNumber;
+
+  if (oscillator &amp;&amp; depth) {
+    oscillator.frequency.value = frequency;
+    depth.gain.value           = oscillator.frequency.value * depthRate;
+  }
+
+  spanPrintFrequencyElement.textContent = `${(Math.trunc(frequency * 10) / 10)} Hz`;
+});
+
+rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  depthRate = event.currentTarget.valueAsNumber;
+
+  if (oscillator &amp;&amp; depth) {
+    depth.gain.value = oscillator.frequency.value * depthRate;
+  }
+
+  spanPrintDepthElement.textContent = depthRate.toString(10);
+});
+
+rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  rateValue = event.currentTarget.valueAsNumber;
+
+  if (lfo) {
+    lfo.frequency.value = rateValue;
+  }
+
+  spanPrintRateElement.textContent = Math.trunc(rateValue).toString(10);
+});</code></pre>
+          </section>
+          <article id="section-effectors-lfo-wave-type">
+            <h4>LFO の波形</h4>
+            <p>
+              ここまでの解説やコードでは, LFO の波形は <code>OscillatorNode</code> のデフォルト値である sin 波 (<code>&apos;sine&apos;</code>) を使っていました.
+              LFO としてはこれで十分機能しますが, 波形 (<code>OscillatorNode</code> の <code>type</code> プロパティ (<code>OscillatorOptions</code>))
+              をノコギリ波や三角波にしても LFO として機能します. また, ランダムなパラメータ変化をさせるためにホワイトノイズを使う場合もあります.
+              もし必要であれば, LFO の波形も選択できるようにすると, エフェクトにバリエーションが出せるかもしれません.
+            </p>
+          </article>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
