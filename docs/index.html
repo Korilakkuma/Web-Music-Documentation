@@ -5747,6 +5747,222 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             簡易的なリバーブを再現することも可能です). ディレイ・リバーブともに, <b>FIR フィルタ</b>, つまり,
             加算・乗算・遅延というデジタルフィルタにおける基本処理で実装可能な点です.
           </p>
+          <section id="section-effectors-delay">
+            <h4>ディレイ</h4>
+            <p>ディレイを実装するために必要な処理は, <code>DelayNode</code>の接続とフィードバックです.</p>
+            <section id="section-effectors-delay-delay-node">
+              <h5>DelayNode</h5>
+              <p>
+                遅延処理を (抽象化して) 実装するために定義されているのが, <b><code>DelayNode</code></b> です. コンストラクタの第 2 引数 (<b
+                  ><code>DelayOptions</code></b>
+                の <b><code>maxDelayTime</code></b> プロパティ) には (ファクトリメソッドの場合, 第 1 引数), 遅延時間 (ディレイタイム)
+                の最大値を秒単位で指定します. 省略した場合のデフォルト値は <code>1 sec</code> です.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const delay = new DelayNode(context, { maxDelayTime: 5 });  // 5 sec
+
+// If use `createDelay`
+// const delay = context.createDelay(5);  // 5 sec</code></pre>
+              <img src="images/delay-node.png" alt="DelayNode and delayTime property" width="1232" height="770" loading="lazy" />
+              <p>
+                <code>DelayNode</code> インスタンスには, <code>AudioParam</code> である <b><code>delayTime</code></b> プロパティが定義されています. これが,
+                遅延時間 (ディレイタイム) を決定づけるプロパティです. 最小値は <code>0 sec</code>, 最大値はインスタンス生成時に指定した値 (sec) です.
+              </p>
+              <p>遅延した音を生成するには, サウンドの入力点となるノード (<code>OscillatorNode</code> など) を <code>DelayNode</code> に接続します.</p>
+              <p>
+                以下のコードは, サウンド出力点である <code>AudioDestinationNode</code> に対して 2 つの入力ノードが接続されています. 1 つは, 原音を出力するため,
+                そして, もう 1 つは遅延音を出力するためです. このように, 複数のノードを入力ノードとして接続することで,
+                それぞれ入力された音をミックスすることが可能になります. これは, ディレイだけではなく他のエフェクターを実装する場合においても,
+                <b>原音とエフェクト音をミックスする</b>という処理は必要になります.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const delay = new DelayNode(context);
+
+// If use `createDelay`
+// const delay = context.createDelay();
+
+delay.delayTime.value = 0.5;
+
+const oscillator = new OscillatorNode(context);
+
+// Connect nodes for original sound
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// Connect nodes for delay sound
+// OscillatorNode (Input) -&gt; DelayNode (Delay) -&gt; AudioDestinationNode (Output)
+oscillator.connect(delay);
+delay.connect(context.destination);
+
+oscillator.start(0);
+oscillator.stop(context.currentTime + 2);</code></pre>
+              <p>
+                これで, ディレイが実装できました ... と言いたいところですが, このコードでは, <b>エフェクターとしてのディレイ</b>は実現できていません.
+                <b>エフェクターとしての</b>という意味は, 上記のコードでも遅延した音は発生します. しかしながら, やまびこ現象のように,
+                遅延音が少しずつ減衰しながら何度も繰り返し生成することが実装できていません.
+              </p>
+              <p>
+                Web Audio API の設計思想からの観点で説明すると,
+                <b><code>DelayNode</code> は, 指定された遅延時間で遅延音を 1 つだけ生成することだからです</b>. すなわち,
+                エフェクターのディレイを実現するという役割までは担いません.
+              </p>
+              <p>
+                そこで, エフェクターとしてのディレイを実装するには,
+                <code>DelayNode</code> の接続と次のセクションで解説する<b>フィードバック</b>という処理が必要になります.
+              </p>
+            </section>
+            <section id="section-effectors-delay-feedback">
+              <h5>フィードバック</h5>
+              <p>
+                <b>フィードバック</b>とは, 出力された音を入力音として利用することです. つまり, <b>DelayNode</b> によって出力された遅延音を,
+                再び入力音とすればディレイを実現することが可能です. これを, Web Audio APIで実装するには,
+                <b>フィードバックのための <code>GainNode</code></b> を接続して, その入出力に同じ <code>DelayNode</code> を接続します. また,
+                フィードバックの実装は, ディレイに限らず, 様々なエフェクターで必要となります.
+              </p>
+              <p>
+                ちなみに, エレキギターではフィードバック奏法と呼ばれる奏法があります. この奏法は, アンプから出力された音で弦を振動させて,
+                それをピックアップが拾い, 再びアンプから出力させることで, 理論上, 永遠の音の伸びを奏でる奏法です.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const delay = new DelayNode(context);
+
+// If use `createDelay`
+// const delay = context.createDelay();
+
+delay.delayTime.value = 0.5;
+
+const feedback = new GainNode(context, { gain: 0.5 });
+
+const oscillator = new OscillatorNode(context);
+
+// Connect nodes for original sound
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// Connect nodes for delay sound
+// OscillatorNode (Input) -&gt; DelayNode (Delay) -&gt; AudioDestinationNode (Output)
+oscillator.connect(delay);
+delay.connect(context.destination);
+
+// Connect nodes for feedback
+// (OscillatorNode (Input) -&gt;) DelayNode (Delay) -&gt; GainNode (Feedback) -&gt; DelayNode (Delay) -&gt; GainNode (Feedback) -&gt; ...
+delay.connect(feedback);
+feedback.connect(delay);
+
+oscillator.start(0);
+oscillator.stop(context.currentTime + 2);</code></pre>
+              <p>上記のコードでは, 大きく 3 つの接続ができました.</p>
+              <ul>
+                <li>原音を出力する接続</li>
+                <li>エフェクト音 (遅延音) を出力する接続</li>
+                <li>フィードバック (エフェクト音を再び入力する) のための接続</li>
+              </ul>
+              <p>
+                フィードバック (エフェクト音を再び入力する) の接続によって, 遅延音が少しずつ減衰しながら何度も繰り返し生成されます. 具体例として, 原音のゲインを
+                <code>1</code>, フィードバッグのゲインが <code>0.5</code> とすると, 1 つめの遅延音のゲインは, <code>0.5</code> (<code>1 x 0.5</code>), 2
+                つめの遅延音のゲインは, <code>0.25</code> (<code>0.5 x 0.5</code>), 3 つめの遅延音のゲインは, <code>0.125</code> (<code>0.25 x 0.5</code>) ...
+                といった繰り返しで, 遅延音が少しずつ減衰しながら生成されます. つまり, フィードバックの <code>GainNode</code> の
+                <code>gain</code> プロパティを適切に設定すれば, エフェクターとしてのディレイにバリエーションが出せるというこでもあります.
+              </p>
+              <p>
+                ただし, <b>フィードバックの値は <code>1</code> 未満にする必要があります</b>. これは, 直感的な説明をすれば,
+                <code>1</code> 以上にすると減衰しない状態 (無限ループのような状態) になってしまうからです. 数学的・工学的な厳密性で説明すると,
+                <a href="#section-fourier-transform">絶対可積分</a>を満たさなくなり, (のちのセクションで解説する) FIR
+                フィルタが安定しないフィルタとなるからです.
+              </p>
+              <figure>
+                <svg id="svg-animation-feedback" width="720" height="405" data-parameters="true" />
+                <figcaption>
+                  <span>フィードバックのイメージ</span>
+                  <button type="button" id="button-feedback-animation">start</button>
+                </figcaption>
+              </figure>
+            </section>
+            <section id="section-effectors-delay-dry-and-wet">
+              <h5>Dry / Wet</h5>
+              <p>
+                <b>Dry</b> / <b>Wet</b> とは, <b>原音とエフェクト音のゲインを調整するパラメータ</b> (または, そのような機能) のことです.
+                現実世界のエフェクターにおいても, Dry (原音) / Wet (エフェクト音) としてコントロール可能になっているものが多いので,
+                このドキュメントでもそれに従って Dry / Wet (あるいは, それらを合わせる Mix) と呼ぶことにします.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const delay = new DelayNode(context, { delayTime: 0.5 });
+
+// If use `createDelay`
+// const delay = context.createDelay();
+// delay.delayTime.value = 0.5;
+
+const dry      = new GainNode(context, { gain: 0.7 });  // for gain of original sound
+const wet      = new GainNode(context, { gain: 0.3 });  // for gain of delay sound
+const feedback = new GainNode(context, { gain: 0.5 });  // for feedback
+
+const oscillator = new OscillatorNode(context);
+
+// Connect nodes for original sound
+// OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+oscillator.connect(dry);
+dry.connect(context.destination);
+
+// Connect nodes for delay sound
+// OscillatorNode (Input) -&gt; DelayNode (Delay) -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
+oscillator.connect(delay);
+delay.connect(wet);
+wet.connect(context.destination);
+
+// Connect nodes for feedback
+// (OscillatorNode (Input) -&gt;) DelayNode (Delay) -&gt; GainNode (Feedback) -&gt; DelayNode (Delay) -&gt; GainNode (Feedback) -&gt; ...
+delay.connect(feedback);
+feedback.connect(delay);
+
+oscillator.start(0);
+oscillator.stop(context.currentTime + 2);</code></pre>
+              <p>
+                上記のコードは, Dry / Wet のための <code>GainNode</code> を接続して, ディレイの実装完成コードです. Dry / Wet の制御を可能にすることで,
+                原音とエフェクト音のゲインを調整するだけで, ディレイにさらなるバリエーションが生まれます. さらに, ノード接続を変更することなくエフェクターのオン
+                / オフを切り替えることが可能になります. 例えば, Dry を <code>1</code>, Wet を <code>0</code> にすれば, エフェクターオフ (つまり, 原音のみ)
+                のサウンドになります.
+              </p>
+              <figure>
+                <svg id="svg-figure-node-connections-for-delay" width="1200" height="520" />
+                <figcaption>ディレイのノード接続図</figcaption>
+              </figure>
+              <p>
+                フィードバックと同様に, Dry / Web (あるいは, Mix) のパラメータ制御は, ディレイだけではなく, 他のエフェクターでも利用されるので, まずは,
+                ノード接続が比較的単純なディレイの実装でそれらを理解しておくとよいでしょう.
+              </p>
+            </section>
+            <article id="section-effectors-delay-ring-buffer">
+              <h5>遅延音の実装とリングバッファ</h5>
+              <p>
+                ディレイはエフェクター実装における基本を理解するためにも最適なエフェクターですが, ディレイのコアとなる,
+                遅延音はどのようにして実装するのでしょうか ? (Web Audio API では,
+                <code>DelayNode</code> がそれを抽象化しているので気にすることはほとんどないと思いますが). 結論的には,
+                <b>リングバッファ</b>に入力された音を格納する (enqueue) ことで, 過去の入力音をリングバッファのサイズだけ蓄積する事が可能です (<code
+                  >DelayNode</code>
+                コンストラクタで指定する遅延時間の最大値は, このリングバッファのサイズを決定するためにあります). 指定した
+                <code>delayTime</code> の値が経過したら, リングバッファに格納した過去の入力音を, 原音 (現在時刻の音) と合成して出力します.
+                加算・乗算・遅延はデジタルフィルタを構成する基本処理なので, 遅延に関しても,
+                ローレイヤーでどのように実装されているかを理解しておくと応用が利くはずです. 実装言語は C++ になりますが, より詳細な解説は,
+                <a href="https://www.utsbox.com/?p=1517" target="_blank" rel="noopener noreferrer">ディレイの実装例 | C++でVST作り</a>を参考にするとよいと思います.
+              </p>
+            </article>
+          </section>
         </section>
       </section>
     </main>
