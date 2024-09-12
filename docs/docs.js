@@ -18,6 +18,7 @@ const lightWaveColor = 'rgb(255 0 255)';
 const alphaBaseColor = 'rgba(153 153 153 / 30%)';
 const alphaWaveColor = 'rgba(0 0 255 / 30%)';
 const alphaLightWaveColor = 'rgba(255 0 255 / 30%)';
+const white = 'rgb(255 255 255)';
 
 const audiocontext = new AudioContext();
 
@@ -3425,6 +3426,295 @@ const vibrato = () => {
   });
 };
 
+const animateFeedback = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', (padding / 2).toString(10));
+  xRect.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  xRect.setAttribute('width', (innerWidth + padding).toString(10));
+  xRect.setAttribute('height', lineWidth.toString(10));
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', (padding - 1).toString(10));
+  yRect.setAttribute('y', padding.toString(10));
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', innerHeight.toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(yRect);
+
+  if (svg.getAttribute('data-parameters') === 'true') {
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = 'Time';
+
+    xText.setAttribute('x', (innerWidth + padding).toString(10));
+    xText.setAttribute('y', (padding + innerHeight - 8).toString(10));
+
+    xText.setAttribute('text-anchor', 'middle');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '20px');
+
+    svg.appendChild(xText);
+
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = 'Amplitude';
+
+    yText.setAttribute('x', padding.toString(10));
+    yText.setAttribute('y', padding.toString(10));
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '20px');
+
+    svg.appendChild(yText);
+  }
+
+  const gains = [1.0, 0.5, 0.25, 0.125, 0.0625];
+
+  const renderGainRect = (gain, index) => {
+    const g = document.createElementNS(xmlns, 'g');
+
+    g.classList.add('svg-feedback-rects');
+
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (padding + (innerWidth / gains.length) * index).toString(10));
+    rect.setAttribute('y', (padding + (1 - gain) * innerHeight).toString(10));
+    rect.setAttribute('width', '4');
+    rect.setAttribute('height', (gain * innerHeight).toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', waveColor);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    if (index === 0) {
+      text.textContent = '0';
+    } else if (index === 1) {
+      text.textContent = 'delayTime';
+    } else if (index === 4) {
+      text.textContent = `${index} x delayTime ...`;
+    } else {
+      text.textContent = `${index} x delayTime`;
+    }
+
+    text.setAttribute('x', (padding + (innerWidth / 5) * index).toString(10));
+    text.setAttribute('y', (padding + innerHeight + 20).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+
+    g.appendChild(rect);
+    g.appendChild(text);
+
+    svg.appendChild(g);
+  };
+
+  gains.forEach((gain, index) => {
+    renderGainRect(gain, index);
+  });
+
+  let intervalId = null;
+
+  document.getElementById('button-feedback-animation').addEventListener('click', (event) => {
+    const feedbackRects = document.querySelectorAll('.svg-feedback-rects');
+
+    for (const feedbackRect of feedbackRects) {
+      svg.removeChild(feedbackRect);
+    }
+
+    const buttonElement = event.currentTarget;
+
+    buttonElement.setAttribute('disabled', 'disabled');
+
+    let index = 0;
+
+    intervalId = window.setInterval(() => {
+      if (index < gains.length) {
+        renderGainRect(gains[index], index++);
+      } else {
+        window.clearInterval(intervalId);
+        intervalId = null;
+
+        buttonElement.removeAttribute('disabled');
+      }
+    }, 500);
+  });
+};
+
+const createAudioNode = (name, x, y, w = 300, h = 100) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const rect = document.createElementNS(xmlns, 'rect');
+  const text = document.createElementNS(xmlns, 'text');
+
+  rect.setAttribute('x', x.toString(10));
+  rect.setAttribute('y', y.toString(10));
+  rect.setAttribute('width', w.toString(10));
+  rect.setAttribute('height', h.toString(10));
+  rect.setAttribute('stroke', baseColor);
+  rect.setAttribute('stroke-width', lineWidth.toString(10));
+  rect.setAttribute('stroke-linecap', lineCap);
+  rect.setAttribute('stroke-linejoin', lineJoin);
+  rect.setAttribute('fill', white);
+
+  text.textContent = name;
+
+  text.setAttribute('x', (x + w / 2).toString(10));
+  text.setAttribute('y', (y + h / 2 + 4).toString(10));
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('stroke', 'none');
+  text.setAttribute('fill', baseColor);
+  text.setAttribute('font-size', '20px');
+
+  g.appendChild(rect);
+  g.appendChild(text);
+
+  return g;
+};
+
+const createConnection = (startX, startY, endX, endY, color = waveColor) => {
+  const path = document.createElementNS(xmlns, 'path');
+
+  const d = `M${startX} ${startY} L${endX} ${endY}`;
+
+  path.setAttribute('d', d);
+  path.setAttribute('stroke', color);
+  path.setAttribute('stroke-width', '4');
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  return path;
+};
+
+const createConnectionArrow = (posX, posY, direction = 'down', color = waveColor) => {
+  const path = document.createElementNS(xmlns, 'path');
+
+  switch (direction) {
+    case 'down': {
+      const d = `M${posX} ${posY} L${posX + 8} ${posY} L${posX} ${posY + 12} L${posX - 8} ${posY} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+
+    case 'up': {
+      const d = `M${posX} ${posY} L${posX + 8} ${posY} L${posX} ${posY - 12} L${posX - 8} ${posY} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+
+    case 'left': {
+      const d = `M${posX} ${posY} L${posX} ${posY + 8} L${posX - 12} ${posY} L${posX} ${posY - 8} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+
+    case 'right': {
+      const d = `M${posX} ${posY} L${posX} ${posY + 8} L${posX + 12} ${posY} L${posX} ${posY - 8} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+  }
+
+  path.setAttribute('stroke', color);
+  path.setAttribute('stroke-width', '4');
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+  path.setAttribute('fill', color);
+
+  return path;
+};
+
+const createNodeConnectionsForDelay = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const dryNodeRect = createAudioNode('GainNode (Dry)', 0, 200);
+  const delayNodeRect = createAudioNode('DelayNode', 400, 100);
+  const wetNodeRect = createAudioNode('GainNode (Wet)', 400, 300);
+  const feedbackNodeRect = createAudioNode('GainNode (Feedback)', 800, 200);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 400);
+
+  const oscillatorNodeAndDryPath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const dryAndAudiodDestinationNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+  const delayNodeAndWetPath = createConnection(400 + (75 - 4), 200, 400 + (75 - 4), 300);
+
+  const oscillatorNodeAndDelayNodePath1 = createConnection(300, 50 - 2, 400 + (75 - 4), 50 - 2);
+  const oscillatorNodeAndDelayNodePath2 = createConnection(400 + (75 - 4), 50 - 2, 400 + (75 - 4), 100 - 2);
+
+  const wetAndAudioDestiationNodePath1 = createConnection(400 + (75 - 4), 400 + 2, 400 + (75 - 4), 450 - 2);
+  const wetAndAudioDestiationNodePath2 = createConnection(400 + (75 - 4), 450 - 2, 300, 450 - 2);
+
+  const delayNodeAndFeedbackPath1 = createConnection(600, 200 + 2, 600, 250 - 2);
+  const delayNodeAndFeedbackPath2 = createConnection(600, 250 - 2, 800, 250 - 2);
+
+  const feedbackAndDelayNodePath1 = createConnection(925, 200 - 2, 925, 50 - 2);
+  const feedbackAndDelayNodePath2 = createConnection(925, 50 - 2, 600, 50 - 2);
+  const feedbackAndDelayNodePath3 = createConnection(600, 50 - 2, 600, 100 - 2);
+
+  const oscillatorNodeAndDryArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const dryAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  const oscillatorNodeAndDelayNodeArrow = createConnectionArrow(475 - 4, 100 - 14, 'down');
+  const delayNodeAndWetArrow = createConnectionArrow(400 + (75 - 4), 300 - 14, 'down');
+  const wetAndAudioDestiationArrow = createConnectionArrow(300 + 14, 450 - 2, 'left');
+
+  const delayNodeAndFeedbackArrow = createConnectionArrow(800 - 12, 250 - 2, 'right');
+  const feedbackAndDelayNodeArrow = createConnectionArrow(600, 100 - 14, 'down');
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndDryPath);
+  g.appendChild(dryNodeRect);
+  g.appendChild(dryAndAudiodDestinationNodePath);
+  g.appendChild(audioDestinationNodeRect);
+  g.appendChild(delayNodeRect);
+  g.appendChild(delayNodeAndWetPath);
+  g.appendChild(wetNodeRect);
+  g.appendChild(feedbackNodeRect);
+
+  g.appendChild(oscillatorNodeAndDelayNodePath1);
+  g.appendChild(oscillatorNodeAndDelayNodePath2);
+
+  g.appendChild(wetAndAudioDestiationNodePath1);
+  g.appendChild(wetAndAudioDestiationNodePath2);
+
+  g.appendChild(delayNodeAndFeedbackPath1);
+  g.appendChild(delayNodeAndFeedbackPath2);
+
+  g.appendChild(feedbackAndDelayNodePath1);
+  g.appendChild(feedbackAndDelayNodePath2);
+  g.appendChild(feedbackAndDelayNodePath3);
+
+  g.appendChild(oscillatorNodeAndDryArrow);
+  g.appendChild(dryAndAudiodDestinationNodeArrow);
+
+  g.appendChild(oscillatorNodeAndDelayNodeArrow);
+  g.appendChild(delayNodeAndWetArrow);
+  g.appendChild(wetAndAudioDestiationArrow);
+
+  g.appendChild(delayNodeAndFeedbackArrow);
+  g.appendChild(feedbackAndDelayNodeArrow);
+
+  svg.appendChild(g);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -3481,3 +3771,6 @@ createFFT8(document.getElementById('svg-figure-fft-8'));
 visualSpectrum(document.getElementById('svg-time'), document.getElementById('svg-spectrum'));
 
 vibrato();
+
+animateFeedback(document.getElementById('svg-animation-feedback'));
+createNodeConnectionsForDelay(document.getElementById('svg-figure-node-connections-for-delay'));
