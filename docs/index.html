@@ -5963,6 +5963,220 @@ oscillator.stop(context.currentTime + 2);</code></pre>
               </p>
             </article>
           </section>
+          <section id="section-effectors-reverb">
+            <h4>リバーブ</h4>
+            <p>
+              簡易的なリバーブであれば, ディレイのパラメータを適切に設定することで実装することは可能です. しかしながら, 現実世界のエフェクターのリバーブは,
+              ディレイと実装は異なり, シミュレートしたい<b>音響空間のインパルス応答</b> (<b>RIR</b>: <b>Room Impulse Response</b>)
+              と呼ばれるオーディオデータを利用します. インパルス応答の詳細に関しては, 後半のセクションで解説しますので, とりあえず,
+              リバーブを実装してみましょう.
+            </p>
+            <section id="section-effectors-reverb-convolver-node">
+              <h5>ConvolverNode</h5>
+              <p>
+                インパルス応答のオーディオデータをエフェクターとして利用するには, <b><code>ConvolverNode</code></b> を利用します. <code>ConvolverNode</code> は,
+                <b>コンボリューション積分</b> (<b>畳み込み積分</b>, <b>合成積</b>) という数学的な演算を抽象化する <code>AudioNode</code> です
+                (デジタルフィルタの視点では, <b>FIR フィルタ</b>を抽象化します. のちほど解説しますが, 見立ての違いであり, 本質的には, コンボリューション積分も
+                FIR フィルタも同じです. コンボリューション積分も FIR フィルタも次のセクション以降で解説しています).
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const convolver = new ConvolverNode(context);
+
+// If use `createConvolver`
+// const convolver = context.createConvolver();</code></pre>
+              <img src="images/convolver-node.png" alt="ConvolverNode" width="1232" height="770" loading="lazy" />
+              <p>
+                <code>ConvolverNode</code> には, <b><code>buffer</code></b> プロパティが定義されており, この <code>buffer</code> プロパティに, インパルス応答
+                (RIR) のオーディオデータの <code>AudioBuffer</code> インスタンスを設定します (コンストラクタ生成であれば,
+                <b><code>ConvolverOptions</code></b> の <code>buffer</code> プロパティで設定することも可能です).
+              </p>
+              <p><code>AudioBuffer</code> インスタンスの生成は, <a href="#section-create-audio-buffer">ワンショットオーディオ</a>と同じです.</p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+fetch(&apos;./assets/rirs/rir.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then((arrayBuffer) =&gt; {
+    const successCallback = (audioBuffer) =&gt; {
+      const convolver = new ConvolverNode(context);
+
+      // If use `ConvolverOptions`
+      // const convolver = new ConvolverNode(context, { buffer: audioBuffer });
+
+      // If use `createConvolver`
+      // const convolver = context.createConvolver();
+
+      convolver.buffer = audioBuffer;
+    };
+
+    const errorCallback = (error) =&gt; {
+      // error handling
+    };
+
+    context.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+              <p>
+                サウンドの入力点となるノード (<code>OscillatorNode</code> など) を <code>ConvolverNode</code> に接続して, <code>ConvolverNode</code> を
+                <code>AudioDestinationNode</code> に接続します.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+fetch(&apos;./assets/rirs/rir.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then((arrayBuffer) =&gt; {
+    const successCallback = (audioBuffer) =&gt; {
+      const convolver = new ConvolverNode(context);
+
+      // If use `ConvolverOptions`
+      // const convolver = new ConvolverNode(context, { buffer: audioBuffer });
+
+      // If use `createConvolver`
+      // const convolver = context.createConvolver();
+
+      convolver.buffer = audioBuffer;
+
+      const dry = new GainNode(context, { gain: 0.6 });  // for gain of original sound
+      const wet = new GainNode(context, { gain: 0.4 });  // for gain of reverb sound
+
+      const oscillator = new OscillatorNode(context);
+
+      // Connect nodes for original sound
+      // OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+      oscillator.connect(dry);
+      dry.connect(context.destination);
+
+      // Connect nodes for reverb sound
+      // OscillatorNode (Input) -&gt; ConvolverNode (Reverb) -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
+      oscillator.connect(convolver);
+      convolver.connect(wet);
+      wet.connect(context.destination);
+
+      oscillator.start(0);
+      oscillator.stop(context.currentTime + 5);
+    };
+
+    const errorCallback = (error) =&gt; {
+      // error handling
+    };
+
+    context.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+              <p>
+                ディレイの場合と同じように, 原音とエフェクト音の接続, そして, Dry / Wet の <code>GainNode</code> も接続しています.
+                遅延音の生成処理と遅延音に対する演算処理は, <code>ConvolverNode</code> が抽象化しているので, フィードバックのための接続は不要です.
+              </p>
+              <figure>
+                <svg id="svg-figure-node-connections-for-reverb" width="800" height="520" />
+                <figcaption>リバーブのノード接続図</figcaption>
+              </figure>
+              <p>
+                以上で, リバーブが完成しました. ところで, リバーブを利用するためには, インパルス応答 (RIR) のオーディオファイルが必要です.
+                楽曲やワンショットオーディオファイルはあっても, インパルス応答のオーディオデータをもっている人は少ないと思います.
+                機材をもっていれば実際に測定するのも可能ですが, そこまでするのはちょっとめんどうです. となると, Web
+                上で公開されているファイルを利用することになるのですが, 利用条件や著作権の関係から無償で自由に利用できるのは意外とありません. とりあえず, 1
+                つ紹介するのは,
+                <a href="http://legacy.spa.aalto.fi/projects/poririrs/" target="_blank" rel="noopener noreferrer"
+                  >Concert Hall Impulse Responses - Pori, Finland</a>
+                です. <a href="http://legacy.spa.aalto.fi/projects/poririrs/docs/readme.txt" target="_blank" rel="noopener noreferrer">readme.txt</a> の 5.
+                Copyright のセクションに, 「<b
+                  >The data are provided free for noncommercial purposes, provided the authors are cited when the data are used in any research application.</b>」と記載されているので, 非商用利用であれば, 自身が開発されている Web アプリケーションに利用しても問題なさそうです.
+              </p>
+            </section>
+            <section id="section-effectors-reverb-rir">
+              <h5>インパルス応答</h5>
+              <p>
+                インパルス応答を理解するには, まずは, <b>インパルス音</b>について理解する必要があります. インパルス音とは,
+                ごく短時間において瞬間的に発生する音です. 具体的には, ピストルの音や風船が破裂するときの音がインパルス音と言えるでしょう.
+                インパルス音のイメージは以下のグラフのようになります. このような物理現象を数式でモデリングするための最適な関数が, <b>デルタ関数</b>です.
+              </p>
+              <figure>
+                <svg id="svg-figure-impulse" width="720" height="405" data-parameters="true" />
+                <figcaption>インパルス音 (デルタ関数) のグラフ表現</figcaption>
+              </figure>
+              <p>
+                以下は, デルタ関数の定義です. デルタ関数は, <span class="math-inline">$t = t_{r}$</span> において, 横幅が
+                <span class="math-inline">$\lim_{\mathrm{w}\to 0}$</span>, 高さが <span class="math-inline">$\lim_{\mathrm{h}\to \infty}$</span> となる関数
+                (数学での関数をより一般化した, <b>超関数</b>に分類されます) なので, 無限の区間において積分すると, その値 (つまり, 面積) が
+                <code>1</code> となります.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &\delta\left(t - t_{r}\right)dt =
+                    \begin{cases}
+                      \infty & (\mathrm{if} \quad t = t_{r}) \\
+                      0 & (\mathrm{if} \quad t \neq t_{r})
+                    \end{cases}
+                  \end{flalign}
+                $
+              </div>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &\int_{-\infty}^{\infty}\delta\left(t - t_{r}\right)dt = 1 \\
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                インパルス音を室内で発生させると, 音が天井や壁などに反射して, 音の響き, すなわち, <b>残響</b>が発生します. カラオケが好きなかたであれば,
+                <b>エコー</b>のような効果と考えてもよいでしょう.
+              </p>
+              <figure>
+                <img src="images/reverb.png" alt="" width="800" height="600" loading="lazy" />
+                <figcaption>直接音以外にも反射音 (初期反射音) や何度も反射して聴こえる残響音 (後期残響音) が室内では発生します</figcaption>
+              </figure>
+              <figure>
+                <svg id="svg-animation-impulse-response" width="720" height="405" data-parameters="true" />
+                <figcaption>
+                  <span>インパルス応答のイメージ</span>
+                  <button type="button" id="button-impulse-response-animation">start</button>
+                </figcaption>
+              </figure>
+              <p>
+                これが, <b>インパルス応答</b>です. つまり, <b>インパルス音を音響空間に対する入力としたときの出力 (応答) </b>ということです. そして, その出力が<b
+                  >音響空間における, 残響特性を表すことになるので</b>, インパルス応答を利用することによって,
+                コンサートホールなどの音響空間の音の響きをシミュレートするエフェクターであるリバーブが実現できるというわけです. ちなみに,
+                室内でのインパルス応答をシミュレートする事が多いので, <b>RIR</b> (Room Impulse Response) と表現されることもあります.
+              </p>
+              <figure>
+                <svg id="svg-rir" width="720" height="405" data-parameters="true" data-a="1" />
+                <figcaption>
+                  <span>実際の RIR の波形</span>
+                  <button type="button" id="button-rir">start</button>
+                </figcaption>
+              </figure>
+              <p>
+                また, この残響が, ディレイにおけるフィードバックと類似した音響効果を発生させることになります
+                (フィードバックのアニメーションとインパルス応答のアニメーションが類似していることに気付いたかもしれません).
+              </p>
+              <p>
+                イメージでインパルス応答は理解できるかと思いますが, それをコンピュータで実現する場合, 数式でモデリングできる必要があります.
+                <code>ConvolverNode</code> の命名 (<b>Convolve</b>: 畳み込む) が表すように, その演算処理が<b>コンボリューション積分</b> (<b>畳み込み積分</b>,
+                <b>合成積</b>) です. 言い換えると, <code>ConvolverNode</code> は, コンボリューション積分を抽象化した <code>AudioNode</code> です.
+              </p>
+            </section>
+          </section>
         </section>
       </section>
     </main>
