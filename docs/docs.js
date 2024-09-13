@@ -3715,6 +3715,352 @@ const createNodeConnectionsForDelay = (svg) => {
   svg.appendChild(g);
 };
 
+const createNodeConnectionsForReverb = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const dryNodeRect = createAudioNode('GainNode (Dry)', 0, 200);
+  const convolverNodeRect = createAudioNode('ConvolverNode', 400, 100);
+  const wetNodeRect = createAudioNode('GainNode (Wet)', 400, 300);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 400);
+
+  const oscillatorNodeAndDryPath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const dryAndAudiodDestinationNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+  const convolverNodeAndWetPath = createConnection(550 - 2, 200, 550 - 2, 300);
+
+  const oscillatorNodeAndConvolverNodeNodePath1 = createConnection(300, 50 - 2, 548, 50 - 2);
+  const oscillatorNodeAndConvolverNodeNodePath2 = createConnection(548, 50 - 2, 548, 100 - 2);
+
+  const wetAndAudioDestiationNodePath1 = createConnection(548, 400 + 2, 548, 450 - 2);
+  const wetAndAudioDestiationNodePath2 = createConnection(548, 450 - 2, 300, 450 - 2);
+
+  const oscillatorNodeAndDryArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const dryAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  const oscillatorNodeAndConvolverNodeNodeArrow = createConnectionArrow(548, 100 - 14, 'down');
+  const convolverNodeAndWetArrow = createConnectionArrow(548, 300 - 14, 'down');
+  const wetAndAudioDestiationArrow = createConnectionArrow(300 + 14, 450 - 2, 'left');
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndDryPath);
+  g.appendChild(dryNodeRect);
+  g.appendChild(dryAndAudiodDestinationNodePath);
+  g.appendChild(audioDestinationNodeRect);
+  g.appendChild(convolverNodeRect);
+  g.appendChild(convolverNodeAndWetPath);
+  g.appendChild(wetNodeRect);
+
+  g.appendChild(oscillatorNodeAndConvolverNodeNodePath1);
+  g.appendChild(oscillatorNodeAndConvolverNodeNodePath2);
+
+  g.appendChild(wetAndAudioDestiationNodePath1);
+  g.appendChild(wetAndAudioDestiationNodePath2);
+
+  g.appendChild(oscillatorNodeAndDryArrow);
+  g.appendChild(dryAndAudiodDestinationNodeArrow);
+
+  g.appendChild(oscillatorNodeAndConvolverNodeNodeArrow);
+  g.appendChild(convolverNodeAndWetArrow);
+  g.appendChild(wetAndAudioDestiationArrow);
+
+  svg.appendChild(g);
+};
+
+const createRIR = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', (padding / 2).toString(10));
+  xRect.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  xRect.setAttribute('width', (innerWidth + padding).toString(10));
+  xRect.setAttribute('height', lineWidth.toString(10));
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', (padding - 1).toString(10));
+  yRect.setAttribute('y', padding.toString(10));
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', innerHeight.toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(yRect);
+
+  if (svg.getAttribute('data-parameters') === 'true') {
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = 'Time';
+
+    xText.setAttribute('x', (innerWidth + padding).toString(10));
+    xText.setAttribute('y', (padding + innerHeight - 8).toString(10));
+
+    xText.setAttribute('text-anchor', 'middle');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '20px');
+
+    svg.appendChild(xText);
+
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = 'Amplitude';
+
+    yText.setAttribute('x', padding.toString(10));
+    yText.setAttribute('y', padding.toString(10));
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '20px');
+
+    svg.appendChild(yText);
+  }
+
+  const rect = document.createElementNS(xmlns, 'rect');
+
+  rect.setAttribute('x', (padding + 120).toString(10));
+  rect.setAttribute('y', (padding + 12).toString(10));
+  rect.setAttribute('width', '4');
+  rect.setAttribute('height', (innerHeight - 12).toString(10));
+  rect.setAttribute('stroke', 'none');
+  rect.setAttribute('fill', waveColor);
+
+  const text = document.createElementNS(xmlns, 'text');
+
+  text.textContent = '∞';
+
+  text.setAttribute('x', (padding + 120).toString(10));
+  text.setAttribute('y', padding.toString(10));
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('stroke', 'none');
+  text.setAttribute('fill', baseColor);
+  text.setAttribute('font-size', '24px');
+
+  svg.appendChild(rect);
+  svg.appendChild(text);
+};
+
+const animateRIR = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', (padding / 2).toString(10));
+  xRect.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  xRect.setAttribute('width', (innerWidth + padding).toString(10));
+  xRect.setAttribute('height', lineWidth.toString(10));
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', (padding - 1).toString(10));
+  yRect.setAttribute('y', padding.toString(10));
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', innerHeight.toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(yRect);
+
+  if (svg.getAttribute('data-parameters') === 'true') {
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = 'Time';
+
+    xText.setAttribute('x', (innerWidth + padding).toString(10));
+    xText.setAttribute('y', (padding + innerHeight - 8).toString(10));
+
+    xText.setAttribute('text-anchor', 'middle');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '20px');
+
+    svg.appendChild(xText);
+
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = 'Amplitude';
+
+    yText.setAttribute('x', padding.toString(10));
+    yText.setAttribute('y', padding.toString(10));
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '20px');
+
+    svg.appendChild(yText);
+  }
+
+  const amplitudes = [1.0, 0.8, 0.7, 0.5, 0.6, 0.45, 0.3, 0.4, 0.325, 0.2, 0.1, 0.0625, 0.05, 0.025, 0.02];
+
+  const renderRIRRect = (amplitude, index) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.classList.add('svg-response-rects');
+
+    rect.setAttribute('x', (padding + (innerWidth / amplitudes.length) * index).toString(10));
+    rect.setAttribute('y', (padding + (1 - amplitude) * innerHeight).toString(10));
+    rect.setAttribute('width', '4');
+    rect.setAttribute('height', (amplitude * innerHeight).toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', waveColor);
+
+    svg.appendChild(rect);
+  };
+
+  amplitudes.forEach((amplitude, index) => {
+    renderRIRRect(amplitude, index);
+  });
+
+  let intervalId = null;
+
+  document.getElementById('button-impulse-response-animation').addEventListener('click', (event) => {
+    const feedbackRects = document.querySelectorAll('.svg-response-rects');
+
+    for (const feedbackRect of feedbackRects) {
+      svg.removeChild(feedbackRect);
+    }
+
+    const buttonElement = event.currentTarget;
+
+    buttonElement.setAttribute('disabled', 'disabled');
+
+    let index = 0;
+
+    intervalId = window.setInterval(() => {
+      if (index < amplitudes.length) {
+        renderRIRRect(amplitudes[index], index++);
+      } else {
+        window.clearInterval(intervalId);
+        intervalId = null;
+
+        buttonElement.removeAttribute('disabled');
+      }
+    }, 250);
+  });
+};
+
+const renderRIR = async (svg) => {
+  const response = await fetch('./assets/rirs/rir.mp3');
+  const arraybuffer = await response.arrayBuffer();
+  const audioBuffer = await audiocontext.decodeAudioData(arraybuffer);
+
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  createCoordinateRect(svg);
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  const rect = document.createElementNS(xmlns, 'rect');
+
+  rect.setAttribute('x', padding);
+  rect.setAttribute('y', padding);
+  rect.setAttribute('width', lineWidth.toString(10));
+  rect.setAttribute('height', innerHeight);
+  rect.setAttribute('stroke', 'none');
+  rect.setAttribute('fill', alphaBaseColor);
+
+  svg.appendChild(path);
+  svg.appendChild(rect);
+
+  const drawRIROverview = () => {
+    const times = audioBuffer.getChannelData(0);
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0, len = times.length; n < len; n++) {
+      if (n !== 0 && n % 4 !== 0) {
+        continue;
+      }
+
+      const x = (n / len) * innerWidth + padding;
+      const y = (1 - times[n] * 10) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+  };
+
+  drawRIROverview();
+
+  let startTime = 0;
+  let animationId = null;
+
+  const updateCurrentTime = () => {
+    const currentTime = audiocontext.currentTime - startTime;
+
+    const translateX = (currentTime / audioBuffer.duration) * innerWidth;
+
+    rect.setAttribute('transform', `translate(${translateX} 0)`);
+
+    animationId = window.requestAnimationFrame(updateCurrentTime);
+  };
+
+  let source = null;
+
+  const buttonElement = document.getElementById('button-rir');
+
+  const onDown = async () => {
+    buttonElement.setAttribute('disabled', 'disabled');
+
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    source = new AudioBufferSourceNode(audiocontext, { buffer: audioBuffer });
+
+    source.connect(audiocontext.destination);
+
+    source.start(0);
+
+    startTime = audiocontext.currentTime;
+
+    updateCurrentTime();
+
+    source.onended = () => {
+      if (source === null) {
+        return;
+      }
+
+      buttonElement.removeAttribute('disabled');
+
+      source.stop(0);
+
+      source = null;
+
+      window.cancelAnimationFrame(animationId);
+    };
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -3774,3 +4120,8 @@ vibrato();
 
 animateFeedback(document.getElementById('svg-animation-feedback'));
 createNodeConnectionsForDelay(document.getElementById('svg-figure-node-connections-for-delay'));
+
+createNodeConnectionsForReverb(document.getElementById('svg-figure-node-connections-for-reverb'));
+createRIR(document.getElementById('svg-figure-impulse'));
+animateRIR(document.getElementById('svg-animation-impulse-response'));
+renderRIR(document.getElementById('svg-rir'));
