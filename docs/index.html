@@ -6177,6 +6177,273 @@ fetch(&apos;./assets/rirs/rir.mp3&apos;)
               </p>
             </section>
           </section>
+          <section id="section-effectors-delay-and-reverb-convolution">
+            <h4>コンボリューション積分</h4>
+            <p>
+              <b>コンボリューション積分</b>とは, 以下の数式で定義されるように, 信号の遅延と乗算, それらの無限区間の積分によって構成されています.
+              <span class="math-inline">$x\left(t\right)$</span> は入力信号, <span class="math-inline">$y\left(t\right)$</span> は出力信号,
+              <span class="math-inline">$h\left(t_{r}\right)$</span> は, インパルス応答の信号 (<code>ConvolverNode</code> の
+              <code>buffer</code> プロパティに設定する, <code>AudioBuffer</code> のオーディオデータと考えてもよいでしょう) です.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+              \begin{flalign}
+                &y\left(t\right) = \int_{0}^{\infty}x\left(t - t_{r}\right)h\left(t_{r}\right)dt
+              \end{flalign}
+              $
+            </div>
+            <p>
+              コンピュータでは, 連続信号をあつかうことはできないので, サンプリングされた離散信号の遅延と乗算, それらの加算となります. また,
+              無限の加算はできないので, 有界な値 (サンプル数) <span class="math-inline">$N$</span> となります.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+              \begin{flalign}
+                &y\left(n\right) = \sum_{m = 0}^{N}x\left(n - m\right)h\left(m\right)
+              \end{flalign}
+              $
+            </div>
+            <p>具体的に理解するために, <span class="math-inline">$N = 5$</span> として, 展開してみます.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+              \begin{flalign}
+                &y\left(n\right) = x\left(n\right)h\left(0\right) + x\left(n - 1\right)h\left(1\right) + x\left(n - 2\right)h\left(2\right) + x\left(n - 3\right)h\left(3\right) + x\left(n - 4\right)h\left(4\right) + x\left(n - 5\right)h\left(5\right)
+              \end{flalign}
+              $
+            </div>
+            <p>
+              理解しやすいように, 入力信号 <span class="math-inline">$x\left(n\right)$</span> は, 振幅が <code>1</code> のパルス列とします. また,
+              出力信号の実際の値を算出するために, インパルス応答の信号は, 以下の値とします.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+              \begin{flalign}
+                &h\left(0\right) = 1.0    \\
+                &h\left(1\right) = 0.75   \\
+                &h\left(2\right) = 0.5    \\
+                &h\left(3\right) = 0.25   \\
+                &h\left(4\right) = 0.125  \\
+                &h\left(5\right) = 0.0625 \\
+              \end{flalign}
+              $
+            </div>
+            <p>これらの信号のコンボリューション積分をイラストにすると, 以下のようなグラフになります.</p>
+            <figure>
+              <svg id="svg-figure-convolution" width="720" height="600" />
+              <figcaption>コンボリューション積分</figcaption>
+            </figure>
+            <p>
+              上部が入力信号のパルス列 (<span class="math-inline">$x\left(n\right)$</span>), 中央がインパルス応答 (<span class="math-inline"
+                >$h\left(m\right)$</span>), 下部がコンボリューション積分結果の出力信号 (<span class="math-inline">$y\left(n\right)$</span>) となります.
+              出力信号の振幅のみスケールが異なることに注意してください. ここで, <span class="math-inline">$n = 3$</span> に相当する時刻までの値を,
+              先ほどの展開したコンボリューション積分に適用して実際の値を算出すると,
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+              \begin{flalign}
+                &y\left(0\right) = x\left(0\right)h\left(0\right) + x\left(-1\right)h\left(1\right) + x\left(-2\right)h\left(2\right) + x\left(-3\right)h\left(3\right) + x\left(-4\right)h\left(4\right) + x\left(-5\right)h\left(5\right) \\
+                &y\left(1\right) = x\left(1\right)h\left(0\right) + x\left(0\right)h\left(1\right) + x\left(-1\right)h\left(2\right) + x\left(-2\right)h\left(3\right) + x\left(-3\right)h\left(4\right) + x\left(-4\right)h\left(5\right) \\
+                &y\left(2\right) = x\left(2\right)h\left(0\right) + x\left(1\right)h\left(1\right) + x\left(0\right)h\left(2\right) + x\left(-1\right)h\left(3\right) + x\left(-2\right)h\left(4\right) + x\left(-3\right)h\left(5\right) \\
+                &y\left(3\right) = x\left(3\right)h\left(0\right) + x\left(2\right)h\left(1\right) + x\left(1\right)h\left(2\right) + x\left(0\right)h\left(3\right) + x\left(-1\right)h\left(4\right) + x\left(-2\right)h\left(5\right) \\
+              \end{flalign}
+              $
+            </div>
+            <p>負数に相当する時刻は, 振幅が <code>0</code> とみなせるので, <span class="math-inline">$n \geq 0$</span> の項のみ記述すると,</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+              \begin{flalign}
+                &y\left(0\right) = x\left(0\right)h\left(0\right) \\
+                &y\left(1\right) = x\left(1\right)h\left(0\right) + x\left(0\right)h\left(1\right) \\
+                &y\left(2\right) = x\left(2\right)h\left(0\right) + x\left(1\right)h\left(1\right) + x\left(0\right)h\left(2\right) \\
+                &y\left(3\right) = x\left(3\right)h\left(0\right) + x\left(2\right)h\left(1\right) + x\left(1\right)h\left(2\right) + x\left(0\right)h\left(3\right) \\
+              \end{flalign}
+              $
+            </div>
+            <p>また, 入力信号は, 振幅 <code>1</code> のパルス列なので, <span class="math-inline">$x\left(n\right) = 1$</span> となるので,</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+              \begin{flalign}
+                &y\left(0\right) = h\left(0\right) \\
+                &y\left(1\right) = h\left(0\right) + h\left(1\right) \\
+                &y\left(2\right) = h\left(0\right) + h\left(1\right) + h\left(2\right) \\
+                &y\left(3\right) = h\left(0\right) + h\left(1\right) + h\left(2\right) + h\left(3\right) \\
+              \end{flalign}
+              $
+            </div>
+            <p>
+              最後に, <span class="math-inline">$h\left(m\right)$</span> の実際の値を適用すれば, 出力信号 <span class="math-inline">$y\left(n\right)$</span> の
+              <span class="math-inline">$n = 3$</span> までの値が算出できます.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+              \begin{flalign}
+                &y\left(0\right) = 1.0 \\
+                &y\left(1\right) = 1.0 + 0.75 = 1.75 \\
+                &y\left(2\right) = 1.0 + 0.75 + 0.5 = 2.25 \\
+                &y\left(3\right) = 1.0 + 0.75 + 0.5 + 0.25 = 2.5 \\
+              \end{flalign}
+              $
+            </div>
+            <p>
+              目視レベルではありますが, グラフで表示されている出力信号と (大きく) 値の相違がないことが確認できます. 計算結果を抽象化すると,
+              コンボリューション積分で生成された出力信号は, <b>現在の時刻の信号だけではなく, 過去の信号の影響も受ける</b>ということですということです (逆に,
+              それを, 厳密に数式で定義したのがコンボリューション積分と言えます).
+            </p>
+            <figure>
+              <svg id="svg-animation-convolution" width="720" height="600" />
+              <figcaption>
+                <span><span class="math-inline">$N = 5$</span>, <span class="math-inline">$n = 3$</span> の場合の, コンボリューション積分のイメージ</span>
+                <button type="button" id="button-convolution-animation">start</button>
+              </figcaption>
+            </figure>
+            <p>
+              入力信号やインパルス応答が, 現実世界のようにより複雑になると, 計算自体も複雑になりますが, コンボリューション積分がどうのような演算か, そして,
+              <b><code>ConvolverNode</code> が抽象化している演算</b>のイメージを理解するのに役立てばと思います.
+            </p>
+            <p>
+              もっとも, 数学・物理的に理解しようとすると少し難しく感じるかもしれませんが, プログラミング言語で実装すれば, 2
+              重ループと積和演算で構成される単純な処理です.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">// コンボリューション積分のコード片
+
+const X_L = 2400;
+const H_L = 1200;
+const Y_L = X_L + H_L - 1;
+
+const x = new Float32Array(X_L);
+const h = new Float32Array(H_L);
+const y = new Float32Array(Y_L);
+
+// 入力信号
+for (let n = 0; n &lt; X_L; n++) {
+  x[n] = Math.sin((2 * Math.PI * n * 2) / 1200);
+}
+
+// インパルス応答
+for (let m = 0; m &lt; H_L; m++) {
+  h[m] = 0.5 * Math.exp(-m);
+}
+
+// 出力信号
+for (let n = 0; n &lt; Y_L; n++) {
+  for (let m = 0; m &lt; H_L; m++) {
+    if (((n - m) &gt;= 0) &amp;&amp; ((n - m) &lt; X_L)) {
+      y[n] += (x[n - m] * h[m]);
+    }
+  }
+}</code></pre>
+            <p>
+              ただし, コンボリューション積分した出力信号のサイズ <span class="math-inline">$Y_{L}$</span> は, 入力信号のサイズを
+              <span class="math-inline">$X_{L}$</span>, インパルス応答のサイズを <span class="math-inline">$H_{L}$</span> とすると,
+              <span class="math-inline">$Y_{L} = X_{L} + H_{L} - 1$</span> (つまり, 出力信号の配列 (コレクション) の末尾のインデックスは,
+              <span class="math-inline">$I_{\mathrm{max}} = (X_{L} + H_{L} - 1) - 1$</span>) となることに注意してください. 現在時刻以降の入力信号が
+              <code>0</code> (無音) でも, コンボリューション積分によって過去の信号の積和演算の影響を受けるからです.
+              信号の末尾をイラストにイメージすると理解しやすいと思います.
+            </p>
+            <figure>
+              <svg id="svg-figure-convolution-output-signal-size" width="720" height="600" />
+              <figcaption>コンポリューション積分と出力信号のサイズ (末尾部分)</figcaption>
+            </figure>
+            <p>
+              上記のイラストは, インパルス応答のサイズを <code>3</code> (<span class="math-inline">$H_{L} = 3$</span>) とした場合の, 出力信号の末尾の値
+              (インデックス <span class="math-inline">$I_{\mathrm{max}} = (X_{L} + H_{L} - 1) - 1$</span> の値) の算出イメージです.
+              過去の入力信号の積和演算の影響で, 出力信号のサイズが <span class="math-inline">$Y_{L} = X_{L} + H_{L} - 1$</span> となることが確認できると思います
+              (出力信号の末尾から <span class="math-inline">$j$</span> 手前のインデックス
+              <span class="math-inline">$I_{\mathrm{max} - j} = (X_{L} + H_{L} - 1) - (1 + j)$</span> の値も同様に,
+              過去の入力信号の積和演算によって算出されます). そして, インデックス
+              <span class="math-inline">$I_{\mathrm{max}} = (X_{L} + H_{L} - 1) - 1$</span> より後の時刻に相当するインデックスにおいては,
+              過去の入力信号の積和演算の値が常に <code>0</code> (無音) となるので, 出力信号のサイズは,
+              <span class="math-inline">$Y_{L} = X_{L} + H_{L} - 1$</span> より大きいサイズにはならないことも確認できると思います.
+            </p>
+            <article id="section-effectors-delay-and-reverb-cyclic-convolution">
+              <h5>巡回畳み込み</h5>
+              <p>
+                コンボリューション積分は, <b>周波数領域においては乗算</b>となります. したがって, 時間領域の入力信号
+                <span class="math-inline">$x\left(n\right)$</span> を (離散) フーリエ変換した信号を <span class="math-inline">$X\left(k\right)$</span>,
+                インパルス応答を (離散) フーリエ変換した信号を <span class="math-inline">$H\left(k\right)$</span>, 出力信号
+                <span class="math-inline">$y\left(n\right)$</span> を (離散) フーリエ変換した信号を
+                <span class="math-inline">$Y\left(k\right)$</span> と定義すると, コンボリューション積分は以下のように定義することもできます,
+                <span class="math-inline">$F$</span> はフーリエ変換 (離散フーリエ変換), <span class="math-inline">$F^{-1}$</span> は逆フーリエ変換
+                (逆離散フーリエ変換) です.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &y\left(n\right) = \sum_{m = 0}^{N}x\left(n - m\right)h\left(m\right) = F^{-1}\left[Y\left(k\right)\right] = F^{-1}\left[X\left(k\right)H\left(k\right)\right]
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                この性質を利用して, 時間領域ではコンボリューション積分になるオーディオ信号処理を, 周波数領域に変換して, 乗算のみで信号処理を適用して,
+                時間領域に変換する<b>巡回畳み込み</b>という処理 (ある種のテクニック的な処理です) があります.
+              </p>
+              <p>
+                インパルス応答も数学的には, デルタ関数のフーリエ変換と周波数領域で定義される<b>伝達関数</b>の乗算の逆フーリエ変換で定義することもできます (以下,
+                簡単にですが, 導出を記載しておきます).
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &h\left(n\right) = \sum_{m = 0}^{\infty}\delta\left(n - m\right)h\left(m\right) = F^{-1}\left[F\left[\delta\left(n\right)\right]H\left(k\right)\right]
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                ここで, デルタ関数のフーリエ変換を導出すると (導出の理解が難しければ, とりあえず
+                <span class="math-inline">$F\left[\delta\left(t\right)\right] = 1$</span> と覚えてしまっていいでしょう. 他に覚えやすいフーリエ変換関係だと,
+                矩形関数とシンク関数 (<span class="math-inline">$\frac{\sin\left(x\right)}{x}$</span>) は, 互いにフーリエ変換の関係にあります),
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &F\left[\delta\left(t\right)\right] = \int_{-\infty}^{\infty}\delta\left(t\right)e^{-j2 \pi ft}dt
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                デルタ関数の定義より, 上記のフーリエ変換において, <span class="math-inline">$t = 0$</span> 以外の積分区間では
+                <span class="math-inline">$\delta\left(t\right) = 0$</span> となるので,
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &F\left[\delta\left(t\right)\right] = \int_{-\infty}^{\infty}\delta\left(0\right)e^{-j2 \pi f \cdot 0}dt = \int_{-\infty}^{\infty}\delta\left(0\right)dt \cdot e^{0} = 1 \cdot 1 = 1
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                (数学的な厳密性は欠いてしまいますが, 同じように離散信号にも適用すると) デルタ関数のフーリエ変換は <code>1</code> です. つまり,
+                <span class="math-inline">$F\left[\delta\left(n\right)\right] = 1$</span> なので,
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &h\left(n\right) = \sum_{m = 0}^{\infty}\delta\left(n - m\right)h\left(m\right) = F^{-1}\left[F\left[\delta\left(n\right)\right]H\left(k\right)\right] = F^{-1}\left[H\left(k\right)\right]
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                Web Audio API は (他のオーディオ API と比較すると) 抽象度が高いので, 巡回畳み込みまで駆使するケースはほとんどないかもしれませんが,
+                一応知っておくと実装のヒントになることがあるかもしれません.
+              </p>
+            </article>
+          </section>
         </section>
       </section>
     </main>
