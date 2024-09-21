@@ -6444,6 +6444,51 @@ for (let n = 0; n &lt; Y_L; n++) {
               </p>
             </article>
           </section>
+          <section id="section-effectors-delay-and-reverb-fir-filter">
+            <h4>FIR フィルタ</h4>
+            <p>
+              デジタルフィルタを数学的な厳密性まで含めて解説すると, それだけで 1 冊の書籍になるぐらいの解説になるので, FIR
+              フィルタをディレイ・リバーブの観点で解説します.
+            </p>
+            <p><b>FIR フィルタ</b> (<b>Finite Impulse Response filter</b>) は, 以下の数式で定義されるデジタルフィルタです.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &y\left(n\right) = \sum_{m = 0}^{N}x\left(n - m\right)h\left(m\right)
+                \end{flalign}
+              $
+            </div>
+            <p>
+              数式的には, コンボリューション積分と同じです. すなわち, <b>見立ての違い</b>でしかありません. 数学的にはコンボリューション積分, 工学的には FIR
+              フィルタと表現しています. 言い換えると, コンボリューション積分を実装に落とし込んだのが FIR フィルタということです.
+            </p>
+            <p>
+              具体的に, <span class="math-inline">$N = 3$</span> (乗算器の数 <span class="math-inline">$N + 1$</span>)
+              の加算器・乗算器・遅延器の要素を利用してブロック図として表現します (遅延器の <span class="math-inline">$z^{-1}$</span> の表記は
+              <b><span class="math-inline">$z$</span> 変換</b>に由来しますが, ブロック図としては, 1 サンプル分遅延させる要素 (素子) の理解で問題ありません).
+            </p>
+            <figure>
+              <svg id="svg-figure-fir-filter" width="720" height="520" />
+              <figcaption>FIR フィルタ</figcaption>
+            </figure>
+            <p>FIR フィルタの図から, 逆に, コンボリューション積分の数式を導出することが可能なこともわかります.</p>
+            <p>
+              乗算器の数 (遅延器の数もそれに比例) と係数は, ディレイは制御可能なパラメータで決定できますが, リバーブは室内の特性によって決定されます. すなわち,
+              <b>乗算器の数と係数の算出がディレイとリバーブの実装に違いに表れます</b>.
+              <b>ディレイは遅延時間とフィードバックよって乗算器の数と係数を決定する</b>のに対して,
+              <b>リバーブはインパルス応答 (RIR) のオーディオデータから乗算器の数と係数が決定されます</b>.
+            </p>
+            <article id="section-effectors-delay-and-reverb-schroeder-reverberator">
+              <h5>Schroeder Reverberator (シュレーダーリバーブ)</h5>
+              <p>
+                コムフィルタ (遅延音を生成) と All-Pass Filter (位相変化によって, 遅延音の間を補間して残響音の密度を高める) を駆使して, 人工的にリバーブ
+                (人工インパルス応答) を生成する実装が知られています. 実装言語は Python になりますが,
+                <a href="https://www.wizard-notes.com/entry/asp/schroeder-reverberator" target="_blank" rel="noopener noreferrer"
+                  >シュレーダーリバーブ（人工残響エフェクタ）のPython実装と試聴デモ</a>などが参考になります.
+              </p>
+            </article>
+          </section>
         </section>
       </section>
     </main>

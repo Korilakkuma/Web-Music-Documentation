@@ -4771,6 +4771,269 @@ const createConvolutionSize = (svg) => {
   svg.appendChild(paths);
 };
 
+const createAddElement = (x, y) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const circle = document.createElementNS(xmlns, 'circle');
+
+  circle.setAttribute('cx', x.toString(10));
+  circle.setAttribute('cy', y.toString(10));
+  circle.setAttribute('r', '12');
+  circle.setAttribute('stroke', baseColor);
+  circle.setAttribute('stroke-width', lineWidth.toString(10));
+  circle.setAttribute('stroke-linecap', lineCap);
+  circle.setAttribute('stroke-linejoin', lineJoin);
+  circle.setAttribute('fill', white);
+
+  const text = document.createElementNS(xmlns, 'text');
+
+  text.textContent = '+';
+
+  text.setAttribute('x', x.toString(10));
+  text.setAttribute('y', (y + 6).toString(10));
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('stroke', 'none');
+  text.setAttribute('fill', baseColor);
+  text.setAttribute('font-size', '24px');
+  text.setAttribute('font-weight', '24px');
+
+  g.appendChild(circle);
+  g.appendChild(text);
+
+  return g;
+};
+
+const createMultiplyElement = (x, y, direction = 'right') => {
+  const path = document.createElementNS(xmlns, 'path');
+
+  if (direction === 'right') {
+    path.setAttribute('d', `M${x} ${y} L${x} ${y - 12} L${x + 16} ${y} L${x} ${y + 12} L${x} ${y}`);
+  } else if (direction === 'left') {
+    path.setAttribute('d', `M${x} ${y} L${x} ${y - 12} L${x - 16} ${y} L${x} ${y + 12} L${x} ${y}`);
+  }
+
+  path.setAttribute('stroke', baseColor);
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+  path.setAttribute('fill', white);
+
+  return path;
+};
+
+const createDelayElement = (x, y) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const rect = document.createElementNS(xmlns, 'rect');
+
+  rect.setAttribute('x', x);
+  rect.setAttribute('y', y);
+  rect.setAttribute('width', '40');
+  rect.setAttribute('height', '24');
+  rect.setAttribute('stroke', baseColor);
+  rect.setAttribute('stroke-width', lineWidth.toString(10));
+  rect.setAttribute('fill', white);
+
+  const text = document.createElementNS(xmlns, 'text');
+  const superText = document.createElementNS(xmlns, 'text');
+
+  text.textContent = 'z';
+  superText.textContent = '-1';
+
+  text.setAttribute('x', (x + 16).toString(10));
+  text.setAttribute('y', (y + 18).toString(10));
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('stroke', 'none');
+  text.setAttribute('fill', baseColor);
+  text.setAttribute('font-size', '20px');
+
+  superText.setAttribute('x', (x + 28).toString(10));
+  superText.setAttribute('y', (y + 12).toString(10));
+  superText.setAttribute('text-anchor', 'middle');
+  superText.setAttribute('stroke', 'none');
+  superText.setAttribute('fill', baseColor);
+  superText.setAttribute('font-size', '16px');
+
+  g.appendChild(rect);
+  g.appendChild(text);
+  g.appendChild(superText);
+
+  return g;
+};
+
+const createBus = (startX, startY, endX, endY) => {
+  const path = document.createElementNS(xmlns, 'path');
+
+  const d = `M${startX} ${startY} L${endX} ${endY}`;
+
+  path.setAttribute('d', d);
+  path.setAttribute('stroke', baseColor);
+  path.setAttribute('stroke-width', '4');
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  return path;
+};
+
+const createBusArrow = (posX, posY, direction = 'down') => {
+  const path = document.createElementNS(xmlns, 'path');
+
+  switch (direction) {
+    case 'down': {
+      const d = `M${posX} ${posY} L${posX + 4} ${posY} L${posX} ${posY + 8} L${posX - 4} ${posY} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+
+    case 'up': {
+      const d = `M${posX} ${posY} L${posX + 4} ${posY} L${posX} ${posY - 8} L${posX - 4} ${posY} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+
+    case 'left': {
+      const d = `M${posX} ${posY} L${posX} ${posY + 4} L${posX - 8} ${posY} L${posX} ${posY - 4} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+
+    case 'right': {
+      const d = `M${posX} ${posY} L${posX} ${posY + 4} L${posX + 8} ${posY} L${posX} ${posY - 4} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+  }
+
+  path.setAttribute('stroke', baseColor);
+  path.setAttribute('stroke-width', '4');
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+  path.setAttribute('fill', baseColor);
+
+  return path;
+};
+
+const createFIRFilter = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const inputText = document.createElementNS(xmlns, 'text');
+
+  inputText.textContent = 'x(n)';
+
+  inputText.setAttribute('x', (padding - 16).toString(10));
+  inputText.setAttribute('y', (padding + 4).toString(10));
+  inputText.setAttribute('text-anchor', 'middle');
+  inputText.setAttribute('stroke', 'none');
+  inputText.setAttribute('fill', baseColor);
+  inputText.setAttribute('font-size', '16px');
+
+  const outputText = document.createElementNS(xmlns, 'text');
+
+  outputText.textContent = 'y(n)';
+
+  outputText.setAttribute('x', (padding + innerWidth + 16).toString(10));
+  outputText.setAttribute('y', (padding + 4).toString(10));
+  outputText.setAttribute('text-anchor', 'middle');
+  outputText.setAttribute('stroke', 'none');
+  outputText.setAttribute('fill', baseColor);
+  outputText.setAttribute('font-size', '16px');
+
+  const outputText0 = document.createElementNS(xmlns, 'text');
+
+  outputText0.textContent = `x(n)h(0)`;
+
+  outputText0.setAttribute('x', (padding + innerWidth - 140).toString(10));
+  outputText0.setAttribute('y', (padding + 36).toString(10));
+  outputText0.setAttribute('text-anchor', 'middle');
+  outputText0.setAttribute('stroke', 'none');
+  outputText0.setAttribute('fill', baseColor);
+  outputText0.setAttribute('font-size', '16px');
+
+  const bus0 = createBus(padding, padding, padding + innerWidth, padding);
+  const arrow0 = createBusArrow(padding + innerWidth - 8, padding, 'right');
+
+  const adder0 = createAddElement(innerWidth - 24, padding);
+
+  const multiplier0 = createMultiplyElement(padding + innerWidth / 2, padding);
+
+  const multiplierText0 = document.createElementNS(xmlns, 'text');
+
+  multiplierText0.textContent = 'h(0)';
+
+  multiplierText0.setAttribute('x', (padding + innerWidth / 2 + 8).toString(10));
+  multiplierText0.setAttribute('y', (padding + 36).toString(10));
+  multiplierText0.setAttribute('text-anchor', 'middle');
+  multiplierText0.setAttribute('stroke', 'none');
+  multiplierText0.setAttribute('fill', baseColor);
+  multiplierText0.setAttribute('font-size', '16px');
+
+  for (let i = 1; i <= 3; i++) {
+    const g = document.createElementNS(xmlns, 'g');
+
+    const busDown = createBus(padding + 128, padding + 128 * (i - 1) + (i > 1 ? 12 : 0), padding + 128, padding + 128 * i);
+    const bus = createBus(padding + 128, padding + 128 * i, padding + innerWidth - 84, padding + 128 * i);
+    const busUp = createBus(padding + innerWidth - 84, padding + 128 * i, padding + innerWidth - 84, padding + 128 * (i - 1) + 12);
+
+    const arrowDown = createBusArrow(padding + 128, padding + 128 * i - 24, 'down');
+    const arrow = createBusArrow(padding + innerWidth - 84 - 24, padding + 128 * i, 'right');
+
+    const delayElement = createDelayElement(padding + 128 - 20, padding + 128 * i - 12);
+
+    const multiplier = createMultiplyElement(padding + innerWidth / 2, padding + 128 * i);
+
+    const multiplierText = document.createElementNS(xmlns, 'text');
+
+    multiplierText.textContent = `h(${i})`;
+
+    multiplierText.setAttribute('x', (padding + innerWidth / 2 + 8).toString(10));
+    multiplierText.setAttribute('y', (padding + 128 * i + 36).toString(10));
+    multiplierText.setAttribute('text-anchor', 'middle');
+    multiplierText.setAttribute('stroke', 'none');
+    multiplierText.setAttribute('fill', baseColor);
+    multiplierText.setAttribute('font-size', '16px');
+
+    const outputText = document.createElementNS(xmlns, 'text');
+
+    outputText.textContent = `x(n - ${i})h(${i})`;
+
+    outputText.setAttribute('x', (padding + innerWidth - 128).toString(10));
+    outputText.setAttribute('y', (padding + 128 * i + 36).toString(10));
+    outputText.setAttribute('text-anchor', 'middle');
+    outputText.setAttribute('stroke', 'none');
+    outputText.setAttribute('fill', baseColor);
+    outputText.setAttribute('font-size', '16px');
+
+    const adder = createAddElement(padding + innerWidth - 84, padding + 128 * i);
+
+    g.appendChild(busDown);
+    g.appendChild(arrowDown);
+    g.appendChild(bus);
+    g.appendChild(arrow);
+    g.appendChild(busUp);
+    g.appendChild(delayElement);
+    g.appendChild(multiplier);
+    g.appendChild(multiplierText);
+    g.appendChild(outputText);
+    g.appendChild(adder);
+
+    svg.appendChild(g);
+  }
+
+  svg.appendChild(bus0);
+  svg.appendChild(arrow0);
+  svg.appendChild(multiplier0);
+  svg.appendChild(multiplierText0);
+  svg.appendChild(outputText0);
+  svg.appendChild(adder0);
+  svg.appendChild(inputText);
+  svg.appendChild(outputText);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -4839,3 +5102,5 @@ renderRIR(document.getElementById('svg-rir'));
 createConvolution(document.getElementById('svg-figure-convolution'));
 animateConvolution(document.getElementById('svg-animation-convolution'));
 createConvolutionSize(document.getElementById('svg-figure-convolution-output-signal-size'));
+
+createFIRFilter(document.getElementById('svg-figure-fir-filter'));
