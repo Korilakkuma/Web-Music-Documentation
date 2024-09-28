@@ -308,6 +308,16 @@ button[type="button"] {
   margin: 24px 0;
 }
 
+.app-chorus {
+  margin: 24px 0;
+}
+
+.app-chorus dl dd {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 span[id*="print-"] {
   display: inline-block;
   min-width: 88px;
