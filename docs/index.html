@@ -6508,6 +6508,299 @@ for (let n = 0; n &lt; Y_L; n++) {
             コーラス・フランジャーはディレイが基本となっているので, ディレイの実装がよくわからないという場合は, (前のセクション解説しているので)
             ディレイの実装を理解してから, このセクションを進めてください.
           </p>
+          <section id="section-effectors-chorus">
+            <h4>コーラス</h4>
+            <p>
+              コーラスは, <b>ディレイタイムを周期的に変化させたエフェクト音</b>を原音とミックスすることにより実装できます.
+              ディレイタイムを周期的に変化させることが実装のポイントになりますが, ここで LFO を利用することで, ディレイタイムを周期的に変化させることができます.
+              つまり, Web Audio API においては, LFO の接続先を <code>DelayNode</code> の AudioParam である
+              <code>delayTime</code> プロパティに接続すれば実装完了です.
+            </p>
+            <p>まず, 原音の出力の接続と, エフェクト音の出力の接続 (<code>DelayNode</code> の接続) のみを実装します.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const delay = new DelayNode(context, { delayTime: 0.02 });
+
+const oscillator = new OscillatorNode(context);
+
+// Connect nodes for original sound
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// Connect nodes for delay sound
+// OscillatorNode (Input) -&gt; DelayNode (Delay) -&gt; AudioDestinationNode (Output)
+oscillator.connect(delay);
+delay.connect(context.destination);
+
+oscillator.start(0);
+oscillator.stop(context.currentTime + 2);</code></pre>
+            <p>
+              そして, <a href="#section-effectors-lfo">LFO</a> の実装で解説したように, LFO のための <code>OscillatorNode</code> インスタンスと
+              <code>GainNode</code> インスタンス (Depth パラメータ) を生成して, <b><code>DelayNode</code> の <code>delayTime</code> プロパティ</b> に接続します.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const baseDelayTime = 0.020;
+const depthValue    = 0.005;
+const rateValue     = 1;
+
+const delay = new DelayNode(context, { delayTime: baseDelayTime });
+
+const oscillator = new OscillatorNode(context);
+
+const lfo   = new OscillatorNode(context, { frequency: rateValue });
+const depth = new GainNode(context, { gain: depthValue });
+
+// Connect nodes for original sound
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// Connect nodes for delay sound
+// OscillatorNode (Input) -&gt; DelayNode (Delay) -&gt; AudioDestinationNode (Output)
+oscillator.connect(delay);
+delay.connect(context.destination);
+
+// Connect nodes for LFO that changes delay time periodically
+// OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; delayTime (AudioParam)
+lfo.connect(depth);
+depth.connect(delay.delayTime);
+
+// Start oscillator and LFO
+oscillator.start(0);
+lfo.start(0);
+
+// Stop oscillator and LFO
+oscillator.stop(context.currentTime + 5);
+lfo.stop(context.currentTime + 5);</code></pre>
+            <p>
+              ディレイのノード接続からフィードバックを除いて, LFO を <code>DelayNode</code> の <code>delayTime</code> プロパティ (<code>AudioParam</code>)
+              に接続したノード接続と同じです. パラメータに関しては, コーラスの場合, 基準となるディレイタイムを <code>20 - 30 msec</code> にして,
+              <code>&plusmn; 5 ~ 10 msec</code>, Rate はゆっくりと <code>1 Hz</code> ぐらいがよいでしょう. (もっとも, 実際のプロダクトでは,
+              ある程度自由度高く設定できるように, <a href="#section-effectors-general-vibrato">汎用的な LFO</a> になるように実装することになるでしょう).
+            </p>
+            <p>
+              コーラスの原理的な実装としてはこれで完了ですが, エフェクターとしてはまだコーラスっぽくありません.
+              原音とエフェクト音が同じゲインで合成されているので, 原音とエフェクト音が別々に出力されているように聴こえると思います.
+              原音が少し揺れているぐらいにエフェクト音を合成するとコーラスらしくなるので, Dry / Wet のための <code>GainNode</code> を接続して,
+              原音とエフェクト音のゲインを調整します.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const baseDelayTime = 0.020;
+const depthValue    = 0.005;
+const rateValue     = 1;
+
+const delay = new DelayNode(context, { delayTime: baseDelayTime });
+
+const oscillator = new OscillatorNode(context);
+
+const lfo   = new OscillatorNode(context, { frequency: rateValue });
+const depth = new GainNode(context, { gain: depthValue });
+
+const dry = new GainNode(context, { gain: 0.7 });  // for gain of original sound
+const wet = new GainNode(context, { gain: 0.3 });  // for gain of chorus sound
+
+// Connect nodes for original sound
+// OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+oscillator.connect(dry);
+dry.connect(context.destination);
+
+// Connect nodes for delay sound
+// OscillatorNode (Input) -&gt; DelayNode (Delay) -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
+oscillator.connect(delay);
+delay.connect(wet);
+wet.connect(context.destination);
+
+// Connect nodes for LFO that changes delay time periodically
+// OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; delayTime (AudioParam)
+lfo.connect(depth);
+depth.connect(delay.delayTime);
+
+// Start oscillator and LFO
+oscillator.start(0);
+lfo.start(0);
+
+// Stop oscillator and LFO
+oscillator.stop(context.currentTime + 5);
+lfo.stop(context.currentTime + 5);</code></pre>
+            <figure>
+              <svg id="svg-figure-node-connections-for-chorus" width="1200" height="520" />
+              <figcaption>コーラスのノード接続図</figcaption>
+            </figure>
+            <p>
+              以上で, コーラスの実装は完了です. ハードコーディングしているパラメータが多いので, ある程度実際のアプリケーションを想定して, UI
+              からパラメータ設定を可能にすると以下のようなコードとなるでしょう (Dry / Wet は同時に設定する Mix としています).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-chorus-delay-time&quot;&gt;Delay time&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-chorus-delay-time&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;50&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-chorus-delay-time-value&quot;&gt;0 msec&lt;/span&gt;
+&lt;label for=&quot;range-chorus-depth&quot;&gt;Depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-chorus-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-chorus-depth-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-chorus-rate&quot;&gt;Rate&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-chorus-rate&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-chorus-rate-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-chorus-mix&quot;&gt;Mix&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-chorus-mix&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-chorus-mix-value&quot;&gt;0&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let oscillator = null;
+let lfo        = null;
+
+let depthRate  = 0;
+let rateValue  = 0;
+let mixValue   = 0;
+
+const delay = new DelayNode(context);
+const depth = new GainNode(context, { gain: delay.delayTime.value * depthRate });
+const dry   = new GainNode(context, { gain: 1 - mixValue });
+const wet   = new GainNode(context, { gain: mixValue });
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+const rangeDelayTimeElement = document.getElementById(&apos;range-chorus-delay-time&apos;);
+const rangeDepthElement     = document.getElementById(&apos;range-chorus-depth&apos;);
+const rangeRateElement      = document.getElementById(&apos;range-chorus-rate&apos;);
+const rangeMixElement       = document.getElementById(&apos;range-chorus-mix&apos;);
+
+const spanPrintDelayTimeElement = document.getElementById(&apos;print-chorus-delay-time-value&apos;);
+const spanPrintDepthElement     = document.getElementById(&apos;print-chorus-depth-value&apos;);
+const spanPrintRateElement      = document.getElementById(&apos;print-chorus-rate-value&apos;);
+const spanPrintMixElement       = document.getElementById(&apos;print-chorus-mix-value&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+  if ((oscillator !== null) || (lfo !== null)) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context);
+  lfo        = new OscillatorNode(context, { frequency: rateValue });
+
+  // Connect nodes for original sound
+  // OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(dry);
+  dry.connect(context.destination);
+
+  // Connect nodes for delay sound
+  // OscillatorNode (Input) -&gt; DelayNode (Delay) -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(delay);
+  delay.connect(wet);
+  wet.connect(context.destination);
+
+  // Connect nodes for LFO that changes delay time periodically
+  // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; delayTime (AudioParam)
+  lfo.connect(depth);
+  depth.connect(delay.delayTime);
+
+  // Start oscillator and LFO immediately
+  oscillator.start(0);
+  lfo.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+  if ((oscillator === null) || (lfo === null)) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+  lfo.stop(0);
+
+  // GC (Garbage Collection)
+  oscillator = null;
+  lfo        = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeDelayTimeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  delay.delayTime.value = event.currentTarget.valueAsNumber * 0.001;
+  depth.gain.value      = delay.delayTime.value * depthRate;
+
+  spanPrintDelayTimeElement.textContent = `${Math.trunc(delay.delayTime.value * 1000)} msec`;
+});
+
+rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  depthRate = event.currentTarget.valueAsNumber;
+
+  depth.gain.value = delay.delayTime.value * depthRate;
+
+  spanPrintDepthElement.textContent = depthRate.toString(10);
+});
+
+rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  rateValue = event.currentTarget.valueAsNumber;
+
+  if (lfo) {
+    lfo.frequency.value = rateValue;
+  }
+
+  spanPrintRateElement.textContent = rateValue.toString(10);
+});
+
+rangeMixElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  mixValue = event.currentTarget.valueAsNumber;
+
+  dry.gain.value = 1 - mixValue;
+  wet.gain.value = mixValue;
+
+  spanPrintMixElement.textContent = mixValue.toString(10);
+});</code></pre>
+            <div class="app-container app-chorus">
+              <button type="button" id="button-chorus">start</button>
+              <div>
+                <dl>
+                  <div>
+                    <dt><label for="range-chorus-delay-time">Delay time</label></dt>
+                    <dd>
+                      <input type="range" id="range-chorus-delay-time" value="0" min="0" max="50" step="1" />
+                      <span id="print-chorus-delay-time-value">0 msec</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-chorus-depth">Depth</label></dt>
+                    <dd>
+                      <input type="range" id="range-chorus-depth" value="0" min="0" max="1" step="0.05" />
+                      <span id="print-chorus-depth-value">0</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-chorus-rate">Rate</label></dt>
+                    <dd>
+                      <input type="range" id="range-chorus-rate" value="0" min="0" max="1" step="0.05" />
+                      <span id="print-chorus-rate-value">0</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-chorus-mix">Mix</label></dt>
+                    <dd>
+                      <input type="range" id="range-chorus-mix" value="0" min="0" max="1" step="0.05" />
+                      <span id="print-chorus-mix-value">0</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
     </main>
