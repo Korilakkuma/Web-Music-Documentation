@@ -3586,6 +3586,84 @@ const createAudioNode = (name, x, y, w = 300, h = 100) => {
   return g;
 };
 
+const createAudioParam = (name, x, y, w = 80, h = 40) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const ellipse = document.createElementNS(xmlns, 'ellipse');
+  const text = document.createElementNS(xmlns, 'text');
+
+  ellipse.setAttribute('cx', x.toString(10));
+  ellipse.setAttribute('cy', y.toString(10));
+  ellipse.setAttribute('rx', w.toString(10));
+  ellipse.setAttribute('ry', h.toString(10));
+  ellipse.setAttribute('stroke', baseColor);
+  ellipse.setAttribute('stroke-width', lineWidth.toString(10));
+  ellipse.setAttribute('stroke-linecap', lineCap);
+  ellipse.setAttribute('stroke-linejoin', lineJoin);
+  ellipse.setAttribute('fill', white);
+
+  text.textContent = name;
+
+  text.setAttribute('x', (x + 4).toString(10));
+  text.setAttribute('y', (y + h / 2 - 14).toString(10));
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('stroke', 'none');
+  text.setAttribute('fill', baseColor);
+  text.setAttribute('font-size', '16px');
+
+  g.appendChild(ellipse);
+  g.appendChild(text);
+
+  return g;
+};
+
+const createLFO = (x, y) => {
+  const w = 300;
+  const h = 100;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const rect = document.createElementNS(xmlns, 'rect');
+
+  const text = document.createElementNS(xmlns, 'text');
+  const subText = document.createElementNS(xmlns, 'text');
+
+  rect.setAttribute('x', x.toString(10));
+  rect.setAttribute('y', y.toString(10));
+  rect.setAttribute('width', w.toString(10));
+  rect.setAttribute('height', h.toString(10));
+  rect.setAttribute('stroke', baseColor);
+  rect.setAttribute('stroke-width', lineWidth.toString(10));
+  rect.setAttribute('stroke-linecap', lineCap);
+  rect.setAttribute('stroke-linejoin', lineJoin);
+  rect.setAttribute('fill', white);
+
+  text.textContent = 'LFO';
+
+  text.setAttribute('x', (x + w / 2).toString(10));
+  text.setAttribute('y', (y + h / 2 - 4).toString(10));
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('stroke', 'none');
+  text.setAttribute('fill', baseColor);
+  text.setAttribute('font-size', '20px');
+  text.textContent = 'LFO';
+
+  subText.textContent = '(OscillatorNode -> GainNode)';
+
+  subText.setAttribute('x', (x + w / 2).toString(10));
+  subText.setAttribute('y', (y + h / 2 + 16).toString(10));
+  subText.setAttribute('text-anchor', 'middle');
+  subText.setAttribute('stroke', 'none');
+  subText.setAttribute('fill', baseColor);
+  subText.setAttribute('font-size', '16px');
+
+  g.appendChild(rect);
+  g.appendChild(text);
+  g.appendChild(subText);
+
+  return g;
+};
+
 const createConnection = (startX, startY, endX, endY, color = waveColor) => {
   const path = document.createElementNS(xmlns, 'path');
 
@@ -5034,6 +5112,170 @@ const createFIRFilter = (svg) => {
   svg.appendChild(outputText);
 };
 
+const createNodeConnectionsForChorus = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const dryNodeRect = createAudioNode('GainNode (Dry)', 0, 200);
+  const delayNodeRect = createAudioNode('DelayNode', 400, 100);
+  const wetNodeRect = createAudioNode('GainNode (Wet)', 400, 300);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 400);
+
+  const oscillatorNodeAndDryPath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const dryAndAudiodDestinationNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+  const delayNodeAndWetPath = createConnection(550 - 2, 200, 550 - 2, 300);
+
+  const oscillatorNodeAndDelayNodeNodePath1 = createConnection(300, 50 - 2, 548, 50 - 2);
+  const oscillatorNodeAndDelayNodeNodePath2 = createConnection(548, 50 - 2, 548, 100 - 2);
+
+  const wetAndAudioDestiationNodePath1 = createConnection(548, 400 + 2, 548, 450 - 2);
+  const wetAndAudioDestiationNodePath2 = createConnection(548, 450 - 2, 300, 450 - 2);
+
+  const oscillatorNodeAndDryArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const dryAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  const oscillatorNodeAndDelayNodeNodeArrow = createConnectionArrow(548, 100 - 14, 'down');
+  const delayNodeAndWetArrow = createConnectionArrow(548, 300 - 14, 'down');
+  const wetAndAudioDestiationArrow = createConnectionArrow(300 + 14, 450 - 2, 'left');
+
+  const lfoRect = createLFO(800, 150);
+  const delayTimeParamEllipse = createAudioParam('delayTime', 650, 200);
+  const lfoAndDelayTimeParamPath = createConnection(800, 200 - 2, 732, 200 - 2, lightWaveColor);
+  const lfoAndDelayTimeParamArrow = createConnectionArrow(732 + 12, 200 - 2, 'left', lightWaveColor);
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndDryPath);
+  g.appendChild(dryNodeRect);
+  g.appendChild(dryAndAudiodDestinationNodePath);
+  g.appendChild(audioDestinationNodeRect);
+  g.appendChild(delayNodeRect);
+  g.appendChild(delayNodeAndWetPath);
+  g.appendChild(wetNodeRect);
+
+  g.appendChild(oscillatorNodeAndDelayNodeNodePath1);
+  g.appendChild(oscillatorNodeAndDelayNodeNodePath2);
+
+  g.appendChild(wetAndAudioDestiationNodePath1);
+  g.appendChild(wetAndAudioDestiationNodePath2);
+
+  g.appendChild(oscillatorNodeAndDryArrow);
+  g.appendChild(dryAndAudiodDestinationNodeArrow);
+
+  g.appendChild(oscillatorNodeAndDelayNodeNodeArrow);
+  g.appendChild(delayNodeAndWetArrow);
+  g.appendChild(wetAndAudioDestiationArrow);
+
+  g.appendChild(lfoRect);
+  g.appendChild(delayTimeParamEllipse);
+  g.appendChild(lfoAndDelayTimeParamPath);
+  g.appendChild(lfoAndDelayTimeParamArrow);
+
+  svg.appendChild(g);
+};
+
+const chorus = () => {
+  let oscillator = null;
+  let lfo = null;
+
+  let depthRate = 0;
+  let rateValue = 0;
+  let mixValue = 0;
+
+  const delay = new DelayNode(audiocontext);
+  const depth = new GainNode(audiocontext, { gain: delay.delayTime.value * depthRate });
+  const dry = new GainNode(audiocontext, { gain: 1 - mixValue });
+  const wet = new GainNode(audiocontext, { gain: mixValue });
+
+  const buttonElement = document.getElementById('button-chorus');
+
+  const rangeDelayTimeElement = document.getElementById('range-chorus-delay-time');
+  const rangeDepthElement = document.getElementById('range-chorus-depth');
+  const rangeRateElement = document.getElementById('range-chorus-rate');
+  const rangeMixElement = document.getElementById('range-chorus-mix');
+
+  const spanPrintDelayTimeElement = document.getElementById('print-chorus-delay-time-value');
+  const spanPrintDepthElement = document.getElementById('print-chorus-depth-value');
+  const spanPrintRateElement = document.getElementById('print-chorus-rate-value');
+  const spanPrintMixElement = document.getElementById('print-chorus-mix-value');
+
+  const onDown = (event) => {
+    if (oscillator !== null || lfo !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+    lfo = new OscillatorNode(audiocontext, { frequency: rateValue });
+
+    oscillator.connect(dry);
+    dry.connect(audiocontext.destination);
+
+    oscillator.connect(delay);
+    delay.connect(wet);
+    wet.connect(audiocontext.destination);
+
+    lfo.connect(depth);
+    depth.connect(delay.delayTime);
+
+    oscillator.start(0);
+    lfo.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = (event) => {
+    if (oscillator === null || lfo === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+    lfo.stop(0);
+
+    oscillator = null;
+    lfo = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeDelayTimeElement.addEventListener('input', (event) => {
+    delay.delayTime.value = event.currentTarget.valueAsNumber * 0.001;
+    depth.gain.value = delay.delayTime.value * depthRate;
+
+    spanPrintDelayTimeElement.textContent = `${Math.trunc(delay.delayTime.value * 1000)} msec`;
+  });
+
+  rangeDepthElement.addEventListener('input', (event) => {
+    depthRate = event.currentTarget.valueAsNumber;
+
+    depth.gain.value = delay.delayTime.value * depthRate;
+
+    spanPrintDepthElement.textContent = depthRate.toString(10);
+  });
+
+  rangeRateElement.addEventListener('input', (event) => {
+    rateValue = event.currentTarget.valueAsNumber;
+
+    if (lfo) {
+      lfo.frequency.value = rateValue;
+    }
+
+    spanPrintRateElement.textContent = rateValue.toString(10);
+  });
+
+  rangeMixElement.addEventListener('input', (event) => {
+    mixValue = event.currentTarget.valueAsNumber;
+
+    dry.gain.value = 1 - mixValue;
+    wet.gain.value = mixValue;
+
+    spanPrintMixElement.textContent = mixValue.toString(10);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -5104,3 +5346,7 @@ animateConvolution(document.getElementById('svg-animation-convolution'));
 createConvolutionSize(document.getElementById('svg-figure-convolution-output-signal-size'));
 
 createFIRFilter(document.getElementById('svg-figure-fir-filter'));
+
+createNodeConnectionsForChorus(document.getElementById('svg-figure-node-connections-for-chorus'));
+
+chorus();
