@@ -5276,6 +5276,212 @@ const chorus = () => {
   });
 };
 
+const createNodeConnectionsForFlanger = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const dryNodeRect = createAudioNode('GainNode (Dry)', 0, 200);
+  const delayNodeRect = createAudioNode('DelayNode', 400, 100);
+  const wetNodeRect = createAudioNode('GainNode (Wet)', 400, 300);
+  const feedbackNodeRect = createAudioNode('GainNode (Feedback)', 800, 0);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 400);
+
+  const oscillatorNodeAndDryPath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const dryAndAudiodDestinationNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+  const delayNodeAndWetPath = createConnection(400 + (75 - 4), 200, 400 + (75 - 4), 300);
+
+  const oscillatorNodeAndDelayNodePath1 = createConnection(300, 50 - 2, 400 + (75 - 4), 50 - 2);
+  const oscillatorNodeAndDelayNodePath2 = createConnection(400 + (75 - 4), 50 - 2, 400 + (75 - 4), 100 - 2);
+
+  const wetAndAudioDestiationNodePath1 = createConnection(400 + (75 - 4), 400 + 2, 400 + (75 - 4), 450 - 2);
+  const wetAndAudioDestiationNodePath2 = createConnection(400 + (75 - 4), 450 - 2, 300, 450 - 2);
+
+  const delayNodeAndFeedbackPath1 = createConnection(600, 200 + 2, 600, 250 - 2);
+  const delayNodeAndFeedbackPath2 = createConnection(600, 250 - 2, 950, 250 - 2);
+  const delayNodeAndFeedbackPath3 = createConnection(950, 250 - 2, 950, 100);
+
+  const feedbackAndDelayNodePath1 = createConnection(800, 50 - 2, 600, 50 - 2);
+  const feedbackAndDelayNodePath2 = createConnection(600, 50 - 2, 600, 100 - 2);
+
+  const oscillatorNodeAndDryArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const dryAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  const oscillatorNodeAndDelayNodeArrow = createConnectionArrow(475 - 4, 100 - 14, 'down');
+  const delayNodeAndWetArrow = createConnectionArrow(400 + (75 - 4), 300 - 14, 'down');
+  const wetAndAudioDestiationArrow = createConnectionArrow(300 + 14, 450 - 2, 'left');
+
+  const delayNodeAndFeedbackArrow = createConnectionArrow(950, 100 + 12, 'up');
+  const feedbackAndDelayNodeArrow = createConnectionArrow(600, 100 - 14, 'down');
+
+  const lfoRect = createLFO(800, 300);
+  const delayTimeParamEllipse = createAudioParam('delayTime', 700, 200);
+  const lfoAndDelayTimeParamPath1 = createConnection(875, 300 - 2, 875, 200 - 2, lightWaveColor);
+  const lfoAndDelayTimeParamPath2 = createConnection(875, 200 - 2, 782, 200 - 2, lightWaveColor);
+  const lfoAndDelayTimeParamArrow = createConnectionArrow(782 + 12, 200 - 2, 'left', lightWaveColor);
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndDryPath);
+  g.appendChild(dryNodeRect);
+  g.appendChild(dryAndAudiodDestinationNodePath);
+  g.appendChild(audioDestinationNodeRect);
+  g.appendChild(delayNodeRect);
+  g.appendChild(delayNodeAndWetPath);
+  g.appendChild(wetNodeRect);
+  g.appendChild(feedbackNodeRect);
+
+  g.appendChild(oscillatorNodeAndDelayNodePath1);
+  g.appendChild(oscillatorNodeAndDelayNodePath2);
+
+  g.appendChild(wetAndAudioDestiationNodePath1);
+  g.appendChild(wetAndAudioDestiationNodePath2);
+
+  g.appendChild(delayNodeAndFeedbackPath1);
+  g.appendChild(delayNodeAndFeedbackPath2);
+  g.appendChild(delayNodeAndFeedbackPath3);
+
+  g.appendChild(feedbackAndDelayNodePath1);
+  g.appendChild(feedbackAndDelayNodePath2);
+
+  g.appendChild(oscillatorNodeAndDryArrow);
+  g.appendChild(dryAndAudiodDestinationNodeArrow);
+
+  g.appendChild(oscillatorNodeAndDelayNodeArrow);
+  g.appendChild(delayNodeAndWetArrow);
+  g.appendChild(wetAndAudioDestiationArrow);
+
+  g.appendChild(delayNodeAndFeedbackArrow);
+  g.appendChild(feedbackAndDelayNodeArrow);
+
+  g.appendChild(lfoRect);
+  g.appendChild(delayTimeParamEllipse);
+  g.appendChild(lfoAndDelayTimeParamPath1);
+  g.appendChild(lfoAndDelayTimeParamPath2);
+  g.appendChild(lfoAndDelayTimeParamArrow);
+
+  svg.appendChild(g);
+};
+
+const flanger = () => {
+  let oscillator = null;
+  let lfo = null;
+
+  let depthRate = 0;
+  let rateValue = 0;
+  let mixValue = 0;
+
+  const delay = new DelayNode(audiocontext);
+  const depth = new GainNode(audiocontext, { gain: delay.delayTime.value * depthRate });
+  const dry = new GainNode(audiocontext, { gain: 1 - mixValue });
+  const wet = new GainNode(audiocontext, { gain: mixValue });
+  const feedback = new GainNode(audiocontext, { gain: 0 });
+
+  const buttonElement = document.getElementById('button-flanger');
+
+  const rangeDelayTimeElement = document.getElementById('range-flanger-delay-time');
+  const rangeDepthElement = document.getElementById('range-flanger-depth');
+  const rangeRateElement = document.getElementById('range-flanger-rate');
+  const rangeMixElement = document.getElementById('range-flanger-mix');
+  const rangeFeedbackElement = document.getElementById('range-flanger-feedback');
+
+  const spanPrintDelayTimeElement = document.getElementById('print-flanger-delay-time-value');
+  const spanPrintDepthElement = document.getElementById('print-flanger-depth-value');
+  const spanPrintRateElement = document.getElementById('print-flanger-rate-value');
+  const spanPrintMixElement = document.getElementById('print-flanger-mix-value');
+  const spanPrintFeedbackElement = document.getElementById('print-flanger-feedback-value');
+
+  const onDown = async (event) => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null || lfo !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+    lfo = new OscillatorNode(audiocontext, { frequency: rateValue });
+
+    oscillator.connect(dry);
+    dry.connect(audiocontext.destination);
+
+    oscillator.connect(delay);
+    delay.connect(wet);
+    wet.connect(audiocontext.destination);
+
+    delay.connect(feedback);
+    feedback.connect(delay);
+
+    lfo.connect(depth);
+    depth.connect(delay.delayTime);
+
+    oscillator.start(0);
+    lfo.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = (event) => {
+    if (oscillator === null || lfo === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+    lfo.stop(0);
+
+    oscillator = null;
+    lfo = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeDelayTimeElement.addEventListener('input', (event) => {
+    delay.delayTime.value = event.currentTarget.valueAsNumber * 0.001;
+    depth.gain.value = delay.delayTime.value * depthRate;
+
+    spanPrintDelayTimeElement.textContent = `${Math.trunc(delay.delayTime.value * 1000)} msec`;
+  });
+
+  rangeDepthElement.addEventListener('input', (event) => {
+    depthRate = event.currentTarget.valueAsNumber;
+
+    depth.gain.value = delay.delayTime.value * depthRate;
+
+    spanPrintDepthElement.textContent = depthRate.toString(10);
+  });
+
+  rangeRateElement.addEventListener('input', (event) => {
+    rateValue = event.currentTarget.valueAsNumber;
+
+    if (lfo) {
+      lfo.frequency.value = rateValue;
+    }
+
+    spanPrintRateElement.textContent = rateValue.toString(10);
+  });
+
+  rangeMixElement.addEventListener('input', (event) => {
+    mixValue = event.currentTarget.valueAsNumber;
+
+    dry.gain.value = 1 - mixValue;
+    wet.gain.value = mixValue;
+
+    spanPrintMixElement.textContent = mixValue.toString(10);
+  });
+
+  rangeFeedbackElement.addEventListener('input', (event) => {
+    const feedbackValue = event.currentTarget.valueAsNumber;
+
+    feedback.gain.value = feedbackValue;
+
+    spanPrintFeedbackElement.textContent = feedbackValue.toString(10);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -5350,3 +5556,7 @@ createFIRFilter(document.getElementById('svg-figure-fir-filter'));
 createNodeConnectionsForChorus(document.getElementById('svg-figure-node-connections-for-chorus'));
 
 chorus();
+
+createNodeConnectionsForFlanger(document.getElementById('svg-figure-node-connections-for-flanger'));
+
+flanger();
