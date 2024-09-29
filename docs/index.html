@@ -6801,6 +6801,204 @@ rangeMixElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               </div>
             </div>
           </section>
+          <section id="section-effectors-flanger">
+            <h4>フランジャー</h4>
+            <p>
+              <b>フランジャー</b>は, コーラスの実装にエフェクト音のフィードバックの接続を追加するだけです (ディレイの実装に LFO を追加して,
+              ディレイタイムを周期的に変化させるとも言えます). つまり, コーラスの実装をより汎用的にした実装となります. パラメータしだいで, フランジャーになり,
+              コーラスにもなります. 原理的には, 同じなのでこのあたりの区別は, 音楽的な感覚による違いでしかありません.
+            </p>
+            <figure>
+              <svg id="svg-figure-node-connections-for-flanger" width="1200" height="520" />
+              <figcaption>フランジャーのノード接続図</figcaption>
+            </figure>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-flanger-delay-time&quot;&gt;Delay time&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-flanger-delay-time&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;50&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-flanger-delay-time-value&quot;&gt;0 msec&lt;/span&gt;
+&lt;label for=&quot;range-flanger-depth&quot;&gt;Depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-flanger-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-flanger-depth-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-flanger-rate&quot;&gt;Rate&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-flanger-rate&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;0.5&quot; /&gt;
+&lt;span id=&quot;print-flanger-rate-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-flanger-mix&quot;&gt;Mix&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-flanger-mix&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-flanger-mix-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-flanger-feedback&quot;&gt;Mix&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-flanger-feedback&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;0.9&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-flanger-feedback-value&quot;&gt;0&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let oscillator = null;
+let lfo        = null;
+
+let depthRate  = 0;
+let rateValue  = 0;
+let mixValue   = 0;
+
+const delay    = new DelayNode(context);
+const depth    = new GainNode(context, { gain: delay.delayTime.value * depthRate });
+const dry      = new GainNode(context, { gain: 1 - mixValue });
+const wet      = new GainNode(context, { gain: mixValue });
+const feedback = new GainNode(context, { gain: 0 });
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+const rangeDelayTimeElement = document.getElementById(&apos;range-flanger-delay-time&apos;);
+const rangeDepthElement     = document.getElementById(&apos;range-flanger-depth&apos;);
+const rangeRateElement      = document.getElementById(&apos;range-flanger-rate&apos;);
+const rangeMixElement       = document.getElementById(&apos;range-flanger-mix&apos;);
+const rangeFeedbackElement  = document.getElementById(&apos;range-flanger-feedback&apos;);
+
+const spanPrintDelayTimeElement = document.getElementById(&apos;print-flanger-delay-time-value&apos;);
+const spanPrintDepthElement     = document.getElementById(&apos;print-flanger-depth-value&apos;);
+const spanPrintRateElement      = document.getElementById(&apos;print-flanger-rate-value&apos;);
+const spanPrintMixElement       = document.getElementById(&apos;print-flanger-mix-value&apos;);
+const spanPrintFeedbackElement  = document.getElementById(&apos;print-flanger-feedback-value&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+  if ((oscillator !== null) || (lfo !== null)) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context);
+  lfo        = new OscillatorNode(context, { frequency: rateValue });
+
+  // Connect nodes for original sound
+  // OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(dry);
+  dry.connect(context.destination);
+
+  // Connect nodes for delay sound
+  // OscillatorNode (Input) -&gt; DelayNode (Delay) -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(delay);
+  delay.connect(wet);
+  wet.connect(context.destination);
+
+  // Connect nodes for feedback
+  // (OscillatorNode (Input) -&gt;) DelayNode (Delay) -&gt; GainNode (Feedback) -&gt; DelayNode (Delay) -&gt; GainNode (Feedback) -&gt; ...
+  delay.connect(feedback);
+  feedback.connect(delay);
+
+  // Connect nodes for LFO that changes delay time periodically
+  // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; delayTime (AudioParam)
+  lfo.connect(depth);
+  depth.connect(delay.delayTime);
+
+  // Start oscillator and LFO immediately
+  oscillator.start(0);
+  lfo.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+  if ((oscillator === null) || (lfo === null)) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+  lfo.stop(0);
+
+  // GC (Garbage Collection)
+  oscillator = null;
+  lfo        = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeDelayTimeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  delay.delayTime.value = event.currentTarget.valueAsNumber * 0.001;
+  depth.gain.value      = delay.delayTime.value * depthRate;
+
+  spanPrintDelayTimeElement.textContent = `${Math.trunc(delay.delayTime.value * 1000)} msec`;
+});
+
+rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  depthRate = event.currentTarget.valueAsNumber;
+
+  depth.gain.value = delay.delayTime.value * depthRate;
+
+  spanPrintDepthElement.textContent = depthRate.toString(10);
+});
+
+rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  rateValue = event.currentTarget.valueAsNumber;
+
+  if (lfo) {
+    lfo.frequency.value = rateValue;
+  }
+
+  spanPrintRateElement.textContent = rateValue.toString(10);
+});
+
+rangeMixElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  mixValue = event.currentTarget.valueAsNumber;
+
+  dry.gain.value = 1 - mixValue;
+  wet.gain.value = mixValue;
+
+  spanPrintMixElement.textContent = mixValue.toString(10);
+});
+
+rangeFeedbackElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  const feedbackValue = event.currentTarget.valueAsNumber;
+
+  feedback.gain.value = feedbackValue;
+
+  spanPrintFeedbackElement.textContent = feedbackValue.toString(10);
+});</code></pre>
+            <div class="app-container app-flanger">
+              <button type="button" id="button-flanger">start</button>
+              <div>
+                <dl>
+                  <div>
+                    <dt><label for="range-flanger-delay-time">Delay time</label></dt>
+                    <dd>
+                      <input type="range" id="range-flanger-delay-time" value="0" min="0" max="50" step="1" />
+                      <span id="print-flanger-delay-time-value">0 msec</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-flanger-depth">Depth</label></dt>
+                    <dd>
+                      <input type="range" id="range-flanger-depth" value="0" min="0" max="1" step="0.05" />
+                      <span id="print-flanger-depth-value">0</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-flanger-rate">Rate</label></dt>
+                    <dd>
+                      <input type="range" id="range-flanger-rate" value="0" min="0" max="10" step="0.5" />
+                      <span id="print-flanger-rate-value">0</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-flanger-mix">Mix</label></dt>
+                    <dd>
+                      <input type="range" id="range-flanger-mix" value="0" min="0" max="1" step="0.05" />
+                      <span id="print-flanger-mix-value">0</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-flanger-feedback">Feedback</label></dt>
+                    <dd>
+                      <input type="range" id="range-flanger-feedback" value="0" min="0" max="0.9" step="0.05" />
+                      <span id="print-flanger-feedback-value">0</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
     </main>
