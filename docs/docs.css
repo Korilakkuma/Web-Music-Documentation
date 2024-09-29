@@ -308,11 +308,13 @@ button[type="button"] {
   margin: 24px 0;
 }
 
-.app-chorus {
+.app-chorus,
+.app-flanger {
   margin: 24px 0;
 }
 
-.app-chorus dl dd {
+.app-chorus dl dd,
+.app-flanger dl dd {
   display: flex;
   gap: 8px;
   align-items: center;
