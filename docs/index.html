@@ -6999,6 +6999,43 @@ rangeFeedbackElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               </div>
             </div>
           </section>
+          <section id="section-effectors-chorus-and-flanger-fm-modulation">
+            <h4>ディレイタイムの周期的な変化とFM 変調</h4>
+            <p><b>FM 変調</b> (<b>Frequency Modulation</b>) とは, 時間の経過とともに信号の周波数を変化させることです.</p>
+            <figure>
+              <dl>
+                <dt>Time Domain</dt>
+                <dd><svg id="svg-animation-frequency-modulation-time" width="720" height="240" data-parameters="true" data-a="1" /></dd>
+                <dt>Frequency Domain (Spectrum)</dt>
+                <dd><svg id="svg-animation-frequency-modulation-spectrum" width="720" height="240" /></dd>
+              </dl>
+              <figcaption>
+                <span>FM 変調のイメージ (スペクトルのピークが <code>880 Hz &plusmn; 440 Hz</code> の間で変調します)</span>
+                <button type="button" id="button-frequency-modulation-animation">start</button>
+              </figcaption>
+            </figure>
+            <p>
+              コーラス・フランジャーは, 結果的に FM 変調を発生させていると解説しましたが, これに対して疑問に思うことがあるかもしれません.
+              周波数を周期的に変化させるために, なぜ, ディレイタイムを周期的に変化させているのかということです
+              (ディレイタイムの周期的な変化が原理となっているかということです). <a href="section-effectors-vibrato">LFO の実装例</a>で解説したように,
+              直接的に周波数を周期的に変化させればよいはずです. しかしながら, 基本波形のように, 基本周波数が明確な場合はそれで問題ないのですが, アンサンブル
+              (楽曲) や音声において, 一般的に, 基本周波数を (精度高く) 推定するアルゴリズム (<span class="math-inline">$f_{0}$</span> 推定)
+              は複雑になってしまい, 計算量も多くなります. したがって, 汎用的なコーラス・フランジャーを実装するとなると,
+              直接的に周波数を変化させることは難しくなります.
+            </p>
+            <p>
+              ここで, コンボリューション積分とフーリエ変換の性質から,
+              <b>時間領域における遅延は, 周波数領域においては周波数成分の変化となります</b> (数学的な詳細を知る必要はないですが,
+              <a href="#section-effectors-delay-and-reverb-cyclic-convolution">巡回畳み込み</a>のセクションが参考になると思います). すなわち,
+              <b>時間領域においてディレイタイムを周期的に変化させることは, 周波数領域において各周波数成分を周期的に変化させる</b>こととなり, 結果として
+              (汎用的な) FM 変調となります.
+            </p>
+            <p>
+              ちなみに, すでにサンプルコードを実行して気づいたかもしれませんが,
+              <b>コーラス・フランジャーで, エフェクト音のみの出力にした場合, ビブラートとなります</b>. ビブラートはまさに FM 変調であり, 言い換えれば,
+              コーラス・フランジャーは, ビブラートをベースにしたエフェクターであり, 汎用的な実装とパラメータ設定でビブラートにすることも可能ということです.
+            </p>
+          </section>
         </section>
       </section>
     </main>
