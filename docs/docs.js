@@ -5744,6 +5744,871 @@ const animateFM = (svgTime, svgSpectrum) => {
   buttonElement.addEventListener('touchend', onUp);
 };
 
+const createPhase = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const renderRotationFactor = () => {
+    const width = innerWidth / 2;
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', (2 * padding).toString(10));
+    xRect.setAttribute('y', (padding + innerHeight / 2 - lineWidth / 2).toString(10));
+    xRect.setAttribute('width', (width - 4 * padding).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (width / 2 - lineWidth / 2).toString(10));
+    yRect.setAttribute('y', '60');
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', innerHeight.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    const realText = document.createElementNS(xmlns, 'text');
+
+    realText.textContent = 'Re';
+
+    realText.setAttribute('x', (width - 2 * padding + 20).toString(10));
+    realText.setAttribute('y', (padding + innerHeight / 2).toString(10));
+    realText.setAttribute('text-anchor', 'middle');
+    realText.setAttribute('stroke', 'none');
+    realText.setAttribute('fill', baseColor);
+    realText.setAttribute('font-size', '16px');
+
+    svg.appendChild(realText);
+
+    const imagText = document.createElementNS(xmlns, 'text');
+
+    imagText.textContent = 'Im';
+
+    imagText.setAttribute('x', (width / 2).toString(10));
+    imagText.setAttribute('y', (padding - 8).toString(10));
+    imagText.setAttribute('text-anchor', 'middle');
+    imagText.setAttribute('stroke', 'none');
+    imagText.setAttribute('fill', baseColor);
+    imagText.setAttribute('font-size', '16px');
+
+    svg.appendChild(imagText);
+
+    const circle = document.createElementNS(xmlns, 'circle');
+
+    circle.setAttribute('cx', (width / 2).toString(10));
+    circle.setAttribute('cy', (padding + innerHeight / 2).toString(10));
+    circle.setAttribute('r', '60');
+    circle.setAttribute('stroke', alphaBaseColor);
+    circle.setAttribute('stroke-width', '2');
+    circle.setAttribute('fill', 'none');
+
+    svg.appendChild(circle);
+
+    const path = document.createElementNS(xmlns, 'path');
+
+    const startX = width / 2;
+    const startY = padding + innerHeight / 2;
+
+    const d = `M${startX} ${startY} L${startX + 60} ${startY - 60}`;
+
+    path.setAttribute('d', d);
+
+    path.setAttribute('stroke', baseColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-dasharray', '5,5');
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    svg.appendChild(path);
+
+    const pathRad = document.createElementNS(xmlns, 'path');
+
+    pathRad.setAttribute('d', `M${startX} ${startY} L${startX + 24} ${startY} A 20 20 90 0 0 ${startX + 18} ${startY - 18} z`);
+
+    pathRad.setAttribute('stroke', lightWaveColor);
+    pathRad.setAttribute('fill', 'none');
+    pathRad.setAttribute('stroke-width', lineWidth.toString(10));
+    pathRad.setAttribute('stroke-linecap', lineCap);
+    pathRad.setAttribute('stroke-linejoin', lineJoin);
+
+    svg.appendChild(pathRad);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'θ';
+
+    text.setAttribute('x', (startX + 30).toString(10));
+    text.setAttribute('y', (startY - 8).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+
+    svg.appendChild(text);
+  };
+
+  const renderSine = () => {
+    const width = innerWidth / 2;
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', (width + padding / 2).toString(10));
+    xRect.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+    xRect.setAttribute('width', (width + padding).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (width + padding - 1).toString(10));
+    yRect.setAttribute('y', padding.toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', innerHeight.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = 'Time';
+
+    xText.setAttribute('x', (width + width + padding).toString(10));
+    xText.setAttribute('y', (padding + innerHeight / 2 - 8).toString(10));
+
+    xText.setAttribute('text-anchor', 'middle');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '16px');
+
+    svg.appendChild(xText);
+
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = 'Amplitude';
+
+    yText.setAttribute('x', (width + padding).toString(10));
+    yText.setAttribute('y', (padding - 4).toString(10));
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '16px');
+
+    svg.appendChild(yText);
+
+    [1, 0, -1].forEach((amplitude, index) => {
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', (width + padding / 2).toString(10));
+      rect.setAttribute('y', (padding + (innerHeight / 2) * (1 - amplitude)).toString(10));
+      rect.setAttribute('width', (width + padding).toString(10));
+      rect.setAttribute('height', lineWidth.toString(10));
+      rect.setAttribute('stroke', 'none');
+      rect.setAttribute('fill', alphaBaseColor);
+
+      svg.appendChild(rect);
+
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = amplitude.toString(10);
+
+      text.setAttribute('x', (width + padding - 8).toString(10));
+      text.setAttribute('y', (padding + (innerHeight / 2) * (1 - amplitude) + 16).toString(10));
+
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '14px');
+
+      svg.appendChild(text);
+    });
+
+    const w = 2 * Math.PI;
+
+    const path = document.createElementNS(xmlns, 'path');
+
+    let d = '';
+
+    for (let n = 0, len = sampleRate; n < len; n++) {
+      const v = Math.sin((w * n) / sampleRate);
+
+      const x = (n / len) * width + width + padding;
+      const y = (1 - v) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    svg.appendChild(path);
+
+    const pathArg = document.createElementNS(xmlns, 'path');
+
+    pathArg.setAttribute('d', `M${width + innerWidth / 8} ${padding + innerHeight / 2} L${width + innerWidth / 8} ${padding + 40}`);
+    pathArg.setAttribute('stroke', lightWaveColor);
+    pathArg.setAttribute('fill', 'none');
+    pathArg.setAttribute('stroke-width', lineWidth.toString(10));
+    pathArg.setAttribute('stroke-linecap', lineCap);
+    pathArg.setAttribute('stroke-linejoin', lineJoin);
+
+    svg.appendChild(pathArg);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'θ';
+
+    text.setAttribute('x', (width + innerWidth / 8).toString(10));
+    text.setAttribute('y', (padding + innerHeight / 2 + 16).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+
+    svg.appendChild(text);
+  };
+
+  renderRotationFactor();
+  renderSine();
+};
+
+const animatePhaseShift = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  createCoordinateRect(svg);
+
+  const xText = document.createElementNS(xmlns, 'text');
+
+  xText.textContent = 'Phase (radian)';
+
+  xText.setAttribute('x', (innerWidth + padding - 8).toString(10));
+  xText.setAttribute('y', (padding + innerHeight / 2 - 8).toString(10));
+
+  xText.setAttribute('text-anchor', 'middle');
+  xText.setAttribute('stroke', 'none');
+  xText.setAttribute('fill', baseColor);
+  xText.setAttribute('font-size', '18px');
+
+  svg.appendChild(xText);
+
+  const yText = document.createElementNS(xmlns, 'text');
+
+  yText.textContent = 'Amplitude';
+
+  yText.setAttribute('x', padding.toString(10));
+  yText.setAttribute('y', (padding - 4).toString(10));
+
+  yText.setAttribute('text-anchor', 'middle');
+  yText.setAttribute('stroke', 'none');
+  yText.setAttribute('fill', baseColor);
+  yText.setAttribute('font-size', '18px');
+
+  svg.appendChild(yText);
+
+  ['0', 'π/2', 'π', '3π/2', '2π', '5π/2', '3π', '7π/2', '4π'].forEach((phase, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${phase}`;
+
+    text.setAttribute('x', (padding + 16 + (innerWidth / 9) * index).toString(10));
+    text.setAttribute('y', (padding + innerHeight / 2 + 16).toString(10));
+
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+
+    svg.appendChild(text);
+  });
+
+  const buttonAnimationElement = document.getElementById('button-phase-shift-animation');
+  const buttonElement = document.getElementById('button-phase-shift-half-pi');
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  let d = '';
+
+  const w = 2 * Math.PI;
+
+  for (let n = -2 * sampleRate, len = 2 * sampleRate; n < len; n++) {
+    const v = 0.5 * Math.sin((w * n) / sampleRate);
+
+    const x = (n / len) * innerWidth + padding;
+    const y = (1 - v) * (innerHeight / 2) + padding;
+
+    if (d === '') {
+      d += `M${x + lineWidth / 2} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute('d', d);
+
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  let animationId = null;
+
+  let translateX = 0;
+
+  const phaseShift = () => {
+    path.setAttribute('transform', `translate(${translateX++} 0)`);
+
+    if (translateX >= innerWidth / 2) {
+      translateX = 0;
+    }
+
+    animationId = window.requestAnimationFrame(phaseShift);
+  };
+
+  const onClickAnimationButton = () => {
+    if (animationId) {
+      window.cancelAnimationFrame(animationId);
+      animationId = null;
+
+      buttonAnimationElement.textContent = 'start';
+      return;
+    }
+
+    phaseShift();
+
+    buttonAnimationElement.textContent = 'stop';
+  };
+
+  const onClick = () => {
+    if (translateX >= innerWidth / 2) {
+      translateX = 0;
+    }
+
+    translateX += 75;
+
+    path.setAttribute('transform', `translate(${translateX} 0)`);
+  };
+
+  buttonAnimationElement.addEventListener('click', onClickAnimationButton);
+  buttonElement.addEventListener('click', onClick);
+};
+
+const animateInterference = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  createCoordinateRect(svg);
+
+  const xText = document.createElementNS(xmlns, 'text');
+
+  xText.textContent = 'Phase (radian)';
+
+  xText.setAttribute('x', (innerWidth + padding - 8).toString(10));
+  xText.setAttribute('y', (padding + innerHeight / 2 - 8).toString(10));
+
+  xText.setAttribute('text-anchor', 'middle');
+  xText.setAttribute('stroke', 'none');
+  xText.setAttribute('fill', baseColor);
+  xText.setAttribute('font-size', '18px');
+
+  svg.appendChild(xText);
+
+  const yText = document.createElementNS(xmlns, 'text');
+
+  yText.textContent = 'Amplitude';
+
+  yText.setAttribute('x', padding.toString(10));
+  yText.setAttribute('y', (padding - 4).toString(10));
+
+  yText.setAttribute('text-anchor', 'middle');
+  yText.setAttribute('stroke', 'none');
+  yText.setAttribute('fill', baseColor);
+  yText.setAttribute('font-size', '18px');
+
+  svg.appendChild(yText);
+
+  [1, 0.5, -0.5, -1].forEach((amplitude, index) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (padding / 2).toString(10));
+    rect.setAttribute('y', (padding + (innerHeight / 2) * (1 - amplitude)).toString(10));
+    rect.setAttribute('width', (innerWidth + padding).toString(10));
+    rect.setAttribute('height', lineWidth.toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rect);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = amplitude.toString(10).padStart(4, ' ');
+
+    text.setAttribute('x', (padding / 2 + 8).toString(10));
+    text.setAttribute('y', (padding + (innerHeight / 2) * (1 - amplitude) + 16).toString(10));
+
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+
+    svg.appendChild(text);
+  });
+
+  ['0', 'π/2', 'π', '3π/2', '2π', '5π/2', '3π', '7π/2', '4π'].forEach((phase, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${phase}`;
+
+    text.setAttribute('x', (padding + 16 + (innerWidth / 9) * index).toString(10));
+    text.setAttribute('y', (padding + innerHeight / 2 + 16).toString(10));
+
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+
+    svg.appendChild(text);
+  });
+
+  const buttonAnimationElement = document.getElementById('button-interference-animation');
+  const buttonElement = document.getElementById('button-interference-half-pi');
+
+  const pathsynthesized = document.createElementNS(xmlns, 'path');
+  const pathOrigin = document.createElementNS(xmlns, 'path');
+  const path = document.createElementNS(xmlns, 'path');
+
+  let d = '';
+  let originD = '';
+
+  const w = 2 * Math.PI;
+
+  for (let n = -2 * sampleRate, len = 2 * sampleRate; n < len; n++) {
+    const v = 0.5 * Math.sin((w * n) / sampleRate);
+
+    const x = (n / len) * innerWidth + padding;
+    const y = (1 - v) * (innerHeight / 2) + padding;
+
+    const sy = (1 - (v + v)) * (innerHeight / 2) + padding;
+
+    if (d === '') {
+      d += `M${x + lineWidth / 2} ${sy}`;
+    } else {
+      d += ` L${x} ${sy}`;
+    }
+
+    if (originD === '') {
+      originD += `M${x + lineWidth / 2} ${y}`;
+    } else {
+      originD += ` L${x} ${y}`;
+    }
+  }
+
+  pathsynthesized.setAttribute('d', d);
+
+  pathsynthesized.setAttribute('stroke', lightWaveColor);
+  pathsynthesized.setAttribute('fill', 'none');
+  pathsynthesized.setAttribute('stroke-width', lineWidth.toString(10));
+  pathsynthesized.setAttribute('stroke-linecap', lineCap);
+  pathsynthesized.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(pathsynthesized);
+
+  pathOrigin.setAttribute('d', originD);
+
+  pathOrigin.setAttribute('stroke', alphaWaveColor);
+  pathOrigin.setAttribute('fill', 'none');
+  pathOrigin.setAttribute('stroke-width', lineWidth.toString(10));
+  pathOrigin.setAttribute('stroke-linecap', lineCap);
+  pathOrigin.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(pathOrigin);
+
+  path.setAttribute('d', originD);
+
+  path.setAttribute('stroke', alphaWaveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  let animationId = null;
+
+  let translateX = 0;
+
+  const phaseShift = () => {
+    pathsynthesized.removeAttribute('d');
+
+    let d = '';
+
+    const w = 2 * Math.PI;
+
+    const s = (translateX / innerWidth) * Math.PI * sampleRate * 0.65;
+
+    for (let n = -2 * sampleRate, len = 2 * sampleRate; n < len; n++) {
+      const v = 0.5 * Math.sin((w * n) / sampleRate) + 0.5 * Math.sin((w * (n - s)) / sampleRate);
+
+      const x = (n / len) * innerWidth + padding;
+      const y = (1 - v) * (innerHeight / 2) + padding;
+
+      if (d === '') {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    pathsynthesized.setAttribute('d', d);
+
+    path.setAttribute('transform', `translate(${translateX++} 0)`);
+
+    if (translateX >= innerWidth / 2) {
+      translateX = 0;
+    }
+
+    animationId = window.requestAnimationFrame(phaseShift);
+  };
+
+  const onClickAnimationButton = () => {
+    if (animationId) {
+      window.cancelAnimationFrame(animationId);
+      animationId = null;
+
+      buttonAnimationElement.textContent = 'start';
+      return;
+    }
+
+    phaseShift();
+
+    buttonAnimationElement.textContent = 'stop';
+  };
+
+  const onClick = () => {
+    translateX += 75;
+
+    if (translateX >= innerWidth / 2) {
+      translateX = 0;
+    }
+
+    pathsynthesized.removeAttribute('d');
+
+    let d = '';
+
+    const w = 2 * Math.PI;
+
+    const s = ((translateX - 2) / innerWidth) * Math.PI * sampleRate * 0.65;
+
+    for (let n = -2 * sampleRate, len = 2 * sampleRate; n < len; n++) {
+      const v = 0.5 * Math.sin((w * n) / sampleRate) + 0.5 * Math.sin((w * (n - s)) / sampleRate);
+
+      const x = (n / len) * innerWidth + padding;
+      const y = (1 - v) * (innerHeight / 2) + padding;
+
+      if (d === '') {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    pathsynthesized.setAttribute('d', d);
+
+    path.setAttribute('transform', `translate(${translateX} 0)`);
+  };
+
+  buttonAnimationElement.addEventListener('click', onClickAnimationButton);
+  buttonElement.addEventListener('click', onClick);
+};
+
+const createNodeConnectionsForPhaser = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const dryNodeRect = createAudioNode('GainNode (Dry)', 0, 300);
+  const allpassFilterRect1 = createAudioNode('BiquadFilterNode (All-Pass)', 400, 0);
+  const allpassFilterRect2 = createAudioNode('BiquadFilterNode (All-Pass)', 400, 150);
+  const allpassFilterRect3 = createAudioNode('BiquadFilterNode (All-Pass)', 400, 300);
+  const allpassFilterRect4 = createAudioNode('BiquadFilterNode (All-Pass)', 400, 450);
+  const wetNodeRect = createAudioNode('GainNode (Wet)', 400, 600);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 600);
+
+  const oscillatorNodeAndDryPath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const dryAndAudiodDestinationNodePath = createConnection(150 - 2, 400, 150 - 2, 600);
+
+  const oscillatorNodeAndDryArrow = createConnectionArrow(150 - 2, 300 - 14, 'down');
+  const dryAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 600 - 14, 'down');
+
+  const oscillatorNodeAndAllpassPath = createConnection(300, 50 - 2, 400, 50 - 2);
+  const oscillatorNodeAndAllpassArrow = createConnectionArrow(400 - 14, 50 - 2, 'right');
+
+  const wetNodeAndAudioDestinationPath = createConnection(300, 650 - 2, 400, 650 - 2);
+  const wetNodeAndAudioDestinationArrow = createConnectionArrow(300 + 14, 650 - 2, 'left');
+
+  const allpass1AndAllpass2Path = createConnection(550 - 2, 100, 550 - 2, 150);
+  const allpass1AndAllpass2Arrow = createConnectionArrow(550 - 2, 150 - 14, 'down');
+  const allpass2AndAllpass3Path = createConnection(550 - 2, 250, 550 - 2, 300);
+  const allpass2AndAllpass3Arrow = createConnectionArrow(550 - 2, 300 - 14, 'down');
+  const allpass3AndAllpass4Path = createConnection(550 - 2, 400, 550 - 2, 450);
+  const allpass3AndAllpass4Arrow = createConnectionArrow(550 - 2, 450 - 14, 'down');
+  const allpass4AndWetNodePath = createConnection(550 - 2, 550, 550 - 2, 600);
+  const allpass4AndWetNodeArrow = createConnectionArrow(550 - 2, 600 - 14, 'down');
+
+  const lfoRect = createLFO(900, 275);
+  const frequencyParamEllipse1 = createAudioParam('frequency', 700, 100);
+  const frequencyParamEllipse2 = createAudioParam('frequency', 700, 250);
+  const frequencyParamEllipse3 = createAudioParam('frequency', 700, 400);
+  const frequencyParamEllipse4 = createAudioParam('frequency', 700, 550);
+  const lfoAndAllpassPath1 = createConnection(900, 325 - 2, 850, 325 - 2, lightWaveColor);
+  const lfoAndAllpassPath2 = createConnection(850, 100, 850, 550, lightWaveColor);
+  const lfoAndAllpass1Path = createConnection(850, 100, 780, 100, lightWaveColor);
+  const lfoAndAllpass1Arrow = createConnectionArrow(794, 100, 'left', lightWaveColor);
+  const lfoAndAllpass2Path = createConnection(850, 250, 780, 250, lightWaveColor);
+  const lfoAndAllpass2Arrow = createConnectionArrow(794, 250, 'left', lightWaveColor);
+  const lfoAndAllpass3Path = createConnection(850, 400, 780, 400, lightWaveColor);
+  const lfoAndAllpass3Arrow = createConnectionArrow(794, 400, 'left', lightWaveColor);
+  const lfoAndAllpass4Path = createConnection(850, 550, 780, 550, lightWaveColor);
+  const lfoAndAllpass4Arrow = createConnectionArrow(794, 550, 'left', lightWaveColor);
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndDryPath);
+  g.appendChild(dryNodeRect);
+  g.appendChild(dryAndAudiodDestinationNodePath);
+  g.appendChild(audioDestinationNodeRect);
+
+  g.appendChild(oscillatorNodeAndDryArrow);
+  g.appendChild(dryAndAudiodDestinationNodeArrow);
+
+  g.appendChild(oscillatorNodeAndAllpassPath);
+  g.appendChild(oscillatorNodeAndAllpassArrow);
+
+  g.appendChild(wetNodeAndAudioDestinationPath);
+  g.appendChild(wetNodeAndAudioDestinationArrow);
+
+  g.appendChild(allpassFilterRect1);
+  g.appendChild(allpassFilterRect2);
+  g.appendChild(allpassFilterRect3);
+  g.appendChild(allpassFilterRect4);
+  g.appendChild(wetNodeRect);
+
+  g.appendChild(lfoRect);
+  g.appendChild(frequencyParamEllipse1);
+  g.appendChild(frequencyParamEllipse2);
+  g.appendChild(frequencyParamEllipse3);
+  g.appendChild(frequencyParamEllipse4);
+
+  g.appendChild(allpass1AndAllpass2Path);
+  g.appendChild(allpass1AndAllpass2Arrow);
+  g.appendChild(allpass2AndAllpass3Path);
+  g.appendChild(allpass2AndAllpass3Arrow);
+  g.appendChild(allpass3AndAllpass4Path);
+  g.appendChild(allpass3AndAllpass4Arrow);
+  g.appendChild(allpass4AndWetNodePath);
+  g.appendChild(allpass4AndWetNodeArrow);
+  g.appendChild(lfoAndAllpassPath1);
+  g.appendChild(lfoAndAllpassPath2);
+  g.appendChild(lfoAndAllpass1Path);
+  g.appendChild(lfoAndAllpass1Arrow);
+  g.appendChild(lfoAndAllpass2Path);
+  g.appendChild(lfoAndAllpass2Arrow);
+  g.appendChild(lfoAndAllpass3Path);
+  g.appendChild(lfoAndAllpass3Arrow);
+  g.appendChild(lfoAndAllpass4Path);
+  g.appendChild(lfoAndAllpass4Arrow);
+
+  svg.appendChild(g);
+};
+
+const phaser = () => {
+  let oscillator = null;
+  let lfo = null;
+
+  let numberOfStages = 4;
+  let baseFrequency = 880;
+  let depthRate = 0;
+  let rateValue = 0;
+  let resonance = 1;
+  let mixValue = 0;
+
+  const allpasses = [
+    new BiquadFilterNode(audiocontext, { type: 'allpass', frequency: baseFrequency }),
+    new BiquadFilterNode(audiocontext, { type: 'allpass', frequency: baseFrequency }),
+    new BiquadFilterNode(audiocontext, { type: 'allpass', frequency: baseFrequency }),
+    new BiquadFilterNode(audiocontext, { type: 'allpass', frequency: baseFrequency })
+  ];
+
+  const depth = new GainNode(audiocontext, { gain: baseFrequency * depthRate });
+  const dry = new GainNode(audiocontext, { gain: 1 - mixValue });
+  const wet = new GainNode(audiocontext, { gain: mixValue });
+
+  const buttonElement = document.getElementById('button-phaser');
+
+  const selectPhaserStagesElement = document.getElementById('select-phaser-stages');
+  const rangeFrequencyElement = document.getElementById('range-phaser-frequency');
+  const rangeDepthElement = document.getElementById('range-phaser-depth');
+  const rangeRateElement = document.getElementById('range-phaser-rate');
+  const rangeResonanceElement = document.getElementById('range-phaser-resonance');
+  const rangeMixElement = document.getElementById('range-phaser-mix');
+
+  const spanPrintFrequencyElement = document.getElementById('print-phaser-frequency-value');
+  const spanPrintDepthElement = document.getElementById('print-phaser-depth-value');
+  const spanPrintRateElement = document.getElementById('print-phaser-rate-value');
+  const spanPrintResonanceElement = document.getElementById('print-phaser-resonance-value');
+  const spanPrintMixElement = document.getElementById('print-phaser-mix-value');
+
+  const onDown = async (event) => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null || lfo !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth' });
+    lfo = new OscillatorNode(audiocontext, { frequency: rateValue });
+
+    oscillator.connect(dry);
+    dry.connect(audiocontext.destination);
+
+    oscillator.connect(allpasses[0]);
+
+    for (let i = 0; i < numberOfStages - 1; i++) {
+      allpasses[i].connect(allpasses[i + 1]);
+    }
+
+    allpasses[numberOfStages - 1].connect(wet);
+    wet.connect(audiocontext.destination);
+
+    lfo.connect(depth);
+
+    for (let i = 0; i < numberOfStages; i++) {
+      depth.connect(allpasses[i].frequency);
+    }
+
+    oscillator.start(0);
+    lfo.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = (event) => {
+    if (oscillator === null || lfo === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+    lfo.stop(0);
+
+    oscillator = null;
+    lfo = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  selectPhaserStagesElement.addEventListener('change', (event) => {
+    numberOfStages = Number(event.currentTarget.value);
+
+    for (let i = 0, len = allpasses.length; i < len; i++) {
+      allpasses[i].disconnect(0);
+    }
+
+    for (let i = 0; i < numberOfStages; i++) {
+      allpasses[i] = new BiquadFilterNode(audiocontext, { type: 'allpass', frequency: baseFrequency });
+    }
+
+    if (oscillator !== null) {
+      oscillator.connect(allpasses[0]);
+    }
+
+    for (let i = 0; i < numberOfStages - 1; i++) {
+      allpasses[i].connect(allpasses[i + 1]);
+    }
+
+    allpasses[numberOfStages - 1].connect(wet);
+    wet.connect(audiocontext.destination);
+
+    for (let i = 0; i < numberOfStages; i++) {
+      depth.connect(allpasses[i].frequency);
+    }
+  });
+
+  rangeFrequencyElement.addEventListener('input', (event) => {
+    baseFrequency = event.currentTarget.valueAsNumber;
+
+    for (let i = 0; i < numberOfStages; i++) {
+      allpasses[i].frequency.value = baseFrequency;
+    }
+
+    spanPrintFrequencyElement.textContent = `${Math.trunc(baseFrequency)} Hz`;
+  });
+
+  rangeDepthElement.addEventListener('input', (event) => {
+    depthRate = event.currentTarget.valueAsNumber;
+
+    depth.gain.value = baseFrequency * depthRate;
+
+    spanPrintDepthElement.textContent = depthRate.toString(10);
+  });
+
+  rangeRateElement.addEventListener('input', (event) => {
+    rateValue = event.currentTarget.valueAsNumber;
+
+    if (lfo) {
+      lfo.frequency.value = rateValue;
+    }
+
+    spanPrintRateElement.textContent = rateValue.toString(10);
+  });
+
+  rangeResonanceElement.addEventListener('input', (event) => {
+    resonance = event.currentTarget.valueAsNumber;
+
+    for (let i = 0; i < numberOfStages; i++) {
+      allpasses[i].Q.value = resonance;
+    }
+
+    spanPrintResonanceElement.textContent = resonance.toString(10);
+  });
+
+  rangeMixElement.addEventListener('input', (event) => {
+    mixValue = event.currentTarget.valueAsNumber;
+
+    dry.gain.value = 1 - mixValue;
+    wet.gain.value = mixValue;
+
+    spanPrintMixElement.textContent = mixValue.toString(10);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -5824,3 +6689,10 @@ createNodeConnectionsForFlanger(document.getElementById('svg-figure-node-connect
 flanger();
 
 animateFM(document.getElementById('svg-animation-frequency-modulation-time'), document.getElementById('svg-animation-frequency-modulation-spectrum'));
+
+createPhase(document.getElementById('svg-figure-phase'));
+animatePhaseShift(document.getElementById('svg-animation-phase-shift'));
+animateInterference(document.getElementById('svg-animation-interference'));
+createNodeConnectionsForPhaser(document.getElementById('svg-figure-node-connections-for-phaser'));
+
+phaser();

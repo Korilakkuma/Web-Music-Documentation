@@ -7048,6 +7048,546 @@ rangeFeedbackElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             原音と合成して, 音を<b>干渉</b>させることによって実装できるエフェクターです. ちなみに, フェイザーの正式な名称は, <b>フェイズ・シフター</b>であり,
             まさに, 名称がその原理を表していると言えます.
           </p>
+          <section id="section-effectors-phaser-phase">
+            <h4>位相</h4>
+            <p>
+              <b>位相</b>とは, 時間領域における波の位置のことです (数学的には, ある時刻の複素数平面における偏角と考えることもできます). したがって,
+              周期性をもつ波の場合, 位相はその周期内の値だけを考慮すれば事足ります (正弦波の場合,
+              <span class="math-inline"
+                >$\sin\theta = \sin\left(\theta + 2\pi\right) = \sin\left(\theta + 4\pi\right) = \cdots = \sin\left(\theta + 2n\pi\right)$</span>
+              となるので, <span class="math-inline">$2\pi$</span> の区間の位相を考慮すればよいことになります). また, 正弦波と余弦波は位相の違いでしかありません
+              (<span class="math-inline">$\sin\theta = \cos\left(\theta - \frac{\pi}{2}\right)$</span>. これは, 位相で考えなくても,
+              加法定理で数式から導出できることでもあります).
+            </p>
+            <figure>
+              <svg id="svg-figure-phase" width="900" height="300" />
+              <figcaption>位相 (例: <span class="math-inline">$\theta = \frac{\pi}{4}$</span> の場合)</figcaption>
+            </figure>
+            <p>位相と周期性から, 位相の変化をイメージすると, 横軸を位相 (単位は <code>radian</code>: ラジアン) としたときに, 以下のような変化になります.</p>
+            <figure>
+              <svg id="svg-animation-phase-shift" width="720" height="405" />
+              <figcaption>
+                <span>位相変化のイメージ</span>
+                <button type="button" id="button-phase-shift-animation">start</button>
+                <button type="button" id="button-phase-shift-half-pi" aria-label="+ π/2"><span class="math-inline">$+\frac{\pi}{2}$</span></button>
+              </figcaption>
+            </figure>
+            <p>
+              正弦波の場合, <span class="math-inline">$\frac{\pi}{2}$</span> シフトすると反転した余弦波,
+              <span class="math-inline">$\pi$</span> シフトすると反転した自身の波 (反転した正弦波),
+              <span class="math-inline">$\frac{3\pi}{2}$</span> シフトすると余弦波, <span class="math-inline">$2\pi$</span> シフトすると元の正弦波に戻ります.
+            </p>
+            <p>フェイザーの原理を理解するうえで, この位相変化のイメージは重要になるのでおさえておいてください.</p>
+          </section>
+          <section id="section-effectors-phaser-all-pass-filter">
+            <h4>All-Pass Filter</h4>
+            <p>
+              フェイザーは, 位相を変化させる周波数帯域を周期的に変化させて, 原音と合成して音を干渉させることによって実装できます. つまり,
+              <b>位相を変化させる</b>ことがフェイザーにとって重要な処理となりますが, <b>All-Pass Filter</b> を使うことで,
+              対象の周波数成分の位相を変化させることができます (他のフィルタと異なり, すべての周波数成分のゲイン (振幅) を変化させずに通過させるので,
+              <b>オールパス</b>という名前がついています).
+            </p>
+            <p>
+              Web Audio API では, <code>BiquadFilterNode</code> インスタンスの <code>type</code> プロパティに <code>&apos;allpass&apos;</code> を設定することで,
+              簡単に All-Pass Filter を使うことができます.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+const allpass    = new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: 880 });
+
+oscillator.connect(allpass);
+allpass.connect(context.destination);
+
+oscillator.start(0);
+oscillator.stop(context.currentTime + 2);</code></pre>
+          </section>
+          <section id="section-effectors-phaser-interference">
+            <h4>位相変化と干渉</h4>
+            <p>
+              ところで, All-Pass Filter を通過させた音, つまり, 位相を変化させただけの音というのは, 特に変化を知覚することはできません.
+              <a href="#section-spectrum">スペクトル</a>のセクションでも記載しましたが, <b>人間の聴覚というのは位相の違いには鈍感</b>だからです. では, なぜ,
+              フェイザーはエフェクトとして知覚することができるのでしょうか ?
+            </p>
+            <p>
+              フェイザーは, 位相の変化を知覚しているのではなく, 位相を変化させたエフェクト音と原音を合成することで音波を<b>干渉</b>させて, 結果として発生する,
+              振幅の増減や<b>うねり</b>を知覚しているからです.
+            </p>
+            <figure>
+              <svg id="svg-animation-interference" width="720" height="405" />
+              <figcaption>
+                <span>位相変化と干渉のイメージ</span>
+                <button type="button" id="button-interference-animation">start</button>
+                <button type="button" id="button-interference-half-pi" aria-label="+ π/2"><span class="math-inline">$+\frac{\pi}{2}$</span></button>
+              </figcaption>
+            </figure>
+            <p>
+              上記の正弦波で説明すると, 開始時刻において, 原音とエフェクト音 (ともに, 半透明の青色の波) は, 同じ位相にあります. ここで,
+              <span class="">$\theta = \frac{\pi}{2}$</span> の位相の点に着目すると, 同じ位相なので, 音波が重なり, 合成された結果, 出力音 (マゼンタ色の波) は
+              <span class="math-inline">$0.5 \cdot \sin\left(\frac{\pi}{2}\right) + 0.5 \cdot \sin\left(\frac{\pi}{2}\right) = 1$</span>
+              となって振幅が増幅します. エフェクト音の位相を <span class="math-inline">$\frac{\pi}{2}$</span> ずらすと, 反転した余弦波となり, 位相
+              <span class="math-inline">$\theta = \frac{\pi}{2}$</span> でのエフェクト音は
+              <span class="math-inline">$-0.5 \cdot \cos\left(\frac{\pi}{2}\right) = 0$</span> となるので, 合成された結果, 出力音の振幅値は,
+              <span class="math-inline">$0.5 \cdot \sin\left(\frac{\pi}{2}\right) - 0.5\cdot \cos\left(\frac{\pi}{2}\right) = 0.5$</span> となります. さらに,
+              エフェクト音の位相を <span class="math-inline">$\frac{\pi}{2}$</span> (開始時刻を基準にすると, <span class="math-inline">$\pi$</span>) ずらすと,
+              反転した正弦波となり, 位相 <span class="math-inline">$\theta = \frac{\pi}{2}$</span> でのエフェクト音は
+              <span class="math-inline">$-0.5 \cdot \sin\left(\frac{\pi}{2}\right) = -0.5$</span> となるので, 合成された結果の振幅値は,
+              <span class="math-inline">$0.5 \cdot \sin\left(\frac{\pi}{2}\right) - 0.5 \cdot \sin\left(\frac{\pi}{2}\right) = 0$</span> となります (位相
+              <span class="math-inline">$\theta = \frac{\pi}{2}$</span> に限らず, 反転した正弦波と合成するので, すべての位相においてその振幅は
+              <code>0</code> であり, すなわち, 無音となります). そして, エフェクト音の位相を 1 周期分, つまり, <span class="math-inline">$2\pi$</span> ずらすと,
+              エフェクト音は再び元の位相に戻るので, 開始時刻と同様の出力音となります.
+            </p>
+            <p>
+              周期関数なので, 1 周期分以上の位相の変化 (<span class="">$2\pi$</span> 以上の位相の変化) においては, 同様の振幅の増減の現象が繰り返し発生します.
+            </p>
+            <p>
+              このように, 複数の音波を合成した結果, 生じる振幅の増減現象を<b>干渉</b>と呼びます (実は, これまでも, エフェクターの解説で実装した,
+              原音とエフェクト音を合成する処理というのも, 物理的な視点では, 音波の干渉です. 音楽的には, このような音を重ねる処理を, 合成, あるいは,
+              ミキシングと呼ぶので, 合成という用語を優先して使いました).
+            </p>
+            <p>
+              また, 位相がわずかに異なる時点で音波を重ねることを<b>うねり</b> (うなりとも呼びます) と呼び, 音楽的な効果が高いことが知られています (同様に,
+              周波数をわずかにずらした音波を重ねた場合でもうねり現象は発生します. 実は, これが原始的なコーラスでもあります).
+            </p>
+            <p>したがって, 位相を変化させたエフェクト音と原音を合成するような <code>AudioNode</code> の接続を実装すると以下のようになります.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+const allpass    = new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: 880 });
+
+// Connect nodes for original sound
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// Connect nodes for shifting phase
+// OscillatorNode (Input) -&gt; BiquadFilterNode (All-Pass Filter) -&gt; AudioDestinationNode (Output)
+oscillator.connect(allpass);
+allpass.connect(context.destination);
+
+oscillator.start(0);
+oscillator.stop(context.currentTime + 2);</code></pre>
+            <p>
+              ところが, この実装では, 位相を変化する周波数成分が固定されたままなので, 干渉による振幅の増減変化が知覚できるほど発生しないので,
+              フェイザーとして聴こえません. 位相変化させる周波数成分を周期的に変化させるように, LFO を All-Pass Filter の <code>frequency</code> プロパティ
+              (<code>AudioParam</code>) に接続します.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const baseFrequency = 880;
+const depthValue    = 220;
+const rateValue     = 1;
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+const allpass    = new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency });
+
+const lfo   = new OscillatorNode(context, { frequency: rateValue });
+const depth = new GainNode(context, { gain: depthValue });
+
+// Connect nodes for original sound
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// Connect nodes for shifting phase
+// OscillatorNode (Input) -&gt; BiquadFilterNode (All-Pass Filter) -&gt; AudioDestinationNode (Output)
+oscillator.connect(allpass);
+allpass.connect(context.destination);
+
+// Connect nodes for LFO that changes All-Pass Filter frequency periodically
+// OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
+lfo.connect(depth);
+depth.connect(allpass.frequency);
+
+// Start oscillator and LFO
+oscillator.start(0);
+lfo.start(0);
+
+// Stop oscillator and LFO
+oscillator.stop(context.currentTime + 5);
+lfo.stop(context.currentTime + 5);</code></pre>
+            <p>
+              これで, 位相を変化させた音と干渉によって生じる振幅の増減, つまり, フェイザーのエフェクト音を知覚できるようになったと思います. あとは,
+              コーラスやフランジャーと同様に, 原音とエフェクト音のゲインを制御できるように, Dry / Wet のための <code>GainNode</code> を接続します.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const baseFrequency = 880;
+const depthValue    = 220;
+const rateValue     = 1;
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+const allpass    = new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency });
+
+const lfo   = new OscillatorNode(context, { frequency: rateValue });
+const depth = new GainNode(context, { gain: depthValue });
+
+const dry = new GainNode(context, { gain: 0.5 });  // for gain of original sound
+const wet = new GainNode(context, { gain: 0.5 });  // for gain of phaser sound
+
+// Connect nodes for original sound
+// OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+oscillator.connect(dry);
+dry.connect(context.destination);
+
+// Connect nodes for shifting phase
+// OscillatorNode (Input) -&gt; BiquadFilterNode (All-Pass Filter) -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
+oscillator.connect(allpass);
+allpass.connect(wet);
+wet.connect(context.destination);
+
+// Connect nodes for LFO that changes All-Pass Filter frequency periodically
+// OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
+lfo.connect(depth);
+depth.connect(allpass.frequency);
+
+// Start oscillator and LFO
+oscillator.start(0);
+lfo.start(0);
+
+// Stop oscillator and LFO
+oscillator.stop(context.currentTime + 5);
+lfo.stop(context.currentTime + 5);</code></pre>
+            <p>
+              現実世界のフェイザーは, よりアグレッシブな干渉を発生させるために, All-Pass Filter を複数接続します. 2 個, 4 個, 12 個, 24
+              個の接続可能なフェイザーが多く, それらは, All-Pass Filter の接続数 <span class="math-inline">$n$</span> 個によって,
+              <b><span class="math-inline">$n$</span> 段フェイザー</b>と呼ばれることもあります.
+            </p>
+            <p>
+              以下は, All-Pass Filter を 4 つ接続したフェイザー (4 段フェイザー) の実装です. 1 つだけの接続の場合より, 干渉による変化が大きく聴こえると思います.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const baseFrequency = 880;
+const depthValue    = 220;
+const rateValue     = 1;
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+
+const allpasses  = [
+  new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency }),
+  new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency }),
+  new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency }),
+  new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency })
+];
+
+const lfo   = new OscillatorNode(context, { frequency: rateValue });
+const depth = new GainNode(context, { gain: depthValue });
+
+const dry = new GainNode(context, { gain: 0.5 });  // for gain of original sound
+const wet = new GainNode(context, { gain: 0.5 });  // for gain of phaser sound
+
+// Connect nodes for original sound
+// OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+oscillator.connect(dry);
+dry.connect(context.destination);
+
+// Connect nodes for shifting phase
+// OscillatorNode (Input) -&gt; BiquadFilterNode (All-Pass Filter) x 4 -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
+oscillator.connect(allpasses[0]);
+
+for (let i = 0; i &lt; 3; i++) {
+  allpasses[i].connect(allpasses[i + 1]);
+}
+
+allpasses[3].connect(wet);
+wet.connect(context.destination);
+
+// Connect nodes for LFO that changes All-Pass Filter frequency periodically
+// OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
+lfo.connect(depth);
+
+for (let i = 0; i &lt; 4; i++) {
+  depth.connect(allpasses[i].frequency);
+}
+
+// Start oscillator and LFO
+oscillator.start(0);
+lfo.start(0);
+
+// Stop oscillator and LFO
+oscillator.stop(context.currentTime + 5);
+lfo.stop(context.currentTime + 5);</code></pre>
+            <figure>
+              <svg id="svg-figure-node-connections-for-phaser" width="1200" height="728" />
+              <figcaption>フェイザーのノード接続図 (4 段フェイザー)</figcaption>
+            </figure>
+          </section>
+          <p>
+            さらに, アグレッシブなエフェクトを発生させたい場合は, フィードバック接続を追加することも考えられます (ただし, フェイザーにおいて,
+            フィードバックは一般的に必須というわけではありません). また, <b>レゾナンス</b> (<code>BiquadFilterNode</code> の <code>Q</code> プロパティ
+            (<code>AudioParam</code>)) を変更可能にすると, フェイザーによりバリエーションを付加することができます (<code>BiquadFilterNode</code> の
+            <code>Q</code> プロパティは, <code>type</code> プロパティ (フィルタの種類) によって制御しているフィルタの特性が異なるので, 詳細は<a
+              href="#section-effectors-filter-biquad-filter-node"
+              >フィルタのセクション</a>で解説します).
+          </p>
+          <p>
+            以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, All-Pass Filter の接続数や,
+            位相変化させる周波数成分などフェイザーに関わるパラメータを制御できるようにしたコード例です. フェイザーはその原理から,
+            エフェクト音のみでは変化を得ることができないので, Mix の値が <code>1</code> 未満になるように上限を設定していることにも着目してください.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;select id=&quot;select-phaser-stages&quot;&gt;
+  &lt;option value=&quot;2&quot;&gt;2 stages&lt;/option&gt;
+  &lt;option value=&quot;4&quot; selected &gt;4 stages&lt;/option&gt;
+  &lt;option value=&quot;8&quot;&gt;8 stages&lt;/option&gt;
+  &lt;option value=&quot;12&quot;&gt;12 stages&lt;/option&gt;
+  &lt;option value=&quot;24&quot;&gt;24 stages&lt;/option&gt;
+&lt;/select&gt;
+&lt;label for=&quot;range-phaser-frequency&quot;&gt;Frequency&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-phaser-frequency&quot; value=&quot;880&quot; min=&quot;100&quot; max=&quot;4000&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-phaser-frequency-value&quot;&gt;880 Hz&lt;/span&gt;
+&lt;label for=&quot;range-phaser-depth&quot;&gt;Depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-phaser-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-phaser-depth-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-phaser-rate&quot;&gt;Rate&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-phaser-rate&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;0.5&quot; /&gt;
+&lt;span id=&quot;print-phaser-rate-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-phaser-resonance&quot;&gt;Resonance&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-phaser-resonance&quot; value=&quot;1&quot; min=&quot;1&quot; max=&quot;20&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-phaser-resonance-value&quot;&gt;1&lt;/span&gt;
+&lt;label for=&quot;range-phaser-mix&quot;&gt;Mix&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-phaser-mix&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;0.9&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-phaser-mix-value&quot;&gt;0&lt;/span&gt;</code></pre>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+let oscillator = null;
+let lfo        = null;
+
+let numberOfStages = 4;
+let baseFrequency  = 880;
+let depthRate      = 0;
+let rateValue      = 0;
+let resonance      = 1;
+let mixValue       = 0;
+
+const allpasses  = [
+  new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency }),
+  new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency }),
+  new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency }),
+  new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency })
+];
+
+const depth = new GainNode(context, { gain: baseFrequency * depthRate });
+const dry   = new GainNode(context, { gain: 1 - mixValue });
+const wet   = new GainNode(context, { gain: mixValue });
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+const selectPhaserStagesElement = document.getElementById(&apos;select-phaser-stages&apos;);
+const rangeFrequencyElement     = document.getElementById(&apos;range-phaser-frequency&apos;);
+const rangeDepthElement         = document.getElementById(&apos;range-phaser-depth&apos;);
+const rangeRateElement          = document.getElementById(&apos;range-phaser-rate&apos;);
+const rangeResonanceElement     = document.getElementById(&apos;range-phaser-resonance&apos;);
+const rangeMixElement           = document.getElementById(&apos;range-phaser-mix&apos;);
+
+const spanPrintFrequencyElement = document.getElementById(&apos;print-phaser-frequency-value&apos;);
+const spanPrintDepthElement     = document.getElementById(&apos;print-phaser-depth-value&apos;);
+const spanPrintRateElement      = document.getElementById(&apos;print-phaser-rate-value&apos;);
+const spanPrintResonanceElement = document.getElementById(&apos;print-phaser-resonance-value&apos;);
+const spanPrintMixElement       = document.getElementById(&apos;print-phaser-mix-value&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+  if ((oscillator !== null) || (lfo !== null)) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+  lfo        = new OscillatorNode(context, { frequency: rateValue });
+
+  // Connect nodes for original sound
+  // OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(dry);
+  dry.connect(context.destination);
+
+  // Connect nodes for shifting phase
+  // OscillatorNode (Input) -&gt; BiquadFilterNode (All-Pass Filter) x N -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(allpasses[0]);
+
+  for (let i = 0; i &lt; (numberOfStages - 1); i++) {
+    allpasses[i].connect(allpasses[i + 1]);
+  }
+
+  allpasses[numberOfStages - 1].connect(wet);
+  wet.connect(context.destination);
+
+  // Connect nodes for LFO that changes All-Pass Filter frequency periodically
+  // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
+  lfo.connect(depth);
+
+  for (let i = 0; i &lt; numberOfStages; i++) {
+    depth.connect(allpasses[i].frequency);
+  }
+
+  // Start oscillator and LFO immediately
+  oscillator.start(0);
+  lfo.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+  if ((oscillator === null) || (lfo === null)) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+  lfo.stop(0);
+
+  // GC (Garbage Collection)
+  oscillator = null;
+  lfo        = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+selectPhaserStagesElement.addEventListener(&apos;change&apos;, (event) =&gt; {
+  numberOfStages = Number(event.currentTarget.value);
+
+  for (let i = 0, len = allpasses.length; i &lt; len; i++) {
+    allpasses[i].disconnect(0);
+  }
+
+  for (let i = 0; i &lt; numberOfStages; i++) {
+    allpasses[i] = new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency });
+  }
+
+  if (oscillator !== null) {
+    oscillator.connect(allpasses[0]);
+  }
+
+  for (let i = 0; i &lt; (numberOfStages - 1); i++) {
+    allpasses[i].connect(allpasses[i + 1]);
+  }
+
+  allpasses[numberOfStages - 1].connect(wet);
+  wet.connect(context.destination);
+
+  for (let i = 0; i &lt; numberOfStages; i++) {
+    depth.connect(allpasses[i].frequency);
+  }
+});
+
+rangeFrequencyElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  baseFrequency = event.currentTarget.valueAsNumber;
+
+  for (let i = 0; i &lt; numberOfStages; i++) {
+    allpasses[i].frequency.value = baseFrequency;
+  }
+
+  spanPrintFrequencyElement.textContent = `${Math.trunc(baseFrequency)} Hz`;
+});
+
+rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  depthRate = event.currentTarget.valueAsNumber;
+
+  depth.gain.value = baseFrequency * depthRate;
+
+  spanPrintDepthElement.textContent = depthRate.toString(10);
+});
+
+rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  rateValue = event.currentTarget.valueAsNumber;
+
+  if (lfo) {
+    lfo.frequency.value = rateValue;
+  }
+
+  spanPrintRateElement.textContent = rateValue.toString(10);
+});
+
+rangeResonanceElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  resonance = event.currentTarget.valueAsNumber;
+
+  for (let i = 0; i &lt; numberOfStages; i++) {
+    allpasses[i].Q.value = resonance;
+  }
+
+  spanPrintResonanceElement.textContent = resonance.toString(10);
+});
+
+rangeMixElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  mixValue = event.currentTarget.valueAsNumber;
+
+  dry.gain.value = 1 - mixValue;
+  wet.gain.value = mixValue;
+
+  spanPrintMixElement.textContent = mixValue.toString(10);
+});</code></pre>
+          <div class="app-container app-phaser">
+            <button type="button" id="button-phaser">start</button>
+            <div>
+              <dl>
+                <div>
+                  <dt><label for="select-phaser-stages">Phaser stages</label></dt>
+                  <dd>
+                    <select id="select-phaser-stages">
+                      <option value="2">2 stages</option>
+                      <option value="4" selected>4 stages</option>
+                      <option value="8">8 stages</option>
+                      <option value="12">12 stages</option>
+                      <option value="24">24 stages</option>
+                    </select>
+                  </dd>
+                </div>
+                <div>
+                  <dt><label for="range-phaser-frequency">Frequency</label></dt>
+                  <dd>
+                    <input type="range" id="range-phaser-frequency" value="880" min="100" max="4000" step="1" />
+                    <span id="print-phaser-frequency-value">880 Hz</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt><label for="range-phaser-depth">Depth</label></dt>
+                  <dd>
+                    <input type="range" id="range-phaser-depth" value="0" min="0" max="1" step="0.05" />
+                    <span id="print-phaser-depth-value">0</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt><label for="range-phaser-rate">Rate</label></dt>
+                  <dd>
+                    <input type="range" id="range-phaser-rate" value="0" min="0" max="10" step="0.5" />
+                    <span id="print-phaser-rate-value">0</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt><label for="range-phaser-resonance">Resonance</label></dt>
+                  <dd>
+                    <input type="range" id="range-phaser-resonance" value="1" min="1" max="20" step="1" />
+                    <span id="print-phaser-resonance-value">1</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt><label for="range-phaser-mix">Mix</label></dt>
+                  <dd>
+                    <input type="range" id="range-phaser-mix" value="0" min="0" max="0.9" step="0.05" />
+                    <span id="print-phaser-mix-value">0</span>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </div>
         </section>
       </section>
     </main>
