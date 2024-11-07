@@ -343,14 +343,16 @@ select {
 .app-chorus,
 .app-flanger,
 .app-phaser,
-.app-tremolo {
+.app-tremolo,
+.app-ringmodulator {
   margin: 24px 0;
 }
 
 .app-chorus dl dd,
 .app-flanger dl dd,
 .app-phaser dl dd,
-.app-tremolo dl dd {
+.app-tremolo dl dd,
+.app-ringmodulator dl dd {
   display: flex;
   gap: 8px;
   align-items: center;
