@@ -196,6 +196,12 @@ table > tbody > tr > td {
   overflow-x: auto;
 }
 
+.app-headline {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .math-block {
   overflow: auto hidden;
 }
@@ -267,6 +273,13 @@ table > tbody > tr > td {
   justify-content: flex-start;
 }
 
+.app-headline > label {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  cursor: pointer;
+}
+
 button[type="button"] {
   cursor: pointer;
   user-select: none;
@@ -307,16 +320,26 @@ select {
 
 .app-chorus,
 .app-flanger,
-.app-phaser {
+.app-phaser,
+.app-tremolo {
   margin: 24px 0;
 }
 
 .app-chorus dl dd,
 .app-flanger dl dd,
-.app-phaser dl dd {
+.app-phaser dl dd,
+.app-tremolo dl dd {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+input[type="checkbox"] {
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 input[type="range"] {
