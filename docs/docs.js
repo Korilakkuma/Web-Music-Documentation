@@ -6759,6 +6759,175 @@ const tremolo = () => {
   });
 };
 
+const createNodeConnectionsForRingmodulator = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const amplitudeRect = createAudioNode('GainNode (Amplitude)', 0, 200);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 400);
+
+  const oscillatorNodeAndAmplitudePath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const amplitudeAndAudiodDestinationNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+
+  const oscillatorNodeAndAmplitudeArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const amplitudeAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  const lfoRect = createLFO(572, 200);
+  const gainParamEllipse = createAudioParam('gain', 350, 250);
+  const lfoAndGainParamArrow = createConnectionArrow(430 + 12, 250 - 2, 'left', lightWaveColor);
+
+  const lfoAndGainParamPath = document.createElementNS(xmlns, 'path');
+
+  const startX = 430 + 24;
+  const startY = 250 - 2;
+
+  let d = `M${430} ${250 - 2}`;
+
+  for (let x = 0; x < 115; x++) {
+    const y = 25 * Math.sin(x / 4);
+
+    d += ` L${startX + x} ${startY + y}`;
+  }
+
+  d += ` L${startX + 115} ${startY}`;
+
+  lfoAndGainParamPath.setAttribute('d', d);
+  lfoAndGainParamPath.setAttribute('fill', 'none');
+  lfoAndGainParamPath.setAttribute('stroke', lightWaveColor);
+  lfoAndGainParamPath.setAttribute('stroke-width', '4');
+  lfoAndGainParamPath.setAttribute('stroke-linecap', lineCap);
+  lfoAndGainParamPath.setAttribute('stroke-linejoin', lineJoin);
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndAmplitudePath);
+  g.appendChild(oscillatorNodeAndAmplitudeArrow);
+  g.appendChild(amplitudeRect);
+  g.appendChild(amplitudeAndAudiodDestinationNodePath);
+  g.appendChild(amplitudeAndAudiodDestinationNodeArrow);
+  g.appendChild(audioDestinationNodeRect);
+
+  g.appendChild(lfoRect);
+  g.appendChild(gainParamEllipse);
+  g.appendChild(lfoAndGainParamPath);
+  g.appendChild(lfoAndGainParamArrow);
+
+  svg.appendChild(g);
+};
+
+const ringmodulator = () => {
+  let depthRate = 1;
+  let rateValue = 1000;
+
+  let oscillator = new OscillatorNode(audiocontext);
+  let lfo = new OscillatorNode(audiocontext, { frequency: rateValue });
+
+  let isStop = true;
+
+  const amplitude = new GainNode(audiocontext, { gain: 0 }); // 0 +- ${depthValue}
+  const depth = new GainNode(audiocontext, { gain: depthRate });
+
+  const buttonElement = document.getElementById('button-ringmodulator');
+  const checkboxElement = document.getElementById('checkbox-ringmodulator');
+
+  const rangeDepthElement = document.getElementById('range-ringmodulator-depth');
+  const rangeRateElement = document.getElementById('range-ringmodulator-rate');
+
+  const spanPrintCheckedElement = document.getElementById('print-checked-ringmodulator');
+  const spanPrintDepthElement = document.getElementById('print-ringmodulator-depth-value');
+  const spanPrintRateElement = document.getElementById('print-ringmodulator-rate-value');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (!isStop) {
+      return;
+    }
+
+    if (checkboxElement.checked) {
+      oscillator.connect(amplitude);
+      amplitude.connect(audiocontext.destination);
+
+      oscillator.start(0);
+    } else {
+      amplitude.disconnect(0);
+
+      oscillator.connect(audiocontext.destination);
+
+      oscillator.start(0);
+    }
+
+    lfo.connect(depth);
+    depth.connect(amplitude.gain);
+
+    lfo.start(0);
+
+    isStop = false;
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (isStop) {
+      return;
+    }
+
+    oscillator.stop(0);
+    lfo.stop(0);
+
+    oscillator = new OscillatorNode(audiocontext);
+    lfo = new OscillatorNode(audiocontext, { frequency: rateValue });
+
+    isStop = true;
+
+    buttonElement.textContent = 'start';
+  };
+
+  checkboxElement.addEventListener('click', () => {
+    oscillator.disconnect(0);
+    amplitude.disconnect(0);
+    lfo.disconnect(0);
+
+    if (checkboxElement.checked) {
+      oscillator.connect(amplitude);
+      amplitude.connect(audiocontext.destination);
+
+      lfo.connect(depth);
+      depth.connect(amplitude.gain);
+
+      spanPrintCheckedElement.textContent = 'ON';
+    } else {
+      oscillator.connect(audiocontext.destination);
+
+      spanPrintCheckedElement.textContent = 'OFF';
+    }
+  });
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeDepthElement.addEventListener('input', (event) => {
+    depthRate = event.currentTarget.valueAsNumber;
+
+    depth.gain.value = depthRate;
+
+    spanPrintDepthElement.textContent = depthRate.toString(10);
+  });
+
+  rangeRateElement.addEventListener('input', (event) => {
+    rateValue = event.currentTarget.valueAsNumber;
+
+    if (lfo) {
+      lfo.frequency.value = rateValue;
+    }
+
+    spanPrintRateElement.textContent = rateValue.toString(10);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -6850,3 +7019,7 @@ phaser();
 createNodeConnectionsForTremolo(document.getElementById('svg-figure-node-connections-for-tremolo'));
 
 tremolo();
+
+createNodeConnectionsForRingmodulator(document.getElementById('svg-figure-node-connections-for-ringmodulator'));
+
+ringmodulator();
