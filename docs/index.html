@@ -7604,6 +7604,227 @@ rangeMixElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             エフェクターとして, トレモロとリングモジュレーターはかなり感じが違いますが, 原理は共通しています. その原理とは,
             <b>AM 変調</b>を利用したエフェクターであることです.
           </p>
+          <section id="section-effectors-tremolo">
+            <h4>トレモロ</h4>
+            <p>
+              トレモロは振幅 (音の大きさ) を周期的に変化させることによって, 実装することができます. つまり, LFO を, <code>GainNode</code> の
+              <code>gain</code> プロパティ (<code>AudioParam</code>) に接続することによって実装できます. トレモロは, これまで解説したディレイ・リバーブ,
+              コーラス・フランジャー, フェイザーなどと異なり, 原音を変化させるので, <code>AudioNode</code> の接続も実装も非常にシンプルです (トレモロのようのな,
+              原音を直接変化させるエフェクターを<b>インサートエフェクト</b>と呼ぶことがあります).
+            </p>
+            <figure>
+              <svg id="svg-figure-node-connections-for-tremolo" width="800" height="520" />
+              <figcaption>トレモロのノード接続図</figcaption>
+            </figure>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const depthValue = 0.25;
+const rateValue  = 2.5;
+
+const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- ${depthValue}
+
+const oscillator = new OscillatorNode(context);
+
+const lfo   = new OscillatorNode(context, { frequency: rateValue });
+const depth = new GainNode(context, { gain: depthValue });
+
+// Connect nodes
+// OscillatorNode (Input) -&gt; GainNode (Amplitude) -&gt; AudioDestinationNode (Output)
+oscillator.connect(amplitude);
+amplitude.connect(context.destination);
+
+// Connect nodes for LFO that changes gain periodically
+// OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; gain (AudioParam)
+lfo.connect(depth);
+depth.connect(amplitude.gain);
+
+// Start oscillator and LFO
+oscillator.start(0);
+lfo.start(0);
+
+// Stop oscillator and LFO
+oscillator.stop(context.currentTime + 5);
+lfo.stop(context.currentTime + 5);</code></pre>
+            <p>
+              トレモロは, 振幅 <code>1</code> を基準に値が変化するように定義されています (<span class="math-inline">$f_{s}$</span> はサンプリング周波数).
+              しかしながら, そのまま実装すると, 実際には音割れ (クリッピング) が発生してしまうので, 実装では, <code>0.5</code> を基準に, Depth
+              の値が増減するようにしています.
+            </p>
+            <div class="math-block">
+              $y\left(n\right) = \left(1 + \mathrm{depth} \cdot \sin\left(\frac{2\pi \cdot \mathrm{rate} \cdot n}{f_{s}}\right)\right) \cdot x\left(n\right)$
+            </div>
+            <p>
+              以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, トレモロに関わるパラメータを制御できるようにしたコード例です.
+              トレモロのような (他には, コンプレッサーやディストーションなど) インサートエフェクトでは, パラメータの制御のみでエフェクターを OFF
+              にする場合が難しい場合もあるので, コード例のように, フラグなどに応じて, <code>AudioNode</code> の接続自体を切り替えるような実装が必要になります
+              (もっとも, トレモロの場合, Depth を <code>0</code> に設定することで, 原音をそのまま出力することが可能です).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-tremolo&quot; checked /&gt;
+  &lt;span id=&quot;print-checked-tremolo&quot;&gt;ON&lt;/span&gt;
+&lt;/label&gt;
+&lt;label for=&quot;range-tremolo-depth&quot;&gt;Depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-tremolo-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-tremolo-depth-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-tremolo-rate&quot;&gt;Rate&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-tremolo-rate&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;0.5&quot; /&gt;
+&lt;span id=&quot;print-tremolo-rate-value&quot;&gt;0&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let depthRate = 0;
+let rateValue = 0;
+
+let oscillator = new OscillatorNode(context);
+let lfo        = new OscillatorNode(context, { frequency: rateValue });
+
+let isStop = true;
+
+const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- ${depthValue}
+const depth     = new GainNode(context, { gain: amplitude.gain.value * depthRate });
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+
+const rangeDepthElement = document.getElementById(&apos;range-tremolo-depth&apos;);
+const rangeRateElement  = document.getElementById(&apos;range-tremolo-rate&apos;);
+
+const spanPrintCheckedElement = document.getElementById(&apos;print-checked-tremolo&apos;);
+const spanPrintDepthElement   = document.getElementById(&apos;print-tremolo-depth-value&apos;);
+const spanPrintRateElement    = document.getElementById(&apos;print-tremolo-rate-value&apos;);
+
+checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
+  oscillator.disconnect(0);
+  amplitude.disconnect(0);
+  lfo.disconnect(0);
+
+  if (checkboxElement.checked) {
+    // Connect nodes
+    // OscillatorNode (Input) -&gt; GainNode (Amplitude) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(amplitude);
+    amplitude.connect(context.destination);
+
+    // Connect nodes for LFO that changes gain periodically
+    // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; gain (AudioParam)
+    lfo.connect(depth);
+    depth.connect(amplitude.gain);
+
+    spanPrintCheckedElement.textContent = &apos;ON&apos;;
+  } else {
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(context.destination);
+
+    spanPrintCheckedElement.textContent = &apos;OFF&apos;;
+  }
+});
+
+buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+  if (!isStop) {
+    return;
+  }
+
+  if (checkboxElement.checked) {
+    // Connect nodes
+    // OscillatorNode (Input) -&gt; GainNode (Amplitude) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(amplitude);
+    amplitude.connect(context.destination);
+
+    // Start oscillator
+    oscillator.start(0);
+  } else {
+    amplitude.disconnect(0);
+
+    // Connect nodes (Tremolo OFF)
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(context.destination);
+
+    // Start oscillator
+    oscillator.start(0);
+  }
+
+  // Connect nodes for LFO that changes gain periodically
+  // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; gain (AudioParam)
+  lfo.connect(depth);
+  depth.connect(amplitude.gain);
+
+  lfo.start(0);
+
+  isStop = false;
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (isStop) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+  lfo.stop(0);
+
+  oscillator = new OscillatorNode(context);
+  lfo        = new OscillatorNode(context, { frequency: rateValue });
+
+  isStop = true;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  depthRate = event.currentTarget.valueAsNumber;
+
+  depth.gain.value = amplitude.gain.value * depthRate;
+
+  spanPrintDepthElement.textContent = depthRate.toString(10);
+});
+
+rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  rateValue = event.currentTarget.valueAsNumber;
+
+  if (lfo) {
+    lfo.frequency.value = rateValue;
+  }
+
+  spanPrintRateElement.textContent = rateValue.toString(10);
+});</code></pre>
+            <div class="app-container app-tremolo">
+              <div class="app-headline">
+                <button type="button" id="button-tremolo">start</button>
+                <label>
+                  <input type="checkbox" id="checkbox-tremolo" checked />
+                  <span id="print-checked-tremolo">ON</span>
+                </label>
+              </div>
+              <div>
+                <dl>
+                  <div>
+                    <dt><label for="range-tremolo-depth">Depth</label></dt>
+                    <dd>
+                      <input type="range" id="range-tremolo-depth" value="0" min="0" max="1" step="0.05" />
+                      <span id="print-tremolo-depth-value">0</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-tremolo-rate">Rate</label></dt>
+                    <dd>
+                      <input type="range" id="range-tremolo-rate" value="0" min="0" max="10" step="0.5" />
+                      <span id="print-tremolo-rate-value">0</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
     </main>
