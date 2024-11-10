@@ -8011,6 +8011,43 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               </div>
             </div>
           </section>
+          <section id="section-effectors-tremolo-and-ringmodulator-am-modulation">
+            <h4>AM 変調</h4>
+            <p><b>AM 変調</b> (<b>Amplitude Modulation</b>) とは, 時間の経過とともに信号の振幅を変化させることです.</p>
+            <figure>
+              <dl>
+                <dt>Time Domain</dt>
+                <dd><svg id="svg-animation-amplitude-modulation-time" width="720" height="240" data-parameters="true" data-a="1" /></dd>
+                <dt>Frequency Domain (Spectrum)</dt>
+                <dd><svg id="svg-animation-amplitude-modulation-spectrum" width="720" height="240" /></dd>
+              </dl>
+              <figcaption>
+                <span>AM 変調のイメージ</span>
+                <button type="button" id="button-amplitude-modulation-animation">start</button>
+                <span class="app-headline">
+                  <label for="range-amplitude-modulation-rate">Rate</label>
+                  <input type="range" id="range-amplitude-modulation-rate" value="1" min="0" max="8000" step="1" />
+                  <span id="print-amplitude-modulation-rate">1 Hz</span>
+                </span>
+              </figcaption>
+            </figure>
+            <p>
+              変調の周期を短くしていくと (LFO の Rate を高くしていくと), 原音の周波数成分だけではなく, LFO の周波数も周波数成分として発生します. これは,
+              原音の波形が<b>キャリア</b> (<b>搬送波</b>) となって, LFO の正弦波が<b>モジュレーター</b>となってエンベロープを形成して周波数成分となるからです
+              (出力音のエンベロープが正弦波になっていることに着目してください).
+            </p>
+            <p>
+              この仕組みを発展させた音合成が, <b>FM シンセサイザー</b> (FM 音源) で, キャリア (搬送波) とモジュレーターの波形を正弦波として,
+              それらを合成する正弦波によって定義されます (<span class="math-inline">$A$</span> はキャリアの振幅,
+              <span class="math-inline">$f_{c}$</span> はキャリアの周波数, <span class="math-inline">$\beta$</span> は変調指数 (LFO の Depth に相当),
+              <span class="math-inline">$f_{m}$</span> はモジュレーターの周波数 (LFO の Rate に相当)).
+            </p>
+            <div class="math-block">
+              $y\left(n\right) = A \cdot \sin\left(\frac{2\pi \cdot f_{c} \cdot n}{f_{s}} + \left(\beta \cdot \sin\left(\frac{2\pi \cdot f_{m} \cdot
+              n}{f_{s}}\right)\right)\right)$
+            </div>
+            <p>(命名的に混同しますが) リングモジュレーター自体の原理は AM 変調であり, それが, FM シンセサイザーの原理になっているということです.</p>
+          </section>
         </section>
       </section>
     </main>
