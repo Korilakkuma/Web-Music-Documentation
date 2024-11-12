@@ -8061,6 +8061,107 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             イコライザーやワウなどフィルタ系のエフェクターで使われることが多いです.
           </p>
           <p>また, 音響特徴量はスペクトル, つまり, 周波数成分として表れることが多いので, 音の加工においてもフィルタを理解することは重要となります.</p>
+          <article id="section-effectors-decibel">
+            <h4>デシベル</h4>
+            <p>
+              フィルタの解説において, 仕様上, <b>デシベル</b> (<b>dB</b>) という単位が使われるので (<code>BiquadFilterNode</code> の
+              <code>gain</code> プロパティやフィルタの特性グラフなど), フィルタに限ったことではないですが, ここで解説をします.
+            </p>
+            <p>デシベルとは, 端的には, <b>音圧レベル</b>を表す単位です. <b>音圧</b>とは, 音の実体である媒体の振動によって伝わる圧力 (力) のことです.</p>
+            <p>
+              ここで, 基準の音圧 (<span class="math-inline">$P_{0} = 2 \cdot 10^{-5} \mathrm{[Pa]}$</span>) を基準 (ちなみに, この基準の音圧は,
+              <code>1 KHz</code> における可聴な最小の音圧とされています) に, 対象の音の音圧 <span class="math-inline">$P$</span> の比率の対数をとった値
+              (以下の定義式. 上は時間領域, 下は周波数領域での定義式. 多くのケースにおいて, <b>音圧パワー</b> (音圧の 2 乗) の比を算出することが有用なので,
+              各音圧の 2 乗の比で定義しています) が音圧レベルとなります.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &10\log_{10}\left(\frac{P}{P_{0}}\right)^{2} = 20\log_{10}\left(\frac{P}{P_{0}}\right) \quad \left(P_{0} = 2 \cdot 10^{-5} \mathrm{[Pa]}\right) \\
+                  & \\
+                  &10\log_{10}\left|X\left(k\right)\right|^{2} = 20\log_{10}\left|X\left(k\right)\right| \\
+                  & \\
+                \end{flalign}
+              $
+            </div>
+            <p>対数で表す理由は大きく 2 つあります.</p>
+            <ul>
+              <li>音圧は非常に広範囲な値となるので, 人間の感覚とうまく対応ない</li>
+              <li><b>フェヒナーの法則</b>という心理学の理論で, <b>人間の感覚量は刺激強度の対数に比例する</b>という法則が適用できる</li>
+            </ul>
+            <p>
+              (以下の表を参考にして) <code>6 dB</code> 音圧レベルが大きくなれば音圧は約 2 倍 (<span class="math-inline">$20\log_{10}2$</span>) になります.
+              <code>20 dB</code> が大きくなれば 10 倍 (<span class="math-inline">$20\log_{10}10$</span>), <code>40 dB</code> 大きくなれば 100 倍 (<span
+                class="math-inline"
+                >$20\log_{10}100$</span>) ... という関係で, 本来であれば広範囲におよぶ値を対数をとることによって解決しています.
+            </p>
+            <table class="auto-table">
+              <caption>
+                デシベル差と倍率
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Difference decibel</th>
+                  <th scope="col">Magnification</th>
+                  <th scope="col">Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>0 dB</td>
+                  <td>1 倍</td>
+                  <td>人間の聴力の限界</td>
+                </tr>
+                <tr>
+                  <td>6 dB</td>
+                  <td>2 倍</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>10 dB</td>
+                  <td>3 倍</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>20 dB</td>
+                  <td>10 倍</td>
+                  <td>木の葉のふれあう音</td>
+                </tr>
+                <tr>
+                  <td>40 dB</td>
+                  <td>100 倍</td>
+                  <td>図書館</td>
+                </tr>
+                <tr>
+                  <td>60 dB</td>
+                  <td>1,000 倍</td>
+                  <td>会話</td>
+                </tr>
+                <tr>
+                  <td>80 dB</td>
+                  <td>10,000 倍</td>
+                  <td>目覚まし時計</td>
+                </tr>
+                <tr>
+                  <td>100 dB</td>
+                  <td>100,000 倍</td>
+                  <td>電車のガード下</td>
+                </tr>
+                <tr>
+                  <td>120 dB</td>
+                  <td>1,000,000 倍</td>
+                  <td>飛行機のエンジン付近</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              フィルタの特性を表すグラフでは, <code>0 dB</code> を基準に見ていただくのがよいのですが, これは,
+              <b><code>0 dB</code> が入力音と出力音の振幅比が変わらない (つまり, そのまま通過させる) ことを意味しているからです</b> (<span class="math-inline"
+                >$20\log_{10}1 = 0$</span>). これを理解しておくと, <code>BiquadFilterNode</code> の <code>gain</code> プロパティが (特定のフィルタの種類において)
+              ある周波数成分を増幅させたり, 減衰させたりすることも理解できると思います.
+            </p>
+          </article>
         </section>
       </section>
     </main>
