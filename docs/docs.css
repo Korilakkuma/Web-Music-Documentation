@@ -206,6 +206,11 @@ input[type="checkbox"] {
   cursor: pointer;
 }
 
+.auto-table {
+  min-width: min-content;
+  table-layout: auto;
+}
+
 .app-container {
   overflow-x: auto;
 }
