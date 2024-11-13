@@ -8162,6 +8162,87 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               ある周波数成分を増幅させたり, 減衰させたりすることも理解できると思います.
             </p>
           </article>
+          <section id="section-effectors-filter-biquad-filter-node">
+            <h4>BiquadFilterNode</h4>
+            <p>
+              Web Audio API において, 様々なフィルタを簡単に利用するには <code>BiquadFilterNode</code> を使うのが最適です. <b>Biquad</b> とは,
+              <b>双 2 次</b>という意味で, <code>BiquadFilterNode</code> の次数は 2 次となります (以下の伝達関数で定義されています). したがって,
+              <code>BiquadFilterNode</code> では実装できないフィルタ, 具体的には, <code>奇数次</code>のフィルタを使いたい場合, あとのセクションで解説する
+              <code>IIRFilterNode</code> を使う必要があります (<code>BiquadFilterNode</code> は 2 次の IIR フィルタです).
+            </p>
+            <p>
+              <code>BiquadFilterNode</code> では, フィルタの特性に関わるプロパティとして, <b><code>type</code></b> プロパティ (<b
+                ><code>BiquadFilterType</code></b>), <b><code>frequency</code></b> / <b><code>detune</code></b> プロパティ (どちらも <code>AudioParam</code>), <b><code>Q</code></b> プロパティ
+              (<code>AudioParam</code>), <b><code>gain</code></b> プロパティ (<code>AudioParam</code>) が定義されています. <code>type</code> プロパティ以外は,
+              <code>type</code> プロパティ (すなわち, フィルタの種類) によって, 制御するフィルタの特性が異なったり, あるいは, そもそも無効だったりするので,
+              <code>BiquadFilterNode</code> で使える 8 つのフィルタの種類ごとに解説を進めます.
+            </p>
+            <p>
+              フィルタの種類に関わらず, <code>BiquadFilterNode</code> は, そのインスタンスを接続するだけで機能します (また, コンストラクタ形式であれば,
+              インスタンス生成時に, 第 2 引数に <b>BiquadFilterOptions</b> を指定して, 初期値を変更することも可能です).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+const filter     = new BiquadFilterNode(context);
+
+// If use `createBiquadFilter`
+// const filter = context.createBiquadFilter();
+
+// OscillatorNode (Input) -&gt; BiquadFilterNode -&gt; AudioDestinationNode (Output)
+oscillator.connect(filter);
+filter.connect(context.destination);
+
+oscillator.start(0);</code></pre>
+            <img src="images/biquad-filter-node.png" alt="BiquadFilterNode" width="1232" height="770" loading="lazy" />
+            <section id="section-effectors-filter-biquad-filter-node-frequency-and-detune">
+              <h5>frequency / detune プロパティ</h5>
+              <p>
+                フィルタの種類に関わらず, <b><code>frequency</code></b> / <b><code>detune</code></b> プロパティはすべてのフィルタにおいて有効になります (ただし,
+                フィルタの特性への影響はフィルタの種類ごとに異なります). <code>OscillatorNode</code> などと同じように, <code>frequency</code> プロパティと
+                <code>detune</code> プロパティを合わせて算出される周波数 (<span class="math-inline">$f_{\mathrm{computed}}\left(t\right)$</span>)
+                は以下のように定義されています.
+              </p>
+              <div class="math-block">
+                $f_{\mathrm{computed}}\left(t\right) = \mathrm{frequency}\left(t\right) \cdot \mathrm{pow}\left(2, \left(\mathrm{detune}\left(t\right) / 1200
+                \right)\right)$
+              </div>
+              <p>
+                <code>frequency</code> / <code>detune</code> プロパティ, <code>Q</code> プロパティ, <code>gain</code> プロパティは, すべて
+                <code>AudioParam</code> なので, オートメーションさせたり, LFO を接続したりすることが可能です.
+              </p>
+            </section>
+            <article class="section-biquad-filter-node-definition">
+              <h5>BiquadFilterNode の定義式</h5>
+              <p>時間領域での <code>BiquadFilterNode</code> の定義式 (2 次の IIR フィルタ) は, 以下のように定義されています.</p>
+              <div class="math-block">
+                $a_{0}y\left(n\right) + a_{1}y\left(n - 1\right) + a_{2}y\left(n - 2\right) = b_{0}x\left(n\right) + b_{1}x\left(n - 1\right) + b_{2}x\left(n -
+                2\right)$
+              </div>
+              <p>
+                これを <span class="math-inline">$z$</span> 変換すると, 伝達関数 (周波数領域での <code>BiquadFilterNode</code> の定義式) は,
+                以下のように定義されます (時間領域の遅延は, <span class="math-inline">$z$</span> 変換の次数となります).
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &H\left(z\right) = \frac{\frac{b_{0}}{a_{0}} + \frac{b_{1}}{a_{0}}z^{-1} + \frac{b_{2}}{a_{0}}z^{-2}}{1 + \frac{a_{1}}{a_{0}}z^{-1} + \frac{a_{2}}{a_{0}}z^{-2}}
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                Biquad Filter (双 2 次フィルタ) はオーディオ信号処理で頻繁に利用される, Robert Bristow-Johnson 氏が書いた有名な設計手法の解説, Audio-EQ-Cookbook
+                というのがあり,
+                <a href="https://www.w3.org/TR/audio-eq-cookbook/" target="_blank" rel="noopener noreferrer">W3C のドキュメント</a>としても公開されています. Web
+                Audio API の <code>BiquadFilterNode</code> も Audio EQ Cookbook をベースにした実装になっています (厳密には, 多少の改変がされています).
+              </p>
+              <p>IIR フィルタに関してはあとのセクションで解説します.</p>
+            </article>
+          </section>
         </section>
       </section>
     </main>
