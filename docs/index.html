@@ -8242,6 +8242,38 @@ oscillator.start(0);</code></pre>
               </p>
               <p>IIR フィルタに関してはあとのセクションで解説します.</p>
             </article>
+            <section id="section-effectors-filter-biquad-filter-node-lowpass">
+              <h5>Low-Pass Filter</h5>
+              <p>
+                <b>Low-Pass Filter</b> (<b>低域通過フィルタ</b>) とは, <b>カットオフ周波数</b> (<span class="math-inline">$f_{\mathrm{computed}}$</span>)
+                付近までの周波数成分を通過させ, それより大きい周波数成分を遮断するフィルタです. すでに解説しましたが, サンプリング定理のために, A/D 変換や D/A
+                変換で使われたり, エフェクターのワウで使われたり, エフェクト音のトーンを設定したり, おそらく最も使用頻度の高いフィルタになります
+                (おそらくその理由で, デフォルト値になっていると思われます).
+              </p>
+              <p>
+                Low-Pass Filter における, <b><code>Q</code></b> プロパティ (<b>クオリティファクタ</b>, または, <b>レゾナンス</b>と呼ばれることが多いです) は,
+                カットオフ周波数付近の急峻を変化させます. 正の値にすると, 急峻が鋭くなって, カットオフ周波数付近の周波数成分を増幅させます (これは,
+                ワウの実装において重要になる点です). 負の値を設定すると, カットオフ周波数付近の周波数成分を減衰させるフィルタ特性になります.
+              </p>
+              <p>
+                Low-Pass Filter においては, <b><code>gain</code></b> プロパティは無効で, フィルタ特性に影響を与えることはありません.
+              </p>
+              <figure>
+                <div class="app-headline">
+                  <label for="range-filter-lowpass-frequency">frequency</label>
+                  <input type="range" id="range-filter-lowpass-frequency" value="350" min="1" max="8000" step="1" />
+                  <span id="print-filter-lowpass-frequency">350 Hz</span>
+                  <label for="range-filter-lowpass-detune">detune</label>
+                  <input type="range" id="range-filter-lowpass-detune" value="0" min="-1200" max="1200" step="1" />
+                  <span id="print-filter-lowpass-detune">0 cent</span>
+                  <label for="range-filter-lowpass-Q">Q</label>
+                  <input type="range" id="range-filter-lowpass-Q" value="1" min="-20" max="20" step="1" />
+                  <span id="print-filter-lowpass-Q">1 dB</span>
+                </div>
+                <svg id="svg-figure-filter-response-lowpass" width="600" height="300" />
+                <figcaption>Low-Pass Filter のフィルタ特性</figcaption>
+              </figure>
+            </section>
           </section>
         </section>
       </section>
