@@ -7203,6 +7203,236 @@ const animateAM = (svgTime, svgSpectrum) => {
   });
 };
 
+const renderFrequencyResponse = (svg, type) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  const frequencies = new Float32Array(8000);
+
+  const min = Math.log(10);
+  const max = Math.log(20000);
+  const diff = max - min;
+
+  for (let i = 0, len = frequencies.length; i < len; i++) {
+    const ratio = i / (len - 1);
+
+    frequencies[i] = Math.exp(diff * ratio + min);
+  }
+
+  for (let i = 0; i < 10; i++) {
+    const x = i * (innerWidth / 9) + padding;
+
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', x.toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', lineWidth.toString(10));
+    rect.setAttribute('height', innerHeight.toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rect);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${Math.trunc(frequencies[i < 9 ? (i + 1) * 800 : 7999])} Hz`;
+
+    text.setAttribute('x', x.toString(10));
+    text.setAttribute('y', (padding + innerHeight + 16).toString(10));
+
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    svg.appendChild(text);
+  }
+
+  if (type === 'allpass') {
+    const rads = ['π', 'π/2', '0', '-π/2', '-π'];
+
+    for (let i = 0; i < 5; i++) {
+      const y = i * (innerHeight / 4) + padding;
+
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', padding.toString(10));
+      rect.setAttribute('y', y.toString(10));
+      rect.setAttribute('width', innerWidth.toString(10));
+      rect.setAttribute('height', lineWidth.toString(10));
+      rect.setAttribute('stroke', 'none');
+      rect.setAttribute('fill', alphaBaseColor);
+
+      svg.appendChild(rect);
+
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = `${rads[i]} rad`;
+
+      text.setAttribute('x', (padding - 8).toString(10));
+      text.setAttribute('y', (y + 4).toString(10));
+
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-family', 'Roboto');
+      text.setAttribute('font-size', '12px');
+
+      svg.appendChild(text);
+    }
+  } else {
+    const dBs = ['24', '18', '12', '6', '0', '-6', '-12', '-18', '-24'];
+
+    for (let i = 0; i < 9; i++) {
+      const y = i * (innerHeight / 8) + padding;
+
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', padding.toString(10));
+      rect.setAttribute('y', y.toString(10));
+      rect.setAttribute('width', innerWidth.toString(10));
+      rect.setAttribute('height', lineWidth.toString(10));
+      rect.setAttribute('stroke', 'none');
+      rect.setAttribute('fill', alphaBaseColor);
+
+      svg.appendChild(rect);
+
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = `${dBs[i]} dB`;
+
+      text.setAttribute('x', (padding - 8).toString(10));
+      text.setAttribute('y', (y + 4).toString(10));
+
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '12px');
+
+      svg.appendChild(text);
+    }
+  }
+
+  const filter = new BiquadFilterNode(audiocontext, { type });
+
+  const render = () => {
+    const magResponses = new Float32Array(frequencies.length);
+    const phaseResponses = new Float32Array(frequencies.length);
+
+    filter.getFrequencyResponse(frequencies, magResponses, phaseResponses);
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    if (type === 'allpass') {
+      for (let i = 0, len = frequencies.length; i < len; i++) {
+        const f = frequencies[i];
+        const x = (Math.log10(f / 20) / Math.log10(1000)) * innerWidth + padding - 3;
+        const p = phaseResponses[i];
+        const y = -1 * (p / (2 * Math.PI)) * innerHeight + innerHeight / 2 + padding;
+
+        if (x < padding) {
+          continue;
+        }
+
+        if (y > padding + innerHeight) {
+          continue;
+        }
+
+        if (d === '') {
+          d += `M${x} ${y} `;
+        } else {
+          d += `L${x} ${y} `;
+        }
+      }
+    } else {
+      for (let i = 0, len = frequencies.length; i < len; i++) {
+        const f = frequencies[i];
+        const x = (Math.log10(f / 20) / Math.log10(1000)) * innerWidth + padding - 3;
+        const dB = 20 * Math.log10(magResponses[i]);
+        const y = ((-1 * dB) / 48) * innerHeight + innerHeight / 2 + padding;
+
+        if (x < padding) {
+          continue;
+        }
+
+        if (y > padding + innerHeight) {
+          continue;
+        }
+
+        if (d === '') {
+          d += `M${x} ${y} `;
+        } else {
+          d += `L${x} ${y} `;
+        }
+      }
+    }
+
+    path.setAttribute('d', d);
+  };
+
+  if (!type) {
+    document.getElementById('select-filter-type').addEventListener('change', (event) => {
+      filter.type = event.currentTarget.value;
+
+      render();
+    });
+  }
+
+  document.getElementById(`range-filter-${type}-frequency`).addEventListener('input', (event) => {
+    filter.frequency.value = event.currentTarget.valueAsNumber;
+
+    document.getElementById(`print-filter-${type}-frequency`).textContent = `${filter.frequency.value} Hz`;
+
+    render();
+  });
+
+  document.getElementById(`range-filter-${type}-detune`).addEventListener('input', (event) => {
+    filter.detune.value = event.currentTarget.valueAsNumber;
+
+    document.getElementById(`print-filter-${type}-detune`).textContent = `${filter.detune.value} cent`;
+
+    render();
+  });
+
+  if (type !== 'lowshelf' && type !== 'highshelf') {
+    document.getElementById(`range-filter-${type}-Q`).addEventListener('input', (event) => {
+      filter.Q.value = event.currentTarget.valueAsNumber;
+
+      if (type === 'lowpass' || type === 'highpass') {
+        document.getElementById(`print-filter-${type}-Q`).textContent = `${filter.Q.value} dB`;
+      } else {
+        document.getElementById(`print-filter-${type}-Q`).textContent = `${filter.Q.value}`;
+      }
+
+      render();
+    });
+  }
+
+  if (type === 'lowshelf' || type === 'highshelf' || type === 'peaking') {
+    document.getElementById(`range-filter-${type}-gain`).addEventListener('input', (event) => {
+      filter.gain.value = event.currentTarget.valueAsNumber;
+
+      document.getElementById(`print-filter-${type}-gain`).textContent = `${filter.gain.value} dB`;
+
+      render();
+    });
+  }
+
+  render();
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -7300,3 +7530,5 @@ createNodeConnectionsForRingmodulator(document.getElementById('svg-figure-node-c
 ringmodulator();
 
 animateAM(document.getElementById('svg-animation-amplitude-modulation-time'), document.getElementById('svg-animation-amplitude-modulation-spectrum'));
+
+renderFrequencyResponse(document.getElementById('svg-figure-filter-response-lowpass'), 'lowpass');
