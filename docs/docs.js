@@ -7532,3 +7532,4 @@ ringmodulator();
 animateAM(document.getElementById('svg-animation-amplitude-modulation-time'), document.getElementById('svg-animation-amplitude-modulation-spectrum'));
 
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-lowpass'), 'lowpass');
+renderFrequencyResponse(document.getElementById('svg-figure-filter-response-highpass'), 'highpass');

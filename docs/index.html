@@ -8274,6 +8274,37 @@ oscillator.start(0);</code></pre>
                 <figcaption>Low-Pass Filter のフィルタ特性</figcaption>
               </figure>
             </section>
+            <section id="section-effectors-filter-biquad-filter-node-highpass">
+              <h5>High-Pass Filter</h5>
+              <p>
+                <b>High-Pass Filter</b> (<b>高域通過フィルタ</b>) とは, Low-Pass Filter と逆で, カットオフ周波数 (<span class="math-inline"
+                  >$f_{\mathrm{computed}}$</span>) 付近までの周波数成分を遮断して, それより大きい周波数成分を通過させるフィルタです. Low-Pass Filter と比較すると, 使用頻度は低いですが,
+                プリアンプ (アンプシミュレーター) や歪み系のエフェクターの実装では重要なフィルタとなります.
+              </p>
+              <p>
+                High-Pass Filter における, <b><code>Q</code></b> プロパティは, Low-Pass Filter と同様に, カットオフ周波数付近の急峻を変化させます.
+                正の値にすると, 急峻が鋭くなり, カットオフ周波数付近の周波数成分を増幅させます. 負の値を設定すると,
+                カットオフ周波数付近の周波数成分を減衰させるフィルタ特性になります.
+              </p>
+              <p>
+                High-Pass Filter においても, <b><code>gain</code></b> プロパティは無効で, フィルタ特性に影響を与えることはありません.
+              </p>
+              <figure>
+                <div class="app-headline">
+                  <label for="range-filter-highpass-frequency">frequency</label>
+                  <input type="range" id="range-filter-highpass-frequency" value="350" min="1" max="8000" step="1" />
+                  <span id="print-filter-highpass-frequency">350 Hz</span>
+                  <label for="range-filter-highpass-detune">detune</label>
+                  <input type="range" id="range-filter-highpass-detune" value="0" min="-1200" max="1200" step="1" />
+                  <span id="print-filter-highpass-detune">0 cent</span>
+                  <label for="range-filter-highpass-Q">Q</label>
+                  <input type="range" id="range-filter-highpass-Q" value="1" min="-20" max="20" step="1" />
+                  <span id="print-filter-highpass-Q">1 dB</span>
+                </div>
+                <svg id="svg-figure-filter-response-highpass" width="600" height="300" />
+                <figcaption>High-Pass Filter のフィルタ特性</figcaption>
+              </figure>
+            </section>
           </section>
         </section>
       </section>
