@@ -7252,3 +7252,4 @@ animateAM(document.getElementById('svg-animation-amplitude-modulation-time'), do
 
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-lowpass'), 'lowpass');
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-highpass'), 'highpass');
+renderFrequencyResponse(document.getElementById('svg-figure-filter-response-bandpass'), 'bandpass');
