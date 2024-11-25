@@ -8335,6 +8335,33 @@ oscillator.start(0);</code></pre>
                 <figcaption>Band-Pass Filter のフィルタ特性</figcaption>
               </figure>
             </section>
+            <section id="section-effectors-filter-biquad-filter-node-lowshelf">
+              <h5>Low-Shelving Filter</h5>
+              <p>
+                <b>Low-Shelving Filter</b> とは, <b>カットオフ周波数</b> (<span class="math-inline">$f_{\mathrm{computed}}$</span>) 付近までの周波数成分を増幅,
+                または, 減衰させ, それより大きい周波数成分をそのまま通過させるフィルタです. Low-Shelving Filter における, <b><code>gain</code></b> プロパティが,
+                増幅, または, 減衰の値を決定します. 単位は, デシベル (<code>dB</code>) です.
+              </p>
+              <p>
+                Low-Shelving Filter においては, <b><code>Q</code></b> プロパティは無効で, フィルタ特性に影響を与えることはありません (一般的な, Biquad Filter
+                においては, フィルタ特性に影響しますが, Web Audio API の <code>BiquadFilterNode</code> でやや実装が改変されている点の 1 つです).
+              </p>
+              <figure>
+                <div class="app-headline">
+                  <label for="range-filter-lowshelf-frequency">frequency</label>
+                  <input type="range" id="range-filter-lowshelf-frequency" value="350" min="1" max="8000" step="1" />
+                  <span id="print-filter-lowshelf-frequency">350 Hz</span>
+                  <label for="range-filter-lowshelf-detune">detune</label>
+                  <input type="range" id="range-filter-lowshelf-detune" value="0" min="-1200" max="1200" step="1" />
+                  <span id="print-filter-lowshelf-detune">0 cent</span>
+                  <label for="range-filter-lowshelf-gain">gain</label>
+                  <input type="range" id="range-filter-lowshelf-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-filter-lowshelf-gain">0 dB</span>
+                </div>
+                <svg id="svg-figure-filter-response-lowshelf" width="600" height="300" />
+                <figcaption>Low-Shelving Filter のフィルタ特性</figcaption>
+              </figure>
+            </section>
           </section>
         </section>
       </section>
