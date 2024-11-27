@@ -7262,3 +7262,4 @@ renderFrequencyResponse(document.getElementById('svg-figure-filter-response-lowp
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-highpass'), 'highpass');
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-bandpass'), 'bandpass');
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-lowshelf'), 'lowshelf');
+renderFrequencyResponse(document.getElementById('svg-figure-filter-response-highshelf'), 'highshelf');
