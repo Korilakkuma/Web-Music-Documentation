@@ -8389,6 +8389,37 @@ oscillator.start(0);</code></pre>
                 <figcaption>High-Shelving Filter のフィルタ特性</figcaption>
               </figure>
             </section>
+            <section id="section-effectors-filter-biquad-filter-node-peaking">
+              <h5>Peaking Filter</h5>
+              <p>
+                <b>Peaking Filter</b> とは, <b>中心周波数</b> (<span class="math-inline">$f_{\mathrm{computed}}$</span>) 付近の周波数成分を増幅, または,
+                減衰させ, それ以外の周波数成分をそのまま通過させるフィルタです. Peaking Filter における, <b><code>gain</code></b> プロパティが, 増幅, または,
+                減衰の値を決定します. 単位は, デシベル (<code>dB</code>) です.
+              </p>
+              <p>
+                Peaking Filter における, <b><code>Q</code></b> プロパティは, Band-Pass Filter と同様に, 中心周波数を基準にした帯域幅に影響を与えます.
+                <code>Q</code> プロパティの値を大きくするほど, 中心周波数付近の帯域幅が狭くなります (急峻になります).
+                <b>0 以下の値を設定すると, 中心周波数として機能しなくなるので, 正の値を指定するようにします</b>.
+              </p>
+              <figure>
+                <div class="app-headline">
+                  <label for="range-filter-peaking-frequency">frequency</label>
+                  <input type="range" id="range-filter-peaking-frequency" value="350" min="1" max="8000" step="1" />
+                  <span id="print-filter-peaking-frequency">350 Hz</span>
+                  <label for="range-filter-peaking-detune">detune</label>
+                  <input type="range" id="range-filter-peaking-detune" value="0" min="-1200" max="1200" step="1" />
+                  <span id="print-filter-peaking-detune">0 cent</span>
+                  <label for="range-filter-peaking-Q">Q</label>
+                  <input type="range" id="range-filter-peaking-Q" value="1" min="1" max="20" step="1" />
+                  <span id="print-filter-peaking-Q">1</span>
+                  <label for="range-filter-peaking-gain">gain</label>
+                  <input type="range" id="range-filter-peaking-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-filter-peaking-gain">0 dB</span>
+                </div>
+                <svg id="svg-figure-filter-response-peaking" width="600" height="300" />
+                <figcaption>Peaking Filter のフィルタ特性</figcaption>
+              </figure>
+            </section>
           </section>
         </section>
       </section>
