@@ -8453,6 +8453,77 @@ oscillator.start(0);</code></pre>
                 <figcaption>Notch Filter のフィルタ特性</figcaption>
               </figure>
             </section>
+            <section id="section-effectors-filter-biquad-filter-node-allpass">
+              <h5>All-Pass Filter</h5>
+              <p>
+                <b>All-Pass Filter</b> (<b>全域通過フィルタ</b>) とは, 振幅特性は変化させずに, <b>中心周波数</b> (<span class="math-inline"
+                  >$f_{\mathrm{computed}}$</span>) 付近の周波数成分の<b>位相特性を変化させるフィルタです</b>. したがって, フィルタ特性のグラフも, All-Pass Filter のみは,
+                <b>位相スペクトル</b> (縦軸が, 位相で単位は <code>radian</code>) となっています (振幅特性が変わらないので, 振幅スペクトルで表示すると,
+                パラメータを変化させてもフィルタ特性は変わりません).
+              </p>
+              <p>
+                中心周波数では, <span class="math-inline">$\pm \pi$</span> で最も位相が変化し (<span class="math-inline">$\pm \pi$</span> 位相変化すると,
+                逆位相となります), 中心周波数から離れる周波数成分ほど, ほとんど位相は変化しなくなります.
+              </p>
+              <p>
+                All-Pass Filter における, <b><code>Q</code></b> プロパティは, 中心周波数付近の急峻に影響を与えます.
+                <code>Q</code> プロパティの値を大きくするほど, 中心周波数付近のフィルタ特性が急峻になって,
+                それ以外の周波数成分の位相特性に影響を与えなくなります. つまり, 位相特性を変化させる周波数帯域をより狭くします.
+                <b>0 以下の値を設定すると, 中心周波数として機能しなくなるので, 正の値を指定するようにします</b>.
+              </p>
+              <p>
+                All-Pass Filter においては, <b><code>gain</code></b> プロパティは無効で, フィルタ特性に影響を与えることはありません.
+              </p>
+              <figure>
+                <div class="app-headline">
+                  <label for="range-filter-allpass-frequency">frequency</label>
+                  <input type="range" id="range-filter-allpass-frequency" value="350" min="1" max="8000" step="1" />
+                  <span id="print-filter-allpass-frequency">350 Hz</span>
+                  <label for="range-filter-allpass-detune">detune</label>
+                  <input type="range" id="range-filter-allpass-detune" value="0" min="-1200" max="1200" step="1" />
+                  <span id="print-filter-allpass-detune">0 cent</span>
+                  <label for="range-filter-allpass-Q">Q</label>
+                  <input type="range" id="range-filter-allpass-Q" value="1" min="1" max="20" step="1" />
+                  <span id="print-filter-allpass-Q">1</span>
+                </div>
+                <svg id="svg-figure-filter-response-allpass" width="600" height="300" />
+                <figcaption>All-Pass Filter のフィルタ特性 (位相スペクトル)</figcaption>
+              </figure>
+              <article id="section-effectors-filter-biquad-filter-node-allpass-parallel-connection">
+                <h6>All-Pass Filter の並列接続</h6>
+                <p>
+                  All-Pass Filter は, 直列接続では, フェイザーや Schroeder Reverberator (シュレーダーリバーブ) などのユースケースがありますが, 実は,
+                  並列接続することで, さまざまなフィルタを実装することが可能です. 例えば, 高音域の位相を <span class="math-inline">$\pi$</span> (<span
+                    class="math-inline"
+                    >$-\pi$</span>) 変化させる All-Pass Filter を並列接続することで, 高音域を遮断する, すなわち, Low-Pass Filter を実装することが可能です. 詳細は,
+                  <a href="https://www.wizard-notes.com/entry/asp/allpass-filter" target="_blank" rel="noopener noreferrer"
+                    >信号処理に欠かせないオールパスフィルタ―の概要・使い方・利用例</a>などを参考にしてください.
+                </p>
+                <pre
+                  data-prismjs-copy="クリップボードにコピー"
+                  data-prismjs-copy-success="コピーしました"
+                ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+const allpass0   = new BiquadFilterNode(context, { type: &apos;allpass&apos; });
+const allpass1   = new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: 1000 });
+
+//                         |-&gt; BiquadFilterNode (All-Pass Filter) |
+// OscillatorNode (Input) -|                                      |-&gt; AudioDestinationNode (Output)
+//                         |-&gt; BiquadFilterNode (All-Pass Filter) |
+oscillator.connect(allpass0);
+oscillator.connect(allpass1);
+
+allpass0.connect(context.destination);
+allpass1.connect(context.destination);
+
+// Start oscillator immediately
+oscillator.start(0);
+
+// Stop oscillator after 5 sec
+oscillator.stop(context.currentTime + 5);</code></pre>
+              </article>
+            </section>
           </section>
         </section>
       </section>
