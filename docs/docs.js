@@ -7538,3 +7538,4 @@ renderFrequencyResponse(document.getElementById('svg-figure-filter-response-lows
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-highshelf'), 'highshelf');
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-peaking'), 'peaking');
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-notch'), 'notch');
+renderFrequencyResponse(document.getElementById('svg-figure-filter-response-allpass'), 'allpass');
