@@ -8525,6 +8525,98 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               </article>
             </section>
           </section>
+          <section id="section-effectors-iir-filter-node">
+            <h4>IIRFilterNode</h4>
+            <p>
+              <code>BiquadFilterNode</code> では実装できない IIR フィルタを実装する場合, 次の手段としては,
+              <b><code>IIRFilterNode</code></b> クラスを利用することです (最後の手段は, AudioWorklet で実装することです).
+            </p>
+            <p>
+              <code>IIRFilterNode</code> では, <code>BiquadFilterNode</code> でフィルタの特性に影響を与えていた, <code>frequency</code> プロパティや
+              <code>Q</code> プロパティ, <code>gain</code> プロパティなどは, リアルタイムに変化させることができなくなる点には注意してください.
+              <code>IIRFilterNode</code> に与えるパラメータは, <code>AudioParam</code> ではないからです.
+            </p>
+            <p>
+              実装としては, <code>IIRFilterNode</code> コンストラクタの第 2 引数に, <b><code>IIRFilterOptions</code></b> として,
+              フィルタの係数の配列を設定します. <code>IIRFilterOptions</code> オブジェクトの <b><code>feedforward</code></b> プロパティは,
+              <b>IIR フィルタの伝達関数の分子となる係数</b> (以下の伝達関数の <span class="math-inline">$b_{m}$</span>),
+              <b><code>feedback</code></b> プロパティは, <b>IIR フィルタの伝達関数の分母となる係数</b> (以下の伝達関数の
+              <span class="math-inline">$a_{n}$</span>) をそれぞれ設定します (ファクトリメソッドの場合, 第 1 引数に <code>feedforward</code>, 第 2 引数に
+              <code>feedback</code> を指定します). <code>IIRFilterNode</code> の伝達関数は以下の定義式となります.
+              <code>BiquadFilterNode</code> の伝達関数と異なり, フィルタの次数を自由に設定できる点に着目してください.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &H\left(z\right) = \frac{\sum_{m=0}^{M}b_{m}z^{-m}}{\sum_{n=0}^{N}a_{n}z^{-n}}
+                \end{flalign}
+              $
+            </div>
+            <p>
+              ただし, まったく制約がないわけではなく, 0 次のフィルタはエラーとなります (それ以外にも, <span class="math-inline">$a_{0}$</span> は,
+              <code>0</code> 以外の値である必要があったり, 係数がすべて <code>0</code> の <code>feedforward</code> はエラーとなったりします). また, 実装上,
+              <b>20 次までのフィルタが上限となります</b>.
+            </p>
+            <p>簡易的ではありますが, 1 次の IIR フィルタによる, Low-Pass Filter と High-Pass Filter の実装例です.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const cutoff = 1000;  // 1000 Hz
+
+const b = (cutoff / context.sampleRate) * Math.PI;
+
+const b0 = b;
+const b1 = b;
+const a0 =  1 + b;
+const a1 = -1 + b;
+
+const feedforward = new Float64Array([b0, b1]);
+const feedback    = new Float64Array([a0, a1]);
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+const filter     = new IIRFilterNode(context, { feedforward, feedback });
+
+// If use `createIIRFilter`
+// const filter = context.createIIRFilter(feedforward, feedback);
+
+// OscillatorNode (Input) -&gt; IIRFilterNode (Low-Pass Filter) -&gt; AudioDestinationNode (Output)
+oscillator.connect(filter);
+filter.connect(context.destination);
+
+oscillator.start(0);</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const cutoff = 4000;  // 4000 Hz
+
+const a = (cutoff / context.sampleRate) * Math.PI;
+
+const b0 =  1;
+const b1 = -1;
+const a0 =  1 + a;
+const a1 = -1 + a;
+
+const feedforward = new Float64Array([b0, b1]);
+const feedback    = new Float64Array([a0, a1]);
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+const filter     = new IIRFilterNode(context, { feedforward, feedback });
+
+// If use `createIIRFilter`
+// const filter = context.createIIRFilter(feedforward, feedback);
+
+// OscillatorNode (Input) -&gt; IIRFilterNode (High-Pass Filter) -&gt; AudioDestinationNode (Output)
+oscillator.connect(filter);
+filter.connect(context.destination);
+
+oscillator.start(0);</code></pre>
+            <img src="images/iir-filter-node.png" alt="IIRFilterNode" width="1232" height="770" loading="lazy" />
+          </section>
         </section>
       </section>
     </main>
