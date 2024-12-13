@@ -8617,6 +8617,145 @@ filter.connect(context.destination);
 oscillator.start(0);</code></pre>
             <img src="images/iir-filter-node.png" alt="IIRFilterNode" width="1232" height="770" loading="lazy" />
           </section>
+          <section id="section-effectors-iir-filter">
+            <h4>IIR フィルタ</h4>
+            <p><b>IIR フィルタ</b> (<b>Infinite Impulse Response filter</b>) は, 以下の数式で定義されるデジタルフィルタです.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &y\left(n\right) = \sum_{m = 0}^{J}b\left(m\right)x\left(n - m\right) - \sum_{m = 1}^{I}a\left(m\right)y\left(n - m\right)
+                \end{flalign}
+              $
+            </div>
+            <p>
+              フィルタを通過した音が再度フィルタを通ることになる, <b>フィードバックがある</b>ことが, FIR フィルタと大きく異なる点です.
+              定義式上は無限にインパルス応答が続くことになるので, <b>Infinite</b> (無限の) と命名されています (もちろん,
+              コンピュータでは無限のフィルタを実装することはできないので, 有限の次数でうちきる必要があります. <code>IIRFilterNode</code> の場合, その上限が
+              <code>20</code> ということです). また, フィードバックの項 (<span class="math-inline">$a\left(m\right)$</span>) は,
+              <span class="math-inline">$m = 1$</span> から始まっている点に着目してください.
+            </p>
+            <p>
+              フィードバックがある利点は, 次数の低いフィルタでも性能のよいフィルタ, つまり, 通過する周波数成分と遮断する周波数成分を可能な限りはっきりと分ける
+              (<b>理想フィルタ</b>に近づける) フィルタが低次数で実装できます (実際, <code>BiquadFilterNode</code> の次数は 2 次です).
+            </p>
+            <p>
+              具体的に, 2 次の IIR フィルタ (<span class="math-inline">$J = I = 2$</span>) を加算器・乗算器・遅延器の要素を利用してブロック図として表現します.
+            </p>
+            <figure>
+              <svg id="svg-figure-iir-filter" width="720" height="400" />
+              <figcaption>IIR フィルタ</figcaption>
+            </figure>
+            <article class="section-effectors-filter-ideal-filter-and-transition-bandwidth">
+              <h5>理想フィルタと遷移帯域幅</h5>
+              <p>
+                アナログフィルタでは, カットオフ周波数や中心周波数を境に, 通過する周波数成分と阻止される周波数成分がはっきりと分離されます. しかし,
+                <code>BiquadFilterNode</code> のセクションで表示しているフィルタ特性のように, デジタルフィルタにおいては, はっきりと分離されることなく,
+                曖昧な帯域が存在することがわかるかと思います. これは, アナログフィルタにおいては, 無限の区間で定義されるフィルタを,
+                コンピュータでは無限の区間をあつかうことはできないので, 有限の区間でうちきる必要があるからです. その処理によって,
+                どうしても曖昧な帯域が発生してしまいます. これを<b>遷移帯域幅</b>と言います. つまり, デジタルフィルタで, アナログフィルタのような,
+                遷移帯域幅のない<b>理想フィルタ</b>を実装することはコンピュータの原理上, 不可能となります. しかしながら, 可能な限り遷移帯域幅を小さくして,
+                アナログフィルタ (理想フィルタ) に近づけることは可能であり,
+                <b>理想フィルタに近いフィルタが, デジタルフィルタにおいて性能のよいフィルタの重要な指標となります</b>. そして, IIR フィルタは低次数で,
+                性能のよいフィルタ, すなわち, 理想フィルタに近いフィルタを実装することが可能です.
+              </p>
+            </article>
+            <article class="section-effectors-filter-transfer-function">
+              <h5>FIR フィルタと IIR フィルタの伝達関数</h5>
+              <p>
+                これまで, <b>伝達関数</b>という用語をそれとなく使っていましたが, ここで詳細を解説します. 伝達関数とは, その名のとおり,
+                <b>伝わりやすさ</b>を数学の関数として定義したものです. オーディオ信号処理に限定して定義すると,
+                <b>入力音のスペクトルに対する出力音のスペクトルの比の関数</b>で定義できます.
+              </p>
+              <p>
+                FIR フィルタの場合, <span class="math-inline">$x\left(n\right)$</span>, <span class="math-inline">$y\left(n\right)$</span>,
+                <span class="math-inline">$b\left(m\right)$</span> をそれぞれ離散フーリエ変換した関数を <span class="math-inline">$X\left(k\right)$</span>,
+                <span class="math-inline">$Y\left(k\right)$</span>, <span class="math-inline">$H\left(k\right)$</span> とすると,
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &y\left(n\right) = \sum_{m = 0}^{N}b\left(m\right)x\left(n - m\right)
+                  \end{flalign}
+                $
+              </div>
+              <p>時間領域でのコンボリューション積分は周波数領域では乗算となるので,</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &Y\left(k\right) = H\left(k\right)X\left(k\right)
+                  \end{flalign}
+                $
+              </div>
+              <p><span class="math-inline">$H\left(k\right)$</span> が伝達関数となるので, 式を変形すると, 入出力スペクトルの比になることがわかります.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &H\left(k\right) = \frac{Y\left(k\right)}{X\left(k\right)}
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                IIR フィルタも同様に, <span class="math-inline">$x\left(n\right)$</span>, <span class="math-inline">$y\left(n\right)$</span>,
+                <span class="math-inline">$b\left(m\right)$</span>, <span class="math-inline">$a\left(m\right)$</span> をそれぞれ離散フーリエ変換した関数を
+                <span class="math-inline">$X\left(k\right)$</span>, <span class="math-inline">$Y\left(k\right)$</span>,
+                <span class="math-inline">$B\left(k\right)$</span>, <span class="math-inline">$A\left(k\right)$</span> とすると,
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &y\left(n\right) = \sum_{m = 0}^{J}b\left(m\right)x\left(n - m\right) - \sum_{m = 1}^{I}a\left(m\right)y\left(n - m\right)
+                  \end{flalign}
+                $
+              </div>
+              <p>時間領域でのコンボリューション積分は周波数領域では乗算となるので,</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &Y\left(k\right) = B\left(k\right)X\left(k\right) - A\left(k\right)Y\left(k\right)
+                  \end{flalign}
+                $
+              </div>
+              <p>ここで, IIR フィルタの伝達関数を <span class="math-inline">$H\left(k\right)$</span> として, 式変形すると,</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &H\left(k\right) = \frac{Y\left(k\right)}{X\left(k\right)} = \frac{B\left(k\right)}{1 + A\left(k\right)}
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                FIR フィルタと異なり, フィードバックがあるので, その伝達関数は分数式として表現されます (<code>IIRFilterNode</code> の
+                <span class="math-inline">$a_{0}$</span> が <code>0</code> 以外の値でなければならない理由です).
+              </p>
+              <p>
+                ところで, 伝達関数をオーディオ信号処理に限らずに, 数学的に一般化すると (複素平面へ拡張すると), 離散フーリエ変換ではなく,
+                <b><span class="math-inline">$z$</span> 変換</b>したあるシステムへの入出力比の関数となります (例えば, RIR は, ある室内をシステムとみなして,
+                システムへの入力をインパルス音とした場合の出力ということに特化して説明できます).
+              </p>
+              <p><span class="math-inline">$z$</span> 変換での FIR フィルタ, IIR フィルタの伝達関数は以下のようになります.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &H\left(z\right) = \frac{Y\left(z\right)}{X\left(z\right)} \quad (FIR) \\
+                    &H\left(z\right) = \frac{B\left(z\right)}{1 + A\left(z\right)} \quad (IIR) \\
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                言い換えると, <span class="math-inline">$z$</span> 変換での伝達関数を, 物理的な音のスペクトル比に特化すると,
+                離散フーリエ変換での入出力比が伝達関数になると言えます.
+              </p>
+              <p>また, 音の伝達特性 (周波数特性) は, RIR 以外にも, 声道フィルタや HRTF (頭部伝達関数), スピーカーキャビネットの響きなどがあります.</p>
+            </article>
+          </section>
         </section>
       </section>
     </main>
