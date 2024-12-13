@@ -7433,6 +7433,193 @@ const renderFrequencyResponse = (svg, type) => {
   render();
 };
 
+const createIIRFilter = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const inputText = document.createElementNS(xmlns, 'text');
+
+  inputText.textContent = 'x(n)';
+
+  inputText.setAttribute('x', (padding - 16).toString(10));
+  inputText.setAttribute('y', (padding + 4).toString(10));
+  inputText.setAttribute('text-anchor', 'middle');
+  inputText.setAttribute('stroke', 'none');
+  inputText.setAttribute('fill', baseColor);
+  inputText.setAttribute('font-size', '16px');
+
+  const outputText = document.createElementNS(xmlns, 'text');
+
+  outputText.textContent = 'y(n)';
+
+  outputText.setAttribute('x', (padding + innerWidth + 16).toString(10));
+  outputText.setAttribute('y', (padding + 4).toString(10));
+  outputText.setAttribute('text-anchor', 'middle');
+  outputText.setAttribute('stroke', 'none');
+  outputText.setAttribute('fill', baseColor);
+  outputText.setAttribute('font-size', '16px');
+
+  const outputText0 = document.createElementNS(xmlns, 'text');
+
+  outputText0.textContent = `b(0)x(n)`;
+
+  outputText0.setAttribute('x', (padding + innerWidth / 2 - 40).toString(10));
+  outputText0.setAttribute('y', (padding - 24).toString(10));
+  outputText0.setAttribute('text-anchor', 'middle');
+  outputText0.setAttribute('stroke', 'none');
+  outputText0.setAttribute('fill', baseColor);
+  outputText0.setAttribute('font-size', '16px');
+
+  const bus0 = createBus(padding, padding, padding + innerWidth, padding);
+  const arrow0 = createBusArrow(padding + innerWidth - 8, padding, 'right');
+
+  const renderInput = () => {
+    const inputAdderX = padding + innerWidth / 2;
+    const inputX = padding + 128;
+
+    const adder0 = createAddElement(inputAdderX, padding);
+
+    const multiplier0 = createMultiplyElement(padding + innerWidth / 3, padding);
+
+    const multiplierText0 = document.createElementNS(xmlns, 'text');
+
+    multiplierText0.textContent = 'b(0)';
+
+    multiplierText0.setAttribute('x', (padding + innerWidth / 3 + 8).toString(10));
+    multiplierText0.setAttribute('y', (padding + 36).toString(10));
+    multiplierText0.setAttribute('text-anchor', 'middle');
+    multiplierText0.setAttribute('stroke', 'none');
+    multiplierText0.setAttribute('fill', baseColor);
+    multiplierText0.setAttribute('font-size', '16px');
+
+    for (let i = 1; i <= 2; i++) {
+      const g = document.createElementNS(xmlns, 'g');
+
+      const busDown = createBus(inputX, padding + 128 * (i - 1) + (i > 1 ? 12 : 0), inputX, padding + 128 * i);
+      const bus = createBus(inputX, padding + 128 * i, inputAdderX, padding + 128 * i);
+      const busUp = createBus(inputAdderX, padding + 128 * i, inputAdderX, padding + 128 * (i - 1) + 12);
+
+      const arrowDown = createBusArrow(inputX, padding + 128 * i - 24, 'down');
+      const arrow = createBusArrow(inputAdderX - 24, padding + 128 * i, 'right');
+
+      const delayElement = createDelayElement(inputX - 20, padding + 128 * i - 12);
+
+      const multiplier = createMultiplyElement(padding + innerWidth / 3, padding + 128 * i);
+
+      const multiplierText = document.createElementNS(xmlns, 'text');
+
+      multiplierText.textContent = `b(${i})`;
+
+      multiplierText.setAttribute('x', (padding + innerWidth / 3 + 8).toString(10));
+      multiplierText.setAttribute('y', (padding + 128 * i + 36).toString(10));
+      multiplierText.setAttribute('text-anchor', 'middle');
+      multiplierText.setAttribute('stroke', 'none');
+      multiplierText.setAttribute('fill', baseColor);
+      multiplierText.setAttribute('font-size', '16px');
+
+      const outputText = document.createElementNS(xmlns, 'text');
+
+      outputText.textContent = `b(${i})x(n - ${i})`;
+
+      outputText.setAttribute('x', (inputAdderX - 48).toString(10));
+      outputText.setAttribute('y', (padding + 128 * i - 24).toString(10));
+      outputText.setAttribute('text-anchor', 'middle');
+      outputText.setAttribute('stroke', 'none');
+      outputText.setAttribute('fill', baseColor);
+      outputText.setAttribute('font-size', '16px');
+
+      const adder = createAddElement(inputAdderX, padding + 128 * i);
+
+      g.appendChild(busDown);
+      g.appendChild(arrowDown);
+      g.appendChild(bus);
+      g.appendChild(arrow);
+      g.appendChild(busUp);
+      g.appendChild(delayElement);
+      g.appendChild(multiplier);
+      g.appendChild(multiplierText);
+      g.appendChild(outputText);
+      g.appendChild(adder);
+
+      svg.appendChild(g);
+    }
+
+    svg.appendChild(multiplier0);
+    svg.appendChild(multiplierText0);
+    svg.appendChild(outputText0);
+    svg.appendChild(adder0);
+  };
+
+  const renderFeedback = () => {
+    const feedbackAdderX = padding + innerWidth / 2 + 48;
+    const feedbackX = feedbackAdderX + 172;
+
+    const adder0 = createAddElement(feedbackAdderX, padding);
+
+    for (let i = 1; i <= 2; i++) {
+      const g = document.createElementNS(xmlns, 'g');
+
+      const busDown = createBus(feedbackX, padding + 128 * (i - 1) + (i > 1 ? 12 : 0), feedbackX, padding + 128 * i);
+      const bus = createBus(feedbackX, padding + 128 * i, feedbackAdderX, padding + 128 * i);
+      const busUp = createBus(feedbackAdderX, padding + 128 * i, feedbackAdderX, padding + 128 * (i - 1) + 12);
+
+      const arrowDown = createBusArrow(feedbackX, padding + 128 * i - 24, 'down');
+      const arrow = createBusArrow(feedbackAdderX + 24, padding + 128 * i, 'left');
+
+      const delayElement = createDelayElement(feedbackX - 20, padding + 128 * i - 12);
+
+      const multiplier = createMultiplyElement(feedbackX - 80, padding + 128 * i, 'left');
+
+      const multiplierText = document.createElementNS(xmlns, 'text');
+
+      multiplierText.textContent = `-a(${i})`;
+
+      multiplierText.setAttribute('x', (feedbackAdderX + 80).toString(10));
+      multiplierText.setAttribute('y', (padding + 128 * i + 36).toString(10));
+      multiplierText.setAttribute('text-anchor', 'middle');
+      multiplierText.setAttribute('stroke', 'none');
+      multiplierText.setAttribute('fill', baseColor);
+      multiplierText.setAttribute('font-size', '16px');
+
+      const outputText = document.createElementNS(xmlns, 'text');
+
+      outputText.textContent = `-a(${i})y(n - ${i})`;
+
+      outputText.setAttribute('x', (feedbackAdderX + 48).toString(10));
+      outputText.setAttribute('y', (padding + 128 * i - 24).toString(10));
+      outputText.setAttribute('text-anchor', 'middle');
+      outputText.setAttribute('stroke', 'none');
+      outputText.setAttribute('fill', baseColor);
+      outputText.setAttribute('font-size', '16px');
+
+      const adder = createAddElement(feedbackAdderX, padding + 128 * i);
+
+      g.appendChild(busDown);
+      g.appendChild(arrowDown);
+      g.appendChild(bus);
+      g.appendChild(arrow);
+      g.appendChild(busUp);
+      g.appendChild(delayElement);
+      g.appendChild(multiplier);
+      g.appendChild(multiplierText);
+      g.appendChild(outputText);
+      g.appendChild(adder);
+
+      svg.appendChild(g);
+    }
+
+    svg.appendChild(adder0);
+  };
+
+  svg.appendChild(bus0);
+  svg.appendChild(arrow0);
+  svg.appendChild(inputText);
+  svg.appendChild(outputText);
+
+  renderInput();
+  renderFeedback();
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -7539,3 +7726,5 @@ renderFrequencyResponse(document.getElementById('svg-figure-filter-response-high
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-peaking'), 'peaking');
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-notch'), 'notch');
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-allpass'), 'allpass');
+
+createIIRFilter(document.getElementById('svg-figure-iir-filter'));
