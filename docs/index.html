@@ -8757,6 +8757,28 @@ oscillator.start(0);</code></pre>
             </article>
           </section>
         </section>
+        <section id="section-effectors-equalizer">
+          <h3>イコライザー</h3>
+          <p>
+            フィルタの組み合わせのみでできるエフェクターとして, <b>イコライザー</b>があります. 元々は, アナログで録音されていた時代に,
+            振幅が小さくなってしまう周波数帯域を等しくする (equalize) 用途で使われていましたが, 現在では, 積極的に音を加工するエフェクターとして使われています.
+            楽器演奏や音楽制作ではもちろんですが, 音楽プレイヤーでもイコライザーは標準的に実装されており, 音楽を聴く場合にもバリエーションを与えています.
+          </p>
+          <figure>
+            <img src="images/macos-music-equalizer.png" alt="" width="433" height="219" loading="lazy" />
+            <figcaption>音楽プレイヤーのイコライザー (macOS Music アプリ イコライザー)</figcaption>
+          </figure>
+          <p>
+            イコライザーにはいくつか種類がありますが, 頻繁に使われるイコライザーとして, 低音域・中音域・高音域の 3 つの帯域を強調・減衰可能な
+            <b>3 バンドイコライザー</b> (ギターアンプなどでは, 超高音域が追加されているのも多くあります) と, 10
+            帯域ぐらいをきめ細かく強調・減衰可能な<b>グラフィックイコライザー</b>があります.
+          </p>
+          <p>
+            このセクションでは, <code>BiquadFilterNode</code> を組み合わせて, 3 バンドイコライザーとグラフィックイコライザーの実装を解説します. また,
+            イコライザーでは, 特定の周波数帯域を強調することを<b>ブースト</b>, 減衰させることを<b>カット</b>と呼ぶことが多いので,
+            これ以降はこれらの用語を使うことにします.
+          </p>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
