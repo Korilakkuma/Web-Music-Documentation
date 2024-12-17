@@ -3586,6 +3586,48 @@ const createAudioNode = (name, x, y, w = 300, h = 100) => {
   return g;
 };
 
+const createAudioNode2LineText = (name, sub, x, y, w = 300, h = 100) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const rect = document.createElementNS(xmlns, 'rect');
+  const text = document.createElementNS(xmlns, 'text');
+  const subText = document.createElementNS(xmlns, 'text');
+
+  rect.setAttribute('x', x.toString(10));
+  rect.setAttribute('y', y.toString(10));
+  rect.setAttribute('width', w.toString(10));
+  rect.setAttribute('height', h.toString(10));
+  rect.setAttribute('stroke', baseColor);
+  rect.setAttribute('stroke-width', lineWidth.toString(10));
+  rect.setAttribute('stroke-linecap', lineCap);
+  rect.setAttribute('stroke-linejoin', lineJoin);
+  rect.setAttribute('fill', white);
+
+  text.textContent = name;
+
+  text.setAttribute('x', (x + w / 2).toString(10));
+  text.setAttribute('y', (y + h / 2 - 4).toString(10));
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('stroke', 'none');
+  text.setAttribute('fill', baseColor);
+  text.setAttribute('font-size', '20px');
+
+  subText.textContent = sub;
+
+  subText.setAttribute('x', (x + w / 2).toString(10));
+  subText.setAttribute('y', (y + h / 2 + 24).toString(10));
+  subText.setAttribute('text-anchor', 'middle');
+  subText.setAttribute('stroke', 'none');
+  subText.setAttribute('fill', baseColor);
+  subText.setAttribute('font-size', '18px');
+
+  g.appendChild(rect);
+  g.appendChild(text);
+  g.appendChild(subText);
+
+  return g;
+};
+
 const createAudioParam = (name, x, y, w = 80, h = 40) => {
   const g = document.createElementNS(xmlns, 'g');
 
@@ -7620,6 +7662,358 @@ const createIIRFilter = (svg) => {
   renderFeedback();
 };
 
+const createNodeConnectionsFor3BandsEqualizer = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const lowshelfRect = createAudioNode2LineText('BiquadFilterNode', '(Bass: Low-Shelving)', 0, 200);
+  const peakingRect = createAudioNode2LineText('BiquadFilterNode', '(Middle: Peaking)', 0, 400);
+  const highshelfRect = createAudioNode2LineText('BiquadFilterNode', '(Treble: High-Shelving)', 0, 600);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 800);
+
+  const oscillatorNodeAndLowshelfPath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const lowshelfAndPeakingPath = createConnection(150 - 2, 300, 150 - 2, 400);
+  const peakingAndHighshelfPath = createConnection(150 - 2, 500, 150 - 2, 600);
+  const highshelfAndAudiodDestinationNodePath = createConnection(150 - 2, 700, 150 - 2, 800);
+
+  const oscillatorNodeAndLowshelfArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const lowshelfAndPeakingArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+  const peakingAndHighshelfArrow = createConnectionArrow(150 - 2, 600 - 14, 'down');
+  const highshelfAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 800 - 14, 'down');
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndLowshelfPath);
+  g.appendChild(oscillatorNodeAndLowshelfArrow);
+  g.appendChild(lowshelfRect);
+  g.appendChild(lowshelfAndPeakingPath);
+  g.appendChild(lowshelfAndPeakingArrow);
+  g.appendChild(peakingRect);
+  g.appendChild(peakingAndHighshelfPath);
+  g.appendChild(peakingAndHighshelfArrow);
+  g.appendChild(highshelfRect);
+  g.appendChild(highshelfAndAudiodDestinationNodePath);
+  g.appendChild(highshelfAndAudiodDestinationNodeArrow);
+  g.appendChild(audioDestinationNodeRect);
+
+  svg.appendChild(g);
+};
+
+const renderFrequencyResponse3BandsEqualizer = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const pathBass = document.createElementNS(xmlns, 'path');
+
+  pathBass.setAttribute('stroke', baseColor);
+  pathBass.setAttribute('fill', 'none');
+  pathBass.setAttribute('stroke-width', lineWidth.toString(10));
+  pathBass.setAttribute('stroke-linecap', lineCap);
+  pathBass.setAttribute('stroke-linejoin', lineJoin);
+
+  const pathMiddle = document.createElementNS(xmlns, 'path');
+
+  pathMiddle.setAttribute('stroke', waveColor);
+  pathMiddle.setAttribute('fill', 'none');
+  pathMiddle.setAttribute('stroke-width', lineWidth.toString(10));
+  pathMiddle.setAttribute('stroke-linecap', lineCap);
+  pathMiddle.setAttribute('stroke-linejoin', lineJoin);
+
+  const pathTreble = document.createElementNS(xmlns, 'path');
+
+  pathTreble.setAttribute('stroke', lightWaveColor);
+  pathTreble.setAttribute('fill', 'none');
+  pathTreble.setAttribute('stroke-width', lineWidth.toString(10));
+  pathTreble.setAttribute('stroke-linecap', lineCap);
+  pathTreble.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(pathBass);
+  svg.appendChild(pathMiddle);
+  svg.appendChild(pathTreble);
+
+  const frequencies = new Float32Array(8000);
+
+  const min = Math.log(10);
+  const max = Math.log(20000);
+  const diff = max - min;
+
+  for (let i = 0, len = frequencies.length; i < len; i++) {
+    const ratio = i / (len - 1);
+
+    frequencies[i] = Math.exp(diff * ratio + min);
+  }
+
+  for (let i = 0; i < 10; i++) {
+    const x = i * (innerWidth / 9) + padding;
+
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', x.toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', lineWidth.toString(10));
+    rect.setAttribute('height', innerHeight.toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rect);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${Math.trunc(frequencies[i < 9 ? (i + 1) * 800 : 7999])} Hz`;
+
+    text.setAttribute('x', x.toString(10));
+    text.setAttribute('y', (padding + innerHeight + 16).toString(10));
+
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    svg.appendChild(text);
+  }
+
+  const dBs = ['24', '18', '12', '6', '0', '-6', '-12', '-18', '-24'];
+
+  for (let i = 0; i < 9; i++) {
+    const y = i * (innerHeight / 8) + padding;
+
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', padding.toString(10));
+    rect.setAttribute('y', y.toString(10));
+    rect.setAttribute('width', innerWidth.toString(10));
+    rect.setAttribute('height', lineWidth.toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rect);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${dBs[i]} dB`;
+
+    text.setAttribute('x', (padding - 8).toString(10));
+    text.setAttribute('y', (y + 4).toString(10));
+
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    svg.appendChild(text);
+  }
+
+  const bass = new BiquadFilterNode(audiocontext, { type: 'lowshelf', frequency: 250 });
+  const middle = new BiquadFilterNode(audiocontext, { type: 'peaking', frequency: 1000, Q: Math.SQRT1_2 });
+  const treble = new BiquadFilterNode(audiocontext, { type: 'highshelf', frequency: 4000 });
+
+  const render = (filter) => {
+    const magResponses = new Float32Array(frequencies.length);
+    const phaseResponses = new Float32Array(frequencies.length);
+
+    filter.getFrequencyResponse(frequencies, magResponses, phaseResponses);
+
+    let path = null;
+
+    switch (filter.type) {
+      case 'lowshelf': {
+        path = pathBass;
+        break;
+      }
+
+      case 'peaking': {
+        path = pathMiddle;
+        break;
+      }
+
+      case 'highshelf': {
+        path = pathTreble;
+        break;
+      }
+    }
+
+    if (path === null) {
+      return;
+    }
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let i = 0, len = frequencies.length; i < len; i++) {
+      const f = frequencies[i];
+      const x = (Math.log10(f / 20) / Math.log10(1000)) * innerWidth + padding - 3;
+      const dB = 20 * Math.log10(magResponses[i]);
+      const y = ((-1 * dB) / 48) * innerHeight + innerHeight / 2 + padding;
+
+      if (x < padding) {
+        continue;
+      }
+
+      if (y > padding + innerHeight) {
+        continue;
+      }
+
+      if (d === '') {
+        d += `M${x} ${y} `;
+      } else {
+        d += `L${x} ${y} `;
+      }
+    }
+
+    path.setAttribute('d', d);
+  };
+
+  document.getElementById('range-3-bands-equalizer-bass-gain').addEventListener('input', (event) => {
+    bass.gain.value = event.currentTarget.valueAsNumber;
+
+    document.getElementById('print-3-bands-equalizer-bass-gain').textContent = `${bass.gain.value} dB`;
+
+    render(bass);
+  });
+
+  document.getElementById('range-3-bands-equalizer-middle-gain').addEventListener('input', (event) => {
+    middle.gain.value = event.currentTarget.valueAsNumber;
+
+    document.getElementById('print-3-bands-equalizer-middle-gain').textContent = `${middle.gain.value} dB`;
+
+    render(middle);
+  });
+
+  document.getElementById('range-3-bands-equalizer-treble-gain').addEventListener('input', (event) => {
+    treble.gain.value = event.currentTarget.valueAsNumber;
+
+    document.getElementById('print-3-bands-equalizer-treble-gain').textContent = `${treble.gain.value} dB`;
+
+    render(treble);
+  });
+
+  render(bass);
+  render(middle);
+  render(treble);
+};
+
+const equalizer3bands = () => {
+  let frequency = 440;
+
+  let oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency });
+
+  let isStop = true;
+
+  const bass = new BiquadFilterNode(audiocontext, { type: 'lowshelf', frequency: 250 });
+  const middle = new BiquadFilterNode(audiocontext, { type: 'peaking', frequency: 1000, Q: Math.SQRT1_2 });
+  const treble = new BiquadFilterNode(audiocontext, { type: 'highshelf', frequency: 4000 });
+
+  const buttonElement = document.getElementById('button-3-bands-equalizer');
+  const checkboxElement = document.getElementById('checkbox-3-bands-equalizer');
+
+  const rangeBassElement = document.getElementById('range-3-bands-equalizer-bass');
+  const rangeMiddleElement = document.getElementById('range-3-bands-equalizer-middle');
+  const rangeTrebleElement = document.getElementById('range-3-bands-equalizer-treble');
+
+  const spanPrintCheckedElement = document.getElementById('print-checked-3-bands-equalizer');
+  const spanPrintBassElement = document.getElementById('print-3-bands-equalizer-bass-value');
+  const spanPrintMiddleElement = document.getElementById('print-3-bands-equalizer-middle-value');
+  const spanPrintTrebleElement = document.getElementById('print-3-bands-equalizer-treble-value');
+
+  const rangeOscillatorFrequencyElement = document.getElementById('range-3-bands-equalizer-oscillator-frequency');
+  const spanPrintOscillatorFrequencyElement = document.getElementById('print-3-bands-equalizer-oscillator-frequency-value');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (!isStop) {
+      return;
+    }
+
+    if (checkboxElement.checked) {
+      oscillator.connect(bass);
+      bass.connect(middle);
+      middle.connect(treble);
+      treble.connect(audiocontext.destination);
+    } else {
+      oscillator.connect(audiocontext.destination);
+    }
+
+    oscillator.start(0);
+
+    isStop = false;
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (isStop) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency });
+
+    isStop = true;
+
+    buttonElement.textContent = 'start';
+  };
+
+  checkboxElement.addEventListener('click', () => {
+    oscillator.disconnect(0);
+
+    if (checkboxElement.checked) {
+      oscillator.connect(bass);
+      bass.connect(middle);
+      middle.connect(treble);
+      treble.connect(audiocontext.destination);
+
+      spanPrintCheckedElement.textContent = 'ON';
+    } else {
+      oscillator.connect(audiocontext.destination);
+
+      spanPrintCheckedElement.textContent = 'OFF';
+    }
+  });
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeOscillatorFrequencyElement.addEventListener('input', (event) => {
+    frequency = event.currentTarget.valueAsNumber;
+
+    if (oscillator) {
+      oscillator.frequency.value = frequency;
+    }
+
+    spanPrintOscillatorFrequencyElement.textContent = `${frequency} Hz`;
+  });
+
+  rangeBassElement.addEventListener('input', (event) => {
+    const gain = event.currentTarget.valueAsNumber;
+
+    bass.gain.value = gain;
+
+    spanPrintBassElement.textContent = `${gain} dB`;
+  });
+
+  rangeMiddleElement.addEventListener('input', (event) => {
+    const gain = event.currentTarget.valueAsNumber;
+
+    middle.gain.value = gain;
+
+    spanPrintMiddleElement.textContent = `${gain} dB`;
+  });
+
+  rangeTrebleElement.addEventListener('input', (event) => {
+    const gain = event.currentTarget.valueAsNumber;
+
+    treble.gain.value = gain;
+
+    spanPrintTrebleElement.textContent = `${gain} dB`;
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -7728,3 +8122,9 @@ renderFrequencyResponse(document.getElementById('svg-figure-filter-response-notc
 renderFrequencyResponse(document.getElementById('svg-figure-filter-response-allpass'), 'allpass');
 
 createIIRFilter(document.getElementById('svg-figure-iir-filter'));
+
+createNodeConnectionsFor3BandsEqualizer(document.getElementById('svg-figure-node-connections-for-3-bands-equalizer'));
+
+renderFrequencyResponse3BandsEqualizer(document.getElementById('svg-figure-filter-response-3-bands-equalizer'));
+
+equalizer3bands();

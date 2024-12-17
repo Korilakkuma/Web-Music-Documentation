@@ -8760,9 +8760,10 @@ oscillator.start(0);</code></pre>
         <section id="section-effectors-equalizer">
           <h3>イコライザー</h3>
           <p>
-            フィルタの組み合わせのみでできるエフェクターとして, <b>イコライザー</b>があります. 元々は, アナログで録音されていた時代に,
-            振幅が小さくなってしまう周波数帯域を等しくする (equalize) 用途で使われていましたが, 現在では, 積極的に音を加工するエフェクターとして使われています.
-            楽器演奏や音楽制作ではもちろんですが, 音楽プレイヤーでもイコライザーは標準的に実装されており, 音楽を聴く場合にもバリエーションを与えています.
+            フィルタの組み合わせのみでできるエフェクターとして, <b>イコライザー</b>があります. 元々は, アナログ方式で録音されていた時代に,
+            振幅が大きくなってしまう低音域や振幅が小さくなってしまう高音域を等しくする (equalize) 用途で使われていましたが, 現在では,
+            積極的に音を加工するエフェクターとして使われています. 楽器演奏や音楽制作ではもちろんですが, 音楽プレイヤーでもイコライザーは標準的に実装されており,
+            音楽を聴く場合にもバリエーションを与えています.
           </p>
           <figure>
             <img src="images/macos-music-equalizer.png" alt="" width="433" height="219" loading="lazy" />
@@ -8770,7 +8771,7 @@ oscillator.start(0);</code></pre>
           </figure>
           <p>
             イコライザーにはいくつか種類がありますが, 頻繁に使われるイコライザーとして, 低音域・中音域・高音域の 3 つの帯域を強調・減衰可能な
-            <b>3 バンドイコライザー</b> (ギターアンプなどでは, 超高音域が追加されているのも多くあります) と, 10
+            <b>3 バンドイコライザー</b> (ギターアンプなどでは, 超高音域が追加されているイコライザーも多くあります) と, 10
             帯域ぐらいをきめ細かく強調・減衰可能な<b>グラフィックイコライザー</b>があります.
           </p>
           <p>
@@ -8778,6 +8779,242 @@ oscillator.start(0);</code></pre>
             イコライザーでは, 特定の周波数帯域を強調することを<b>ブースト</b>, 減衰させることを<b>カット</b>と呼ぶことが多いので,
             これ以降はこれらの用語を使うことにします.
           </p>
+          <section id="section-effectors-3-bands-equalizer">
+            <h4>3 バンドイコライザー</h4>
+            <p>
+              <b>3 バンドイコライザー</b>は, 低音域・中音域・高音域の 3 つの帯域をブースト・カット可能なイコライザーですが, 実装としては, Low-Shelving Filter,
+              Peaking Filter, High-Shelving Filter を使うだけで実装できます. つまり, 3 つの帯域を制御する <code>BiquadFilterNode</code> インスタンスを生成して,
+              接続することで実装可能です. このとき, それぞれのフィルタの
+              <span class="math-inline">$f_{\mathrm{computed}}$</span> は厳密に決まっているわけではありませんが, 以下のような値が設定されることが多いようです.
+            </p>
+            <dl>
+              <dt>Low-Shelving Filter (低音域)</dt>
+              <dd><code>250 Hz</code> ~ <code>500 Hz</code></dd>
+              <dt>Peaking Filter (中音域)</dt>
+              <dd><code>1000 Hz</code> ~ <code>2000 Hz</code></dd>
+              <dt>High-Shelving Filter (高音域)</dt>
+              <dd><code>4000 Hz</code> ~ <code>8000 Hz</code></dd>
+            </dl>
+            <p>
+              また, Peaking Filter のみ, <code>Q</code> プロパティの値を設定可能ですが, これも厳密に決まっているわけではありませんが, コード例としては
+              <span class="math-inline">$\frac{1}{\sqrt{2}}$</span> を設定しています.
+            </p>
+            <figure>
+              <svg id="svg-figure-node-connections-for-3-bands-equalizer" width="320" height="920" />
+              <figcaption>3 バンドイコライザーのノード接続図</figcaption>
+            </figure>
+            <p>
+              現実世界のイコライザーでは, それぞれ 3 つのフィルタの <code>gain</code> プロパティの値を変更して, ブースト・カットします. また, それらのパラメータ
+              (<code>gain</code> プロパティの値) は, 低音域は <b>Bass</b>, 中音域は <b>Middle</b>, 高音域は
+              <b>Treble</b> として制御可能になっているイコライザーがほとんどです (ちなみに, 超高音域がある場合, <b>Presence</b> となっています).
+            </p>
+            <figure>
+              <div class="app-headline">
+                <label for="range-3-bands-equalizer-bass-gain">Bass</label>
+                <input type="range" id="range-3-bands-equalizer-bass-gain" value="0" min="-24" max="24" step="1" />
+                <span id="print-3-bands-equalizer-bass-gain">0 dB</span>
+                <label for="range-3-bands-equalizer-middle-gain">Middle</label>
+                <input type="range" id="range-3-bands-equalizer-middle-gain" value="0" min="-24" max="24" step="1" />
+                <span id="print-3-bands-equalizer-middle-gain">0 dB</span>
+                <label for="range-3-bands-equalizer-treble-gain">Treble</label>
+                <input type="range" id="range-3-bands-equalizer-treble-gain" value="0" min="-24" max="24" step="1" />
+                <span id="print-3-bands-equalizer-treble-gain">0 dB</span>
+              </div>
+              <svg id="svg-figure-filter-response-3-bands-equalizer" width="600" height="300" />
+              <figcaption>3 バンドイコライザーのフィルタ特性</figcaption>
+            </figure>
+            <p>
+              以下は, 上記のフィルタ特性となる 3 バンドイコライザーを実際のアプリケーションを想定して, ユーザーインタラクティブに, 3
+              つの周波数帯域をブースト・カットできるようにしたコード例です. 原音を直接変化させるインサートエフェクトなので, 本質的な実装は, 3 つの帯域を制御する
+              <code>BiquadFilterNode</code> インスタンスの接続処理です. 現実世界の 3 バンドイコライザーでは, ユーザーが操作できるパラメータではありませんが,
+              <span class="math-inline">$f_{\mathrm{computed}}$</span> の値や Peaking Filter の <code>Q</code> プロパティの値なども変更してみて,
+              好みの値を探索してみるのもよいと思います.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-3-bands-equalizer&quot; checked /&gt;
+  &lt;span id=&quot;print-checked-3-bands-equalizer&quot;&gt;ON&lt;/span&gt;
+&lt;/label&gt;
+&lt;label&gt;
+  &lt;span&gt;OscillatorNode frequency&lt;/span&gt;
+  &lt;input type="range" id="range-3-bands-equalizer-oscillator-frequency" value="440" min="27.5" max="4000" step="0.5" /&gt;
+  &lt;span id="print-3-bands-equalizer-oscillator-frequency-value"&gt;440 Hz&lt;/span&gt;
+&lt;/label&gt;
+&lt;label for=&quot;range-3-bands-equalizer-bass&quot;&gt;Bass&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-3-bands-equalizer-bass&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-3-bands-equalizer-bass-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-3-bands-equalizer-middle&quot;&gt;Middle&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-3-bands-equalizer-middle&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-3-bands-equalizer-middle-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-3-bands-equalizer-treble&quot;&gt;Treble&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-3-bands-equalizer-treble&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-3-bands-equalizer-treble-value&quot;&gt;0 dB&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let frequency = 440;
+
+let oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency });
+
+let isStop = true;
+
+const bass   = new BiquadFilterNode(context, { type: &apos;lowshelf&apos;, frequency: 250 });
+const middle = new BiquadFilterNode(context, { type: &apos;peaking&apos;, frequency: 1000, Q: Math.SQRT1_2 });
+const treble = new BiquadFilterNode(context, { type: &apos;highshelf&apos;, frequency: 4000 });
+
+const buttonElement   = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+
+const rangeBassElement   = document.getElementById(&apos;range-3-bands-equalizer-bass&apos;);
+const rangeMiddleElement = document.getElementById(&apos;range-3-bands-equalizer-middle&apos;);
+const rangeTrebleElement = document.getElementById(&apos;range-3-bands-equalizer-treble&apos;);
+
+const spanPrintCheckedElement = document.getElementById(&apos;print-checked-3-bands-equalizer&apos;);
+const spanPrintBassElement    = document.getElementById(&apos;print-3-bands-equalizer-bass-value&apos;);
+const spanPrintMiddleElement  = document.getElementById(&apos;print-3-bands-equalizer-middle-value&apos;);
+const spanPrintTrebleElement  = document.getElementById(&apos;print-3-bands-equalizer-treble-value&apos;);
+
+const rangeOscillatorFrequencyElement     = document.getElementById(&apos;range-3-bands-equalizer-oscillator-frequency&apos;);
+const spanPrintOscillatorFrequencyElement = document.getElementById(&apos;print-3-bands-equalizer-oscillator-frequency-value&apos;);
+
+checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
+  oscillator.disconnect(0);
+
+  if (checkboxElement.checked) {
+    // OscillatorNode (Input) -&gt; Equalizer (Low-Shelving Filter -&gt; Peaking Filter -&gt; High-Shelving Filter) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(bass);
+    bass.connect(middle);
+    middle.connect(treble);
+    treble.connect(context.destination);
+
+    spanPrintCheckedElement.textContent = &apos;ON&apos;
+  } else {
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(context.destination);
+
+    spanPrintCheckedElement.textContent = &apos;OFF&apos;
+  }
+});
+
+buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+  if (!isStop) {
+    return;
+  }
+
+  if (checkboxElement.checked) {
+    // Connect nodes (Equalizer ON)
+    // OscillatorNode (Input) -&gt; Equalizer (Low-Shelving Filter -&gt; Peaking Filter -&gt; High-Shelving Filter) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(bass);
+    bass.connect(middle);
+    middle.connect(treble);
+    treble.connect(context.destination);
+  } else {
+    // Connect nodes (Equalizer OFF)
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(context.destination);
+  }
+
+  // Start oscillator
+  oscillator.start(0);
+
+  isStop = false;
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (isStop) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency });
+
+  isStop = true;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeOscillatorFrequencyElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  frequency = event.currentTarget.valueAsNumber;
+
+  if (oscillator) {
+    oscillator.frequency.value = frequency
+  }
+
+  spanPrintOscillatorFrequencyElement.textContent = `${frequency} Hz`;
+});
+
+rangeBassElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  const gain = event.currentTarget.valueAsNumber;
+
+  bass.gain.value = gain;
+
+  spanPrintBassElement.textContent = `${gain} dB`;
+});
+
+rangeMiddleElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  const gain = event.currentTarget.valueAsNumber;
+
+  middle.gain.value = gain;
+
+  spanPrintMiddleElement.textContent = `${gain} dB`;
+});
+
+rangeTrebleElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  const gain = event.currentTarget.valueAsNumber;
+
+  treble.gain.value = gain;
+
+  spanPrintTrebleElement.textContent = `${gain} dB`;
+});</code></pre>
+            <div class="app-container app-3-bands-equalizer">
+              <div class="app-headline">
+                <button type="button" id="button-3-bands-equalizer">start</button>
+                <label>
+                  <input type="checkbox" id="checkbox-3-bands-equalizer" checked />
+                  <span id="print-checked-3-bands-equalizer">ON</span>
+                </label>
+                <label>
+                  <span>OscillatorNode frequency</span>
+                  <input type="range" id="range-3-bands-equalizer-oscillator-frequency" value="440" min="27.5" max="4000" step="0.5" />
+                  <span id="print-3-bands-equalizer-oscillator-frequency-value">440 Hz</span>
+                </label>
+              </div>
+              <div>
+                <dl>
+                  <div>
+                    <dt><label for="range-3-bands-equalizer-bass">Bass</label></dt>
+                    <dd>
+                      <input type="range" id="range-3-bands-equalizer-bass" value="0" min="-24" max="24" step="1" />
+                      <span id="print-3-bands-equalizer-bass-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-3-bands-equalizer-middle">Middle</label></dt>
+                    <dd>
+                      <input type="range" id="range-3-bands-equalizer-middle" value="0" min="-24" max="24" step="1" />
+                      <span id="print-3-bands-equalizer-middle-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-3-bands-equalizer-treble">Treble</label></dt>
+                    <dd>
+                      <input type="range" id="range-3-bands-equalizer-treble" value="0" min="-24" max="24" step="1" />
+                      <span id="print-3-bands-equalizer-treble-value">0 dB</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
     </main>
