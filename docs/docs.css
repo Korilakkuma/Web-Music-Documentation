@@ -350,7 +350,8 @@ select {
 .app-phaser,
 .app-tremolo,
 .app-ringmodulator,
-.app-3-bands-equalizer {
+.app-3-bands-equalizer,
+.app-graphic-equalizer {
   margin: 24px 0;
 }
 
@@ -359,10 +360,22 @@ select {
 .app-phaser dl dd,
 .app-tremolo dl dd,
 .app-ringmodulator dl dd,
-.app-3-bands-equalizer dl dd {
+.app-3-bands-equalizer dl dd,
+.app-graphic-equalizer dl dd {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.grid-3x3-layout {
+  display: grid;
+  grid-template-rows: repeat(3, auto);
+  grid-template-columns: repeat(3, auto);
+}
+
+.grid-3x3-layout label {
+  display: inline-block;
+  min-width: 64px;
 }
 
 span[id*="print-"] {
