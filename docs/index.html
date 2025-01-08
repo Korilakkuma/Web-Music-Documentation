@@ -9015,6 +9015,310 @@ rangeTrebleElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               </div>
             </div>
           </section>
+          <section id="section-effectors-graphic-equalizer">
+            <h4>グラフィックイコライザー</h4>
+            <p>
+              <b>グラフィックイコライザー</b>は, 10 帯域ほどの周波数成分をブースト・カットできるイコライザーですが, 実装としては, Peaking Filter
+              を制御したい周波数帯域の数だけ接続するだけです. <span class="math-inline">$f_{\mathrm{computed}}$</span> を制御したい周波数帯域に設定します.
+            </p>
+            <figure>
+              <svg id="svg-figure-node-connections-for-graphic-equalizer" width="720" height="1020" />
+              <figcaption>グラフィックイコライザーのノード接続図</figcaption>
+            </figure>
+            <figure>
+              <div class="app-headline grid-3x3-layout">
+                <div>
+                  <label for="range-graphic-equalizer-32Hz-gain">32 Hz</label>
+                  <input type="range" id="range-graphic-equalizer-32Hz-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-graphic-equalizer-32Hz-gain">0 dB</span>
+                </div>
+                <div>
+                  <label for="range-graphic-equalizer-62Hz-gain">62.5 Hz</label>
+                  <input type="range" id="range-graphic-equalizer-62Hz-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-graphic-equalizer-62Hz-gain">0 dB</span>
+                </div>
+                <div>
+                  <label for="range-graphic-equalizer-125Hz-gain">125 Hz</label>
+                  <input type="range" id="range-graphic-equalizer-125Hz-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-graphic-equalizer-125Hz-gain">0 dB</span>
+                </div>
+                <div>
+                  <label for="range-graphic-equalizer-250Hz-gain">250 Hz</label>
+                  <input type="range" id="range-graphic-equalizer-250Hz-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-graphic-equalizer-250Hz-gain">0 dB</span>
+                </div>
+                <div>
+                  <label for="range-graphic-equalizer-500Hz-gain">500 Hz</label>
+                  <input type="range" id="range-graphic-equalizer-500Hz-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-graphic-equalizer-500Hz-gain">0 dB</span>
+                </div>
+                <div>
+                  <label for="range-graphic-equalizer-1000Hz-gain">1000 Hz</label>
+                  <input type="range" id="range-graphic-equalizer-1000Hz-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-graphic-equalizer-1000Hz-gain">0 dB</span>
+                </div>
+                <div>
+                  <label for="range-graphic-equalizer-2000Hz-gain">2000 Hz</label>
+                  <input type="range" id="range-graphic-equalizer-2000Hz-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-graphic-equalizer-2000Hz-gain">0 dB</span>
+                </div>
+                <div>
+                  <label for="range-graphic-equalizer-4000Hz-gain">4000 Hz</label>
+                  <input type="range" id="range-graphic-equalizer-4000Hz-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-graphic-equalizer-4000Hz-gain">0 dB</span>
+                </div>
+                <div>
+                  <label for="range-graphic-equalizer-8000Hz-gain">8000 Hz</label>
+                  <input type="range" id="range-graphic-equalizer-8000Hz-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-graphic-equalizer-8000Hz-gain">0 dB</span>
+                </div>
+                <div>
+                  <label for="range-graphic-equalizer-16000Hz-gain">1.6 kHz</label>
+                  <input type="range" id="range-graphic-equalizer-16000Hz-gain" value="0" min="-24" max="24" step="1" />
+                  <span id="print-graphic-equalizer-16000Hz-gain">0 dB</span>
+                </div>
+              </div>
+              <svg id="svg-figure-filter-response-graphic-equalizer" width="600" height="300" />
+              <figcaption>グラフィックイコライザーのフィルタ特性</figcaption>
+            </figure>
+            <p>
+              以下は, 上記のフィルタ特性となるグラフィックイコライザーを実際のアプリケーションを想定して, ユーザーインタラクティブに,
+              各周波数帯域をブースト・カットできるようにしたコード例です.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-graphic-equalizer&quot; checked /&gt;
+  &lt;span id=&quot;print-checked-graphic-equalizer&quot;&gt;ON&lt;/span&gt;
+&lt;/label&gt;
+&lt;label&gt;
+  &lt;span&gt;OscillatorNode frequency&lt;/span&gt;
+  &lt;input type="range" id="range-graphic-equalizer-oscillator-frequency" value="440" min="27.5" max="4000" step="0.5" /&gt;
+  &lt;span id="print-graphic-equalizer-oscillator-frequency-value"&gt;440 Hz&lt;/span&gt;
+&lt;/label&gt;
+&lt;label for=&quot;range-graphic-equalizer-32Hz&quot;&gt;32 Hz&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-graphic-equalizer-32Hz&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-graphic-equalizer-32Hz-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-graphic-equalizer-62Hz&quot;&gt;62.5 Hz&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-graphic-equalizer-62Hz&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-graphic-equalizer-62Hz-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-graphic-equalizer-125Hz&quot;&gt;125 Hz&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-graphic-equalizer-125Hz&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-graphic-equalizer-125Hz-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-graphic-equalizer-250Hz&quot;&gt;250 Hz&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-graphic-equalizer-250Hz&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-graphic-equalizer-250Hz-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-graphic-equalizer-500Hz&quot;&gt;500 Hz&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-graphic-equalizer-500Hz&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-graphic-equalizer-500Hz-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-graphic-equalizer-1000Hz&quot;&gt;1000 Hz&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-graphic-equalizer-1000Hz&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-graphic-equalizer-1000Hz-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-graphic-equalizer-2000Hz&quot;&gt;2000 Hz&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-graphic-equalizer-2000Hz&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-graphic-equalizer-2000Hz-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-graphic-equalizer-4000Hz&quot;&gt;4000 Hz&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-graphic-equalizer-4000Hz&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-graphic-equalizer-4000Hz-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-graphic-equalizer-8000Hz&quot;&gt;8000 Hz&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-graphic-equalizer-8000Hz&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-graphic-equalizer-8000Hz-value&quot;&gt;0 dB&lt;/span&gt;
+&lt;label for=&quot;range-graphic-equalizer-16000Hz&quot;&gt;1.6 kHz&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-graphic-equalizer-16000Hz&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-graphic-equalizer-16000Hz-value&quot;&gt;0 dB&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let frequency = 440;
+
+let oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency });
+
+let isStop = true;
+
+const buttonElement   = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+
+const spanPrintCheckedElement = document.getElementById(&apos;print-checked-graphic-equalizer&apos;);
+
+const rangeOscillatorFrequencyElement     = document.getElementById(&apos;range-graphic-equalizer-oscillator-frequency&apos;);
+const spanPrintOscillatorFrequencyElement = document.getElementById(&apos;print-graphic-equalizer-oscillator-frequency-value&apos;);
+
+const centerFrequencies = [32, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+
+const peakingFilters = centerFrequencies.map((frequency) =&gt; {
+  return new BiquadFilterNode(context, { type: &apos;peaking&apos;, frequency, Q: Math.SQRT1_2 });
+});
+
+centerFrequencies.forEach((frequency, index) =&gt; {
+  document.getElementById(`range-graphic-equalizer-${Math.trunc(frequency)}Hz`).addEventListener(&apos;input&apos;, (event) =&gt; {
+    const peakingFilter = peakingFilters[index];
+
+    peakingFilter.gain.value = event.currentTarget.valueAsNumber;
+
+    document.getElementById(`print-graphic-equalizer-${Math.trunc(frequency)}Hz-value`).textContent = `${peakingFilter.gain.value} dB`;
+  });
+});
+
+checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
+  oscillator.disconnect(0);
+
+  if (checkboxElement.checked) {
+    oscillator.connect(peakingFilters[0]);
+
+    for (let i = 0, len = peakingFilters.length - 1; i &lt; len; i++) {
+      peakingFilters[i].connect(peakingFilters[i + 1]);
+    }
+
+    peakingFilters[peakingFilters.length - 1].connect(context.destination);
+
+    spanPrintCheckedElement.textContent = &apos;ON&apos;;
+  } else {
+    oscillator.connect(context.destination);
+
+    spanPrintCheckedElement.textContent = &apos;OFF&apos;;
+  }
+});
+
+buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+  if (!isStop) {
+    return;
+  }
+
+  if (checkboxElement.checked) {
+    oscillator.connect(peakingFilters[0]);
+
+    for (let i = 0, len = peakingFilters.length - 1; i &lt; len; i++) {
+      peakingFilters[i].connect(peakingFilters[i + 1]);
+    }
+
+    peakingFilters[peakingFilters.length - 1].connect(context.destination);
+  } else {
+    oscillator.connect(context.destination);
+  }
+
+  oscillator.start(0);
+
+  isStop = false;
+
+  buttonElement.textContent = &apos;stop&apos;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (isStop) {
+    return;
+  }
+
+  oscillator.stop(0);
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency });
+
+  isStop = true;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeOscillatorFrequencyElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  frequency = event.currentTarget.valueAsNumber;
+
+  if (oscillator) {
+    oscillator.frequency.value = frequency;
+  }
+
+  spanPrintOscillatorFrequencyElement.textContent = `${frequency} Hz`;
+});</code></pre>
+            <div class="app-container app-graphic-equalizer">
+              <div class="app-headline">
+                <button type="button" id="button-graphic-equalizer">start</button>
+                <label>
+                  <input type="checkbox" id="checkbox-graphic-equalizer" checked />
+                  <span id="print-checked-graphic-equalizer">ON</span>
+                </label>
+                <label>
+                  <span>OscillatorNode frequency</span>
+                  <input type="range" id="range-graphic-equalizer-oscillator-frequency" value="440" min="27.5" max="4000" step="0.5" />
+                  <span id="print-graphic-equalizer-oscillator-frequency-value">440 Hz</span>
+                </label>
+              </div>
+              <div>
+                <dl class="grid-3x3-layout">
+                  <div>
+                    <dt><label for="range-graphic-equalizer-32Hz">32 Hz</label></dt>
+                    <dd>
+                      <input type="range" id="range-graphic-equalizer-32Hz" value="0" min="-24" max="24" step="1" />
+                      <span id="print-graphic-equalizer-32Hz-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-graphic-equalizer-62Hz">62.5 Hz</label></dt>
+                    <dd>
+                      <input type="range" id="range-graphic-equalizer-62Hz" value="0" min="-24" max="24" step="1" />
+                      <span id="print-graphic-equalizer-62Hz-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-graphic-equalizer-125Hz">125 Hz</label></dt>
+                    <dd>
+                      <input type="range" id="range-graphic-equalizer-125Hz" value="0" min="-24" max="24" step="1" />
+                      <span id="print-graphic-equalizer-125Hz-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-graphic-equalizer-250Hz">250 Hz</label></dt>
+                    <dd>
+                      <input type="range" id="range-graphic-equalizer-250Hz" value="0" min="-24" max="24" step="1" />
+                      <span id="print-graphic-equalizer-250Hz-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-graphic-equalizer-500Hz">500 Hz</label></dt>
+                    <dd>
+                      <input type="range" id="range-graphic-equalizer-500Hz" value="0" min="-24" max="24" step="1" />
+                      <span id="print-graphic-equalizer-500Hz-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-graphic-equalizer-1000Hz">1000 Hz</label></dt>
+                    <dd>
+                      <input type="range" id="range-graphic-equalizer-1000Hz" value="0" min="-24" max="24" step="1" />
+                      <span id="print-graphic-equalizer-1000Hz-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-graphic-equalizer-2000Hz">2000 Hz</label></dt>
+                    <dd>
+                      <input type="range" id="range-graphic-equalizer-2000Hz" value="0" min="-24" max="24" step="1" />
+                      <span id="print-graphic-equalizer-2000Hz-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-graphic-equalizer-4000Hz">4000 Hz</label></dt>
+                    <dd>
+                      <input type="range" id="range-graphic-equalizer-4000Hz" value="0" min="-24" max="24" step="1" />
+                      <span id="print-graphic-equalizer-4000Hz-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-graphic-equalizer-8000Hz">8000 Hz</label></dt>
+                    <dd>
+                      <input type="range" id="range-graphic-equalizer-8000Hz" value="0" min="-24" max="24" step="1" />
+                      <span id="print-graphic-equalizer-8000Hz-value">0 dB</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-graphic-equalizer-16000Hz">1.6 kHz</label></dt>
+                    <dd>
+                      <input type="range" id="range-graphic-equalizer-16000Hz" value="0" min="-24" max="24" step="1" />
+                      <span id="print-graphic-equalizer-16000Hz-value">0 dB</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
     </main>
