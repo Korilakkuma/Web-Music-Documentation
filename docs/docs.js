@@ -8344,6 +8344,180 @@ const equalizerGraphic = () => {
   });
 };
 
+const renderWahPrinciple = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const buttonElement = document.getElementById('button-wah-principle-animation');
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  const frequencies = new Float32Array(8000);
+
+  const min = Math.log(10);
+  const max = Math.log(20000);
+  const diff = max - min;
+
+  for (let i = 0, len = frequencies.length; i < len; i++) {
+    const ratio = i / (len - 1);
+
+    frequencies[i] = Math.exp(diff * ratio + min);
+  }
+
+  for (let i = 0; i < 10; i++) {
+    const x = i * (innerWidth / 9) + padding;
+
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', x.toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', lineWidth.toString(10));
+    rect.setAttribute('height', innerHeight.toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rect);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${Math.trunc(frequencies[i < 9 ? (i + 1) * 800 : 7999])} Hz`;
+
+    text.setAttribute('x', x.toString(10));
+    text.setAttribute('y', (padding + innerHeight + 16).toString(10));
+
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    svg.appendChild(text);
+  }
+
+  const dBs = ['24', '18', '12', '6', '0', '-6', '-12', '-18', '-24'];
+
+  for (let i = 0; i < 9; i++) {
+    const y = i * (innerHeight / 8) + padding;
+
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', padding.toString(10));
+    rect.setAttribute('y', y.toString(10));
+    rect.setAttribute('width', innerWidth.toString(10));
+    rect.setAttribute('height', lineWidth.toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rect);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${dBs[i]} dB`;
+
+    text.setAttribute('x', (padding - 8).toString(10));
+    text.setAttribute('y', (y + 4).toString(10));
+
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    svg.appendChild(text);
+  }
+
+  const filter = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: 250, Q: 15 });
+
+  let timerId = null;
+
+  let isPlus = true;
+
+  const render = (isLoad) => {
+    const magResponses = new Float32Array(frequencies.length);
+    const phaseResponses = new Float32Array(frequencies.length);
+
+    filter.getFrequencyResponse(frequencies, magResponses, phaseResponses);
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let i = 0, len = frequencies.length; i < len; i++) {
+      const f = frequencies[i];
+      const x = (Math.log10(f / 20) / Math.log10(1000)) * innerWidth + padding - 3;
+      const dB = 20 * Math.log10(magResponses[i]);
+      const y = ((-1 * dB) / 48) * innerHeight + innerHeight / 2 + padding;
+
+      if (x < padding) {
+        continue;
+      }
+
+      if (y > padding + innerHeight) {
+        continue;
+      }
+
+      if (d === '') {
+        d += `M${x} ${y} `;
+      } else {
+        d += `L${x} ${y} `;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    if (isLoad) {
+      return;
+    }
+
+    if (isPlus && filter.frequency.value <= 1000) {
+      filter.frequency.value += 50;
+    } else {
+      isPlus = false;
+      filter.frequency.value -= 50;
+
+      if (filter.frequency.value <= 250) {
+        isPlus = true;
+      }
+    }
+
+    timerId = window.setTimeout(() => {
+      render(false);
+    }, 125);
+  };
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    render(false);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    buttonElement.textContent = 'start';
+
+    if (timerId) {
+      window.clearTimeout(timerId);
+      timerId = null;
+    }
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  render(true);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -8464,3 +8638,5 @@ createNodeConnectionsForGraphicEqualizer(document.getElementById('svg-figure-nod
 renderFrequencyResponseGraphicEqualizer(document.getElementById('svg-figure-filter-response-graphic-equalizer'));
 
 equalizerGraphic();
+
+renderWahPrinciple(document.getElementById('svg-figure-wah-principle'));

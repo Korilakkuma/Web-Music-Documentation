@@ -9320,6 +9320,31 @@ rangeOscillatorFrequencyElement.addEventListener(&apos;input&apos;, (event) =&gt
             </div>
           </section>
         </section>
+        <section id="section-effectors-wah">
+          <h3>ワウ</h3>
+          <p>
+            フィルタを利用したよく使われるエフェクターとして, <b>ワウ</b>があります. 原理は, Low-Pass Filter のカットオフ周波数, もしくは, Band-Pass Filter
+            の中心周波数 (<span class="math-inline">$f_{\mathrm{computed}}$</span>) を時間経過とともに変化させることによって,
+            まさに「ワ」「ウ」と発声しているようなエフェクト音を生成することができます (エレキギターなどでは, いわゆる飛び道具的なエフェクターとして使われます).
+            音声分析合成技術である, <b>ボコーダー</b> (<b>Vocoder</b>: <b>Voice Coder</b>) と似ているエフェクト音ですが, ワウの発明起源は諸説あるようです (また,
+            ボコーダーから, さらに音楽用途に改良して使われるようになったエフェクターとしては, <b>フェーズボコーダ</b>があります).
+          </p>
+          <p>
+            ワウを実装するためには, <span class="math-inline">$f_{\mathrm{computed}}$</span> (Low-Pass Filter のカットオフ周波数, もしくは, Band-Pass Filter
+            の中心周波数) を時間経過とともに変化させる必要があります. これをワウペダル (参考:
+            <a href="https://voxamps.com/ja/product/v847-wah-pedal/" target="_blank" rel="noopener noreferrer">VOX 社のワウペダル</a>)
+            と呼ばれるコントローラーで変化させるするのが<b>ペダルワウ</b>, 楽器の発音時の振幅の変化 (打弦や撥弦の強弱)
+            に応じて変化させるのが<b>オートワウ</b>となります .
+          </p>
+          <figure>
+            <svg id="svg-figure-wah-principle" width="600" height="300" />
+            <figcaption>
+              <span>ワウの原理 (<span class="math-inline">$f_{\mathrm{computed}}$</span> が時間経過とともに変化することに着目してください)</span>
+              <button type="button" id="button-wah-principle-animation">start</button>
+            </figcaption>
+          </figure>
+          <p>ワウは原音を直接変化させるエフェクターなので, インサートエフェクトとなります.</p>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
