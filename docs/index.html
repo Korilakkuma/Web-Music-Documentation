@@ -9344,6 +9344,275 @@ rangeOscillatorFrequencyElement.addEventListener(&apos;input&apos;, (event) =&gt
             </figcaption>
           </figure>
           <p>ワウは原音を直接変化させるエフェクターなので, インサートエフェクトとなります.</p>
+          <section id="section-effectors-pedal-wah">
+            <h4>ペダルワウ</h4>
+            <p>
+              Web ブラウザでペダルワウを実装するには, ハードウェア的な制約があるので, このセクションでは,
+              <b>LFO を擬似的なワウペダルとして</b>ペダルワウの実装を解説します (もし, Web MIDI API の理解があり, MIDI 機器があれば, ベロシティなどに応じて
+              <span class="math-inline">$f_{\mathrm{computed}}$</span> を変化させるようにすると, よりペダルワウに近い体験ができると思います).
+            </p>
+            <p>
+              原理をそのまま実装に落とし込めば, ペダルワウの実装はトレモロなどと同じです. <code>BiquadFilterNode</code> を接続して,
+              <code>frequency</code> プロパティ (<code>AudioParam</code>) に LFO を接続して時間経過とともに
+              <span class="math-inline">$f_{\mathrm{computed}}$</span> を変化させることで実装可能です.
+              <b>Low-Pass Filter を使う場合, カットオフ周波数付近の急峻を鋭くしておく必要があるので</b>, <code>Q</code> プロパティの値は <code>10</code> ~
+              <code>20</code> 程度に設定しておく必要があります (Band-Pass Filter の場合は, デフォルト値で問題ありません).
+            </p>
+            <p>
+              <code>IIRFilterNode</code> を使っても実装は可能ですが, その場合, カットオフ周波数は <code>AudioParam</code> ではないので, LFO も AudioWorklet
+              を利用して実装する必要が生じます. 特にフィルタのチューニングが必要なければ (奇数次の IIR フィルタを使わなければならない理由があるなど),
+              <code>BiquadFilterNode</code> を使うほうが実装は簡潔になります.
+            </p>
+            <figure>
+              <svg id="svg-figure-node-connections-for-pedal-wah" width="800" height="520" />
+              <figcaption>ペダルワウのノード接続図</figcaption>
+            </figure>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const cutoff    = 880;
+const depthRate = 0.5;
+const rateValue = 0.5;
+const resonance = 10;
+
+const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: cutoff, Q: resonance });
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
+
+const lfo   = new OscillatorNode(context, { frequency: rateValue });
+const depth = new GainNode(context, { gain: cutoff * depthRate });
+
+// Connect nodes
+// OscillatorNode (Input) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; AudioDestinationNode (Output)
+oscillator.connect(lowpass);
+lowpass.connect(context.destination);
+
+// Connect nodes for LFO that changes Low-Pass Filter&apos;s frequency periodically
+// OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; delayTime (AudioParam)
+lfo.connect(depth);
+depth.connect(lowpass.frequency);
+
+// Start oscillator and LFO
+oscillator.start(0);
+lfo.start(0);
+
+// Stop oscillator and LFO
+oscillator.stop(context.currentTime + 10);
+lfo.stop(context.currentTime + 10);</code></pre>
+            <p>
+              以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, ペダルワウに関わるパラメータを制御できるようにしたコード例です.
+              一般的なペダルワウでは, ワウペダルのプレッシャーレベルに応じて, カットオフ周波数 (<span class="math-inline">$f_{\mathrm{computed}}$</span>)
+              が変化するようになっていますが, LFO を擬似的なワウペダルとした実装なので, 基準となる <span class="math-inline">$f_{\mathrm{computed}}$</span> と
+              Depth でワウペダルのプレッシャーレベルを, Rate でペダルの動きを擬似的に実装しています.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-pedal-wah&quot; checked /&gt;
+  &lt;span id=&quot;print-checked-pedal-wah&quot;&gt;ON&lt;/span&gt;
+&lt;/label&gt;
+&lt;label for=&quot;range-pedal-wah-cutoff&quot;&gt;Cutoff Frequency&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-pedal-wah-cutoff&quot; value=&quot;1000&quot; min=&quot;1000&quot; max=&quot;2000&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-pedal-wah-cutoff-value&quot;&gt;1000 Hz&lt;/span&gt;
+&lt;label for=&quot;range-pedal-wah-depth&quot;&gt;Depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-pedal-wah-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-pedal-wah-depth-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-pedal-wah-rate&quot;&gt;Rate&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-pedal-wah-rate&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;0.5&quot; /&gt;
+&lt;span id=&quot;print-pedal-wah-rate-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-pedal-wah-resonance&quot;&gt;Resonance&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-pedal-wah-resonance&quot; value=&quot;1&quot; min=&quot;1&quot; max=&quot;20&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-pedal-wah-resonance-value&quot;&gt;1&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let cutoff    = 1000;
+let depthRate = 0;
+let rateValue = 0;
+let resonance = 1;
+
+let oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
+let lfo        = new OscillatorNode(context, { frequency: rateValue });
+
+let isStop = true;
+
+const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: cutoff, Q: resonance });
+const depth   = new GainNode(context, { gain: lowpass.frequency.value * depthRate });
+
+const buttonElement   = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+
+const rangeCutoffElement    = document.getElementById(&apos;range-pedal-wah-cutoff&apos;);
+const rangeDepthElement     = document.getElementById(&apos;range-pedal-wah-depth&apos;);
+const rangeRateElement      = document.getElementById(&apos;range-pedal-wah-rate&apos;);
+const rangeResonanceElement = document.getElementById(&apos;range-pedal-wah-resonance&apos;);
+
+const spanPrintCheckedElement   = document.getElementById(&apos;print-checked-pedal-wah&apos;);
+const spanPrintCutoffElement    = document.getElementById(&apos;print-pedal-wah-cutoff-value&apos;);
+const spanPrintDepthElement     = document.getElementById(&apos;print-pedal-wah-depth-value&apos;);
+const spanPrintRateElement      = document.getElementById(&apos;print-pedal-wah-rate-value&apos;);
+const spanPrintResonanceElement = document.getElementById(&apos;print-pedal-wah-resonance-value&apos;);
+
+checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
+  oscillator.disconnect(0);
+  lowpass.disconnect(0);
+  lfo.disconnect(0);
+
+  if (checkboxElement.checked) {
+    // Connect nodes
+    // OscillatorNode (Input) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(lowpass);
+    lowpass.connect(context.destination);
+
+    // Connect nodes for LFO that changes Low-Pass Filter&apos;s frequency periodically
+    // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
+    lfo.connect(depth);
+    depth.connect(lowpass.frequency);
+
+    spanPrintCheckedElement.textContent = &apos;ON&apos;;
+  } else {
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(context.destination);
+
+    spanPrintCheckedElement.textContent = &apos;OFF&apos;;
+  }
+});
+
+buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+  if (!isStop) {
+    return;
+  }
+
+  if (checkboxElement.checked) {
+    // Connect nodes
+    // OscillatorNode (Input) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(lowpass);
+    lowpass.connect(context.destination);
+
+    // Start oscillator
+    oscillator.start(0);
+  } else {
+    lowpass.disconnect(0);
+
+    // Connect nodes (Pedal Wah OFF)
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(context.destination);
+
+    // Start oscillator
+    oscillator.start(0);
+  }
+
+  // Connect nodes for LFO that changes Low-Pass Filter&apos;s frequency periodically
+  // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
+  lfo.connect(depth);
+  depth.connect(lowpass.frequency);
+
+  // Start LFO
+  lfo.start(0);
+
+  isStop = false;
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (isStop) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+  lfo.stop(0);
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
+  lfo        = new OscillatorNode(context, { frequency: rateValue });
+
+  isStop = true;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeCutoffElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  cutoff = event.currentTarget.valueAsNumber;
+
+  lowpass.frequency.value = cutoff;
+
+  spanPrintCutoffElement.textContent = `${cutoff.toString(10)} Hz`;
+});
+
+rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  depthRate = event.currentTarget.valueAsNumber;
+
+  depth.gain.value = lowpass.frequency.value * depthRate;
+
+  spanPrintDepthElement.textContent = depthRate.toString(10);
+});
+
+rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  rateValue = event.currentTarget.valueAsNumber;
+
+  if (lfo) {
+    lfo.frequency.value = rateValue;
+  }
+
+  spanPrintRateElement.textContent = rateValue.toString(10);
+});
+
+rangeResonanceElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  resonance = event.currentTarget.valueAsNumber;
+
+  lowpass.Q.value = resonance;
+
+  spanPrintResonanceElement.textContent = resonance.toString(10);
+});</code></pre>
+            <div class="app-container app-pedal-wah">
+              <div class="app-headline">
+                <button type="button" id="button-pedal-wah">start</button>
+                <label>
+                  <input type="checkbox" id="checkbox-pedal-wah" checked />
+                  <span id="print-checked-pedal-wah">ON</span>
+                </label>
+              </div>
+              <div>
+                <dl>
+                  <div>
+                    <dt><label for="range-pedal-wah-cutoff">Cutoff Frequency</label></dt>
+                    <dd>
+                      <input type="range" id="range-pedal-wah-cutoff" value="1000" min="1000" max="2000" step="1" />
+                      <span id="print-pedal-wah-cutoff-value">1000 Hz</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-pedal-wah-depth">Depth</label></dt>
+                    <dd>
+                      <input type="range" id="range-pedal-wah-depth" value="0" min="0" max="1" step="0.05" />
+                      <span id="print-pedal-wah-depth-value">0</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-pedal-wah-rate">Rate</label></dt>
+                    <dd>
+                      <input type="range" id="range-pedal-wah-rate" value="0" min="0" max="10" step="0.5" />
+                      <span id="print-pedal-wah-rate-value">0</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-pedal-wah-resonance">Resonance</label></dt>
+                    <dd>
+                      <input type="range" id="range-pedal-wah-resonance" value="1" min="1" max="20" step="1" />
+                      <span id="print-pedal-wah-resonance-value">1</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
     </main>

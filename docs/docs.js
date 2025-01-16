@@ -8518,6 +8518,178 @@ const renderWahPrinciple = (svg) => {
   render(true);
 };
 
+const createNodeConnectionsForPedalWah = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const lowpassRect = createAudioNode('BiquadFilterNode (Low-Pass)', 0, 200);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 400);
+
+  const oscillatorNodeAndLowpassPath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const lowpassAndAudiodDestinationNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+
+  const oscillatorNodeAndLowpassArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const lowpassAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  const lfoRect = createLFO(400, 0);
+  const frequencyParamEllipse = createAudioParam('frequency', 350, 300);
+  const lfoAndFrequencyParamPath1 = createConnection(545, 100 + 2, 545, 300 - 2, lightWaveColor);
+  const lfoAndFrequencyParamPath2 = createConnection(430, 300 - 2, 545, 300 - 2, lightWaveColor);
+  const lfoAndFrequencyParamArrow = createConnectionArrow(430 + 12, 300 - 2, 'left', lightWaveColor);
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndLowpassPath);
+  g.appendChild(oscillatorNodeAndLowpassArrow);
+  g.appendChild(lowpassRect);
+  g.appendChild(lowpassAndAudiodDestinationNodePath);
+  g.appendChild(lowpassAndAudiodDestinationNodeArrow);
+  g.appendChild(audioDestinationNodeRect);
+
+  g.appendChild(lfoRect);
+  g.appendChild(frequencyParamEllipse);
+  g.appendChild(lfoAndFrequencyParamPath1);
+  g.appendChild(lfoAndFrequencyParamPath2);
+  g.appendChild(lfoAndFrequencyParamArrow);
+
+  svg.appendChild(g);
+};
+
+const pedalWah = () => {
+  let cutoff = 1000;
+  let depthRate = 0;
+  let rateValue = 0;
+  let resonance = 1;
+
+  let oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency: 440 });
+  let lfo = new OscillatorNode(audiocontext, { frequency: rateValue });
+
+  let isStop = true;
+
+  const lowpass = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: cutoff, Q: resonance });
+  const depth = new GainNode(audiocontext, { gain: lowpass.frequency.value * depthRate });
+
+  const buttonElement = document.getElementById('button-pedal-wah');
+  const checkboxElement = document.getElementById('checkbox-pedal-wah');
+
+  const rangeCutoffElement = document.getElementById('range-pedal-wah-cutoff');
+  const rangeDepthElement = document.getElementById('range-pedal-wah-depth');
+  const rangeRateElement = document.getElementById('range-pedal-wah-rate');
+  const rangeResonanceElement = document.getElementById('range-pedal-wah-resonance');
+
+  const spanPrintCheckedElement = document.getElementById('print-checked-pedal-wah');
+  const spanPrintCutoffElement = document.getElementById('print-pedal-wah-cutoff-value');
+  const spanPrintDepthElement = document.getElementById('print-pedal-wah-depth-value');
+  const spanPrintRateElement = document.getElementById('print-pedal-wah-rate-value');
+  const spanPrintResonanceElement = document.getElementById('print-pedal-wah-resonance-value');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (!isStop) {
+      return;
+    }
+
+    if (checkboxElement.checked) {
+      oscillator.connect(lowpass);
+      lowpass.connect(audiocontext.destination);
+
+      oscillator.start(0);
+    } else {
+      lowpass.disconnect(0);
+
+      oscillator.connect(audiocontext.destination);
+
+      oscillator.start(0);
+    }
+
+    lfo.connect(depth);
+    depth.connect(lowpass.frequency);
+
+    lfo.start(0);
+
+    isStop = false;
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (isStop) {
+      return;
+    }
+
+    oscillator.stop(0);
+    lfo.stop(0);
+
+    oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency: 440 });
+    lfo = new OscillatorNode(audiocontext, { frequency: rateValue });
+
+    isStop = true;
+
+    buttonElement.textContent = 'start';
+  };
+
+  checkboxElement.addEventListener('click', () => {
+    oscillator.disconnect(0);
+    lowpass.disconnect(0);
+    lfo.disconnect(0);
+
+    if (checkboxElement.checked) {
+      oscillator.connect(lowpass);
+      lowpass.connect(audiocontext.destination);
+
+      lfo.connect(depth);
+      depth.connect(lowpass.frequency);
+
+      spanPrintCheckedElement.textContent = 'ON';
+    } else {
+      oscillator.connect(audiocontext.destination);
+
+      spanPrintCheckedElement.textContent = 'OFF';
+    }
+  });
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeCutoffElement.addEventListener('input', (event) => {
+    cutoff = event.currentTarget.valueAsNumber;
+
+    lowpass.frequency.value = cutoff;
+
+    spanPrintCutoffElement.textContent = `${cutoff.toString(10)} Hz`;
+  });
+
+  rangeDepthElement.addEventListener('input', (event) => {
+    depthRate = event.currentTarget.valueAsNumber;
+
+    depth.gain.value = lowpass.frequency.value * depthRate;
+
+    spanPrintDepthElement.textContent = depthRate.toString(10);
+  });
+
+  rangeRateElement.addEventListener('input', (event) => {
+    rateValue = event.currentTarget.valueAsNumber;
+
+    if (lfo) {
+      lfo.frequency.value = rateValue;
+    }
+
+    spanPrintRateElement.textContent = rateValue.toString(10);
+  });
+
+  rangeResonanceElement.addEventListener('input', (event) => {
+    resonance = event.currentTarget.valueAsNumber;
+
+    lowpass.Q.value = resonance;
+
+    spanPrintResonanceElement.textContent = resonance.toString(10);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -8640,3 +8812,7 @@ renderFrequencyResponseGraphicEqualizer(document.getElementById('svg-figure-filt
 equalizerGraphic();
 
 renderWahPrinciple(document.getElementById('svg-figure-wah-principle'));
+
+createNodeConnectionsForPedalWah(document.getElementById('svg-figure-node-connections-for-pedal-wah'));
+
+pedalWah();
