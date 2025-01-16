@@ -351,7 +351,8 @@ select {
 .app-tremolo,
 .app-ringmodulator,
 .app-3-bands-equalizer,
-.app-graphic-equalizer {
+.app-graphic-equalizer,
+.app-pedal-wah {
   margin: 24px 0;
 }
 
@@ -361,7 +362,8 @@ select {
 .app-tremolo dl dd,
 .app-ringmodulator dl dd,
 .app-3-bands-equalizer dl dd,
-.app-graphic-equalizer dl dd {
+.app-graphic-equalizer dl dd,
+.app-pedal-wah dl dd {
   display: flex;
   gap: 8px;
   align-items: center;
