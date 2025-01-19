@@ -9613,6 +9613,278 @@ rangeResonanceElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               </div>
             </div>
           </section>
+          <section id="section-effectors-vcf-auto-wah">
+            <h4>オートワウ</h4>
+            <p>
+              汎用的なオートワウを実装するためには, <code>WaveShaperNode</code> クラスの理解が必要であったり, ノード接続が複雑であったりするので,
+              このセクションでは, すでに解説した <code>BiquadFilterNode</code> の <code>frequency</code> プロパティ (<code>AudioParam</code>)
+              のオートメーションメソッドを利用した簡易的な実装を解説します (これは, アナログシンセサイザーの <b>VCF</b> (<b>Voltage Controlled Filter</b>:
+              <b>電圧制御フィルタ</b>) の実装でもあります).
+            </p>
+            <p>
+              エンベロープジェネレーターと同様のオートメーションを <code>BiquadFilterNode</code> の <code>frequency</code> プロパティに実装することです. そして,
+              それに対応するように, <code>GainNode</code> の <code>gain</code> プロパティにもオートメーションを適用すれば, 同様のスケジューリングで,
+              振幅に応じて <span class="math-inline">$f_{\mathrm{computed}}$</span> も変化することになるので, オートワウが実装できます. 現実的には,
+              オートワウが有用なのは, このような, ユーザーインタラクティブな操作に応じて, 振幅の変化とともに,
+              <span class="math-inline">$f_{\mathrm{computed}}$</span> を変化させればよいケースがほとんどなので, 簡易的なオートワウでも十分なことが多いでしょう.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const cutoff       = 1000;
+const targetCutoff = 2000;
+const resonance    = 10;
+
+const attack  = 1.0;
+const decay   = 0.5;
+const sustain = 0.5;
+const release = 1.0;
+
+const envelopegenerator = new GainNode(context);
+
+let oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
+
+let isStop = true;
+
+const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: cutoff, Q: resonance });
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+  if (!isStop) {
+    return;
+  }
+
+  // Connect nodes
+  // OscillatorNode (Input) -&gt; GainNode (Envelope Generator) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(envelopegenerator);
+  envelopegenerator.connect(lowpass);
+  lowpass.connect(context.destination);
+
+  const t0 = context.currentTime;
+  const t1 = t0 + attack;
+  const t2 = decay;
+
+  const t2Level = lowpass.frequency.value * sustain;
+
+  // Attack -&gt; Decay -&gt; Sustain
+  envelopegenerator.gain.cancelScheduledValues(t0);
+  envelopegenerator.gain.setValueAtTime(0, t0);
+  envelopegenerator.gain.linearRampToValueAtTime(1, t1);
+  envelopegenerator.gain.setTargetAtTime(sustain, t1, t2);
+
+  lowpass.frequency.cancelScheduledValues(t0);
+  lowpass.frequency.setValueAtTime(cutoff, t0);
+  lowpass.frequency.exponentialRampToValueAtTime(targetCutoff, t1);
+  lowpass.frequency.setTargetAtTime(t2Level, t1, t2);
+
+  // Start oscillator
+  oscillator.start(0);
+
+  isStop = false;
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (isStop) {
+    return;
+  }
+
+  const t3 = context.currentTime;
+  const t4 = release;
+
+  // Sustain -&gt; Release
+  envelopegenerator.gain.cancelScheduledValues(t3);
+  envelopegenerator.gain.setTargetAtTime(0, t3, t4);
+
+  lowpass.frequency.cancelScheduledValues(t3);
+  lowpass.frequency.setTargetAtTime(cutoff, t3, t4);
+
+  // Stop after Release
+  oscillator.stop(t3 + t4);
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
+
+  isStop = true;
+
+  buttonElement.textContent = &apos;start&apos;;
+});</code></pre>
+            <p>
+              ワウは飛び道具的なエフェクターなので, <code>linearRampToValueAtTime</code> メソッドではなく,
+              <code>exponentialRampToValueAtTime</code> メソッドで指数関数的に変化させてみました (もちろん, 線形的に変化させる
+              <code>linearRampToValueAtTime</code> メソッドでもオートワウとしては機能します).
+            </p>
+            <p>
+              以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, (パラメータのオートメーションによる)
+              オートワウに関わるパラメータを制御できるようにしたコード例です.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label for="range-vcf-auto-wah-attack"&gt;attack&lt;/label&gt;
+&lt;input type="range" id="range-vcf-auto-wah-attack" value="1" min="0" max="1" step="0.01" /&gt;
+&lt;span id="print-vcf-auto-wah-attack-value"&gt;1&lt;/span&gt;
+&lt;label for="range-vcf-auto-wah-decay"&gt;decay&lt;/label&gt;
+&lt;input type="range" id="range-vcf-auto-wah-decay" value="0.3" min="0" max="1" step="0.01" /&gt;
+&lt;span id="print-vcf-auto-wah-decay-value"&gt;0.3&lt;/span&gt;
+&lt;label for="range-vcf-auto-wah-sustain"&gt;sustain&lt;/label&gt;
+&lt;input type="range" id="range-vcf-auto-wah-sustain" value="0.5" min="0" max="1" step="0.01" /&gt;
+&lt;span id="print-vcf-auto-wah-sustain-value"&gt;0.5&lt;/span&gt;
+&lt;label for="range-vcf-auto-wah-release"&gt;release&lt;/label&gt;
+&lt;input type="range" id="range-vcf-auto-wah-release" value="1" min="0" max="1" step="0.01" /&gt;
+&lt;span id="print-vcf-auto-wah-release-value"&gt;1&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const cutoff       = 1000;
+const targetCutoff = 2000;
+const resonance    = 10;
+
+let attack  = 1.0;
+let decay   = 0.5;
+let sustain = 0.5;
+let release = 1.0;
+
+const envelopegenerator = new GainNode(context);
+
+let oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
+
+let isStop = true;
+
+const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: cutoff, Q: resonance });
+
+const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+
+const rangeAttackElement  = document.getElementById(&apos;range-vcf-auto-wah-attack&apos;);
+const rangeDecayElement   = document.getElementById(&apos;range-vcf-auto-wah-decay&apos;);
+const rangeSustainElement = document.getElementById(&apos;range-vcf-auto-wah-sustain&apos;);
+const rangeReleaseElement = document.getElementById(&apos;range-vcf-auto-wah-release&apos;);
+
+const spanPrintAttackElement  = document.getElementById(&apos;print-vcf-auto-wah-attack-value&apos;);
+const spanPrintDecayElement   = document.getElementById(&apos;print-vcf-auto-wah-decay-value&apos;);
+const spanPrintSutainElement  = document.getElementById(&apos;print-vcf-auto-wah-sustain-value&apos;);
+const spanPrintReleaseElement = document.getElementById(&apos;print-vcf-auto-wah-release-value&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+  if (!isStop) {
+    return;
+  }
+
+  // Connect nodes
+  // OscillatorNode (Input) -&gt; GainNode (Envelope Generator) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(envelopegenerator);
+  envelopegenerator.connect(lowpass);
+  lowpass.connect(context.destination);
+
+  const t0 = context.currentTime;
+  const t1 = t0 + attack;
+  const t2 = decay;
+
+  const t2Level = lowpass.frequency.value * sustain;
+
+  // Attack -&gt; Decay -&gt; Sustain
+  envelopegenerator.gain.cancelScheduledValues(t0);
+  envelopegenerator.gain.setValueAtTime(0, t0);
+  envelopegenerator.gain.linearRampToValueAtTime(1, t1);
+  envelopegenerator.gain.setTargetAtTime(sustain, t1, t2);
+
+  lowpass.frequency.cancelScheduledValues(t0);
+  lowpass.frequency.setValueAtTime(cutoff, t0);
+  lowpass.frequency.exponentialRampToValueAtTime(targetCutoff, t1);
+  lowpass.frequency.setTargetAtTime(t2Level, t1, t2);
+
+  // Start oscillator
+  oscillator.start(0);
+
+  isStop = false;
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (isStop) {
+    return;
+  }
+
+  const t3 = context.currentTime;
+  const t4 = release;
+
+  // Sustain -&gt; Release
+  envelopegenerator.gain.cancelAndHoldAtTime(t3);
+  envelopegenerator.gain.setTargetAtTime(0, t3, t4);
+
+  lowpass.frequency.cancelAndHoldAtTime(t3);
+  lowpass.frequency.setTargetAtTime(cutoff, t3, t4);
+
+  // Stop after Release (+ until nearly zero audio data)
+  oscillator.stop(t3 + t4 + 5);
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
+
+  isStop = true;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeAttackElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  attack = event.currentTarget.valueAsNumber;
+
+  spanPrintAttackElement.textContent = attack.toString(10);
+});
+
+rangeDecayElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  decay = event.currentTarget.valueAsNumber;
+
+  spanPrintDecayElement.textContent = decay.toString(10);
+});
+
+rangeSustainElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  sustain = event.currentTarget.valueAsNumber;
+
+  spanPrintSutainElement.textContent = sustain.toString(10);
+});
+
+rangeReleaseElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  release = event.currentTarget.valueAsNumber;
+
+  spanPrintReleaseElement.textContent = release.toString(10);
+});</code></pre>
+            <div class="app-container app-vcf-auto-wah">
+              <div class="app-headline">
+                <button type="button" id="button-vcf-auto-wah">start</button>
+              </div>
+              <div class="ranges-envelopegenerator">
+                <dl>
+                  <dt><label for="range-vcf-auto-wah-attack">attack</label></dt>
+                  <dd>
+                    <input type="range" id="range-vcf-auto-wah-attack" value="1" min="0" max="1" step="0.01" />
+                    <span id="print-vcf-auto-wah-attack-value">1</span>
+                  </dd>
+                  <dt><label for="range-vcf-auto-wah-decay">decay</label></dt>
+                  <dd>
+                    <input type="range" id="range-vcf-auto-wah-decay" value="0.3" min="0" max="1" step="0.01" />
+                    <span id="print-vcf-auto-wah-decay-value">0.3</span>
+                  </dd>
+                  <dt><label for="range-vcf-auto-wah-sustain">sustain</label></dt>
+                  <dd>
+                    <input type="range" id="range-vcf-auto-wah-sustain" value="0.5" min="0" max="1" step="0.01" />
+                    <span id="print-vcf-auto-wah-sustain-value">0.5</span>
+                  </dd>
+                  <dt><label for="range-vcf-auto-wah-release">release</label></dt>
+                  <dd>
+                    <input type="range" id="range-vcf-auto-wah-release" value="1" min="0" max="1" step="0.01" />
+                    <span id="print-vcf-auto-wah-release-value">1</span>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
     </main>

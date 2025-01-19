@@ -8690,6 +8690,125 @@ const pedalWah = () => {
   });
 };
 
+const vcfAutoWah = () => {
+  const cutoff = 1000;
+  const targetCutoff = 2000;
+  const resonance = 10;
+
+  let attack = 1.0;
+  let decay = 0.5;
+  let sustain = 0.5;
+  let release = 1.0;
+
+  const envelopegenerator = new GainNode(audiocontext);
+
+  let oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency: 440 });
+
+  let isStop = true;
+
+  const lowpass = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: cutoff, Q: resonance });
+
+  const buttonElement = document.getElementById('button-vcf-auto-wah');
+
+  const rangeAttackElement = document.getElementById('range-vcf-auto-wah-attack');
+  const rangeDecayElement = document.getElementById('range-vcf-auto-wah-decay');
+  const rangeSustainElement = document.getElementById('range-vcf-auto-wah-sustain');
+  const rangeReleaseElement = document.getElementById('range-vcf-auto-wah-release');
+
+  const spanPrintAttackElement = document.getElementById('print-vcf-auto-wah-attack-value');
+  const spanPrintDecayElement = document.getElementById('print-vcf-auto-wah-decay-value');
+  const spanPrintSutainElement = document.getElementById('print-vcf-auto-wah-sustain-value');
+  const spanPrintReleaseElement = document.getElementById('print-vcf-auto-wah-release-value');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (!isStop) {
+      return;
+    }
+
+    oscillator.connect(envelopegenerator);
+    envelopegenerator.connect(lowpass);
+    lowpass.connect(audiocontext.destination);
+
+    const t0 = audiocontext.currentTime;
+    const t1 = t0 + attack;
+    const t2 = decay;
+
+    const t2Level = lowpass.frequency.value * sustain;
+
+    envelopegenerator.gain.cancelScheduledValues(t0);
+    envelopegenerator.gain.setValueAtTime(0, t0);
+    envelopegenerator.gain.linearRampToValueAtTime(1, t1);
+    envelopegenerator.gain.setTargetAtTime(sustain, t1, t2);
+
+    lowpass.frequency.cancelScheduledValues(t0);
+    lowpass.frequency.setValueAtTime(cutoff, t0);
+    lowpass.frequency.exponentialRampToValueAtTime(targetCutoff, t1);
+    lowpass.frequency.setTargetAtTime(t2Level, t1, t2);
+
+    oscillator.start(0);
+
+    isStop = false;
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (isStop) {
+      return;
+    }
+
+    const t3 = audiocontext.currentTime;
+    const t4 = release;
+
+    envelopegenerator.gain.cancelAndHoldAtTime(t3);
+    envelopegenerator.gain.setTargetAtTime(0, t3, t4);
+
+    lowpass.frequency.cancelAndHoldAtTime(t3);
+    lowpass.frequency.setTargetAtTime(cutoff, t3, t4);
+
+    oscillator.stop(t3 + t4 + 5);
+
+    oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency: 440 });
+
+    isStop = true;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeAttackElement.addEventListener('input', (event) => {
+    attack = event.currentTarget.valueAsNumber;
+
+    spanPrintAttackElement.textContent = attack.toString(10);
+  });
+
+  rangeDecayElement.addEventListener('input', (event) => {
+    decay = event.currentTarget.valueAsNumber;
+
+    spanPrintDecayElement.textContent = decay.toString(10);
+  });
+
+  rangeSustainElement.addEventListener('input', (event) => {
+    sustain = event.currentTarget.valueAsNumber;
+
+    spanPrintSutainElement.textContent = sustain.toString(10);
+  });
+
+  rangeReleaseElement.addEventListener('input', (event) => {
+    release = event.currentTarget.valueAsNumber;
+
+    spanPrintReleaseElement.textContent = release.toString(10);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -8816,3 +8935,5 @@ renderWahPrinciple(document.getElementById('svg-figure-wah-principle'));
 createNodeConnectionsForPedalWah(document.getElementById('svg-figure-node-connections-for-pedal-wah'));
 
 pedalWah();
+
+vcfAutoWah();
