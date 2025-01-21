@@ -353,7 +353,8 @@ select {
 .app-3-bands-equalizer,
 .app-graphic-equalizer,
 .app-pedal-wah,
-.app-vcf-auto-wah {
+.app-vcf-auto-wah,
+.app-auto-wah {
   margin: 24px 0;
 }
 
@@ -365,7 +366,8 @@ select {
 .app-3-bands-equalizer dl dd,
 .app-graphic-equalizer dl dd,
 .app-pedal-wah dl dd,
-.app-vcf-auto-wah dl dd {
+.app-vcf-auto-wah dl dd,
+.app-auto-wah dl dd {
   display: flex;
   gap: 8px;
   align-items: center;
