@@ -9885,6 +9885,280 @@ rangeReleaseElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               </div>
             </div>
           </section>
+          <section id="section-effector-auto-wah">
+            <h4>汎用的なオートワウ</h4>
+            <p>
+              汎用的なオートワウを実装するためには, <b><code>WaveShaperNode</code></b> クラスを理解して, <b>エンベロープフォロワー</b>を実装する必要があるので,
+              ここでは, とりあえず形式的に (以下のように実装すればオートワウができる程度に) 理解していただければだいじょうぶです (<code>WaveShaperNode</code>
+              クラスやエンベロープフォロワーに関しては,
+              <a href="#section-effectors-distortion">ディストーション (歪み系エフェクター) のセクション</a>で詳細を解説します).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const depthValue = 0.25;
+const rateValue  = 1;
+
+const envelopeFollower = new WaveShaperNode(context, { buffer: new Float32Array([1, 0, 1]) });
+const sensitivity      = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 2000, Q: 10 });
+const lowpass          = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 2, Q: 1 });
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
+const lfo        = new OscillatorNode(context, { frequency: rateValue });
+
+const depth = new GainNode(context, { gain: 1000 });
+
+const lfoDepth = new GainNode(context, { gain: depthValue });
+
+const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- ${depthValue}
+
+// Connect nodes
+// OscillatorNode (Input) -&gt; GainNode (Tremolo) -&gt; BiquadFilterNode (Sensitivity) -&gt; GainNode (Output)
+oscillator.connect(amplitude);
+amplitude.connect(sensitivity);
+sensitivity.connect(context.destination);
+
+// OscillatorNode (Input) -&gt; WaveShaperNode (Envelope Follower) -&gt; WaveShaperNode (Envelope Follower) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
+oscillator.connect(envelopeFollower);
+envelopeFollower.connect(lowpass);
+lowpass.connect(depth);
+depth.connect(sensitivity.frequency);
+
+lfo.connect(lfoDepth);
+lfoDepth.connect(amplitude.gain);
+
+// Start oscillator
+oscillator.start(0);
+lfo.start(0);
+
+// Stop oscillator
+oscillator.stop(context.currentTime + 5);
+lfo.stop(context.currentTime + 5);</code></pre>
+            <p>
+              音源の振幅の変化をシミュレートするために, トレモロを使っています (したがって, ここでのトレモロは, オートワウの実装には直接的に関係ありません).
+            </p>
+            <p>
+              ノード接続は, 大きく 2 つで構成されています. 1 つは, 音源と振幅に対する感度のための Low-Pass Filter, そして
+              <code>AudioDestinationNode</code> の接続と, もう 1 つは, 音源の振幅を<b>エンベロープフォロワー</b>に接続することによって,
+              <b>全波整流</b> (端的には, 振幅の絶対値に波形を整形する処理) を施し, それをもとに, 感度の Low-Pass Filter の
+              <code>frequency</code> プロパティを振幅に応じて変化させるための (<code>AudioParam</code> への) 接続です.
+            </p>
+            <figure>
+              <svg id="svg-figure-node-connections-for-auto-wah" width="1200" height="720" />
+              <figcaption>オートワウのノード接続図</figcaption>
+            </figure>
+            <p>
+              全波整流した原音を, カットオフ周波数が非常に低い Low-Pass Filter を通過させることで, 波形 (エンベロープ) ではなく, 振幅の変化を出力とします.
+              あとは, 振幅に応じて Depth の値が変化するようにすれば, Sensitivity の Low-Pass Filter の
+              <span class="math-inline">$f_{\mathrm{computed}}$</span> が原音の振幅の変化に応じて変化することになり, (汎用的な) オートワウが実装できます.
+            </p>
+            <p>
+              以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, オートワウに関わるパラメータを制御できるようにしたコード例です.
+              原音はハードコーディングしていますが, <code>OscillatorNode</code> だけでなく, ワンショットオーディオや
+              <code>MediaStreamAudioSourceNode</code> をオーディオソースとして音声に適用するのもおもしろいかもしれません.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-auto-wah&quot; checked /&gt;
+  &lt;span id=&quot;print-checked-auto-wah&quot;&gt;ON&lt;/span&gt;
+&lt;/label&gt;
+&lt;label for=&quot;range-auto-wah-sensitivity&quot;&gt;Sensitivity&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-auto-wah-sensitivity&quot; value=&quot;1000&quot; min=&quot;1000&quot; max=&quot;2000&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-auto-wah-sensitivity-value&quot;&gt;1000 Hz&lt;/span&gt;
+&lt;label for=&quot;range-auto-wah-depth&quot;&gt;Depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-auto-wah-depth&quot; value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-auto-wah-depth-value&quot;&gt;0.5&lt;/span&gt;
+&lt;label for=&quot;range-auto-wah-resonance&quot;&gt;Resonance&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-auto-wah-resonance&quot; value=&quot;10&quot; min=&quot;1&quot; max=&quot;40&quot; step=&quot;1&quot; /&gt;
+&lt;span id=&quot;print-auto-wah-resonance-value&quot;&gt;10&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let sensitivityFrequency = 2000;
+let sensitivityDepthRate = 0.5;
+let sensitivityResonance = 10;
+
+const tremoloDepthValue = 0.25;
+const tremoloRateValue  = 1;
+
+let oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
+let lfo        = new OscillatorNode(context, { frequency: tremoloRateValue });
+
+// for Tremolo (simulates amplitude modulation)
+const lfoDepth  = new GainNode(context, { gain: tremoloDepthValue });
+const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- ${tremoloDepthValue}
+
+lfo.connect(lfoDepth);
+lfoDepth.connect(amplitude.gain);
+
+// Start LFO (simulates amplitude modulation)
+lfo.start(0);
+
+const envelopeFollower = new WaveShaperNode(context, { buffer: new Float32Array([1, 0, 1]) });
+const sensitivity      = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: sensitivityFrequency, Q: sensitivityResonance });
+const lowpass          = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 2, Q: 1 });
+
+const depth = new GainNode(context, { gain: sensitivity.frequency.value * sensitivityDepthRate });
+
+let isStop = true;
+
+const buttonElement   = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+
+const rangeSensitivityFrequencyElement = document.getElementById(&apos;range-auto-wah-sensitivity&apos;);
+const rangeSensitivityDepthElement     = document.getElementById(&apos;range-auto-wah-depth&apos;);
+const rangeResonanceElement            = document.getElementById(&apos;range-auto-wah-resonance&apos;);
+
+const spanPrintCheckedElement              = document.getElementById(&apos;print-checked-auto-wah&apos;);
+const spanPrintSensitivityFrequencyElement = document.getElementById(&apos;print-auto-wah-sensitivity-value&apos;);
+const spanPrintDepthElement                = document.getElementById(&apos;print-auto-wah-depth-value&apos;);
+const spanPrintResonanceElement            = document.getElementById(&apos;print-auto-wah-resonance-value&apos;);
+
+checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
+  oscillator.disconnect(0);
+  sensitivity.disconnect(0);
+  envelopeFollower.disconnect(0);
+  lowpass.disconnect(0);
+  depth.disconnect(0);
+
+  if (checkboxElement.checked) {
+    // Connect nodes
+    // OscillatorNode (Input) -&gt; GainNode (Tremolo) -&gt; BiquadFilterNode (Sensitivity) -&gt; GainNode (Output)
+    oscillator.connect(amplitude);
+    amplitude.connect(sensitivity);
+    sensitivity.connect(context.destination);
+
+    // OscillatorNode (Input) -&gt; WaveShaperNode (Envelope Follower) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
+    oscillator.connect(envelopeFollower);
+    envelopeFollower.connect(lowpass);
+    lowpass.connect(depth);
+    depth.connect(sensitivity.frequency);
+
+    spanPrintCheckedElement.textContent = &apos;ON&apos;;
+  } else {
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(context.destination);
+
+    spanPrintCheckedElement.textContent = &apos;OFF&apos;;
+  }
+});
+
+buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+  if (!isStop) {
+    return;
+  }
+
+  if (checkboxElement.checked) {
+    // Connect nodes
+    // OscillatorNode (Input) -&gt; GainNode (Tremolo) -&gt; BiquadFilterNode (Sensitivity) -&gt; GainNode (Output)
+    oscillator.connect(amplitude);
+    amplitude.connect(sensitivity);
+    sensitivity.connect(context.destination);
+
+    // OscillatorNode (Input) -&gt; WaveShaperNode (Envelope Follower) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
+    oscillator.connect(envelopeFollower);
+    envelopeFollower.connect(lowpass);
+    lowpass.connect(depth);
+    depth.connect(sensitivity.frequency);
+
+    // Start oscillator
+    oscillator.start(0);
+  } else {
+    oscillator.disconnect(0);
+
+    // Connect nodes (Auto Wah OFF)
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(context.destination);
+
+    // Start oscillator
+    oscillator.start(0);
+  }
+
+  isStop = false;
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (isStop) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
+
+  isStop = true;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeSensitivityFrequencyElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  sensitivityFrequency = event.currentTarget.valueAsNumber;
+
+  sensitivity.frequency.value = sensitivityFrequency;
+
+  spanPrintSensitivityFrequencyElement.textContent = `${sensitivityFrequency.toString(10)} Hz`;
+});
+
+rangeSensitivityDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  sensitivityDepthRate = event.currentTarget.valueAsNumber;
+
+  depth.gain.value = sensitivityFrequency * sensitivityDepthRate;
+
+  spanPrintDepthElement.textContent = sensitivityDepthRate.toString(10);
+});
+
+rangeResonanceElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  sensitivityResonance = event.currentTarget.valueAsNumber;
+
+  sensitivity.Q.value = sensitivityResonance;
+
+  spanPrintResonanceElement.textContent = sensitivityResonance.toString(10);
+});</code></pre>
+            <div class="app-container app-auto-wah">
+              <div class="app-headline">
+                <button type="button" id="button-auto-wah">start</button>
+                <label>
+                  <input type="checkbox" id="checkbox-auto-wah" checked />
+                  <span id="print-checked-auto-wah">ON</span>
+                </label>
+              </div>
+              <div>
+                <dl>
+                  <div>
+                    <dt><label for="range-auto-wah-sensitivity">Sensitivity</label></dt>
+                    <dd>
+                      <input type="range" id="range-auto-wah-sensitivity" value="1000" min="1000" max="2000" step="1" />
+                      <span id="print-auto-wah-sensitivity-value">1000 Hz</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-auto-wah-depth">Depth</label></dt>
+                    <dd>
+                      <input type="range" id="range-auto-wah-depth" value="0.5" min="0" max="1" step="0.05" />
+                      <span id="print-auto-wah-depth-value">0.5</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-auto-wah-resonance">Resonance</label></dt>
+                    <dd>
+                      <input type="range" id="range-auto-wah-resonance" value="10" min="1" max="40" step="1" />
+                      <span id="print-auto-wah-resonance-value">10</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
     </main>
