@@ -8809,6 +8809,207 @@ const vcfAutoWah = () => {
   });
 };
 
+const createNodeConnectionsForAutoWah = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const sensitivityRect = createAudioNode2LineText('BiquadFilterNode (Low-Pass)', '(Sensitivity)', 0, 300);
+  const envelopeFollowerRect = createAudioNode2LineText('WaveShaperNode', '(Envelope Follower)', 600, 0);
+  const lowpassRect = createAudioNode('BiquadFilterNode (Low-Pass)', 600, 150);
+  const depthRect = createAudioNode('GainNode (Depth)', 600, 300);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 600);
+
+  const oscillatorNodeAndSensitivityPath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const sensitivityAndAudiodDestinationNodePath = createConnection(150 - 2, 400, 150 - 2, 600);
+
+  const oscillatorNodeAndSensitivityArrow = createConnectionArrow(150 - 2, 300 - 14, 'down');
+  const sensitivityAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 600 - 14, 'down');
+
+  const oscillatorNodeAndEnvelopeFollowerPath = createConnection(300, 50 - 2, 600, 50 - 2, lightWaveColor);
+  const oscillatorNodeAndEnvelopeFollowerArrow = createConnectionArrow(600 - 14, 50 - 2, 'right', lightWaveColor);
+
+  const depthAndAudioDestinationPath = createConnection(450, 350 - 2, 600, 350 - 2, lightWaveColor);
+  const depthAndAudioDestinationArrow = createConnectionArrow(450 + 12, 350 - 2, 'left', lightWaveColor);
+
+  const envelopeFollowerAndLowpassPath = createConnection(750 - 2, 100, 750 - 2, 150, lightWaveColor);
+  const envelopeFollowerAndLowpassArrow = createConnectionArrow(750 - 2, 750 - 14, 'down', lightWaveColor);
+  const lowpassAndDepthPath = createConnection(750 - 2, 250, 750 - 2, 300, lightWaveColor);
+  const lowpassAndDepthArrow = createConnectionArrow(750 - 2, 300 - 14, 'down', lightWaveColor);
+
+  const frequencyParamEllipse = createAudioParam('frequency', 365, 350);
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndSensitivityPath);
+  g.appendChild(sensitivityRect);
+  g.appendChild(sensitivityAndAudiodDestinationNodePath);
+  g.appendChild(frequencyParamEllipse);
+  g.appendChild(audioDestinationNodeRect);
+
+  g.appendChild(oscillatorNodeAndSensitivityArrow);
+  g.appendChild(sensitivityAndAudiodDestinationNodeArrow);
+
+  g.appendChild(oscillatorNodeAndEnvelopeFollowerPath);
+  g.appendChild(oscillatorNodeAndEnvelopeFollowerArrow);
+
+  g.appendChild(depthAndAudioDestinationPath);
+  g.appendChild(depthAndAudioDestinationArrow);
+
+  g.appendChild(envelopeFollowerRect);
+  g.appendChild(lowpassRect);
+  g.appendChild(depthRect);
+
+  g.appendChild(envelopeFollowerAndLowpassPath);
+  g.appendChild(envelopeFollowerAndLowpassArrow);
+  g.appendChild(lowpassAndDepthPath);
+  g.appendChild(lowpassAndDepthArrow);
+
+  svg.appendChild(g);
+};
+
+const autoWah = () => {
+  let sensitivityFrequency = 2000;
+  let sensitivityDepthRate = 0.5;
+  let sensitivityResonance = 10;
+
+  const tremoloDepthValue = 0.25;
+  const tremoloRateValue = 1;
+
+  let oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency: 440 });
+  let lfo = new OscillatorNode(audiocontext, { frequency: tremoloRateValue });
+
+  // for Tremolo
+  const lfoDepth = new GainNode(audiocontext, { gain: tremoloDepthValue });
+  const amplitude = new GainNode(audiocontext, { gain: 0.5 }); // 0.5 +- ${tremoloDepthValue}
+
+  lfo.connect(lfoDepth);
+  lfoDepth.connect(amplitude.gain);
+
+  // Start LFO (for simulating amplitude modulation)
+  lfo.start(0);
+
+  const envelopeFollower = new WaveShaperNode(audiocontext, { buffer: new Float32Array([1, 0, 1]) });
+  const sensitivity = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: sensitivityFrequency, Q: sensitivityResonance });
+  const lowpass = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: 2, Q: 1 });
+
+  const depth = new GainNode(audiocontext, { gain: sensitivity.frequency.value * sensitivityDepthRate });
+
+  let isStop = true;
+
+  const buttonElement = document.getElementById('button-auto-wah');
+  const checkboxElement = document.getElementById('checkbox-auto-wah');
+
+  const rangeSensitivityFrequencyElement = document.getElementById('range-auto-wah-sensitivity');
+  const rangeSensitivityDepthElement = document.getElementById('range-auto-wah-depth');
+  const rangeResonanceElement = document.getElementById('range-auto-wah-resonance');
+
+  const spanPrintCheckedElement = document.getElementById('print-checked-auto-wah');
+  const spanPrintSensitivityFrequencyElement = document.getElementById('print-auto-wah-sensitivity-value');
+  const spanPrintDepthElement = document.getElementById('print-auto-wah-depth-value');
+  const spanPrintResonanceElement = document.getElementById('print-auto-wah-resonance-value');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (!isStop) {
+      return;
+    }
+
+    if (checkboxElement.checked) {
+      oscillator.connect(amplitude);
+      amplitude.connect(sensitivity);
+      sensitivity.connect(audiocontext.destination);
+
+      oscillator.connect(envelopeFollower);
+      envelopeFollower.connect(lowpass);
+      lowpass.connect(depth);
+      depth.connect(sensitivity.frequency);
+
+      oscillator.start(0);
+    } else {
+      oscillator.disconnect(0);
+
+      oscillator.connect(audiocontext.destination);
+
+      // Start oscillator
+      oscillator.start(0);
+    }
+
+    isStop = false;
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (isStop) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency: 440 });
+
+    isStop = true;
+
+    buttonElement.textContent = 'start';
+  };
+
+  checkboxElement.addEventListener('click', () => {
+    oscillator.disconnect(0);
+    sensitivity.disconnect(0);
+    envelopeFollower.disconnect(0);
+    lowpass.disconnect(0);
+    depth.disconnect(0);
+
+    if (checkboxElement.checked) {
+      oscillator.connect(amplitude);
+      amplitude.connect(sensitivity);
+      sensitivity.connect(audiocontext.destination);
+
+      oscillator.connect(envelopeFollower);
+      envelopeFollower.connect(lowpass);
+      lowpass.connect(depth);
+      depth.connect(sensitivity.frequency);
+
+      spanPrintCheckedElement.textContent = 'ON';
+    } else {
+      oscillator.connect(audiocontext.destination);
+
+      spanPrintCheckedElement.textContent = 'OFF';
+    }
+  });
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeSensitivityFrequencyElement.addEventListener('input', (event) => {
+    sensitivityFrequency = event.currentTarget.valueAsNumber;
+
+    sensitivity.frequency.value = sensitivityFrequency;
+
+    spanPrintSensitivityFrequencyElement.textContent = `${sensitivityFrequency.toString(10)} Hz`;
+  });
+
+  rangeSensitivityDepthElement.addEventListener('input', (event) => {
+    sensitivityDepthRate = event.currentTarget.valueAsNumber;
+
+    depth.gain.value = sensitivityFrequency * sensitivityDepthRate;
+
+    spanPrintDepthElement.textContent = sensitivityDepthRate.toString(10);
+  });
+
+  rangeResonanceElement.addEventListener('input', (event) => {
+    sensitivityResonance = event.currentTarget.valueAsNumber;
+
+    sensitivity.Q.value = sensitivityResonance;
+
+    spanPrintResonanceElement.textContent = sensitivityResonance.toString(10);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -8937,3 +9138,7 @@ createNodeConnectionsForPedalWah(document.getElementById('svg-figure-node-connec
 pedalWah();
 
 vcfAutoWah();
+
+createNodeConnectionsForAutoWah(document.getElementById('svg-figure-node-connections-for-auto-wah'));
+
+autoWah();
