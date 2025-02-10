@@ -10188,6 +10188,159 @@ rangeResonanceElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             <b>Overdrive</b> (<b>オーバードライブ</b>), <b>Distortion</b> (<b>ディストーション</b>), <b>Fuzz</b> (<b>ファズ</b>)
             に分類されるエフェクターによるディストーションサウンドの実装に関して解説します.
           </p>
+          <section id="section-effectors-distortion-wave-shaper-node">
+            <h4>WaveShaperNode</h4>
+            <p>
+              ディストーションサウンドの原理は, 周波数領域でみると, 原音には存在しない周波数成分を発生させる<b>非線形処理</b>が原理となっています. これを,
+              時間領域の波形でみると, 意図的な音割れを発生させる<b>クリッピング</b>が原理となっています.
+            </p>
+            <figure>
+              <svg id="svg-figure-clipping" width="1200" height="320" />
+              <figcaption>クリッピング</figcaption>
+            </figure>
+            <p>
+              波形を単純にクリッピングしただけでは, ディストーションサウンドではなく, 音割れっぽくなってしまうことや, 非線形処理によって折り返し歪み
+              (エイリアス歪み) が発生するのを防ぐための<b>オーバーサンプル処理</b>などを抽象化するのが, <b><code>WaveShaperNode</code></b> クラスです.
+            </p>
+            <section id="section-effectors-distortion-wave-shaper-node-curve">
+              <h5>curve プロパティ</h5>
+              <p>
+                波形のクリッピングを決定するための <code>Float32Array</code> を指定します. <code>curve</code> プロパティで設定される
+                <code>Float32Array</code> は, <b>入力の振幅に対する出力の振幅を表しています</b>. つまり, <code>new Float32Array([0, 1])</code> であれば,
+                入出力の振幅比は 1 : 1 となり, クリッピングカーブの形状は直線となります. すなわち, これは, <b>線形処理</b>となるので,
+                <code>curve</code> プロパティを指定しないのと同じです (<code>curve</code> プロパティのデフォルト値は <code>undefined</code> です).
+                <code>curve</code> プロパティに設定する <code>Float32Array</code> のサイズの上限は仕様では決められていませんが,
+                <b>下限は <code>2</code></b> です (これは最低でも直線を表現しなければならないことを考慮すると直感的でもあります).
+                <b>サンプルとサンプルの間は線形補間が適用される</b>ので, 計算コストも考慮すると現実的な上限は
+                <code>8192</code> サンプルぐらいまでで十分と言えます (あまりに少ないと, 線形補間の間が大きくなるので,
+                カーブではなく直線をつないだような形状となってしまい, クリッピングの精度が悪くなるので, ディストーションカーブとして使う場合は,
+                <code>512</code> サンプル程度は下限としておいたほうがよいでしょう).
+              </p>
+              <p>
+                もっとも, 手動的にクリッピングカーブとなる <code>Float32Array</code> の値を設定することはあまりなく (エンベロープフォロワーなどを除いて),
+                ディストーションサウンドとしてのクリッピングカーブを指定する場合, 定石となるようなクリッピングカーブが知られているので,
+                それを利用してクリッピングカーブを生成するのがよいでしょう (例えば, シグモイド関数 (<span class="math-inline"
+                  >$\sigma_{a}\left(x\right) = \frac{1}{1 + e^{-ax}}$</span>) や<a href="https://stackoverflow.com/questions/7840347/web-audio-api-waveshapernode" target="_blank" rel="noopener noreferrer"
+                  >オーバードライブカーブ</a>など).
+              </p>
+              <p>
+                <code>curve</code> プロパティに指定されたクリッピングカーブによって, <b>非線形処理</b>が適用されて, 入出力の振幅比が<b>歪み</b>,
+                倍音成分が発生してディストーションサウンドとなります.
+              </p>
+              <figure>
+                <div class="flexbox">
+                  <svg id="svg-figure-wave-shaper-node-curve" width="424" height="424" />
+                  <dl class="flexbox-column">
+                    <dt><label for="svg-figure-wave-shaper-node-curve-select-curve-type">Curve Type</label></dt>
+                    <dd>
+                      <select id="svg-figure-wave-shaper-node-curve-select-curve-type">
+                        <option value="" selected>Linear</option>
+                        <option value="sigmoid">Sigmoid Function</option>
+                        <option value="overdrive">Overdrive</option>
+                        <option value="asymmetrical-overdrive">Overdrive (Asymmetrical)</option>
+                        <option value="full-wave-rectifier">Full Wave Rectifier (Envelope Follower)</option>
+                        <option value="half-wave-rectifier">Half Wave Rectifier</option>
+                        <option value="full-wave-rectifier-and-hard-clipping">Full Wave Rectifier + Hard Clipping</option>
+                        <option value="half-wave-rectifier-and-hard-clipping">Half Wave Rectifier + Hard Clipping</option>
+                        <option value="bitcrusher">Bit Crusher</option>
+                      </select>
+                    </dd>
+                    <dt>
+                      <label for="svg-figure-wave-shaper-node-curve-range-curve-size">Curve Size: </label><span id="svg-figure-wave-shaper-node-curve-range-curve-size-value">4096</span>
+                    </dt>
+                    <dd>
+                      <input type="range" id="svg-figure-wave-shaper-node-curve-range-curve-size" value="4096" min="32" max="8192" step="1" />
+                    </dd>
+                    <dt>
+                      <label for="svg-figure-wave-shaper-node-curve-range-amount">Amount or Clipping Level: </label><span id="svg-figure-wave-shaper-node-curve-range-amount-value">0</span>
+                    </dt>
+                    <dd>
+                      <input type="range" id="svg-figure-wave-shaper-node-curve-range-amount" value="0" min="0" max="0.95" step="0.05" />
+                    </dd>
+                    <dt>
+                      <label for="svg-figure-wave-shaper-node-curve-range-step">Bit Crusher Step: </label><span id="svg-figure-wave-shaper-node-curve-range-step-value">2</span>
+                    </dt>
+                    <dd>
+                      <input type="range" id="svg-figure-wave-shaper-node-curve-range-step" value="2" min="2" max="40" step="2" />
+                    </dd>
+                  </dl>
+                </div>
+                <figcaption>クリッピングカーブ</figcaption>
+              </figure>
+            </section>
+            <section id="section-effectors-distortion-wave-shaper-node-oversample">
+              <h5>oversample プロパティ</h5>
+              <p>
+                ディストーションサウンドの生成において必須ではありませんが, クリッピング処理によって原音には存在しない周波数成分が発生しますが,
+                <b>ナイキスト周波数以上の周波数成分が発生する可能性, すなわち, 折り返し歪み (エイリアス歪み) が発生してしまう可能性があります</b>. この歪みは,
+                ノイズとなって知覚されてしまうので, それを防ぐために,
+                <b
+                  >プリプロセス処理 (クリッピング前の処理) として, アップサンプリングによってクリッピング対象の信号のサンプル数を増やし, ポストプロセス処理
+                  (クリッピング後の処理) として, ダウンサンプリングによって元のサンプル数に戻すという処理</b>
+                (<b>オーバーサンプル処理</b>) が知られています.
+              </p>
+              <p>
+                オーバーサンプル処理の, アップサンプリングのサンプリング周波数を設定するのが, <code>oversample</code> プロパティです. もっとも,
+                直接アップサンプリング周波数を設定するのではなく, <code>&apos;2x&apos;</code>, または, <code>&apos;4x&apos;</code> の文字列 (<b
+                  ><code>OverSampleType</code></b>
+                列挙型. デフォルト値は, オーバーサンプル処理をしない <code>&apos;none&apos;</code> です) を指定することによって, サンプリング周波数の 2 倍,
+                または, 4 倍にアップサンプリングします. ディストーションサウンドの音質だけを考えるなら, 常に
+                <code>&apos;4x&apos;</code> を指定しておくのがよいですが, オーバーサンプル処理によって,
+                サンプル数が増えるほどパフォーマンスは低下してしまいます. したがって, Crunch のような軽い歪みやエンベロープフォロワーのような場合には
+                <code>&apos;none&apos;</code>, Distortion や Fuzz のような激しい歪みの場合には <code>&apos;4x&apos;</code>, Overdrive の場合には
+                <code>&apos;2x&apos;</code> というように, 歪みの深さや用途に応じて設定を変えるほうが, 音質とパフォーマンス (CPU リソースやレイテンシー)
+                の観点からは理想と言えます.
+              </p>
+            </section>
+            <p>
+              <code>curve</code> プロパティと <code>oversample</code> プロパティが理解できれば, <code>WaveShaperNode</code> インスタンス生成して接続するだけです
+              (ファクトリメソッドでインスタンスを生成する場合は, <code>AudioContext</code> インスタンスの
+              <b><code>createWaveShaper</code></b> メソッドを呼び出します).
+            </p>
+            <figure>
+              <svg id="svg-figure-node-connections-for-wave-shaper-node" width="400" height="520" />
+              <figcaption><code>WaveShaperNode</code> のノード接続図</figcaption>
+            </figure>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const curve = new Float32Array(4096);
+
+const amount = 0.7;
+
+const k = (2 * amount) / (1 - amount);
+
+for (let n = 0, numberOfSamples = curve.length; n &lt; numberOfSamples; n++) {
+  const x = (((n - 0) * (1 - (-1))) / (numberOfSamples - 0)) + (-1);
+  const y = ((1 + k) * x) / (1 + (k * Math.abs(x)));
+
+  curve[n] = y;
+}
+
+const shaper = new WaveShaperNode(context, { curve, oversample: &apos;2x&apos; });
+
+// If use `createWaveShaper`
+// const shaper = context.createWaveShaper();
+//
+// shaper.curve      = curve;
+// shaper.oversample = &apos;2x&apos;;
+
+const oscillator = new OscillatorNode(context);
+
+// Connect nodes
+// OscillatorNode (Input) -&gt; WaveShaperNode (Clipping) -&gt; AudioDestinationNode (Output)
+oscillator.connect(shaper);
+shaper.connect(context.destination);
+
+// Start oscillator immediately
+oscillator.start(0);
+
+// Stop oscillator after 10 sec
+oscillator.stop(context.currentTime + 10);</code></pre>
+            <img src="images/wave-shaper-node.png" alt="WaveShaperNode" width="1232" height="770" loading="lazy" />
+          </section>
         </section>
       </section>
     </main>

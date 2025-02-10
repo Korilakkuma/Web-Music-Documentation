@@ -9010,6 +9010,603 @@ const autoWah = () => {
   });
 };
 
+const createClipping = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const renderSine = (offset, isClipping) => {
+    const g = document.createElementNS(xmlns, 'g');
+
+    const width = innerWidth / 2 - padding;
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', (offset + padding / 2).toString(10));
+    xRect.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+    xRect.setAttribute('width', (width + padding).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    g.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (offset + padding - 1).toString(10));
+    yRect.setAttribute('y', padding.toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', innerHeight.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    g.appendChild(yRect);
+
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = 'Time';
+
+    xText.setAttribute('x', (offset + width + padding).toString(10));
+    xText.setAttribute('y', (padding + innerHeight / 2 - 8).toString(10));
+
+    xText.setAttribute('text-anchor', 'middle');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '16px');
+
+    g.appendChild(xText);
+
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = 'Amplitude';
+
+    yText.setAttribute('x', (offset + padding).toString(10));
+    yText.setAttribute('y', (padding - 4).toString(10));
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '16px');
+
+    g.appendChild(yText);
+
+    [1, 0, -1].forEach((amplitude, index) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = amplitude.toString(10);
+
+      text.setAttribute('x', (offset + padding - 8).toString(10));
+      text.setAttribute('y', (padding + (innerHeight / 2) * (1 - amplitude) + 12).toString(10));
+
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '14px');
+
+      g.appendChild(text);
+    });
+
+    const w = 2 * Math.PI;
+
+    const path = document.createElementNS(xmlns, 'path');
+
+    let d = '';
+
+    for (let n = 0, len = sampleRate; n < len; n++) {
+      let v = Math.sin((2 * w * n) / sampleRate);
+
+      if (isClipping) {
+        if (Math.abs(v) > 0.5) {
+          v = v > 0 ? 0.5 : -0.5;
+        }
+      }
+
+      const x = (n / len) * width + offset + padding;
+      const y = (1 - v) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(path);
+
+    svg.appendChild(g);
+  };
+
+  [-0.5, 0.5].forEach((y) => {
+    const clippingRect = document.createElementNS(xmlns, 'rect');
+
+    clippingRect.setAttribute('x', padding.toString(10));
+    clippingRect.setAttribute('y', (padding + (1 - y) * (innerHeight / 2)).toString(10));
+    clippingRect.setAttribute('width', innerWidth.toString(10));
+    clippingRect.setAttribute('height', lineWidth.toString(10));
+    clippingRect.setAttribute('stroke', 'none');
+    clippingRect.setAttribute('fill', alphaLightWaveColor);
+
+    svg.appendChild(clippingRect);
+  });
+
+  renderSine(0, false);
+  renderSine(innerWidth / 2 + padding, true);
+};
+
+const createCurveTable = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const rect = document.createElementNS(xmlns, 'rect');
+
+  rect.setAttribute('x', padding);
+  rect.setAttribute('y', padding);
+  rect.setAttribute('width', innerWidth.toString(10));
+  rect.setAttribute('height', innerHeight.toString(10));
+  rect.setAttribute('stroke', lightColor);
+  rect.setAttribute('stroke-width', lineWidth.toString(10));
+  rect.setAttribute('fill', 'none');
+
+  svg.appendChild(rect);
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const inputLabel = document.createElementNS(xmlns, 'text');
+
+  inputLabel.textContent = 'Input';
+
+  inputLabel.setAttribute('x', (innerWidth + padding + 40).toString(10));
+  inputLabel.setAttribute('y', (padding + innerHeight + 20).toString(10));
+  inputLabel.setAttribute('text-anchor', 'middle');
+  inputLabel.setAttribute('stroke', 'none');
+  inputLabel.setAttribute('fill', baseColor);
+  inputLabel.setAttribute('font-size', '16px');
+
+  g.appendChild(inputLabel);
+
+  const outputLabel = document.createElementNS(xmlns, 'text');
+
+  outputLabel.textContent = 'Output';
+
+  outputLabel.setAttribute('x', (padding - 20).toString(10));
+  outputLabel.setAttribute('y', (padding - 20).toString(10));
+  outputLabel.setAttribute('text-anchor', 'middle');
+  outputLabel.setAttribute('stroke', 'none');
+  outputLabel.setAttribute('fill', baseColor);
+  outputLabel.setAttribute('font-size', '16px');
+
+  g.appendChild(outputLabel);
+
+  ['-1.0', '-0.5', ' 0.0', ' 0.5', ' 1.0'].forEach((x, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = x;
+
+    text.setAttribute('x', ((innerWidth / 4) * index + padding).toString(10));
+    text.setAttribute('y', (padding + innerHeight + 20).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(text);
+
+    if (x === -1 || x === 1) {
+      return;
+    }
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', ((innerWidth / 4) * index + padding).toString(10));
+    xRect.setAttribute('y', padding.toString(10));
+    xRect.setAttribute('width', lineWidth.toString(10));
+    xRect.setAttribute('height', innerHeight.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', lightColor);
+
+    g.appendChild(xRect);
+  });
+
+  ['1.0', '0.5', ' 0.0', '-0.5', '-1.0'].forEach((y, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = y;
+
+    text.setAttribute('x', (padding - 20).toString(10));
+    text.setAttribute('y', ((innerHeight / 4) * index + padding).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(text);
+
+    if (y === -1 || y === 1) {
+      return;
+    }
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', padding.toString(10));
+    yRect.setAttribute('y', ((innerHeight / 4) * index + padding).toString(10));
+    yRect.setAttribute('width', innerWidth.toString(10));
+    yRect.setAttribute('height', lineWidth.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', lightColor);
+
+    g.appendChild(yRect);
+  });
+
+  svg.appendChild(g);
+
+  let type = '';
+  let numberOfSamples = 4096;
+  let amount = 0;
+  let step = 2;
+
+  const createLinearPath = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding} ${padding + innerHeight} L${padding + innerWidth} ${padding}`);
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    return path;
+  };
+
+  const createSigmoidFunctionPath = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    let d = '';
+
+    for (let n = 0; n < numberOfSamples; n++) {
+      const x = 3 * (amount + 1) * (n / numberOfSamples - 0.5);
+      const y = 1 / (1 + Math.exp(-x));
+
+      if (n === 0) {
+        d += `M${n * (innerWidth / numberOfSamples) + padding} ${(1 - y) * innerHeight + padding}`;
+      } else {
+        d += ` L${n * (innerWidth / numberOfSamples) + padding} ${(1 - y) * innerHeight + padding}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    return path;
+  };
+
+  const createOverdriveCurvePath = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    if (amount < 0 || amount >= 1) {
+      return path;
+    }
+
+    const k = (2 * amount) / (1 - amount);
+
+    let d = '';
+
+    for (let n = 0; n < numberOfSamples; n++) {
+      const x = ((n - 0) * (1 - -1)) / (numberOfSamples - 0) + -1;
+      const y = ((1 + k) * x) / (1 + k * Math.abs(x));
+
+      if (n === 0) {
+        d += `M${n * (innerWidth / numberOfSamples) + padding} ${(1 - y) * (innerHeight / 2) + padding}`;
+      } else {
+        d += ` L${n * (innerWidth / numberOfSamples) + padding} ${(1 - y) * (innerHeight / 2) + padding}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    return path;
+  };
+
+  const createAsymmetricalOverdriveCurvePath = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    if (amount < 0 || amount >= 1) {
+      return path;
+    }
+
+    const k = (2 * amount) / (1 - amount);
+
+    let d = '';
+
+    for (let n = 0; n < numberOfSamples; n++) {
+      const x = ((n - 0) * (1 - -1)) / (numberOfSamples - 0) + -1;
+      const v = ((1 + k) * x) / (1 + k * Math.abs(x));
+
+      const y = v > 0 ? v : (1 - (amount > 0.5 ? 0.5 : amount)) * v;
+
+      if (n === 0) {
+        d += `M${n * (innerWidth / numberOfSamples) + padding} ${(1 - y) * (innerHeight / 2) + padding}`;
+      } else {
+        d += ` L${n * (innerWidth / numberOfSamples) + padding} ${(1 - y) * (innerHeight / 2) + padding}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    return path;
+  };
+
+  const createFullWaveRectifierPath = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding} ${padding} L${padding + innerWidth / 2} ${padding + innerHeight / 2} L${padding + innerWidth} ${padding}`);
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    return path;
+  };
+
+  const createHalfWaveRectifierPath = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight / 2} L${padding + innerWidth / 2} ${padding + innerHeight / 2} L${padding + innerWidth} ${padding}`
+    );
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    return path;
+  };
+
+  const createFullWaveRectifierAndHardClippingPath = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding} ${padding + amount * (innerHeight / 2)} L${padding + amount * (innerWidth / 2)} ${padding + amount * (innerHeight / 2)} L${padding + innerWidth / 2} ${padding + innerHeight / 2} L${padding + innerWidth - amount * (innerWidth / 2)} ${padding + amount * (innerHeight / 2)} L${padding + innerWidth} ${padding + amount * (innerHeight / 2)}`
+    );
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    return path;
+  };
+
+  const createHalfWaveRectifierAndHardClippingPath = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight / 2} L${padding + innerWidth / 2} ${padding + innerHeight / 2} L${padding + innerWidth - amount * (innerWidth / 2)} ${padding + amount * (innerHeight / 2)} L${padding + innerWidth} ${padding + amount * (innerHeight / 2)}`
+    );
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    return path;
+  };
+
+  const createBitCrusherPath = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    let d = '';
+
+    for (let n = 0; n < numberOfSamples; n++) {
+      const y = (((n / numberOfSamples) * step) | 0) / (2 * (step - 1)) - 1;
+
+      if (n === 0) {
+        d += `M${n * (innerWidth / numberOfSamples) + padding} ${-1 * y * (innerHeight / 2) + padding}`;
+      } else {
+        d += ` L${n * (innerWidth / numberOfSamples) + padding} ${-1 * y * (innerHeight / 2) + padding}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    return path;
+  };
+
+  let curvePath = null;
+
+  const renderCurve = () => {
+    if (curvePath) {
+      svg.removeChild(curvePath);
+    }
+
+    switch (type) {
+      case 'sigmoid': {
+        curvePath = createSigmoidFunctionPath();
+        break;
+      }
+
+      case 'overdrive': {
+        curvePath = createOverdriveCurvePath();
+        break;
+      }
+
+      case 'asymmetrical-overdrive': {
+        curvePath = createAsymmetricalOverdriveCurvePath();
+        break;
+      }
+
+      case 'full-wave-rectifier': {
+        curvePath = createFullWaveRectifierPath();
+        break;
+      }
+
+      case 'half-wave-rectifier': {
+        curvePath = createHalfWaveRectifierPath();
+        break;
+      }
+
+      case 'full-wave-rectifier-and-hard-clipping': {
+        curvePath = createFullWaveRectifierAndHardClippingPath();
+        break;
+      }
+
+      case 'half-wave-rectifier-and-hard-clipping': {
+        curvePath = createHalfWaveRectifierAndHardClippingPath();
+        break;
+      }
+
+      case 'bitcrusher': {
+        curvePath = createBitCrusherPath();
+        break;
+      }
+
+      default: {
+        curvePath = createLinearPath();
+        break;
+      }
+    }
+
+    svg.appendChild(curvePath);
+  };
+
+  const selectCurveTypeElement = document.getElementById('svg-figure-wave-shaper-node-curve-select-curve-type');
+  const rangeCurveSizeElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-curve-size');
+  const rangeAmountElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-amount');
+  const rangeStepElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-step');
+
+  const spanPrintCurveSizeElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-curve-size-value');
+  const spanPrintAmountElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-amount-value');
+  const spanPrintStepElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-step-value');
+
+  rangeCurveSizeElement.setAttribute('disabled', 'disabled');
+  rangeAmountElement.setAttribute('disabled', 'disabled');
+  rangeStepElement.setAttribute('disabled', 'disabled');
+
+  selectCurveTypeElement.addEventListener('input', (event) => {
+    type = event.currentTarget.value;
+
+    rangeCurveSizeElement.removeAttribute('disabled');
+    rangeAmountElement.removeAttribute('disabled');
+    rangeStepElement.removeAttribute('disabled');
+
+    switch (type) {
+      case 'sigmoid':
+      case 'overdrive':
+      case 'asymmetrical-overdrive': {
+        rangeStepElement.setAttribute('disabled', 'disabled');
+        break;
+      }
+
+      case 'full-wave-rectifier-and-hard-clipping':
+      case 'half-wave-rectifier-and-hard-clipping': {
+        rangeCurveSizeElement.setAttribute('disabled', 'disabled');
+        rangeStepElement.setAttribute('disabled', 'disabled');
+        break;
+      }
+
+      case 'bitcrusher': {
+        rangeAmountElement.setAttribute('disabled', 'disabled');
+        break;
+      }
+
+      case 'full-wave--follower':
+      case 'half-wave-rectifier':
+      default: {
+        rangeCurveSizeElement.setAttribute('disabled', 'disabled');
+        rangeAmountElement.setAttribute('disabled', 'disabled');
+        rangeStepElement.setAttribute('disabled', 'disabled');
+        break;
+      }
+    }
+
+    renderCurve();
+  });
+
+  rangeCurveSizeElement.addEventListener('input', (event) => {
+    numberOfSamples = event.currentTarget.valueAsNumber;
+
+    spanPrintCurveSizeElement.textContent = numberOfSamples.toString(10);
+
+    renderCurve();
+  });
+
+  rangeAmountElement.addEventListener('input', (event) => {
+    amount = event.currentTarget.valueAsNumber;
+
+    spanPrintAmountElement.textContent = amount.toString(10);
+
+    renderCurve();
+  });
+
+  rangeStepElement.addEventListener('input', (event) => {
+    step = event.currentTarget.valueAsNumber;
+
+    spanPrintStepElement.textContent = step.toString(10);
+
+    renderCurve();
+  });
+
+  renderCurve();
+};
+
+const createNodeConnectionsForWaveShaperNode = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const waveShaperNodeRect = createAudioNode('WaveShaperNode', 0, 200);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 400);
+
+  const oscillatorNodeAndWaveShaperNodePath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const waveShaperNodeAndAudiodDestinationNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+
+  const oscillatorNodeAndWaveShaperNodeArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const waveShaperNodeAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndWaveShaperNodePath);
+  g.appendChild(oscillatorNodeAndWaveShaperNodeArrow);
+  g.appendChild(waveShaperNodeRect);
+  g.appendChild(waveShaperNodeAndAudiodDestinationNodePath);
+  g.appendChild(waveShaperNodeAndAudiodDestinationNodeArrow);
+  g.appendChild(audioDestinationNodeRect);
+
+  svg.appendChild(g);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -9142,3 +9739,7 @@ vcfAutoWah();
 createNodeConnectionsForAutoWah(document.getElementById('svg-figure-node-connections-for-auto-wah'));
 
 autoWah();
+
+createClipping(document.getElementById('svg-figure-clipping'));
+createCurveTable(document.getElementById('svg-figure-wave-shaper-node-curve'));
+createNodeConnectionsForWaveShaperNode(document.getElementById('svg-figure-node-connections-for-wave-shaper-node'));
