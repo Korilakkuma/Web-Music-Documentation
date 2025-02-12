@@ -10341,6 +10341,81 @@ oscillator.start(0);
 oscillator.stop(context.currentTime + 10);</code></pre>
             <img src="images/wave-shaper-node.png" alt="WaveShaperNode" width="1232" height="770" loading="lazy" />
           </section>
+          <section id="section-effectors-distortion-wave-asymmetrical-clipping">
+            <h4>非対称クリッピング</h4>
+            <p>
+              クリッピングカーブでも紹介した<a
+                href="https://stackoverflow.com/questions/7840347/web-audio-api-waveshapernode"
+                target="_blank"
+                rel="noopener noreferrer"
+                >オーバードライブカーブ</a>でも Overdrive を実装することは可能ですが, Overdrive によっては,
+              <b>クリッピング後の波形が非対称となる非対称クリッピング</b>で実装されていることも多いのでこのセクションで解説します (ちなみに, BOSS
+              <a href="https://www.boss.info/jp/promos/40th_anniversary_compact_pedals/" target="_blank" rel="noopener noreferrer">OD-1 Overdrive</a>
+              も非対称クリッピング回路が利用されています).
+            </p>
+            <p>
+              <b>非対称クリッピングすることによって, 奇数次の倍音成分だけではなく, 偶数次の倍音成分も発生するので</b> (端的には, 倍音成分が増えるので),
+              ハイゲインよりの Overdrive を生成することが可能となります.
+            </p>
+            <figure>
+              <svg id="svg-figure-asymmetrical-clipping" width="1200" height="320" />
+              <figcaption>非対称クリッピング</figcaption>
+            </figure>
+            <p>
+              したがって,
+              <a href="https://stackoverflow.com/questions/7840347/web-audio-api-waveshapernode" target="_blank" rel="noopener noreferrer"
+                >オーバードライブカーブ</a>をもとに, 非対称のクリッピングになるように, 正負の判定を追加して非対称になるように設定します. 非対称クリッピングカーブの形状は,
+              <a href="#svg-figure-wave-shaper-node-curve">クリッピングカーブ</a>で <code>Curve Type</code> を
+              <code>Overdrive (Asymmetrical)</code> に選択すると確認できます.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const curve = new Float32Array(4096);
+
+const amount = 0.7;
+
+const k = (2 * amount) / (1 - amount);
+
+for (let n = 0, numberOfSamples = curve.length; n &lt; numberOfSamples; n++) {
+  const x = (((n - 0) * (1 - (-1))) / (numberOfSamples - 0)) + (-1);
+  const y = ((1 + k) * x) / (1 + (k * Math.abs(x)));
+
+  // Asymmetrical clipping curve
+  curve[n] = (y &gt; 0) ? y : ((1 - ((amount &gt; 0.5) ? 0.5 : amount)) * y);
+}
+
+const shaper = new WaveShaperNode(context, { curve, oversample: &apos;2x&apos; });
+
+// If use `createWaveShaper`
+// const shaper = context.createWaveShaper();
+//
+// shaper.curve      = curve;
+// shaper.oversample = &apos;2x&apos;;
+
+const oscillator = new OscillatorNode(context);
+
+// Connect nodes
+// OscillatorNode (Input) -&gt; WaveShaperNode (Clipping) -&gt; AudioDestinationNode (Output)
+oscillator.connect(shaper);
+shaper.connect(context.destination);
+
+// Start oscillator immediately
+oscillator.start(0);
+
+// Stop oscillator after 10 sec
+oscillator.stop(context.currentTime + 10);</code></pre>
+            <p>
+              また, 対称性に関わらず, Overdrive のクリッピングカーブは滑らかな曲線を設定することが多く, <b>ソフトクリッピング</b>された波形となります (逆に,
+              Distortion や Fuzz などは, 急峻に変化する曲線や非線形に直線を組み合わせた設定にすることが多く, <b>ハードクリッピング</b>された波形となります).
+            </p>
+            <figure>
+              <svg id="svg-figure-soft-and-hard-clipping" width="1200" height="320" />
+              <figcaption>ソフトクリッピング (左) とハードクリッピング (右)</figcaption>
+            </figure>
+          </section>
         </section>
       </section>
     </main>
