@@ -9948,6 +9948,309 @@ const createSoftAndHardClipping = (svg) => {
   renderClipping(innerWidth / 2 + padding, true);
 };
 
+const createRectification = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const renderRectification = (offset, isFull) => {
+    const g = document.createElementNS(xmlns, 'g');
+
+    const width = innerWidth / 2 - padding;
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', (offset + padding / 2).toString(10));
+    xRect.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+    xRect.setAttribute('width', (width + padding).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    g.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (offset + padding - 1).toString(10));
+    yRect.setAttribute('y', padding.toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', innerHeight.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    g.appendChild(yRect);
+
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = 'Time';
+
+    xText.setAttribute('x', (offset + width + padding).toString(10));
+    xText.setAttribute('y', (padding + innerHeight / 2 - 8).toString(10));
+
+    xText.setAttribute('text-anchor', 'middle');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '16px');
+
+    g.appendChild(xText);
+
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = 'Amplitude';
+
+    yText.setAttribute('x', (offset + padding).toString(10));
+    yText.setAttribute('y', (padding - 4).toString(10));
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '16px');
+
+    g.appendChild(yText);
+
+    [1, 0, -1].forEach((amplitude, index) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = amplitude.toString(10);
+
+      text.setAttribute('x', (offset + padding - 8).toString(10));
+      text.setAttribute('y', (padding + (innerHeight / 2) * (1 - amplitude) + 12).toString(10));
+
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '14px');
+
+      g.appendChild(text);
+    });
+
+    const w = 2 * Math.PI;
+
+    const sinePath = document.createElementNS(xmlns, 'path');
+
+    let sinePathD = '';
+
+    for (let n = 0, len = sampleRate; n < len; n++) {
+      const v = Math.sin((2 * w * n) / sampleRate);
+
+      const x = (n / len) * width + offset + padding;
+      const y = (1 - v) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        sinePathD += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        sinePathD += ` L${x} ${y}`;
+      }
+    }
+
+    sinePath.setAttribute('d', sinePathD);
+
+    sinePath.setAttribute('stroke', alphaWaveColor);
+    sinePath.setAttribute('fill', 'none');
+    sinePath.setAttribute('stroke-width', lineWidth.toString(10));
+    sinePath.setAttribute('stroke-linecap', lineCap);
+    sinePath.setAttribute('stroke-linejoin', lineJoin);
+    sinePath.setAttribute('stroke-dasharray', '5,5');
+
+    g.appendChild(sinePath);
+
+    const path = document.createElementNS(xmlns, 'path');
+
+    let d = '';
+
+    for (let n = 0, len = sampleRate; n < len; n++) {
+      let v = Math.sin((2 * w * n) / sampleRate);
+
+      if (v < 0) {
+        v = isFull ? Math.abs(v) : 0;
+      }
+
+      const x = (n / len) * width + offset + padding;
+      const y = (1 - v) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(path);
+
+    svg.appendChild(g);
+  };
+
+  renderRectification(0, true);
+  renderRectification(innerWidth / 2 + padding, false);
+};
+
+const createFuzz = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const renderRectifier = (offset, isFull) => {
+    const g = document.createElementNS(xmlns, 'g');
+
+    const width = innerWidth / 2 - padding;
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', (offset + padding / 2).toString(10));
+    xRect.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+    xRect.setAttribute('width', (width + padding).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    g.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (offset + padding - 1).toString(10));
+    yRect.setAttribute('y', padding.toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', innerHeight.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    g.appendChild(yRect);
+
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = 'Time';
+
+    xText.setAttribute('x', (offset + width + padding).toString(10));
+    xText.setAttribute('y', (padding + innerHeight / 2 - 8).toString(10));
+
+    xText.setAttribute('text-anchor', 'middle');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '16px');
+
+    g.appendChild(xText);
+
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = 'Amplitude';
+
+    yText.setAttribute('x', (offset + padding).toString(10));
+    yText.setAttribute('y', (padding - 4).toString(10));
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '16px');
+
+    g.appendChild(yText);
+
+    [1, 0, -1].forEach((amplitude, index) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = amplitude.toString(10);
+
+      text.setAttribute('x', (offset + padding - 8).toString(10));
+      text.setAttribute('y', (padding + (innerHeight / 2) * (1 - amplitude) + 12).toString(10));
+
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '14px');
+
+      g.appendChild(text);
+    });
+
+    const w = 2 * Math.PI;
+
+    const sinePath = document.createElementNS(xmlns, 'path');
+
+    let sinePathD = '';
+
+    for (let n = 0, len = sampleRate; n < len; n++) {
+      const v = Math.sin((2 * w * n) / sampleRate);
+
+      const x = (n / len) * width + offset + padding;
+      const y = (1 - v) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        sinePathD += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        sinePathD += ` L${x} ${y}`;
+      }
+    }
+
+    sinePath.setAttribute('d', sinePathD);
+
+    sinePath.setAttribute('stroke', alphaWaveColor);
+    sinePath.setAttribute('fill', 'none');
+    sinePath.setAttribute('stroke-width', lineWidth.toString(10));
+    sinePath.setAttribute('stroke-linecap', lineCap);
+    sinePath.setAttribute('stroke-linejoin', lineJoin);
+    sinePath.setAttribute('stroke-dasharray', '5,5');
+
+    g.appendChild(sinePath);
+
+    const path = document.createElementNS(xmlns, 'path');
+
+    let d = '';
+
+    for (let n = 0, len = sampleRate; n < len; n++) {
+      let v = Math.sin((2 * w * n) / sampleRate);
+
+      if (v < 0) {
+        v = isFull ? Math.abs(v) : 0;
+      }
+
+      if (v > 0.5) {
+        v = 0.5;
+      }
+
+      const x = (n / len) * width + offset + padding;
+      const y = (1 - v) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(path);
+
+    svg.appendChild(g);
+  };
+
+  [-0.5, 0.5].forEach((y) => {
+    const clippingRect = document.createElementNS(xmlns, 'rect');
+
+    clippingRect.setAttribute('x', padding.toString(10));
+    clippingRect.setAttribute('y', (padding + (1 - y) * (innerHeight / 2)).toString(10));
+    clippingRect.setAttribute('width', innerWidth.toString(10));
+    clippingRect.setAttribute('height', lineWidth.toString(10));
+    clippingRect.setAttribute('stroke', 'none');
+    clippingRect.setAttribute('fill', alphaLightWaveColor);
+
+    svg.appendChild(clippingRect);
+  });
+
+  renderRectifier(0, true);
+  renderRectifier(innerWidth / 2 + padding, false);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -10087,3 +10390,6 @@ createNodeConnectionsForWaveShaperNode(document.getElementById('svg-figure-node-
 
 createAsymmetricalClipping(document.getElementById('svg-figure-asymmetrical-clipping'));
 createSoftAndHardClipping(document.getElementById('svg-figure-soft-and-hard-clipping'));
+
+createRectification(document.getElementById('svg-figure-rectification'));
+createFuzz(document.getElementById('svg-figure-fuzz'));
