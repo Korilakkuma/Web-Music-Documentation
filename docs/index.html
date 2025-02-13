@@ -10416,6 +10416,85 @@ oscillator.stop(context.currentTime + 10);</code></pre>
               <figcaption>ソフトクリッピング (左) とハードクリッピング (右)</figcaption>
             </figure>
           </section>
+          <section id="section-effectors-distortion-rectification">
+            <h4>全波整流・半波整流</h4>
+            <p>
+              最も激しい歪みに分類される Fuzz では, クリッピングだけでなく, <b>絶対値をとる全波整流</b>, あるいは,
+              <b>負数となる振幅を <code>0</code> にする半波整流</b>が実装されていることが多いです (ちなみに,
+              「<b>整流器</b>」を英語に訳すと「<b>Rectifier</b>」ですが, ハイゲインアンプで有名な Mesa/Boogie 社の
+              <a href="https://www.mesaboogie.com/ja-JP/p/Amp/90s-Dual-Rectifier/2-DR2B-3-A" target="_blank" rel="noopener noreferrer">Dual Rectifier</a>
+              などはこれに由来します. ただし, 整流を適用するのは音ではなく, 電源となる電流で, 交流を直流に変換する整流回路として使われます. また,
+              その整流回路が, 真空管とダイオードで切り替え可能なことから「Dual」と名称がついています).
+            </p>
+            <figure>
+              <svg id="svg-figure-rectification" width="1200" height="320" />
+              <figcaption>整流 (左が全波整流, 右が半波整流)</figcaption>
+            </figure>
+            <p>
+              整流のクリッピングカーブ (<code>curve</code> プロパティの値) は直線の組み合わせなので, 手動的に設定できます. 全波整流であれば
+              <code>new Float32Array([1, 0, 1])</code>, 半波整流であれば <code>new Float32Array([0, 0, 1])</code> を設定します (全波整流は,
+              オートワウのセクションで解説した, <a href="#section-effector-auto-wah">エンベロープフォロワー</a>でもあります). クリッピングカーブの形状は,
+              <a href="#svg-figure-wave-shaper-node-curve">クリッピングカーブ</a>で <code>Curve Type</code> を <code>Full Wave Rectifier</code>, または,
+              <code>Half Wave Rectifier</code> に選択すると確認できます.
+            </p>
+            <p>
+              Fuzz では, 整流とハードクリッピングを組み合わせるので, 整流のクリッピングカーブの <code>Float32Array</code> の
+              <code>1</code> となっている値をハードクリッピングする値に設定します.
+            </p>
+            <figure>
+              <svg id="svg-figure-fuzz" width="1200" height="320" />
+              <figcaption>Fuzz (整流とハードクリッピング)</figcaption>
+            </figure>
+            <p>
+              例えば, <code>0.5</code> でハードクリッピングする場合, 全波整流であれば <code>new Float32Array([0.5, 0, 0.5])</code>, 半波整流であれば
+              <code>new Float32Array([0, 0, 0.5])</code>) に設定すれば, 整流とハードクリッピングを組み合わせたクリッピングカーブとなります.
+              クリッピングカーブの形状は, <a href="#svg-figure-wave-shaper-node-curve">クリッピングカーブ</a>で <code>Curve Type</code> を
+              <code>Full Wave Rectifier + Hard Clipping</code>, または, <code>Half Wave Rectifier + Hard Clipping</code> に選択して,
+              <code>Clipping Level</code> の値を変更することで確認できます.
+            </p>
+            <p>
+              しかし, 実際に波形に適用すると, ゲインが <code>1</code> のままでは整流は適用されても, クリッピングされないので
+              (振幅がクリッピングの値まで減衰するだけなので), <code>GainNode</code> で振幅を増幅しておきます (以下のコードでは, 2 倍に増幅していますが,
+              この増幅率は <code>1</code> より大きいことが重要なので, 必ずしも 2 倍である必要はありません).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const level = 0.5;
+
+// Full Wave Rectifier
+const curve = new Float32Array([level, 0, level]);
+
+// If use Half Wave Rectifier
+// const curve = new Float32Array([0, 0, level]);
+
+const shaper = new WaveShaperNode(context, { curve, oversample: &apos;4x&apos; });
+
+// If use `createWaveShaper`
+// const shaper = context.createWaveShaper();
+//
+// shaper.curve      = curve;
+// shaper.oversample = &apos;4x&apos;;
+
+// for clipping
+const gain = new GainNode(context, { gain: 2 });
+
+const oscillator = new OscillatorNode(context);
+
+// Connect nodes
+// OscillatorNode (Input) -&gt; GainNode (Amplification) -&gt; WaveShaperNode (Clipping) -&gt; AudioDestinationNode (Output)
+oscillator.connect(gain);
+gain.connect(shaper);
+shaper.connect(context.destination);
+
+// Start oscillator immediately
+oscillator.start(0);
+
+// Stop oscillator after 10 sec
+oscillator.stop(context.currentTime + 10);</code></pre>
+          </section>
         </section>
       </section>
     </main>
