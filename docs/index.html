@@ -10496,6 +10496,35 @@ oscillator.start(0);
 oscillator.stop(context.currentTime + 10);</code></pre>
           </section>
         </section>
+        <section id="section-effectors-amp-simulator">
+          <h3>アンプシミュレーター</h3>
+          <p>
+            ギターアンプにおけるアンプとは, <b>プリアンプ</b>, <b>パワーアンプ</b>, <b>キャビネットとスピーカー</b> (コンボアンプやスモールアンプでは,
+            キャビネットはなくて, スピーカーのみであることが多いですが, アンプ本来の音をできるだけ忠実に再現することを目的に解説するので,
+            キャビネット内にスピーカーが内蔵されているようなスタックアンプをイメージしていただくのがよいかもしれません) で構成されています.
+            パワーアンプは振幅を増幅させるのが主な役割なので,
+            <b>アンプ独特のディストーションサウンドは, プリアンプとキャビネットとスピーカーによってつくられます</b>
+            (アンプシミュレーターやマルチエフェクターによっては, プリアンプの設定として, キャビネットとスピーカー構成の設定も含まれています).
+          </p>
+          <p>
+            特に, <b>プリアンプの実装が, アンプによるディストーションサウンドにおいて重要となります</b>. アンプシミュレーターを実装するとなると,
+            モデリングしたいアンプの数だけ実装が存在することになりますが, エフェクターによるディストーションサウンドと比較して,
+            ほとんどのプリアンプで共通して異なる点は, <b>クリッピングの前後にフィルタ処理</b>があること, そして,
+            <b>プリアンプの個性となる多段のクリッピングとゲインです</b>.
+          </p>
+          <p>
+            もっとも, モデリングするアンプの数だけ実装を解説することはできないので, このセクションでは,
+            <a href="https://lazyecology.web.fc2.com/reverb/special/guitar_tone_process/web_guitar_amp_note.html" target="_blank" rel="noopener noreferrer"
+              >WEB AMP like Marshall</a>
+            を参考に, ほとんどのスタジオで設置されている Marshall (ライクな) アンプシミュレーターの実装を解説します (さらに, Marshall といっても,
+            年代ごとに特色があり,
+            <a href="https://www.marshallamps.jp/live_for_music/tips/history/50-years-in-the-making.html" target="_blank" rel="noopener noreferrer"
+              >古くは, JTM45, JMP (主に, 1960 年代後半から 70 年代のモデル. 特に, 有名なのが Marshall 1959 Super Lead Plexi), JCM (800, 900, 2000), 最近だと DSL
+              や JVM など様々です</a>
+            (<a href="https://hookup.co.jp/blog/23844" target="_blank" rel="noopener noreferrer">Marshall 1959 Super Lead Plexi</a> の詳細).
+            あくまでこのセクションでの実装は Marshall ライクな実装と捉えてください).
+          </p>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
