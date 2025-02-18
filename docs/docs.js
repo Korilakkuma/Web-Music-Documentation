@@ -10251,6 +10251,151 @@ const createFuzz = (svg) => {
   renderRectifier(innerWidth / 2 + padding, false);
 };
 
+const createNodeConnectionsForAmpSimulator = (svg, withSpeakerSimulator) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const audioBufferSourceNodeRect = createAudioNode('AudioBufferSourceNode (Input)', 0, 0, 700, 100);
+
+  const preHighpass1NodeRect = createAudioNode('High-Pass Filter', 0, 150, 300, 100);
+  const preLowpassNodeRect = createAudioNode('Low-Pass Filter', 0, 300, 300, 100);
+  const normallGainNodeRect = createAudioNode('GainNode (Normal)', 0, 450, 300, 100);
+
+  const preHighpass2NodeRect = createAudioNode('High-Pass Filter', 400, 150, 300, 100);
+  const highTrebleGainNodeRect = createAudioNode('GainNode (High Treble)', 400, 450, 300, 100);
+
+  const preHighpass3NodeRect = createAudioNode('High-Pass Filter', 0, 650, 700, 100);
+
+  const preClippingNodeRect = createAudioNode('WaveShaperNode (Pre Clipping)', 0, 850, 700, 100);
+  const lowpassNodeRect = createAudioNode('Low-Pass Filter', 0, 1000, 700, 100);
+  const highpassNodeRect = createAudioNode('High-Pass Filter', 0, 1150, 700, 100);
+  const postClippingNodeRect = createAudioNode('WaveShaperNode (Post Clipping)', 0, 1300, 700, 100);
+
+  const postEqualizerNodeRect = createAudioNode('3 Bands Equalizer (Post Equalizer)', 0, 1500, 700, 100);
+
+  g.appendChild(audioBufferSourceNodeRect);
+  g.appendChild(preHighpass1NodeRect);
+  g.appendChild(preLowpassNodeRect);
+  g.appendChild(normallGainNodeRect);
+
+  g.appendChild(preHighpass2NodeRect);
+  g.appendChild(highTrebleGainNodeRect);
+
+  g.appendChild(preHighpass3NodeRect);
+
+  g.appendChild(preClippingNodeRect);
+  g.appendChild(lowpassNodeRect);
+  g.appendChild(highpassNodeRect);
+  g.appendChild(postClippingNodeRect);
+
+  g.appendChild(postEqualizerNodeRect);
+
+  const audioBufferSourceNodeAndPreHighpass1NodePath = createConnection(150 - 2, 100, 150 - 2, 150);
+  const audioBufferSourceNodeAndPreHighpass1NodeArrow = createConnectionArrow(150 - 2, 150 - 14, 'down');
+  const preHighpassNodeAndPreLowpass1NodePath = createConnection(150 - 2, 250, 150 - 2, 300);
+  const preHighpassNodeAndPreLowpass1NodeArrow = createConnectionArrow(150 - 2, 300 - 14, 'down');
+  const preLowpassNodeAndNormalGainNodePath = createConnection(150 - 2, 400, 150 - 2, 450);
+  const preLowpassNodeAndNormalGainNodeArrow = createConnectionArrow(150 - 2, 450 - 14, 'down');
+  const normalGainNodeAndPreHighpass3NodePath = createConnection(150 - 2, 550, 150 - 2, 650);
+  const normalGainNodeAndPreHighpass3NodeArrow = createConnectionArrow(150 - 2, 650 - 14, 'down');
+
+  g.appendChild(audioBufferSourceNodeAndPreHighpass1NodePath);
+  g.appendChild(audioBufferSourceNodeAndPreHighpass1NodeArrow);
+  g.appendChild(preHighpassNodeAndPreLowpass1NodePath);
+  g.appendChild(preHighpassNodeAndPreLowpass1NodeArrow);
+  g.appendChild(preLowpassNodeAndNormalGainNodePath);
+  g.appendChild(preLowpassNodeAndNormalGainNodeArrow);
+  g.appendChild(normalGainNodeAndPreHighpass3NodePath);
+  g.appendChild(normalGainNodeAndPreHighpass3NodeArrow);
+
+  const audioBufferSourceNodeAndPreHighpass2NodePath = createConnection(550 - 2, 100, 550 - 2, 150);
+  const audioBufferSourceNodeAndPreHighpass2NodeArrow = createConnectionArrow(550 - 2, 150 - 14, 'down');
+  const preHighpass2NodeAndHighTrebleGainNodePath = createConnection(550 - 2, 250, 550 - 2, 450);
+  const preHighpass2NodeAndHighTrebleGainNodeArrow = createConnectionArrow(550 - 2, 450 - 14, 'down');
+  const highTrebleGainNodeAndPreHighpass3NodePath = createConnection(550 - 2, 550, 550 - 2, 650);
+  const highTrebleGainNodeAndPreHighpass3NodeArrow = createConnectionArrow(550 - 2, 650 - 14, 'down');
+
+  g.appendChild(audioBufferSourceNodeAndPreHighpass2NodePath);
+  g.appendChild(audioBufferSourceNodeAndPreHighpass2NodeArrow);
+  g.appendChild(preHighpass2NodeAndHighTrebleGainNodePath);
+  g.appendChild(preHighpass2NodeAndHighTrebleGainNodeArrow);
+  g.appendChild(highTrebleGainNodeAndPreHighpass3NodePath);
+  g.appendChild(highTrebleGainNodeAndPreHighpass3NodeArrow);
+
+  const preHighpass3NodeAndPreClippingNodePath = createConnection(350 - 2, 750, 350 - 2, 850);
+  const preHighpass3NodeAndPreClippingNodeArrow = createConnectionArrow(350 - 2, 850 - 14, 'down');
+  const preClippingNodeLowpassNodePath = createConnection(350 - 2, 950, 350 - 2, 1000);
+  const preClippingNodeLowpassNodeArrow = createConnectionArrow(350 - 2, 1000 - 14, 'down');
+  const lowpassNodeAndHighpassNodePath = createConnection(350 - 2, 1100, 350 - 2, 1150);
+  const lowpassNodeAndHighpassNodeArrow = createConnectionArrow(350 - 2, 1150 - 14, 'down');
+  const highpassNodePostClippingNodePath = createConnection(350 - 2, 1250, 350 - 2, 1300);
+  const highpassNodePostClippingNodeArrow = createConnectionArrow(350 - 2, 1300 - 14, 'down');
+  const postClippingNodePostEqualizerNodePath = createConnection(350 - 2, 1400, 350 - 2, 1500);
+  const postClippingNodePostEqualizerNodeArrow = createConnectionArrow(350 - 2, 1500 - 14, 'down');
+
+  g.appendChild(preHighpass3NodeAndPreClippingNodePath);
+  g.appendChild(preHighpass3NodeAndPreClippingNodeArrow);
+  g.appendChild(preClippingNodeLowpassNodePath);
+  g.appendChild(preClippingNodeLowpassNodeArrow);
+  g.appendChild(lowpassNodeAndHighpassNodePath);
+  g.appendChild(lowpassNodeAndHighpassNodeArrow);
+  g.appendChild(highpassNodePostClippingNodePath);
+  g.appendChild(highpassNodePostClippingNodeArrow);
+  g.appendChild(postClippingNodePostEqualizerNodePath);
+  g.appendChild(postClippingNodePostEqualizerNodeArrow);
+
+  if (withSpeakerSimulator) {
+    const speakerSimulatorNotchNodeRect = createAudioNode('Notch-Filter (Speaker Simulator)', 0, 1700, 700, 100);
+    const speakerSimulatorLowpassNodeRect = createAudioNode('Low-Filter (Speaker Simulator)', 0, 1850, 700, 100);
+
+    g.appendChild(speakerSimulatorNotchNodeRect);
+    g.appendChild(speakerSimulatorLowpassNodeRect);
+
+    const masterVolumeNodeRect = createAudioNode('GainNode (Master Volume)', 0, 2050, 700, 100);
+    const audioDestinationNodeRect = createAudioNode('AudioDestinationNode (Output)', 0, 2250, 700, 100);
+
+    g.appendChild(masterVolumeNodeRect);
+    g.appendChild(audioDestinationNodeRect);
+
+    const postEqualizerNodeNotchNodePath = createConnection(350 - 2, 1600, 350 - 2, 1700);
+    const postEqualizerNodeNotchNodeArrow = createConnectionArrow(350 - 2, 1700 - 14, 'down');
+    const notchNodeAndLowpassNodePath = createConnection(350 - 2, 1800, 350 - 2, 1850);
+    const notchNodeAndLowpassNodeArrow = createConnectionArrow(350 - 2, 1850 - 14, 'down');
+
+    g.appendChild(postEqualizerNodeNotchNodePath);
+    g.appendChild(postEqualizerNodeNotchNodeArrow);
+    g.appendChild(notchNodeAndLowpassNodePath);
+    g.appendChild(notchNodeAndLowpassNodeArrow);
+
+    const lowpassNodeAndMasterVolumeNodePath = createConnection(350 - 2, 1950, 350 - 2, 2050);
+    const lowpassNodeAndMasterVolumeNodeArrow = createConnectionArrow(350 - 2, 2050 - 14, 'down');
+    const masterVolumeNodeAudioDestinationNodePath = createConnection(350 - 2, 2150, 350 - 2, 2250);
+    const masterVolumeNodeAudioDestinationNodeArrow = createConnectionArrow(350 - 2, 2250 - 14, 'down');
+
+    g.appendChild(lowpassNodeAndMasterVolumeNodePath);
+    g.appendChild(lowpassNodeAndMasterVolumeNodeArrow);
+    g.appendChild(masterVolumeNodeAudioDestinationNodePath);
+    g.appendChild(masterVolumeNodeAudioDestinationNodeArrow);
+  } else {
+    const masterVolumeNodeRect = createAudioNode('GainNode (Master Volume)', 0, 1700, 700, 100);
+    const audioDestinationNodeRect = createAudioNode('AudioDestinationNode (Output)', 0, 1900, 700, 100);
+
+    g.appendChild(masterVolumeNodeRect);
+    g.appendChild(audioDestinationNodeRect);
+
+    const postEqualizerNodeMasterVolumeNodePath = createConnection(350 - 2, 1600, 350 - 2, 1700);
+    const postEqualizerNodeMasterVolumeNodeArrow = createConnectionArrow(350 - 2, 1700 - 14, 'down');
+    const masterVolumeNodeAudioDestinationNodePath = createConnection(350 - 2, 1800, 350 - 2, 1900);
+    const masterVolumeNodeAudioDestinationNodeArrow = createConnectionArrow(350 - 2, 1900 - 14, 'down');
+
+    g.appendChild(postEqualizerNodeMasterVolumeNodePath);
+    g.appendChild(postEqualizerNodeMasterVolumeNodeArrow);
+    g.appendChild(masterVolumeNodeAudioDestinationNodePath);
+    g.appendChild(masterVolumeNodeAudioDestinationNodeArrow);
+  }
+
+  svg.appendChild(g);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -10393,3 +10538,5 @@ createSoftAndHardClipping(document.getElementById('svg-figure-soft-and-hard-clip
 
 createRectification(document.getElementById('svg-figure-rectification'));
 createFuzz(document.getElementById('svg-figure-fuzz'));
+
+createNodeConnectionsForAmpSimulator(document.getElementById('svg-figure-node-connections-for-pre-amplifier'), false);
