@@ -10524,6 +10524,327 @@ oscillator.stop(context.currentTime + 10);</code></pre>
             (<a href="https://hookup.co.jp/blog/23844" target="_blank" rel="noopener noreferrer">Marshall 1959 Super Lead Plexi</a> の詳細).
             あくまでこのセクションでの実装は Marshall ライクな実装と捉えてください).
           </p>
+          <section id="section-effectors-amp-simulator-preamplifier">
+            <h4>プリアンプ</h4>
+            <p>
+              Marshall ライクなプリアンプの特徴として, <b>2 つのクリッピング処理による歪み</b>と, クリッピングの<b
+                >プリプロセスとなる High-Pass Filter と Low-Pass Filter によるフィルタ処理</b>, また, 2 つのクリッピングの間にもフィルタ処理があること, そして, クリッピングのポストプロセスとして<b>ポストイコライザー</b>があることです.
+              さらに, 中低域のゲインコントロールと, 高音域のゲインコントロールがあります.
+            </p>
+            <p>まずは, プリプロセスとなるフィルタ処理を実装します.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const preLowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 3200, Q: -3 });
+
+const preHighpass1 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency:  80, Q: -3 });
+const preHighpass2 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 640, Q: -3 });
+const preHighpass3 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 160, Q: -3 });
+
+const middleAndBassGain = new GainNode(context, { gain: 0.5 });
+const highTrebleGain    = new GainNode(context, { gain: 0.5 });
+
+// (AudioSourceNode -&gt;) GainNode (Input) -&gt; BiquadFilterNode (High-Pass Filter) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; GainNode (Middle and Low Gain) -&gt; BiquadFilterNode (High-Pass Filter)
+preHighpass1.connect(preLowpass);
+preLowpass.connect(middleAndBassGain);
+middleAndBassGain.connect(preHighpass3);
+
+// (AudioSourceNode -&gt;) BiquadFilterNode (High-Pass Filter) -&gt; GainNode (High Treble Gain) -&gt; BiquadFilterNode (High-Pass Filter)
+preHighpass2.connect(highTrebleGain);
+highTrebleGain.connect(preHighpass3);
+
+// ...</code></pre>
+            <p>次に, 前段の歪みを生成するクリッピング処理を実装します.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">function createCurve(drive, numberOfSamples) {
+  const curves = new Float32Array(numberOfSamples);
+
+  const index = Math.trunc((numberOfSamples - 1) / 2);
+
+  const d = (10 ** ((drive / 5.0) - 1.0)) - 0.1;
+  const c = (d / 5.0) + 1.0;
+
+  let peak = 0.4;
+
+  if (c === 1) {
+    peak = 1.0;
+  } else if ((c &gt; 1) &amp;&amp; (c &lt; 1.04)) {
+    peak = (-15.5 * c) + 16.52;
+  }
+
+  for (let i = 0; i &lt; index; i++) {<!--
+    curves[index + i] = peak * ( 1 - c ** (-i) + i * (c ** (-index)) / index );
+    curves[index - i] = peak * (-1 + c ** (-i) - i * (c ** (-index)) / index );
+-->
+    curves[index + i] = peak * (((+1) - (c ** (-i))) + ((i * (c ** (-index))) / index));
+    curves[index - i] = peak * (((-1) + (c ** (-i))) - ((i * (c ** (-index))) / index));
+  }
+
+  curves[index] = 0;
+
+  return curves;
+}
+
+// If `drive` is about `3`, distortion sound is Crunch.
+// If `drive` is about `5`, distortion sound is Overdrive.
+// If `drive` is about `8`, distortion sound is Distortion.
+const drive   = 5;
+const samples = 127;
+
+const curve      = createCurve(drive, samples);
+const oversample = &apos;4x&apos;;
+
+const preShaper = new WaveShaperNode(context, { curve, oversample });
+
+// (... -&gt;) BiquadFilterNode (High-Pass Filter) -&gt; WaveShaperNode (Pre Clipping)
+preHighpass3.connect(preShaper);
+
+// ...</code></pre>
+            <p>そして, 前段の歪み後段の歪みの間のフィルタ処理を実装します.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const lowpass  = new BiquadFilterNode(context, { type: &apos;lowpass&apos;,  frequency: 4000, Q: -3 });
+const highpass = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency:   40, Q: -3 });
+
+// (... -&gt;) WaveShaperNode (Pre Clipping) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; BiquadFilterNode (High-Pass Filter)
+preShaper.connect(lowpass);
+lowpass.connect(highpass);
+
+// ...</code></pre>
+            <p>後段の歪みを生成するクリッピング処理を実装します (このクリッピングカーブは前段と同じです).</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const postShaper = new WaveShaperNode(context, { curve, oversample });
+
+// (... -&gt;) BiquadFilterNode (High-Pass Filter) -&gt; WaveShaperNode (Post Clipping)
+highpass.connect(postShaper);
+
+// ...</code></pre>
+            <p>最後は, ポストイコライザーの実装ですが, これはすでに解説している 3 バンドイコライザーを追加するだけです.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const bass   = new BiquadFilterNode(context, { type: &apos;lowshelf&apos;,  frequency:  240 });
+const middle = new BiquadFilterNode(context, { type: &apos;peaking&apos;,   frequency:  500, Q: 1.5 });
+const treble = new BiquadFilterNode(context, { type: &apos;highshelf&apos;, frequency: 1600 });
+
+// (... -&gt;) WaveShaperNode (Post Clipping) -&gt; Post Equalizer (Low-Shelving Filter -&gt; Peaking Filter -&gt; High-Shelving Filter) -&gt; AudioDestinationNode (Output)
+postShaper.connect(bass);
+bass.connect(middle);
+middle.connect(treble);
+treble.connect(context.destination);</code></pre>
+            <p>ここまでのコードを網羅して記載すると, 以下のようになります.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">function createCurve(drive, numberOfSamples) {
+  const curves = new Float32Array(numberOfSamples);
+
+  const index = Math.trunc((numberOfSamples - 1) / 2);
+
+  const d = (10 ** ((drive / 5.0) - 1.0)) - 0.1;
+  const c = (d / 5.0) + 1.0;
+
+  let peak = 0.4;
+
+  if (c === 1) {
+    peak = 1.0;
+  } else if ((c &gt; 1) &amp;&amp; (c &lt; 1.04)) {
+    peak = (-15.5 * c) + 16.52;
+  }
+
+  for (let i = 0; i &lt; index; i++) {
+    curves[index + i] = peak * (((+1) - (c ** (-i))) + ((i * (c ** (-index))) / index));
+    curves[index - i] = peak * (((-1) + (c ** (-i))) - ((i * (c ** (-index))) / index));
+  }
+
+  curves[index] = 0;
+
+  return curves;
+}
+
+const context = new AudioContext();
+
+const preLowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 3200, Q: -3 });
+
+const preHighpass1 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency:  80, Q: -3 });
+const preHighpass2 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 640, Q: -3 });
+const preHighpass3 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 160, Q: -3 });
+
+const middleAndBassGain = new GainNode(context, { gain: 0.5 });
+const highTrebleGain    = new GainNode(context, { gain: 0.5 });
+
+// If `drive` is about `3`, distortion sound is Crunch.
+// If `drive` is about `5`, distortion sound is Overdrive.
+// If `drive` is about `8`, distortion sound is Distortion.
+const drive   = 5;
+const samples = 127;
+
+const curve      = createCurve(drive, samples);
+const oversample = &apos;4x&apos;;
+
+const preShaper  = new WaveShaperNode(context, { curve, oversample });
+const postShaper = new WaveShaperNode(context, { curve, oversample });
+
+const lowpass  = new BiquadFilterNode(context, { type: &apos;lowpass&apos;,  frequency: 4000, Q: -3 });
+const highpass = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency:   40, Q: -3 });
+
+const bass   = new BiquadFilterNode(context, { type: &apos;lowshelf&apos;,  frequency:  240 });
+const middle = new BiquadFilterNode(context, { type: &apos;peaking&apos;,   frequency:  500, Q: 1.5 });
+const treble = new BiquadFilterNode(context, { type: &apos;highshelf&apos;, frequency: 1600 });
+
+// (AudioSourceNode -&gt;) GainNode (Input) -&gt; BiquadFilterNode (High-Pass Filter) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; GainNode (Middle and Low Gain) -&gt; BiquadFilterNode (High-Pass Filter)
+preHighpass1.connect(preLowpass);
+preLowpass.connect(middleAndBassGain);
+middleAndBassGain.connect(preHighpass3);
+
+// (AudioSourceNode -&gt;) BiquadFilterNode (High-Pass Filter) -&gt; GainNode (High Treble Gain) -&gt; BiquadFilterNode (High-Pass Filter)
+preHighpass2.connect(highTrebleGain);
+highTrebleGain.connect(preHighpass3);
+
+// BiquadFilterNode (High-Pass Filter) -&gt; WaveShaperNode (Pre Clipping)
+preHighpass3.connect(preShaper);
+
+// WaveShaperNode (Pre Clipping) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; BiquadFilterNode (High-Pass Filter)
+preShaper.connect(lowpass);
+lowpass.connect(highpass);
+
+// BiquadFilterNode (High-Pass Filter) -&gt; WaveShaperNode (Post Clipping)
+highpass.connect(postShaper);
+
+// WaveShaperNode (Post Clipping) -&gt; Post Equalizer (Low-Shelving Filter -&gt; Peaking Filter -&gt; High-Shelving Filter) -&gt; AudioDestinationNode (Output)
+postShaper.connect(bass);
+bass.connect(middle);
+middle.connect(treble);
+treble.connect(context.destination);</code></pre>
+            <p>
+              ここまでで, Marshall ライクなプリアンプが実装できたので, エレキギターのクリーントーンのワンショットオーディオを利用して,
+              プリアンプで歪ませたディストーションサウンドを聴いてみてください (プリアンプによるディストーションサウンドは,
+              多段のフィルタやクリッピングによって, どうしても音が大きくなってしまうので, 最終的な音量を調整できるように, Master Volume となる
+              <code>GainNode</code> を出力前に接続しています).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">function createCurve(drive, numberOfSamples) {
+  const curves = new Float32Array(numberOfSamples);
+
+  const index = Math.trunc((numberOfSamples - 1) / 2);
+
+  const d = (10 ** ((drive / 5.0) - 1.0)) - 0.1;
+  const c = (d / 5.0) + 1.0;
+
+  let peak = 0.4;
+
+  if (c === 1) {
+    peak = 1.0;
+  } else if ((c &gt; 1) &amp;&amp; (c &lt; 1.04)) {
+    peak = (-15.5 * c) + 16.52;
+  }
+
+  for (let i = 0; i &lt; index; i++) {
+    curves[index + i] = peak * (((+1) - (c ** (-i))) + ((i * (c ** (-index))) / index));
+    curves[index - i] = peak * (((-1) + (c ** (-i))) - ((i * (c ** (-index))) / index));
+  }
+
+  curves[index] = 0;
+
+  return curves;
+}
+
+const context = new AudioContext();
+
+const mastervolume = new GainNode(context, { gain: 0.3 });
+
+const preLowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 3200, Q: -3 });
+
+const preHighpass1 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency:  80, Q: -3 });
+const preHighpass2 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 640, Q: -3 });
+const preHighpass3 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 160, Q: -3 });
+
+const middleAndBassGain = new GainNode(context, { gain: 0.5 });
+const highTrebleGain    = new GainNode(context, { gain: 0.5 });
+
+// If `drive` is about `3`, distortion sound is Crunch.
+// If `drive` is about `5`, distortion sound is Overdrive.
+// If `drive` is about `8`, distortion sound is Distortion.
+const drive   = 5;
+const samples = 127;
+
+const curve      = createCurve(drive, samples);
+const oversample = &apos;4x&apos;;
+
+const preShaper  = new WaveShaperNode(context, { curve, oversample });
+const postShaper = new WaveShaperNode(context, { curve, oversample });
+
+const lowpass  = new BiquadFilterNode(context, { type: &apos;lowpass&apos;,  frequency: 4000, Q: -3 });
+const highpass = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency:   40, Q: -3 });
+
+const bass   = new BiquadFilterNode(context, { type: &apos;lowshelf&apos;,  frequency:  240 });
+const middle = new BiquadFilterNode(context, { type: &apos;peaking&apos;,   frequency:  500, Q: 1.5 });
+const treble = new BiquadFilterNode(context, { type: &apos;highshelf&apos;, frequency: 1600 });
+
+fetch(&apos;./assets/one-shots/electric-guitar-clean-chord.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then((arrayBuffer) =&gt; {
+    const successCallback = (audioBuffer) =&gt; {
+      const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
+
+      // AudioBufferSourceNode (Input) -&gt; BiquadFilterNode (High-Pass Filter) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; GainNode (Middle and Low Gain) -&gt; BiquadFilterNode (High-Pass Filter)
+      source.connect(preHighpass1);
+      preHighpass1.connect(preLowpass);
+      preLowpass.connect(middleAndBassGain);
+      middleAndBassGain.connect(preHighpass3);
+
+      // AudioBufferSourceNode (Input) -&gt; BiquadFilterNode (High-Pass Filter) -&gt; GainNode (High Treble Gain) -&gt; BiquadFilterNode (High-Pass Filter)
+      source.connect(preHighpass2);
+      preHighpass2.connect(highTrebleGain);
+      highTrebleGain.connect(preHighpass3);
+
+      // BiquadFilterNode (High-Pass Filter) -&gt; WaveShaperNode (Pre Clipping)
+      preHighpass3.connect(preShaper);
+
+      // WaveShaperNode (Pre Clipping) -&gt; BiquadFilterNode (Low-Pass Filter) -&gt; BiquadFilterNode (High-Pass Filter)
+      preShaper.connect(lowpass);
+      lowpass.connect(highpass);
+
+      // BiquadFilterNode (High-Pass Filter) -&gt; WaveShaperNode (Post Clipping)
+      highpass.connect(postShaper);
+
+      // WaveShaperNode (Post Clipping) -&gt; Post Equalizer (Low-Shelving Filter -&gt; Peaking Filter -&gt; High-Shelving Filter) -&gt; GainNode (Master Volume)
+      postShaper.connect(bass);
+      bass.connect(middle);
+      middle.connect(treble);
+      treble.connect(mastervolume);
+
+      // GainNode (Master Volume) -&gt; AudioDestinationNode (Output)
+      mastervolume.connect(context.destination);
+
+      source.start(0);
+    };
+
+    const errorCallback = (error) =&gt; {
+      // error handling
+    };
+
+    context.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <figure>
+              <svg id="svg-figure-node-connections-for-pre-amplifier" width="800" height="2050" />
+              <figcaption>(Marshall ライクな) プリアンプのノード接続図</figcaption>
+            </figure>
+          </section>
         </section>
       </section>
     </main>
