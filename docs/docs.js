@@ -10540,3 +10540,4 @@ createRectification(document.getElementById('svg-figure-rectification'));
 createFuzz(document.getElementById('svg-figure-fuzz'));
 
 createNodeConnectionsForAmpSimulator(document.getElementById('svg-figure-node-connections-for-pre-amplifier'), false);
+createNodeConnectionsForAmpSimulator(document.getElementById('svg-figure-node-connections-for-amp-simulator'), true);
