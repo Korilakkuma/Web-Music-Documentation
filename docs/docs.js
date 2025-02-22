@@ -9971,6 +9971,295 @@ const createFuzz = (svg) => {
   renderRectifier(innerWidth / 2 + padding, false);
 };
 
+const distortion = async () => {
+  function createPreampCurve(level, numberOfSamples) {
+    const curves = new Float32Array(numberOfSamples);
+
+    const index = Math.trunc((numberOfSamples - 1) / 2);
+
+    const d = 10 ** (level / 5.0 - 1.0) - 0.1;
+    const c = d / 5.0 + 1.0;
+
+    let peak = 0.4;
+
+    if (c === 1) {
+      peak = 1.0;
+    } else if (c > 1 && c < 1.04) {
+      peak = -15.5 * c + 16.52;
+    }
+
+    for (let i = 0; i < index; i++) {
+      curves[index + i] = peak * (+1 - c ** -i + (i * c ** -index) / index);
+      curves[index - i] = peak * (-1 + c ** -i - (i * c ** -index) / index);
+    }
+
+    curves[index] = 0;
+
+    return curves;
+  }
+
+  function createAsymmetricalOverdriveCurve(drive, numberOfSamples) {
+    if (drive < 0 || drive >= 1) {
+      return null;
+    }
+
+    const curves = new Float32Array(numberOfSamples);
+
+    const k = (2 * drive) / (1 - drive);
+
+    for (let n = 0; n < numberOfSamples; n++) {
+      const x = ((n - 0) * (1 - -1)) / (numberOfSamples - 0) + -1;
+      const y = ((1 + k) * x) / (1 + k * Math.abs(x));
+
+      curves[n] = y > 0 ? y : (1 - (drive > 0.5 ? 0.5 : drive)) * y;
+    }
+
+    return curves;
+  }
+
+  const responses = await Promise.all([
+    fetch('./assets/one-shots/electric-guitar-clean-picking-down.mp3'),
+    fetch('./assets/one-shots/electric-guitar-clean-picking-up.mp3'),
+    fetch('./assets/one-shots/electric-guitar-clean-chord.mp3')
+  ]);
+
+  const audioBuffers = await Promise.all(
+    responses.map(async (response) => {
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audiocontext.decodeAudioData(arrayBuffer);
+
+      return audioBuffer;
+    })
+  );
+
+  const buttonElementPickingDown = document.getElementById('button-picking-down');
+  const buttonElementPickingUp = document.getElementById('button-picking-up');
+  const buttonElementChord = document.getElementById('button-chord');
+
+  const checkboxElementPreamp = document.getElementById('checkbox-preamp');
+  const checkboxElementSpeakerSimulator = document.getElementById('checkbox-speaker-simulator');
+
+  const samples = 127;
+  const oversample = '4x';
+
+  const mastervolume = new GainNode(audiocontext, { gain: 0.5 });
+
+  const preLowpass = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: 3200, Q: -3 });
+
+  const preHighpass1 = new BiquadFilterNode(audiocontext, { type: 'highpass', frequency: 80, Q: -3 });
+  const preHighpass2 = new BiquadFilterNode(audiocontext, { type: 'highpass', frequency: 640, Q: -3 });
+  const preHighpass3 = new BiquadFilterNode(audiocontext, { type: 'highpass', frequency: 160, Q: -3 });
+
+  const highTrebleGain = new GainNode(audiocontext, { gain: 0.5 });
+  const middleAndBassGain = new GainNode(audiocontext, { gain: 0.5 });
+
+  const preShaper = new WaveShaperNode(audiocontext, { curve: createPreampCurve(5.0, samples), oversample });
+  const postShaper = new WaveShaperNode(audiocontext, { curve: createPreampCurve(5.0, samples), oversample });
+
+  const lowpass = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: 4000, Q: -3 });
+  const highpass = new BiquadFilterNode(audiocontext, { type: 'highpass', frequency: 40, Q: -3 });
+
+  const bass = new BiquadFilterNode(audiocontext, { type: 'lowshelf', frequency: 240 });
+  const middle = new BiquadFilterNode(audiocontext, { type: 'peaking', frequency: 500, Q: 1.5 });
+  const treble = new BiquadFilterNode(audiocontext, { type: 'highshelf', frequency: 1600 });
+
+  const speakerSimulatorNotch = new BiquadFilterNode(audiocontext, { type: 'notch', frequency: 8000, Q: 1 });
+  const speakerSimulatorLowpass = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: 3200, Q: 6 });
+
+  const shaper = new WaveShaperNode(audiocontext);
+
+  const onDown = async (event) => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    const index = Number(event.target.getAttribute('data-index'));
+
+    const buffer = audioBuffers[index];
+    const source = new AudioBufferSourceNode(audiocontext, { buffer });
+
+    shaper.disconnect(0);
+    treble.disconnect(0);
+    speakerSimulatorLowpass.disconnect(0);
+
+    source.connect(shaper);
+
+    if (checkboxElementPreamp.checked && checkboxElementSpeakerSimulator.checked) {
+      shaper.connect(preHighpass1);
+      preHighpass1.connect(preLowpass);
+      preLowpass.connect(middleAndBassGain);
+      middleAndBassGain.connect(preHighpass3);
+
+      shaper.connect(preHighpass2);
+      preHighpass2.connect(highTrebleGain);
+      highTrebleGain.connect(preHighpass3);
+
+      preHighpass3.connect(preShaper);
+
+      preShaper.connect(lowpass);
+      lowpass.connect(highpass);
+
+      highpass.connect(postShaper);
+
+      postShaper.connect(bass);
+      bass.connect(middle);
+      middle.connect(treble);
+      treble.connect(speakerSimulatorNotch);
+
+      speakerSimulatorNotch.connect(speakerSimulatorLowpass);
+      speakerSimulatorLowpass.connect(mastervolume);
+    } else {
+      if (checkboxElementPreamp.checked) {
+        shaper.connect(preHighpass1);
+        preHighpass1.connect(preLowpass);
+        preLowpass.connect(middleAndBassGain);
+        middleAndBassGain.connect(preHighpass3);
+
+        shaper.connect(preHighpass2);
+        preHighpass2.connect(highTrebleGain);
+        highTrebleGain.connect(preHighpass3);
+
+        preHighpass3.connect(preShaper);
+
+        preShaper.connect(lowpass);
+        lowpass.connect(highpass);
+
+        highpass.connect(postShaper);
+
+        postShaper.connect(bass);
+        bass.connect(middle);
+        middle.connect(treble);
+        treble.connect(mastervolume);
+      } else if (checkboxElementSpeakerSimulator.checked) {
+        shaper.connect(speakerSimulatorNotch);
+
+        speakerSimulatorNotch.connect(speakerSimulatorLowpass);
+        speakerSimulatorLowpass.connect(mastervolume);
+      } else {
+        shaper.connect(mastervolume);
+      }
+    }
+
+    mastervolume.connect(audiocontext.destination);
+
+    source.start(0);
+  };
+
+  buttonElementPickingDown.addEventListener('mousedown', onDown);
+  buttonElementPickingDown.addEventListener('touchstart', onDown);
+  buttonElementPickingUp.addEventListener('mousedown', onDown);
+  buttonElementPickingUp.addEventListener('touchstart', onDown);
+  buttonElementChord.addEventListener('mousedown', onDown);
+  buttonElementChord.addEventListener('touchstart', onDown);
+
+  document.getElementById('range-preamp-normal-gain').addEventListener('input', (event) => {
+    const gain = event.currentTarget.valueAsNumber;
+
+    middleAndBassGain.gain.value = gain;
+
+    document.getElementById('print-preamp-normal-gain-value').textContent = gain.toString(10);
+  });
+
+  document.getElementById('range-preamp-high-treble-gain').addEventListener('input', (event) => {
+    const gain = event.currentTarget.valueAsNumber;
+
+    highTrebleGain.gain.value = gain;
+
+    document.getElementById('print-preamp-high-treble-value').textContent = gain.toString(10);
+  });
+
+  document.getElementById('range-preamp-drive').addEventListener('input', (event) => {
+    const drive = event.currentTarget.valueAsNumber;
+
+    preShaper.curve = createPreampCurve(drive, samples);
+    postShaper.curve = createPreampCurve(drive, samples);
+
+    document.getElementById('print-preamp-drive-value').textContent = drive.toFixed(1);
+  });
+
+  document.getElementById('range-preamp-post-equalizer-bass').addEventListener('input', (event) => {
+    const gain = event.currentTarget.valueAsNumber;
+
+    bass.gain.value = gain;
+
+    document.getElementById('print-preamp-post-equalizer-bass-value').textContent = `${gain} dB`;
+  });
+
+  document.getElementById('range-preamp-post-equalizer-middle').addEventListener('input', (event) => {
+    const gain = event.currentTarget.valueAsNumber;
+
+    middle.gain.value = gain;
+
+    document.getElementById('print-preamp-post-equalizer-middle-value').textContent = `${gain} dB`;
+  });
+
+  document.getElementById('range-preamp-post-equalizer-treble').addEventListener('input', (event) => {
+    const gain = event.currentTarget.valueAsNumber;
+
+    treble.gain.value = gain;
+
+    document.getElementById('print-preamp-post-equalizer-treble-value').textContent = `${gain} dB`;
+  });
+
+  document.getElementById('select-distortion-type').addEventListener('change', (event) => {
+    const drive = document.getElementById('range-distortion-drive').valueAsNumber;
+
+    switch (event.currentTarget.value) {
+      case 'overdrive': {
+        shaper.curve = createAsymmetricalOverdriveCurve(drive, samples);
+        shaper.oversample = '2x';
+        break;
+      }
+
+      case 'fuzz': {
+        shaper.curve = new Float32Array([drive, 0, drive]);
+        shaper.oversample = '4x';
+        break;
+      }
+
+      default: {
+        shaper.curve = null;
+        shaper.oversample = 'none';
+        break;
+      }
+    }
+  });
+
+  document.getElementById('range-distortion-drive').addEventListener('input', (event) => {
+    const drive = event.currentTarget.valueAsNumber;
+
+    switch (document.getElementById('select-distortion-type').value) {
+      case 'overdrive': {
+        shaper.curve = createAsymmetricalOverdriveCurve(drive, samples);
+        shaper.oversample = '2x';
+        break;
+      }
+
+      case 'fuzz': {
+        shaper.curve = new Float32Array([drive, 0, drive]);
+        shaper.oversample = '4x';
+        break;
+      }
+
+      default: {
+        shaper.curve = null;
+        shaper.oversample = 'none';
+        break;
+      }
+    }
+
+    document.getElementById('print-distortion-drive-value').textContent = drive.toFixed(2);
+  });
+
+  document.getElementById('range-amp-simulator-mastervolume').addEventListener('input', (event) => {
+    const gain = event.currentTarget.valueAsNumber;
+
+    mastervolume.gain.value = gain;
+
+    document.getElementById('print-amp-simulator-mastervolume-value').textContent = gain.toString(10);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -10112,3 +10401,5 @@ createSoftAndHardClipping(document.getElementById('svg-figure-soft-and-hard-clip
 
 createRectification(document.getElementById('svg-figure-rectification'));
 createFuzz(document.getElementById('svg-figure-fuzz'));
+
+distortion();

@@ -10784,6 +10784,114 @@ speakerSimulator.connect(mastervolume);
 mastervolume.connect(context.destination);</code></pre>
             </article>
           </section>
+          <section id="section-effectors-amp-simulator-and-effectors-distortion">
+            <h4>アンプシミュレーターと歪み系エフェクターによるディストーションサウンド</h4>
+            <p>
+              ここまでで, アンプ (アンプシミュレーター) と歪み系エフェクターによるディストーションサウンドを解説したので, それらを組み合わせて, さらに,
+              ハードコーディングしていたパラメータをインタラクティブに制御できるようにしたコード例です.
+            </p>
+            <div class="app-container app-amp-simulator-and-effectors-distortion">
+              <div>
+                <button type="button" id="button-picking-down" data-index="0">Picking Down</button>
+                <button type="button" id="button-picking-up" data-index="1">Picking Up</button>
+                <button type="button" id="button-chord" data-index="2">Chord</button>
+              </div>
+              <div class="flexbox">
+                <div>
+                  <dl>
+                    <div class="checkbox-container">
+                      <dt>
+                        <label for="checkbox-preamp"><span>Preamp</span></label>
+                      </dt>
+                      <dd><input type="checkbox" id="checkbox-preamp" checked /></dd>
+                    </div>
+                    <div class="checkbox-container">
+                      <dt>
+                        <label for="checkbox-speaker-simulator"><span>Speaker Simulator</span></label>
+                      </dt>
+                      <dd><input type="checkbox" id="checkbox-speaker-simulator" checked /></dd>
+                    </div>
+                  </dl>
+                </div>
+                <div>
+                  <dl>
+                    <div>
+                      <dt><label for="range-preamp-normal-gain">Normal Gain (Middle and Low Gain)</label></dt>
+                      <dd>
+                        <input type="range" id="range-preamp-normal-gain" value="0.5" min="0" max="1" step="0.05" />
+                        <span id="print-preamp-normal-gain-value">0.5</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt><label for="range-preamp-high-treble-gain">High Treble Gain</label></dt>
+                      <dd>
+                        <input type="range" id="range-preamp-high-treble-gain" value="0.5" min="0" max="1" step="0.05" />
+                        <span id="print-preamp-high-treble-value">0.5</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt><label for="range-preamp-drive">Drive</label></dt>
+                      <dd>
+                        <input type="range" id="range-preamp-drive" value="5" min="0" max="10" step="0.5" />
+                        <span id="print-preamp-drive-value">5.0</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt><label for="range-preamp-post-equalizer-bass">Bass</label></dt>
+                      <dd>
+                        <input type="range" id="range-preamp-post-equalizer-bass" value="0" min="-24" max="24" step="1" />
+                        <span id="print-preamp-post-equalizer-bass-value">0 dB</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt><label for="range-preamp-post-equalizer-middle">Middle</label></dt>
+                      <dd>
+                        <input type="range" id="range-preamp-post-equalizer-middle" value="0" min="-24" max="24" step="1" />
+                        <span id="print-preamp-post-equalizer-middle-value">0 dB</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt><label for="range-preamp-post-equalizer-treble">Treble</label></dt>
+                      <dd>
+                        <input type="range" id="range-preamp-post-equalizer-treble" value="0" min="-24" max="24" step="1" />
+                        <span id="print-preamp-post-equalizer-treble-value">0 dB</span>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+                <div>
+                  <dl>
+                    <div>
+                      <dt><label for="select-distortion-type">Overdrive / Fuzz</label></dt>
+                      <dd>
+                        <select id="select-distortion-type">
+                          <option value="" selected>none</option>
+                          <option value="overdrive">Overdrive</option>
+                          <option value="fuzz">Fuzz</option>
+                        </select>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt><label for="range-distortion-drive">Drive</label></dt>
+                      <dd>
+                        <input type="range" id="range-distortion-drive" value="0.5" min="0" max="0.95" step="0.05" />
+                        <span id="print-distortion-drive-value">0.5</span>
+                      </dd>
+                    </div>
+                  </dl>
+                  <dl>
+                    <div>
+                      <dt><label for="range-amp-simulator-mastervolume">Master Volume</label></dt>
+                      <dd>
+                        <input type="range" id="range-amp-simulator-mastervolume" value="0.5" min="0" max="1" step="0.05" />
+                        <span id="print-amp-simulator-mastervolume-value">0.5</span>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
     </main>
