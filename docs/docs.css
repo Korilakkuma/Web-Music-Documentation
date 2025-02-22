@@ -379,10 +379,23 @@ select {
 .app-graphic-equalizer dl dd,
 .app-pedal-wah dl dd,
 .app-vcf-auto-wah dl dd,
-.app-auto-wah dl dd {
+.app-auto-wah dl dd,
+.app-amp-simulator-and-effectors-distortion dl dd {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.app-amp-simulator-and-effectors-distortion dl dd {
+  margin: 0;
+}
+
+.app-amp-simulator-and-effectors-distortion label {
+  cursor: pointer;
+}
+
+.app-amp-simulator-and-effectors-distortion select {
+  margin: 8px 0;
 }
 
 .grid-3x3-layout {
@@ -394,6 +407,18 @@ select {
 .grid-3x3-layout label {
   display: inline-block;
   min-width: 64px;
+}
+
+.checkbox-container {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 8px;
+  align-items: center;
+  width: fit-content;
+}
+
+.checkbox-container label {
+  display: inline-block;
 }
 
 span[id*="print-"] {
