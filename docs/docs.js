@@ -10740,6 +10740,30 @@ const distortion = () => {
   });
 };
 
+const createNodeConnectionsForDynamicsCompressorNode = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const waveShaperNodeRect = createAudioNode('DynamicsCompressorNode', 0, 200);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 400);
+
+  const oscillatorNodeAndWaveShaperNodePath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const waveShaperNodeAndAudiodDestinationNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+
+  const oscillatorNodeAndWaveShaperNodeArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const waveShaperNodeAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndWaveShaperNodePath);
+  g.appendChild(oscillatorNodeAndWaveShaperNodeArrow);
+  g.appendChild(waveShaperNodeRect);
+  g.appendChild(waveShaperNodeAndAudiodDestinationNodePath);
+  g.appendChild(waveShaperNodeAndAudiodDestinationNodeArrow);
+  g.appendChild(audioDestinationNodeRect);
+
+  svg.appendChild(g);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -10887,3 +10911,5 @@ createNodeConnectionsForAmpSimulator(document.getElementById('svg-figure-node-co
 createNodeConnectionsForAmpSimulator(document.getElementById('svg-figure-node-connections-for-amp-simulator'), true);
 
 distortion();
+
+createNodeConnectionsForDynamicsCompressorNode(document.getElementById('svg-figure-node-connections-for-dynamics-compressor-node'));

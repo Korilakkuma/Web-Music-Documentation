@@ -11713,6 +11713,82 @@ Promise
             ドラム, そして, ボーカルと定石の構成でも楽音数が多く, ミキシングをある程度オートマティックにおこなう必要があるからです (逆に, クラシックなどでは
             (例えば, ピアノ演奏のみの場合), 演奏時の強弱 (フォルテやピアノなど) も忠実に再現することが理想とされます).
           </p>
+          <section id="section-effectors-compressor-dynamics-compressor-node">
+            <h4>DynamicsCompressorNode</h4>
+            <p>
+              Web Audio API でコンプレッサーを実装するのはおそらくもっとも簡単です.
+              <b><code>DynamicsCompressorNode</code></b> インスタンスを生成して接続するだけです. これだけで, それなりのコンプレッサーとして機能します (<code
+                >DynamicsCompressorNode</code>
+              インスタンスの各 <code>AudioParam</code> のデフォルト値が機能するような値になっていますが, コンストラクタの第 2 引数の
+              <b><code>DynamicsCompressorOptions</code></b> でインスタンス生成時に値を設定したり, <code>AudioParam</code> のセッターで値を設定したりはできます).
+            </p>
+            <figure>
+              <svg id="svg-figure-node-connections-for-dynamics-compressor-node" width="400" height="520" />
+              <figcaption><code>DynamicsCompressorNode</code> のノード接続図</figcaption>
+            </figure>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);
+
+const compressor = new DynamicsCompressorNode(context);
+
+// If use `createDynamicsCompressor`
+// const compressor = context.createDynamicsCompressor();
+
+// OscillatorNode (Input) -&gt; DynamicsCompressorNode (Compressor) -&gt; AudioDestinationNode (Output)
+oscillator.connect(compressor);
+compressor.connect(context.destination);
+
+// Start oscillator immediately
+oscillator.start(0);
+
+// Stop oscillator after 10 sec
+oscillator.stop(context.currentTime + 10);</code></pre>
+            <img src="images/dynamics-compressor-node.png" alt="DynamicsCompressorNode" width="1232" height="770" loading="lazy" />
+            <p>
+              以下は, <a href="#section-oscillator-node-synthesize">基本波形の合成セクション</a>でコード例として記載した, 和音となる
+              <code>OscillatorNode</code> の合成で, ゲインの調整ではなく, コンプレッサーを利用することで (<code>DynamicsCompressorNode</code>
+              インスタンスを接続することで), 意図しない音割れを防止するコードです.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+// C major chord
+const oscillatorC = new OscillatorNode(context, { frequency: 261.6255653005991 });
+const oscillatorE = new OscillatorNode(context, { frequency: 329.6275569128705 });
+const oscillatorG = new OscillatorNode(context, { frequency: 391.9954359817500 });
+
+const compressor = new DynamicsCompressorNode(context);
+
+// If use `createDynamicsCompressor`
+// const compressor = context.createDynamicsCompressor();
+
+// OscillatorNode (Input) -&gt; DynamicsCompressorNode (Compressor) -&gt; AudioDestinationNode (Output)
+oscillatorC.connect(compressor);
+oscillatorE.connect(compressor);
+oscillatorG.connect(compressor);
+compressor.connect(context.destination);
+
+// Start oscillators immediately
+oscillatorC.start(0);
+oscillatorE.start(0);
+oscillatorG.start(0);
+
+// Stop oscillators after 10 sec
+oscillatorC.stop(context.currentTime + 10);
+oscillatorE.stop(context.currentTime + 10);
+oscillatorG.stop(context.currentTime + 10);</code></pre>
+            <p>
+              「おそらくもっとも簡単」と表現したのは, <code>AudioNode</code> 単体の接続とデフォルト値でエフェクターとして機能することが理由です. すでに,
+              解説したように <code>DelayNode</code> や <code>BiquadFilterNode</code> 単体としては現実世界の (音楽表現として意味をもつ)
+              エフェクターとして機能することはないからです.
+            </p>
+          </section>
         </section>
       </section>
     </main>
