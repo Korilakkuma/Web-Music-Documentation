@@ -11789,6 +11789,77 @@ oscillatorG.stop(context.currentTime + 10);</code></pre>
               エフェクターとして機能することはないからです.
             </p>
           </section>
+          <section id="section-effectors-compressor-parameters">
+            <h4>コンプレッサーの仕組み</h4>
+            <p>
+              <code>DynamicsCompressorNode</code> で制御可能なパラメータ (<code>AudioParam</code> インスタンス) としては, <b><code>threshold</code></b>, <b><code>knee</code></b>, <b><code>ratio</code></b>, <b><code>attack</code></b>, <b><code>release</code></b> がありますが, コンプレッサーの効果に大きく影響するのは, <code>threshold</code> (<b>閾値</b>) と
+              <code>ratio</code> (<b>レシオ値</b>) です.
+            </p>
+            <p>
+              <code>threshold</code> は, コンプレッサーによる振幅の圧縮がかかる閾値を指定します. 逆に言うと,
+              <code>threshold</code> 以下の振幅には影響を与えません. 単位はデシベルで, <code>-100 dB</code> から
+              <code>0 dB</code> デシベルまでの範囲で設定可能です. <code>threshold</code> が <code>0</code> (<code>dB</code>) の場合は,
+              コンプレッサーが効いていないのと同じで, <code>-100</code> (<code>dB</code>) に近づくほど,
+              より小さな振幅に対してもコンプレッサーが効くことになります (デフォルト値は, <code>-24</code> (<code>dB</code>) です).
+            </p>
+            <p>
+              <code>ratio</code> は, <code>threshold</code> を超えた振幅を圧縮する割合を指定します (デフォルト値は <code>12</code> なので,
+              <code>threshold</code> を超えた振幅値を <span class="math-inline">$\frac{1}{12}$</span> 倍に圧縮します). したがって, <code>ratio</code> が
+              <code>1</code> (最小値) の場合は, まったく圧縮をしないので, コンプレッサーが効いてないのと同じで, ここから
+              <span class="math-inline">$\infty$</span> (ただし, 実際の最大値は <code>20</code> です) に近づくほど,
+              <code>threshold</code> に近い値に圧縮されていきます. 圧縮後の振幅値は, <code>threshold</code> の振幅値と圧縮された振幅値を加算した値となります.
+              <b>リミッター</b>は, <code>ratio</code> が <span class="math-inline">$\infty$</span> のコンプレッサーであり,
+              <code>threshold</code> を超える振幅はすべて <code>threshold</code> にまで圧縮します.
+            </p>
+            <p>
+              <code>knee</code> は <code>threshold</code> を超えた振幅の圧縮を緩やかに処理する (<b>Soft knee</b>) か, 急峻に処理する (<b>Hard knee</b>)
+              かを決定します. デフォルト値は <code>30</code> (<code>dB</code>) ですが, 最大値の <code>40</code> (<code>dB</code>) に近づくほど,
+              より緩やかな振幅の圧縮となり, 最小値の <code>0</code> (<code>dB</code>) に近づくほど, 急峻な圧縮となります (音楽的には,
+              コンプレッサーが急激に効いてしまうと, アナログ感のあるスムーズな圧縮にならず, いわゆる, 「<b>デジタルくさい音</b>」と言われることもあるので,
+              それを緩和するパラメータと考えるとよいかもしれません (また, <code>knee</code> の値とコンプレッションカーブの関係 (関数) は,
+              単調増加する関数であることが唯一の仕様となっているので, その詳細はレンダリングエンジンの実装に依存することになります).
+            </p>
+            <figure>
+              <div class="flexbox">
+                <svg id="svg-figure-compressor-parameters" width="424" height="424" />
+                <dl class="flexbox-column">
+                  <dt>
+                    <label for="svg-figure-compressor-range-threshold">threshold: </label><span id="svg-figure-compressor-range-threshold-value">-24 dB</span>
+                  </dt>
+                  <dd>
+                    <input type="range" id="svg-figure-compressor-range-threshold" value="-24" min="-100" max="0" step="1" />
+                  </dd>
+                  <dt><label for="svg-figure-compressor-range-ratio">ratio: </label><span id="svg-figure-compressor-range-ratio-value">12</span></dt>
+                  <dd>
+                    <input type="range" id="svg-figure-compressor-range-ratio" value="12" min="1" max="20" step="1" />
+                  </dd>
+                  <dt><label for="svg-figure-compressor-range-knee">knee: </label><span id="svg-figure-compressor-range-knee-value">30 dB</span></dt>
+                  <dd>
+                    <input type="range" id="svg-figure-compressor-range-knee" value="30" min="0" max="40" step="1" />
+                  </dd>
+                </dl>
+              </div>
+              <figcaption><code>threshold</code> (閾値), <code>ratio</code> (レシオ値), <code>knee</code></figcaption>
+            </figure>
+            <p>
+              また, 振幅を圧縮した結果, 振幅を大きくする余地が発生します. これによって, 相対的に振幅の小さい音もある程度大きくすることが可能になります (ただし,
+              <code>DynamicsCompressorNode</code> の仕様上, どのようなアルゴリズムよって増幅するかは記載されていないので,
+              レンダリングエンジンの実装に依存することになります).
+            </p>
+            <figure>
+              <div><svg id="svg-figure-compressor-lower-volume-and-raise-volume-by-compressor-curve" width="800" height="400" /></div>
+              <div><svg id="svg-figure-compressor-lower-volume-and-raise-volume" width="800" height="280" /></div>
+              <figcaption>コンプレッサーによる圧縮と増幅</figcaption>
+            </figure>
+            <p>
+              <code>attack</code> と <code>release</code> はイメージとしては, エンベロープジェネレーターの <code>attack</code> と <code>release</code> と同じで,
+              コンプレッサーが効き始めと終わりの時間的変化を指定することになります. 仕様としては, <code>attack</code> は, コンプレッサーが効き始めて,
+              <code>10 dB</code> 圧縮されるまでの時間 (秒単位. デフォルト値は, <code>0.003 sec</code>), <code>release</code> は,
+              コンプレッサーが効き終わってから, <code>10 dB</code> 増幅されるまでの時間 (秒単位. デフォルト値は, <code>0.25 sec</code>) となっています. また,
+              <code>attack</code> と <code>release</code> による, コンプレッサーの時間的な圧縮レベルの変化は, 読み取り専用の
+              <b><code>reduction</code></b> プロパティ (単位は <code>dB</code>)で参照することが可能です.
+            </p>
+          </section>
         </section>
       </section>
     </main>
