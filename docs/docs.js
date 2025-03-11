@@ -10330,6 +10330,204 @@ const createNodeConnectionsForDynamicsCompressorNode = (svg) => {
   svg.appendChild(g);
 };
 
+const createCompressorParameters = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const rect = document.createElementNS(xmlns, 'rect');
+
+  rect.setAttribute('x', padding);
+  rect.setAttribute('y', padding);
+  rect.setAttribute('width', innerWidth.toString(10));
+  rect.setAttribute('height', innerHeight.toString(10));
+  rect.setAttribute('stroke', lightColor);
+  rect.setAttribute('stroke-width', lineWidth.toString(10));
+  rect.setAttribute('fill', 'none');
+
+  svg.appendChild(rect);
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const inputLabel = document.createElementNS(xmlns, 'text');
+
+  inputLabel.textContent = 'Input';
+
+  inputLabel.setAttribute('x', (innerWidth + padding + 40).toString(10));
+  inputLabel.setAttribute('y', (padding + innerHeight + 20).toString(10));
+  inputLabel.setAttribute('text-anchor', 'middle');
+  inputLabel.setAttribute('stroke', 'none');
+  inputLabel.setAttribute('fill', baseColor);
+  inputLabel.setAttribute('font-size', '16px');
+
+  g.appendChild(inputLabel);
+
+  const outputLabel = document.createElementNS(xmlns, 'text');
+
+  outputLabel.textContent = 'Output';
+
+  outputLabel.setAttribute('x', (padding - 20).toString(10));
+  outputLabel.setAttribute('y', (padding - 20).toString(10));
+  outputLabel.setAttribute('text-anchor', 'middle');
+  outputLabel.setAttribute('stroke', 'none');
+  outputLabel.setAttribute('fill', baseColor);
+  outputLabel.setAttribute('font-size', '16px');
+
+  g.appendChild(outputLabel);
+
+  ['0.00', '0.25', ' 0.50', '0.75', '1.00'].forEach((x, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = x;
+
+    text.setAttribute('x', ((innerWidth / 4) * index + padding).toString(10));
+    text.setAttribute('y', (padding + innerHeight + 20).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(text);
+
+    if (x === -1 || x === 1) {
+      return;
+    }
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', ((innerWidth / 4) * index + padding).toString(10));
+    xRect.setAttribute('y', padding.toString(10));
+    xRect.setAttribute('width', lineWidth.toString(10));
+    xRect.setAttribute('height', innerHeight.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', lightColor);
+
+    g.appendChild(xRect);
+  });
+
+  ['1.00', '0.75', ' 0.50', '0.25', '0.00'].forEach((y, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = y;
+
+    text.setAttribute('x', (padding - 20).toString(10));
+    text.setAttribute('y', ((innerHeight / 4) * index + padding).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(text);
+
+    if (y === -1 || y === 1) {
+      return;
+    }
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', padding.toString(10));
+    yRect.setAttribute('y', ((innerHeight / 4) * index + padding).toString(10));
+    yRect.setAttribute('width', innerWidth.toString(10));
+    yRect.setAttribute('height', lineWidth.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', lightColor);
+
+    g.appendChild(yRect);
+  });
+
+  const createLinearPath = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding} ${padding + innerHeight} L${padding + innerWidth} ${padding}`);
+    path.setAttribute('stroke', alphaWaveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    return path;
+  };
+
+  g.appendChild(createLinearPath());
+
+  svg.appendChild(g);
+
+  let threshold = -24;
+  let ratio = 12;
+  let knee = 30;
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', lightWaveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  const renderComressorPath = () => {
+    path.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight} L${padding + (100 + threshold) * (innerWidth / 100)} ${padding + Math.abs(threshold) * (innerHeight / 100)} L${padding + innerWidth} ${padding + Math.abs(threshold - threshold * (1 / ratio)) * (innerHeight / 100)}`
+    );
+
+    /*
+    if (threshold === 0 || knee === 0) {
+      path.setAttribute(
+        'd',
+        `M${padding} ${padding + innerHeight} L${padding + (100 + threshold) * (innerWidth / 100)} ${padding + Math.abs(threshold) * (innerHeight / 100)} L${padding + innerWidth} ${padding + Math.abs(threshold - threshold * (1 / ratio)) * (innerHeight / 100)}`
+      );
+    } else {
+      const startX = padding + (100 + threshold) * (innerWidth / 100);
+      const startY = padding + Math.abs(threshold) * (innerHeight / 100);
+      const endX = padding + (100 + threshold + knee) * (innerWidth / 100);
+      const endY = padding + Math.abs(threshold + knee - (threshold + knee) * (1 / ratio)) * (innerHeight / 100);
+
+      path.setAttribute(
+        'd',
+        `M${padding} ${padding + innerHeight} L${startX} ${startY} Q${startX} ${startY} ${endX} ${endY} T${padding + innerWidth} ${padding + Math.abs(threshold - threshold * (1 / ratio)) * (innerHeight / 100)}`
+      );
+    }
+    */
+  };
+
+  const rangeCompressorThresholdElement = document.getElementById('svg-figure-compressor-range-threshold');
+  const rangeCompressorRatioElement = document.getElementById('svg-figure-compressor-range-ratio');
+  // const rangeCompressorKneeElement = document.getElementById('svg-figure-compressor-range-knee');
+
+  const spanPrintComressorThresholdElement = document.getElementById('svg-figure-compressor-range-threshold-value');
+  const spanPrintComressorRatioElement = document.getElementById('svg-figure-compressor-range-ratio-value');
+  // const spanPrintComressorKneeElement = document.getElementById('svg-figure-compressor-range-knee-value');
+
+  rangeCompressorThresholdElement.addEventListener('input', (event) => {
+    threshold = event.currentTarget.valueAsNumber;
+
+    spanPrintComressorThresholdElement.textContent = `${threshold} dB`;
+
+    renderComressorPath();
+  });
+
+  rangeCompressorRatioElement.addEventListener('input', (event) => {
+    ratio = event.currentTarget.valueAsNumber;
+
+    spanPrintComressorRatioElement.textContent = ratio.toString(10);
+
+    renderComressorPath();
+  });
+
+  /*
+  rangeCompressorKneeElement.addEventListener('input', (event) => {
+    knee = event.currentTarget.valueAsNumber;
+
+    spanPrintComressorKneeElement.textContent = `${knee} dB`;
+
+    renderComressorPath();
+  });
+  */
+
+  renderComressorPath();
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -10475,3 +10673,4 @@ createFuzz(document.getElementById('svg-figure-fuzz'));
 distortion();
 
 createNodeConnectionsForDynamicsCompressorNode(document.getElementById('svg-figure-node-connections-for-dynamics-compressor-node'));
+createCompressorParameters(document.getElementById('svg-figure-compressor-parameters'));
