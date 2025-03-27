@@ -11861,6 +11861,18 @@ oscillatorG.stop(context.currentTime + 10);</code></pre>
             </p>
           </section>
         </section>
+        <section id="section-effectors-auto-panner">
+          <h3>オートパン</h3>
+          <p>
+            <b>オートパン</b>とは, <b>音像</b>を周期的に左右のチャンネルに振るエフェクターです. 楽器演奏でのエフェクターとして使われることはほとんどなく, DAW
+            (Digital Audio Workstation) を利用した音楽制作・音源編集で使われることが多いエフェクターです. Web Audio API において,
+            オートパンを実装する方法はいくつかありますが, もっとも簡単な実装は <b><code>StereoPannerNode</code></b> クラスを利用する実装です.
+            オーディオ信号処理としては, <b>左右のチャンネルが互いに逆位相となるトレモロ</b>をかけることで実装する方法が一般的でもあるので,
+            こちらの実装も解説したいと思います (さらに, Web Audio API において, チャンネルごとに独立したオーディオ信号処理を適用するための,
+            <b><code>ChannelSplitterNode</code></b> クラス, および,
+            <b><code>ChannelMergerNode</code></b> クラスの基本を理解するためにも適切なエフェクターだからです).
+          </p>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
