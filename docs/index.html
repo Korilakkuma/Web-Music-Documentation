@@ -11872,6 +11872,22 @@ oscillatorG.stop(context.currentTime + 10);</code></pre>
             <b><code>ChannelSplitterNode</code></b> クラス, および,
             <b><code>ChannelMergerNode</code></b> クラスの基本を理解するためにも適切なエフェクターだからです).
           </p>
+          <section id="section-effectors-auto-panner-sound-image">
+            <h4>音像</h4>
+            <p>
+              人間の聴覚は, 音を聴いただけで, 音源の位置や音源の (物理的な) 大きさや形などを知覚することができます. この感覚的に (実際の音源はどうであれ)
+              知覚した音を, <b>音像</b>と呼びます. すなわち, <b>聴覚上の音源</b>とも言えます. Web Audio API の音像に関しては,
+              <code>StereoPannerNode</code> クラスもそうですが, あとのセクションで解説する <code>PannerNode</code> クラスも音像を変化させることが可能ですが,
+              <b>音源の位置</b>のみの設定です (<code>AudioListener</code> クラスで, リスナーの位置も設定可能で, これによって音像を変化させることもできます).
+              したがって, Web Audio API のスコープの中では, 音像, イコール, 音源の位置と理解しても問題ありません. また, 音像を知覚することを,
+              <b>音像定位</b>と呼びます.
+            </p>
+            <p>
+              音像を適切に設定したり, 変化させることで, 音に立体感や臨場感を与えることができます. 特に, CG (WebGL) と音楽を利用するような Web
+              アプリケーションでは (理論上は) 重要なエフェクターと言えます (しかしながら, 現状の Web Audio API における <code>PannerNode</code> クラス, および,
+              <code>AudioListener</code> クラスは, それらのユースケースに十分に応えられるほど精度のよいものではありません).
+            </p>
+          </section>
         </section>
       </section>
     </main>
