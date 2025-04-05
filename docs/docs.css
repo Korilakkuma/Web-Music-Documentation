@@ -366,7 +366,8 @@ select {
 .app-graphic-equalizer,
 .app-pedal-wah,
 .app-vcf-auto-wah,
-.app-auto-wah {
+.app-auto-wah,
+.app-auto-panner {
   margin: 24px 0;
 }
 
@@ -380,7 +381,8 @@ select {
 .app-pedal-wah dl dd,
 .app-vcf-auto-wah dl dd,
 .app-auto-wah dl dd,
-.app-amp-simulator-and-effectors-distortion dl dd {
+.app-amp-simulator-and-effectors-distortion dl dd,
+.app-auto-panner dl dd {
   display: flex;
   gap: 8px;
   align-items: center;

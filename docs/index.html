@@ -11888,6 +11888,230 @@ oscillatorG.stop(context.currentTime + 10);</code></pre>
               <code>AudioListener</code> クラスは, それらのユースケースに十分に応えられるほど精度のよいものではありません).
             </p>
           </section>
+          <section id="section-effectors-auto-panner-stereo-panner-node">
+            <h4>StereoPannerNode</h4>
+            <p>
+              <b><code>StereoPannerNode</code></b> クラスは, 音像を左右に移動させることだけに特化した <code>AudioNode</code> です (<code>PannerNode</code>
+              クラスの <code>positionX</code> プロパティ (<code>AudioParam</code>) のみを設定可能なクラスで,
+              <code>PannerNode</code> クラスのサブセット的なクラスと言えます). 音楽制作・音源編集などのユースケースでは,
+              左右のチャンネルに音像を振ることができれば十分要件を満たすことができるので, すなわち, オートパンにおいても
+              <code>StereoPannerNode</code> で実装可能です (<code>PannerNode</code> クラスは左右のチャンネルに音像を設定するというよりは,
+              あくまで立体音響でのユースケースのために定義されています).
+            </p>
+            <p>
+              <code>StereoPannerNode</code> には, <code>AudioParam</code> の <b><code>pan</code></b> プロパティのみが定義されています. デフォルト値は
+              <code>0</code> で, 音像は変化しません. <code>pan</code> プロパティの値は, 最大値 (<code>maxValue</code>) が <code>1</code>, 最小値
+              (<code>minValue</code>) が <code>-1</code> ですが,
+              <b>最大値に近いほど, 右チャンネルに音像が振られ, 最小値に近いほど, 左チャンネルに音像が振られます</b>.
+            </p>
+            <p>
+              以下のコードは, <code>pan</code> プロパティの初期値を <code>-1</code> (つまり, 左チャンネルに完全に音像を振った状態) に設定して
+              (コンストラクタの第 2 引数 <b><code>StereoPannerOptions</code></b> で指定しています. ファクトリメソッドを利用する場合は,
+              <code>AudioParam</code> の <code>value</code> プロパティで設定してください). タイマーによって, 右チャンネル,
+              左チャンネルに交互に音像を移動させます (<b>ヘッドフォンやイヤフォンを着用して確認することを推奨します</b>).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);
+
+const panner = new StereoPannerNode(context, { pan: -1 });
+
+// If use `createStereoPanner`
+// const panner = context.createStereoPanner();
+//
+// panner.pan.value = -1;
+
+// OscillatorNode (Input) -&gt; StereoPannerNode (pan) -&gt; AudioDestinationNode (Output)
+oscillator.connect(panner);
+panner.connect(context.destination);
+
+// Start oscillator immediately
+oscillator.start(0);
+
+// Stop oscillator after 10 sec
+oscillator.stop(context.currentTime + 10);
+
+const intervalid = window.setInterval(() =&gt; {
+  panner.pan.value *= -1;
+}, 2000);
+
+oscillator.onended = () =&gt; {
+  window.clearInterval(intervalid);
+};</code></pre>
+            <p>オートパンを実装するには, <code>AudioParam</code> である <code>pan</code> に, LFO を接続して周期的に変化させることで可能になります.</p>
+            <figure>
+              <svg id="svg-figure-node-connections-for-auto-panner" width="800" height="520" />
+              <figcaption>オートパンのノード接続図</figcaption>
+            </figure>
+            <p>
+              以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, オートパンに関わるパラメータを制御できるようにしたコード例です. Depth
+              が大きいほど, より大きく左右に音像が振れて, Rate を高くするほど, より速く左右に音像が振られるようになります.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+&lt;label&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-auto-panner&quot; checked /&gt;
+  &lt;span id=&quot;print-checked-auto-panner&quot;&gt;ON&lt;/span&gt;
+&lt;/label&gt;
+&lt;label for=&quot;range-auto-panner-depth&quot;&gt;Depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-auto-panner-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-auto-panner-depth-value&quot;&gt;0&lt;/span&gt;
+&lt;label for=&quot;range-auto-panner-rate&quot;&gt;Rate&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-auto-panner-rate&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;5&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-auto-panner-rate-value&quot;&gt;0&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let rateValue = 0;
+
+let oscillator = new OscillatorNode(context);
+let lfo        = new OscillatorNode(context, { frequency: rateValue });
+
+let isStop = true;
+
+const depth = new GainNode(context);
+
+const panner = new StereoPannerNode(context);
+
+const buttonElement   = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+
+const rangeDepthElement = document.getElementById(&apos;range-auto-panner-depth&apos;);
+const rangeRateElement  = document.getElementById(&apos;range-auto-panner-rate&apos;);
+
+const spanPrintCheckedElement = document.getElementById(&apos;print-checked-auto-panner&apos;);
+const spanPrintDepthElement   = document.getElementById(&apos;print-auto-panner-depth-value&apos;);
+const spanPrintRateElement    = document.getElementById(&apos;print-auto-panner-rate-value&apos;);
+
+checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
+  oscillator.disconnect(0);
+  lfo.disconnect(0);
+
+  if (checkboxElement.checked) {
+    // Connect nodes
+    // OscillatorNode (Input) -&gt; StereoPannerNode (Auto Panner) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(panner);
+    panner.connect(context.destination);
+
+    // Connect nodes for LFO that changes pan periodically
+    // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; pan (AudioParam)
+    lfo.connect(depth);
+    depth.connect(panner.pan);
+
+    spanPrintCheckedElement.textContent = &apos;ON&apos;;
+  } else {
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(context.destination);
+
+    spanPrintCheckedElement.textContent = &apos;OFF&apos;;
+  }
+});
+
+buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+  if (!isStop) {
+    return;
+  }
+
+  if (checkboxElement.checked) {
+    // Connect nodes
+    // OscillatorNode (Input) -&gt; StereoPannerNode (Auto Panner) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(panner);
+    panner.connect(context.destination);
+
+    // Start oscillator
+    oscillator.start(0);
+  } else {
+    panner.disconnect(0);
+
+    // Connect nodes (Auto Panner OFF)
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+    oscillator.connect(context.destination);
+
+    // Start oscillator
+    oscillator.start(0);
+  }
+
+  // Connect nodes for LFO that changes pan periodically
+  // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; pan (AudioParam)
+  lfo.connect(depth);
+  depth.connect(panner.pan);
+
+  lfo.start(0);
+
+  isStop = false;
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (isStop) {
+    return;
+  }
+
+  // Stop immediately
+  oscillator.stop(0);
+  lfo.stop(0);
+
+  oscillator = new OscillatorNode(context);
+  lfo        = new OscillatorNode(context, { frequency: rateValue });
+
+  isStop = true;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  const depthValue = event.currentTarget.valueAsNumber;
+
+  depth.gain.value = depthValue;
+
+  spanPrintDepthElement.textContent = depthValue.toString(10);
+});
+
+rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  rateValue = event.currentTarget.valueAsNumber;
+
+  if (lfo) {
+    lfo.frequency.value = rateValue;
+  }
+
+  spanPrintRateElement.textContent = rateValue.toString(10);
+});</code></pre>
+            <div class="app-container app-auto-panner">
+              <div class="app-headline">
+                <button type="button" id="button-auto-panner">start</button>
+                <label>
+                  <input type="checkbox" id="checkbox-auto-panner" checked />
+                  <span id="print-checked-auto-panner">ON</span>
+                </label>
+              </div>
+              <div>
+                <dl>
+                  <div>
+                    <dt><label for="range-auto-panner-depth">Depth</label></dt>
+                    <dd>
+                      <input type="range" id="range-auto-panner-depth" value="0" min="0" max="1" step="0.05" />
+                      <span id="print-auto-panner-depth-value">0</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-auto-panner-rate">Rate</label></dt>
+                    <dd>
+                      <input type="range" id="range-auto-panner-rate" value="0" min="0" max="5" step="0.05" />
+                      <span id="print-auto-panner-rate-value">0</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
     </main>
