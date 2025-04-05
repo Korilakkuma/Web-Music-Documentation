@@ -11359,6 +11359,155 @@ const createCompressorLowerAndRaiseVolume = (svg) => {
   renderGraph(innerWidth / 2 + padding, true);
 };
 
+const createNodeConnectionsForAutoPanner = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const stereoPannerNodeRect = createAudioNode('StereoPannerNode', 0, 200);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 400);
+
+  const oscillatorNodeAndStereoPannerNodePath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const stereoPannerNodeAndAudiodDestinationNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+
+  const oscillatorNodeAndStereoPannerNodeArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const stereoPannerNodeAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  const lfoRect = createLFO(400, 0);
+  const panParamEllipse = createAudioParam('pan', 350, 250);
+  const lfoAndPanParamPath1 = createConnection(545, 100 + 2, 545, 250 - 2, lightWaveColor);
+  const lfoAndPanParamPath2 = createConnection(430, 250 - 2, 545, 250 - 2, lightWaveColor);
+  const lfoAndPanParamArrow = createConnectionArrow(430 + 12, 250 - 2, 'left', lightWaveColor);
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndStereoPannerNodePath);
+  g.appendChild(oscillatorNodeAndStereoPannerNodeArrow);
+  g.appendChild(stereoPannerNodeRect);
+  g.appendChild(stereoPannerNodeAndAudiodDestinationNodePath);
+  g.appendChild(stereoPannerNodeAndAudiodDestinationNodeArrow);
+  g.appendChild(audioDestinationNodeRect);
+
+  g.appendChild(lfoRect);
+  g.appendChild(panParamEllipse);
+  g.appendChild(lfoAndPanParamPath1);
+  g.appendChild(lfoAndPanParamPath2);
+  g.appendChild(lfoAndPanParamArrow);
+
+  svg.appendChild(g);
+};
+
+const autopanner = () => {
+  let rateValue = 0;
+
+  let oscillator = new OscillatorNode(audiocontext);
+  let lfo = new OscillatorNode(audiocontext, { frequency: rateValue });
+
+  let isStop = true;
+
+  const depth = new GainNode(audiocontext);
+
+  const panner = new StereoPannerNode(audiocontext);
+
+  const buttonElement = document.getElementById('button-auto-panner');
+  const checkboxElement = document.getElementById('checkbox-auto-panner');
+
+  const rangeDepthElement = document.getElementById('range-auto-panner-depth');
+  const rangeRateElement = document.getElementById('range-auto-panner-rate');
+
+  const spanPrintCheckedElement = document.getElementById('print-checked-auto-panner');
+  const spanPrintDepthElement = document.getElementById('print-auto-panner-depth-value');
+  const spanPrintRateElement = document.getElementById('print-auto-panner-rate-value');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (!isStop) {
+      return;
+    }
+
+    if (checkboxElement.checked) {
+      oscillator.connect(panner);
+      panner.connect(audiocontext.destination);
+
+      oscillator.start(0);
+    } else {
+      panner.disconnect(0);
+
+      oscillator.connect(audiocontext.destination);
+
+      oscillator.start(0);
+    }
+
+    lfo.connect(depth);
+    depth.connect(panner.pan);
+
+    lfo.start(0);
+
+    isStop = false;
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (isStop) {
+      return;
+    }
+
+    oscillator.stop(0);
+    lfo.stop(0);
+
+    oscillator = new OscillatorNode(audiocontext);
+    lfo = new OscillatorNode(audiocontext, { frequency: rateValue });
+
+    isStop = true;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  checkboxElement.addEventListener('click', () => {
+    oscillator.disconnect(0);
+    lfo.disconnect(0);
+
+    if (checkboxElement.checked) {
+      oscillator.connect(panner);
+      panner.connect(audiocontext.destination);
+
+      lfo.connect(depth);
+      depth.connect(panner.pan);
+
+      spanPrintCheckedElement.textContent = 'ON';
+    } else {
+      oscillator.connect(audiocontext.destination);
+
+      spanPrintCheckedElement.textContent = 'OFF';
+    }
+  });
+
+  rangeDepthElement.addEventListener('input', (event) => {
+    const depthValue = event.currentTarget.valueAsNumber;
+
+    depth.gain.value = depthValue;
+
+    spanPrintDepthElement.textContent = depthValue.toString(10);
+  });
+
+  rangeRateElement.addEventListener('input', (event) => {
+    rateValue = event.currentTarget.valueAsNumber;
+
+    if (lfo) {
+      lfo.frequency.value = rateValue;
+    }
+
+    spanPrintRateElement.textContent = rateValue.toString(10);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -11511,3 +11660,7 @@ createNodeConnectionsForDynamicsCompressorNode(document.getElementById('svg-figu
 createCompressorParameters(document.getElementById('svg-figure-compressor-parameters'));
 createCompressorLowerAndRaiseVolumeByCompressorCurve(document.getElementById('svg-figure-compressor-lower-volume-and-raise-volume-by-compressor-curve'));
 createCompressorLowerAndRaiseVolume(document.getElementById('svg-figure-compressor-lower-volume-and-raise-volume'));
+
+createNodeConnectionsForAutoPanner(document.getElementById('svg-figure-node-connections-for-auto-panner'));
+
+autopanner();
