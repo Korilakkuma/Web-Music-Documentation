@@ -12124,6 +12124,25 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               徐々に音像が左右の間で移動することになります. 左右の位相が互いに逆位相になることにより, 徐々に音像が左右の間で移動することになります.
               位相差が大きいほど, 左右のどちらかに, 小さいほど中央に音像が移動します.
             </p>
+            <section id="section-effectors-auto-panner-tremolo-channel-splitter-node">
+              <h5>ChannelSplitterNode</h5>
+              <p>
+                <b><code>ChannelSplitterNode</code></b> は, 指定のチャンネル数に分割するためのクラスです. デフォルト値としては,
+                <code>6</code> チャンネルに分割します (おそらく, このデフォルト値は, 5.1 チャンネルサラウンド方式を考慮しての値と思われます). つまり, ステレオ
+                (2 チャンネル) に分割するのであれば, コンストラクタの第 2 引数 <b><code>ChannelSplitterOptions</code></b> 型の
+                <b><code>numberOfOutputs</code></b> プロパティに <code>2</code> を指定します (ファクトリメソッドを利用する場合は, 第 1 引数に指定します).
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const splitter = new ChannelSplitterNode(context, { numberOfOutputs: 2 });
+
+// If use `createChannelSplitter`
+// const splitter = context.createChannelSplitter(2);</code></pre>
+              <img src="images/channel-splitter-node.png" alt="ChannelSplitterNode" width="1232" height="770" loading="lazy" />
+            </section>
           </section>
         </section>
       </section>
