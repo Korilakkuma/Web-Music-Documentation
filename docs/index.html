@@ -12143,6 +12143,26 @@ const splitter = new ChannelSplitterNode(context, { numberOfOutputs: 2 });
 // const splitter = context.createChannelSplitter(2);</code></pre>
               <img src="images/channel-splitter-node.png" alt="ChannelSplitterNode" width="1232" height="770" loading="lazy" />
             </section>
+            <section id="section-effectors-auto-panner-tremolo-channel-merger-node">
+              <h5>ChannelMergerNode</h5>
+              <p>
+                <b><code>ChannelMergerNode</code></b> は, <code>ChannelSplitterNode</code> によって分割された複数のチャンネルを 1 つのチャンネル (ストリーム)
+                にまとめるためのクラスです (したがって, <code>ChannelSplitterNode</code> と併用するケースがほとんどです).
+                <code>ChannelSplitterNode</code> のデフォルト値にしたがって, デフォルトの入力チャンネル数は <code>6</code> チャンネルです. つまり, ステレオ (2
+                チャンネル) を 1 つのチャンネルにまとめるのであれば, コントラクタの第 2 引数 <b><code>ChannelMergerOptions</code></b> 型の
+                <b><code>numberOfInputs</code></b> プロパティに <code>2</code> を指定します (ファクトリメソッドを利用する場合は, 第 1 引数に指定します).
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const merger = new ChannelMergerNode(context, { numberOfInputs: 2 });
+
+// If use `createChannelMerge`
+// const merger = context.createChannelMerger(2);</code></pre>
+              <img src="images/channel-merger-node.png" alt="ChannelMergerNode" width="1232" height="770" loading="lazy" />
+            </section>
           </section>
         </section>
       </section>
