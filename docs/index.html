@@ -12163,6 +12163,18 @@ const merger = new ChannelMergerNode(context, { numberOfInputs: 2 });
 // const merger = context.createChannelMerger(2);</code></pre>
               <img src="images/channel-merger-node.png" alt="ChannelMergerNode" width="1232" height="770" loading="lazy" />
             </section>
+            <section id="section-effectors-auto-panner-tremolo-connect-channel">
+              <h5>connect メソッドの接続先チャンネル指定</h5>
+              <p>
+                <code>connect</code> メソッドには, いくつかのオーバーロードされたシグネチャがありますが, <code>ChannelSplitterNode</code> /
+                <code>ChannelMergerNode</code> を利用する場合に, 第 2 引数と第 3 引数にチャンネルを指定する形式が実質的に有用になります (ちなみに, 第 2 引数, 第
+                3 引数はオプショナルです).
+              </p>
+              <p>
+                第 2 引数には, <code>ChannelSplitterNode</code> で分割した出力先のチャンネルナンバーを指定します. 例えば, ステレオなら, 左チャンネルであれば
+                <code>0</code>, 右チャンネルであれば <code>1</code> を指定します.
+              </p>
+            </section>
           </section>
         </section>
       </section>
