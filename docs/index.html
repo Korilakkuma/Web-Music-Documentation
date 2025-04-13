@@ -12175,6 +12175,155 @@ const merger = new ChannelMergerNode(context, { numberOfInputs: 2 });
                 <code>0</code>, 右チャンネルであれば <code>1</code> を指定します.
               </p>
             </section>
+            <section id="section-effectors-auto-panner-tremolo-code">
+              <h5>実装</h5>
+              <p>
+                トレモロによるオートパンの実装で, <code>ChannelSplitterNode</code> / <code>ChannelMergerNode</code>, および, <code>connect</code> メソッドの第 2
+                引数, 第 3 引数の指定を解説します.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-html line-numbers">&lt;audio src=&quot;https://korilakkuma.github.io/Web-Music-Documentation/assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&quot; crossorigin="anonymous" controls /&gt;</code></pre>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const audioElement = document.querySelector(&apos;audio&apos;);
+
+const source = new MediaElementAudioSourceNode(context, { mediaElement: audioElement });
+
+const amplitudeL = new GainNode(context, { gain: +1.0 });  // +1.0 +- ${depthValue}
+const amplitudeR = new GainNode(context, { gain: -1.0 });  // -1.0 +- ${depthValue} Inverse Phase
+
+const lfo   = new OscillatorNode(context, { frequency: 0 });
+const depth = new GainNode(context, { gain: 0 });
+
+const splitter = new ChannelSplitterNode(context, { numberOfOutputs: 2 });
+const merger   = new ChannelMergerNode(context, { numberOfInputs: 2 });
+
+const lfoSplitter = new ChannelSplitterNode(context, { numberOfOutputs: 2 });
+
+// Connect nodes
+//                                                              -&gt; GainNode (Amplitude) Output Channel Number is `0` (Left Channel)  -&gt; Input Channel Number is `0` (Left Channel)  -
+// MediaElementAudioSourceNode (Input) -&gt; ChannelSplitterNode -|                                                                                                                    | -&gt; ChannelMergerNode -&gt; AudioDestinationNode (Output)
+//                                                              -&gt; GainNode (Amplitude) Output Channel Number is `1` (Right Channel) -&gt; Input Channel Number is `1` (Right Channel) -
+source.connect(splitter);
+splitter.connect(amplitudeL, 0, 0);
+splitter.connect(amplitudeR, 1, 0);
+amplitudeL.connect(merger, 0, 0);
+amplitudeR.connect(merger, 0, 1);
+merger.connect(context.destination);
+
+// Connect nodes for LFO that changes gain periodically
+// OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; ChannelSplitterNode
+lfo.connect(depth);
+depth.connect(lfoSplitter);
+
+// ChannelSplitterNode (Left Channel) -&gt;  gain (AudioParam) (Left Channel)
+lfoSplitter.connect(amplitudeL.gain, 0);
+
+// ChannelSplitterNode (Right Channel) -&gt;  gain (AudioParam) (Right Channel)
+lfoSplitter.connect(amplitudeR.gain, 1);
+
+lfo.start(0);
+
+const rangeDepthElement = document.getElementById(&apos;range-auto-panner-by-tremolo-depth&apos;);
+const rangeRateElement  = document.getElementById(&apos;range-auto-panner-by-tremolo-rate&apos;);
+
+const spanPrintDepthElement = document.getElementById(&apos;print-auto-panner-by-tremolo-depth-value&apos;);
+const spanPrintRateElement  = document.getElementById(&apos;print-auto-panner-by-tremolo-rate-value&apos;);
+
+rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  const depthValue = event.currentTarget.valueAsNumber;
+
+  depth.gain.value = depthValue;
+
+  spanPrintDepthElement.textContent = depthValue.toString(10);
+});
+
+rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  const rateValue = event.currentTarget.valueAsNumber;
+
+  lfo.frequency.value = rateValue;
+
+  spanPrintRateElement.textContent = rateValue.toString(10);
+});</code></pre>
+              <p>
+                左右のチャンネルに, 互いに逆位相となるトレモロをかけるので, <code>ChannelSplitterNode</code> の <code>numberOfOutputs</code> プロパティ,
+                <code>ChannelMergerNode</code> の <code>numberOfInputs</code> プロパティのチャンネル数はそれぞれ, <code>2</code> (以上) を指定します. また,
+                振幅変調させるための <code>GainNode</code> インスタンスも, それぞれのチャンネルに必要なので 2 つ生成します. また,
+                <b
+                  >左右の <code>gain</code> プロパティの値を互いに逆, つまり, 絶対値を同じにして, 一方を負数にすることで,
+                  左右のチャンネルが逆位相となるトレモロが実装可能です</b>.
+                <b
+                  ><code>GainNode</code> インスタンスの <code>gain</code> プロパティの値を負数 (<code>-1</code>) にして, 逆位相にする実装は Web Audio API
+                  におけるテクニックの 1 つです</b>
+                (もっとも, このような Web Audio API 特有のテクニックが, 他のオーディオ API 経験者からすると, 奇怪な API に思われる一因かもしれません).
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &y_{L}\left(n\right) = \left(1 + \mathrm{depth} \cdot \sin\left(\frac{2\pi \cdot \mathrm{rate} \cdot n}{f_{s}}\right)\right) \cdot x_{L}\left(n\right) \\
+                    &y_{R}\left(n\right) = \left(1 - \mathrm{depth} \cdot \sin\left(\frac{2\pi \cdot \mathrm{rate} \cdot n}{f_{s}}\right)\right) \cdot x_{R}\left(n\right) \\
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                <code>ChannelSplitterNode</code> によって分割された出力は, <code>numberOfOutputs</code> で指定したチャンネル数と同じです.
+                それぞれのチャンネルを<b>接続先の <code>AudioNode</code>, または, <code>AudioParam</code> の入力チャンネル</b>として (<b
+                  ><code>ChannelSplitterNode</code> の出力チャンネル</b>として), <code>connect</code> メソッドの第 2 引数に, チャンネルナンバーを指定します (第 3 引数はデフォルトで <code>0</code> なので,
+                不要であれば省略可能です)
+              </p>
+              <p>
+                <code>ChannelSplitterNode</code> でチャンネルを分割して, それぞれにオーディオ処理を適用したあと, 1 つのチャンネル (ストリーム) にまとめるために,
+                <code>ChannelMergerNode</code> へ接続します. <code>ChannelMergerNode</code> へまとめられるチャンネルの入力は,
+                <code>numberOfInputs</code> で指定したチャンネル数と同じです. それぞれのチャンネルを<b>接続元の <code>AudioNode</code> の出力チャンネル</b>として (<b><code>ChannelMergerNode</code> の入力チャンネル</b>として), <code>connect</code> メソッドの第 3 引数に,
+                チャンネルナンバーを指定します (また, <code>AudioParam</code> の場合, 分割したチャンネル (ストリーム) をまとめる必要はないので,
+                <code>ChannelMergerNode</code> へ接続するのは, 分割された <code>AudioNode</code> のみです).
+              </p>
+              <figure>
+                <svg id="svg-figure-node-connections-for-auto-panner-by-tremolo" width="1150" height="940" />
+                <figcaption>トレモロによるオートパンのノード接続図</figcaption>
+              </figure>
+              <p>以下は, トレモロによるオートパンのデモです.</p>
+              <div class="app-container">
+                <div class="app-headline">
+                  <audio
+                    id="audio-auto-panner-by-tremolo"
+                    src="https://korilakkuma.github.io/Web-Music-Documentation/assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3"
+                    crossorigin="anonymous"
+                    controls
+                  ></audio>
+                </div>
+                <div>
+                  <dl>
+                    <div>
+                      <dt><label for="range-auto-panner-by-tremolo-depth">Depth</label></dt>
+                      <dd>
+                        <input type="range" id="range-auto-panner-by-tremolo-depth" value="0" min="0" max="1" step="0.05" disabled />
+                        <span id="print-auto-panner-by-tremolo-depth-value">0</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt><label for="range-auto-panner-by-tremolo-rate">Rate</label></dt>
+                      <dd>
+                        <input type="range" id="range-auto-panner-by-tremolo-rate" value="0" min="0" max="5" step="0.05" disabled />
+                        <span id="print-auto-panner-by-tremolo-rate-value">0</span>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+              <p>
+                <code>OscillatorNode</code> は 1 チャンネルしかもたないモノラルな入力なので, 入力ノードはステレオ入力となるオーディオデータをもつ
+                <code>MediaElementAudioSourceNode</code> を利用しています. したがって, オートパンを実装するには,
+                <code>StereoPannerNode</code> を利用したほうが実装も簡潔で汎用性も高いですが, <code>ChannelSplitterNode</code> と
+                <code>ChannelMergerNode</code> の解説として好例なのであえて解説しました.
+              </p>
+            </section>
           </section>
         </section>
       </section>
