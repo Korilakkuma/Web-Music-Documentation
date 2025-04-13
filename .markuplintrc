@@ -24,6 +24,12 @@
       "rules": {
         "required-attr": ["async"]
       }
+    },
+    {
+      "selector": "audio",
+      "rules": {
+        "required-element": false
+      }
     }
   ]
 }
