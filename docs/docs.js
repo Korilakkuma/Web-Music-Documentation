@@ -11508,6 +11508,163 @@ const autopanner = () => {
   });
 };
 
+const createNodeConnectionsForAutoPannerByTremolo = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const mediaElementAudioSourceNodeRect = createAudioNode('MediaElementAudioSourceNode', 0, 0, 700, 100);
+  const channelSplitterNodeRect = createAudioNode('ChannelSplitterNode', 0, 200, 700, 100);
+  const leftGainNodeRect = createAudioNode2LineText('GainNode', 'Left Channel (0)', 0, 400);
+  const rightGainNodeRect = createAudioNode2LineText('GainNode', 'Right Channel (1)', 400, 400);
+  const channelMergerNodeRect = createAudioNode('ChannelMergerNode', 0, 600, 700, 100);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 800, 700, 100);
+
+  g.appendChild(mediaElementAudioSourceNodeRect);
+  g.appendChild(channelSplitterNodeRect);
+  g.appendChild(leftGainNodeRect);
+  g.appendChild(rightGainNodeRect);
+  g.appendChild(channelMergerNodeRect);
+  g.appendChild(audioDestinationNodeRect);
+
+  const mediaElementAudioSourceNodeAndChannelSplitterNodePath = createConnection(350 - 2, 100, 350 - 2, 200);
+  const mediaElementAudioSourceNodeAndChannelSplitterNodeArrow = createConnectionArrow(350 - 2, 200 - 14, 'down');
+
+  g.appendChild(mediaElementAudioSourceNodeAndChannelSplitterNodePath);
+  g.appendChild(mediaElementAudioSourceNodeAndChannelSplitterNodeArrow);
+
+  const channelSplitterNodeAndLeftGainNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+  const channelSplitterNodeAndLeftGainNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  g.appendChild(channelSplitterNodeAndLeftGainNodePath);
+  g.appendChild(channelSplitterNodeAndLeftGainNodeArrow);
+
+  const channelSplitterNodeAndRightGainNodePath = createConnection(550 - 2, 300, 550 - 2, 400);
+  const channelSplitterNodeAndRightGainNodeArrow = createConnectionArrow(550 - 2, 400 - 14, 'down');
+
+  g.appendChild(channelSplitterNodeAndRightGainNodePath);
+  g.appendChild(channelSplitterNodeAndRightGainNodeArrow);
+
+  const leftGainNodeAndChannelMergerNodePath = createConnection(150 - 2, 500, 150 - 2, 600);
+  const leftGainNodeAndChannelMergerNodeArrow = createConnectionArrow(150 - 2, 600 - 14, 'down');
+
+  g.appendChild(leftGainNodeAndChannelMergerNodePath);
+  g.appendChild(leftGainNodeAndChannelMergerNodeArrow);
+
+  const rightGainNodeAndChannelMergerNodePath = createConnection(550 - 2, 500, 550 - 2, 600);
+  const rightGainNodeAndChannelMergerNodeArrow = createConnectionArrow(550 - 2, 600 - 14, 'down');
+
+  g.appendChild(rightGainNodeAndChannelMergerNodePath);
+  g.appendChild(rightGainNodeAndChannelMergerNodeArrow);
+
+  const channelMergerNodeAndAudioDestinationNodePath = createConnection(350 - 2, 700, 350 - 2, 800);
+  const channelMergerNodeAndAudioDestinationNodeArrow = createConnectionArrow(350 - 2, 800 - 14, 'down');
+
+  g.appendChild(channelMergerNodeAndAudioDestinationNodePath);
+  g.appendChild(channelMergerNodeAndAudioDestinationNodeArrow);
+
+  const lfoRect = createLFO(800, 0);
+  const leftGainParamEllipse = createAudioParam('gain', 300, 500);
+  const rightGainParamEllipse = createAudioParam('gain', 700, 500);
+  const lfoChannelSplitterNodeRect = createAudioNode('ChannelSplitterNode', 800, 200, 300, 100);
+
+  g.appendChild(lfoRect);
+  g.appendChild(leftGainParamEllipse);
+  g.appendChild(rightGainParamEllipse);
+  g.appendChild(lfoChannelSplitterNodeRect);
+
+  const lfoAndChannelSplitterNodePath = createConnection(945, 100 + 2, 945, 200 - 2, lightWaveColor);
+  const lfoAndChannelSplitterNodeArrow = createConnectionArrow(945 - 2, 200 - 12, 'down', lightWaveColor);
+
+  g.appendChild(lfoAndChannelSplitterNodePath);
+  g.appendChild(lfoAndChannelSplitterNodeArrow);
+
+  const lfoAndLeftGainParamPath1 = createConnection(885, 300 + 2, 885, 350 - 2, lightWaveColor);
+  const lfoAndLeftGainParamPath2 = createConnection(330, 350 - 2, 885, 350 - 2, lightWaveColor);
+  const lfoAndLeftGainParamPath3 = createConnection(330, 350 - 2, 330, 450 - 2, lightWaveColor);
+  const lfoAndLeftGainParamArrow = createConnectionArrow(330, 450 - 2, 'down', lightWaveColor);
+
+  g.appendChild(lfoAndLeftGainParamPath1);
+  g.appendChild(lfoAndLeftGainParamPath2);
+  g.appendChild(lfoAndLeftGainParamPath3);
+  g.appendChild(lfoAndLeftGainParamArrow);
+
+  const lfoAndRightGainParamPath1 = createConnection(1005, 300 + 2, 1005, 500 - 2, lightWaveColor);
+  const lfoAndRightGainParamPath2 = createConnection(792, 500 - 2, 1005, 500 - 2, lightWaveColor);
+  const lfoAndRightGainParamArrow = createConnectionArrow(792, 500 - 2, 'left', lightWaveColor);
+
+  g.appendChild(lfoAndRightGainParamPath1);
+  g.appendChild(lfoAndRightGainParamPath2);
+  g.appendChild(lfoAndRightGainParamArrow);
+
+  svg.appendChild(g);
+};
+
+const autopannerByTremolo = () => {
+  const audioElement = document.getElementById('audio-auto-panner-by-tremolo');
+
+  const rangeDepthElement = document.getElementById('range-auto-panner-by-tremolo-depth');
+  const rangeRateElement = document.getElementById('range-auto-panner-by-tremolo-rate');
+
+  const spanPrintDepthElement = document.getElementById('print-auto-panner-by-tremolo-depth-value');
+  const spanPrintRateElement = document.getElementById('print-auto-panner-by-tremolo-rate-value');
+
+  const amplitudeL = new GainNode(audiocontext, { gain: +1.0 });
+  const amplitudeR = new GainNode(audiocontext, { gain: -1.0 });
+
+  const splitter = new ChannelSplitterNode(audiocontext, { numberOfOutputs: 2 });
+  const merger = new ChannelMergerNode(audiocontext, { numberOfInputs: 2 });
+
+  const lfoSplitter = new ChannelSplitterNode(audiocontext, { numberOfOutputs: 2 });
+
+  const onPlay = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    rangeDepthElement.removeAttribute('disabled');
+    rangeRateElement.removeAttribute('disabled');
+
+    const source = new MediaElementAudioSourceNode(audiocontext, { mediaElement: audioElement });
+
+    const lfo = new OscillatorNode(audiocontext, { frequency: 0 });
+    const depth = new GainNode(audiocontext, { gain: 0 });
+
+    source.connect(splitter);
+    splitter.connect(amplitudeL, 0, 0);
+    splitter.connect(amplitudeR, 1, 0);
+    amplitudeL.connect(merger, 0, 0);
+    amplitudeR.connect(merger, 0, 1);
+    merger.connect(audiocontext.destination);
+
+    lfo.connect(depth);
+    depth.connect(lfoSplitter);
+
+    lfoSplitter.connect(amplitudeL.gain, 0);
+    lfoSplitter.connect(amplitudeR.gain, 1);
+
+    lfo.start(0);
+
+    rangeDepthElement.addEventListener('input', (event) => {
+      const depthValue = event.currentTarget.valueAsNumber;
+
+      depth.gain.value = depthValue;
+
+      spanPrintDepthElement.textContent = depthValue.toString(10);
+    });
+
+    rangeRateElement.addEventListener('input', (event) => {
+      const rateValue = event.currentTarget.valueAsNumber;
+
+      lfo.frequency.value = rateValue;
+
+      spanPrintRateElement.textContent = rateValue.toString(10);
+    });
+
+    audioElement.removeEventListener('play', onPlay);
+  };
+
+  audioElement.addEventListener('play', onPlay);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -11664,3 +11821,7 @@ createCompressorLowerAndRaiseVolume(document.getElementById('svg-figure-compress
 createNodeConnectionsForAutoPanner(document.getElementById('svg-figure-node-connections-for-auto-panner'));
 
 autopanner();
+
+createNodeConnectionsForAutoPannerByTremolo(document.getElementById('svg-figure-node-connections-for-auto-panner-by-tremolo'));
+
+autopannerByTremolo();
