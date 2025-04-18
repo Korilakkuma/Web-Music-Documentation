@@ -11665,6 +11665,105 @@ const autopannerByTremolo = () => {
   audioElement.addEventListener('play', onPlay);
 };
 
+const glide = () => {
+  const keyboards = document.querySelectorAll('.piano button[type="button"]');
+
+  const frequencyRatio = 2 ** (1 / 12);
+
+  let glideTime = 0;
+  let glideType = 'linear';
+
+  let prevFrequency = -1;
+
+  keyboards.forEach((keyboard) => {
+    let oscillator = null;
+
+    const onDown = async (event) => {
+      if (audiocontext.state !== 'running') {
+        await audiocontext.resume();
+      }
+
+      const t0 = audiocontext.currentTime;
+
+      if (oscillator !== null) {
+        oscillator.frequency.cancelScheduledValues(t0);
+        oscillator.stop(t0);
+      }
+
+      const pianoIndex = Number(keyboard.getAttribute('data-index'));
+      const nextFrequency = 27.5 * frequencyRatio ** pianoIndex;
+
+      oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency: prevFrequency === -1 ? nextFrequency : prevFrequency });
+
+      oscillator.connect(audiocontext.destination);
+
+      if (prevFrequency !== -1) {
+        const t1 = t0 + glideTime;
+
+        oscillator.frequency.setValueAtTime(prevFrequency, t0);
+
+        switch (glideType) {
+          case 'linear': {
+            oscillator.frequency.linearRampToValueAtTime(nextFrequency, t1);
+            break;
+          }
+
+          case 'exponential': {
+            oscillator.frequency.exponentialRampToValueAtTime(nextFrequency, t1);
+            break;
+          }
+        }
+      }
+
+      prevFrequency = nextFrequency;
+
+      oscillator.start(t0);
+
+      keyboard.classList.add('pressed');
+    };
+
+    const onUp = () => {
+      if (oscillator === null) {
+        return;
+      }
+
+      oscillator.frequency.cancelScheduledValues(audiocontext.currentTime);
+      oscillator.stop(0);
+
+      oscillator = null;
+
+      keyboard.classList.remove('pressed');
+    };
+
+    keyboard.addEventListener('mousedown', onDown);
+    keyboard.addEventListener('touchstart', onDown);
+    keyboard.addEventListener('mouseup', onUp);
+    keyboard.addEventListener('touchend', onUp);
+  });
+
+  const rangeGlideTimeElement = document.getElementById('range-glide-time');
+  const formGlideTypeElement = document.getElementById('form-glide-type');
+
+  const spanPrintGlideTimeElement = document.getElementById('print-glide-time-value');
+
+  rangeGlideTimeElement.addEventListener('input', (event) => {
+    glideTime = event.currentTarget.valueAsNumber;
+
+    spanPrintGlideTimeElement.textContent = glideTime.toFixed(2);
+  });
+
+  formGlideTypeElement.addEventListener('change', () => {
+    const radios = formGlideTypeElement.elements['radio-glide-type'];
+
+    for (const radio of radios) {
+      if (radio.checked) {
+        glideType = radio.value;
+        break;
+      }
+    }
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -11825,3 +11924,5 @@ autopanner();
 createNodeConnectionsForAutoPannerByTremolo(document.getElementById('svg-figure-node-connections-for-auto-panner-by-tremolo'));
 
 autopannerByTremolo();
+
+glide();

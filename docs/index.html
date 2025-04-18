@@ -12334,6 +12334,319 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             のスケジューリング) のみで実装可能です. シンセサイザー特有のエフェクターでありますが, 同様の実装で, 演奏記号の<b>スラー</b>,
             ギターやベースの<b>スライド奏法</b>を実現することも可能です.
           </p>
+          <section id="section-effectors-glide-parameter-automation">
+            <h4>グライドのパラメータのオートメーション</h4>
+            <p>
+              グライドに必要となるパラメータのオートメーションは, <code>OscillatorNode</code> インスタンスの <code>frequency</code> プロパティ (または
+              <code>detune</code> プロパティ) で, グライドタイムの経過後に, 次の <code>frequency</code> プロパティの値になるように変化させます. 以下の実装では,
+              <code>linearRampToValueAtTime</code> メソッドを利用して線形的に変化させていますが,
+              <code>exponentialRampToValueAtTime</code> メソッドを利用して指数関数的に変化させてもよいでしょう. グライドのアルゴリズム上,
+              次に発音する音の周波数が同じ場合, 効果はありません.
+            </p>
+            <p>
+              <code>OscillatorNode</code> インスタンスの <code>frequency</code> プロパティのオートメーションと同様に,
+              <code>AudioBufferSourceNode</code> インスタンスの <code>detune</code> プロパティ (または <code>playbackRate</code> プロパティ) を変化させれば,
+              スラーやスライド奏法の実現となります.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const defaultFrequency = 440;
+const nextFrequency    = 880;
+
+const glide = 1.5;
+
+const oscillator = new OscillatorNode(context);
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+const t0 = context.currentTime;
+const t1 = t0 + glide;
+
+// Schedule `frequency` (`AudioParam`) for Glide
+oscillator.frequency.setValueAtTime(defaultFrequency, t0);
+oscillator.frequency.linearRampToValueAtTime(nextFrequency, t1);
+
+// Start oscillator immediately
+oscillator.start(t0);
+
+// Stop oscillator after 2.5 sec
+oscillator.stop(t1 + 2.5);</code></pre>
+            <p>
+              以下は, シンセサイザーで利用することを想定して, 鍵盤の UI でインタラクティブに操作できるようにしたコード例です (グライドタイムとメソッド (<code
+                >linearRampToValueAtTime</code>
+              メソッド, または, <code>exponentialRampToValueAtTime</code> メソッド) もインタラクティブに制御できるようにしています.
+            </p>
+            <p>また, 鍵盤の UI の実装はいくつかアプローチ (SVG, Canvas ... etc) がありますが, ここではシンプルに HTML と CSS で実装しています).</p>
+            <p>
+              HTML や CSS のコードまで記載すると, グライドの本質的な解説からそれてしまうので, ディベロッパーツールなどを使いながら, HTML や CSS
+              をリーディングしていただくとして, その UI がある前提で, グライドのコードを記載します.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const keyboards = document.querySelectorAll(&apos;.piano button[type=&quot;button&quot;]&apos;);
+
+const frequencyRatio = 2 ** (1 / 12);
+
+let glideTime = 0;
+let glideType = &apos;linear&apos;;
+
+// Invalid frequency
+let prevFrequency = -1;
+
+keyboards.forEach((keyboard) =&gt; {
+  let oscillator = null;
+
+  const onDown = async (event) =&gt; {
+    if (context.state !== &apos;running&apos;) {
+      await context.resume();
+    }
+
+    const t0 = context.currentTime;
+
+    if (oscillator !== null) {
+      // If starts next oscillator during glide, should cancel scheduling
+      oscillator.frequency.cancelScheduledValues(t0);
+      oscillator.stop(t0);
+    }
+
+    const pianoIndex    = Number(keyboard.getAttribute(&apos;data-index&apos;));
+    const nextFrequency = 27.5 * (frequencyRatio ** pianoIndex);
+
+    oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: (prevFrequency === -1 ? nextFrequency : prevFrequency) });
+
+    oscillator.connect(context.destination);
+
+    if (prevFrequency !== -1) {
+      const t1 = t0 + glideTime;
+
+      oscillator.frequency.setValueAtTime(prevFrequency, t0);
+
+      switch (glideType) {
+        case &apos;linear&apos;: {
+          oscillator.frequency.linearRampToValueAtTime(nextFrequency, t1);
+          break;
+        }
+
+        case &apos;exponential&apos;: {
+          oscillator.frequency.exponentialRampToValueAtTime(nextFrequency, t1);
+          break;
+        }
+      }
+    }
+
+    // Update frequency
+    prevFrequency = nextFrequency;
+
+    oscillator.start(t0);
+
+    keyboard.classList.add(&apos;pressed&apos;);
+  };
+
+  const onUp = () =&gt; {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.frequency.cancelScheduledValues(context.currentTime);
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    keyboard.classList.remove(&apos;pressed&apos;);
+  };
+
+  keyboard.addEventListener(&apos;mousedown&apos;, onDown);
+  keyboard.addEventListener(&apos;touchstart&apos;, onDown);
+  keyboard.addEventListener(&apos;mouseup&apos;, onUp);
+  keyboard.addEventListener(&apos;touchend&apos;, onUp);
+});
+
+const rangeGlideTimeElement = document.getElementById(&apos;range-glide-time&apos;);
+const formGlideTypeElement  = document.getElementById(&apos;form-glide-type&apos;);
+
+const spanPrintGlideTimeElement = document.getElementById(&apos;print-glide-time-value&apos;);
+
+rangeGlideTimeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  glideTime = event.currentTarget.valueAsNumber;
+
+  spanPrintGlideTimeElement.textContent = glideTime.toFixed(2);
+});
+
+formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
+  const radios = formGlideTypeElement.elements[&apos;radio-glide-type&apos;];
+
+  for (const radio of radios) {
+    if (radio.checked) {
+      glideType = radio.value;
+      break;
+    }
+  }
+});</code></pre>
+            <p>
+              UI と関連するイベントリスナーのコードも混在していますが, 以下の 3 つが実用的なグライドを実装する場合に重要となります
+              (コードのコメントとしても記載しています).
+            </p>
+            <ul>
+              <li>
+                グライドの原理上, 初回の発音では無効なので, 初回の発音が判定できるフラグなどを定義します. 上記のコードでは,
+                <code>prevFrequency</code> 変数を周波数としては無効な <code>-1</code> に設定することで初回の発音であることを判定して分岐させています (また,
+                このほうが, 初回の発音時は, 前回の発音はないので, より原理を実装に落とし込んだコードと言えそうです. もちろん,
+                <code>boolean</code> 型の変数などで判定しても実装としては問題ありません)
+              </li>
+              <li>
+                発音のたびに, 現在発音している周波数 (コードでは <code>nextFrequency</code> 変数) を次回の発音まで参照できるようにします. 実装としては,
+                <code>prevFrequency</code> 変数を更新してしまうのがよいでしょう (1 つ前より以前の周波数を参照する必要はないので)
+              </li>
+              <li>
+                上記の 2 つが実装できていれば, グライドとしてはほぼ問題なく機能しますが, 鍵盤を連打した場合など, 前回の
+                <code>frequency</code> プロパティのスケジューリングが残っている可能性があるので, 発音のたびに,
+                <code>OscillatorNode</code> インスタンスが存在していれば, <code>cancelScheduledValues</code> メソッドでクリアして, 即時停止します (ちなみに,
+                Firefox の対応が不要であれば, <code>cancelAndHoldAtTime</code> メソッドを利用してもよいでしょう. その場合,
+                <code>setValueAtTime</code> メソッドが不要になります)
+              </li>
+            </ul>
+            <p>
+              また, グライドの実装とは関係ありませんが, このような鍵盤の UI を利用して発音する場合, 周波数の算出式として,
+              <span class="math-inline">$27.5 \cdot \mathrm{pow}\left(\mathrm{pow}\left(2, \left(\frac{1}{12}\right)\right), \mathrm{index}\right)$</span>
+              を利用すると便利です. <span class="math-inline">$\mathrm{index}$</span> は, ピアノ 88 鍵を配列に見立てて, 最も左側にある鍵盤 (<code>27.5 Hz</code>) のインデックスを <code>0</code> とした場合の値です. また, そのインデックスは, それぞれの鍵盤を構成する HTML
+              のカスタムーデータ属性として定義しておくことで, イベントリスナーで簡単に取得することが可能です (もちろん, 他のよりよい実装があるかもしれませんが).
+            </p>
+            <div class="app-container app-glide">
+              <div class="piano">
+                <ul class="white-keyboards">
+                  <li><button type="button" data-index="0">A0</button></li>
+                  <li><button type="button" data-index="2">B0</button></li>
+                  <li><button type="button" data-index="3">C1</button></li>
+                  <li><button type="button" data-index="5">D1</button></li>
+                  <li><button type="button" data-index="7">E1</button></li>
+                  <li><button type="button" data-index="8">F1</button></li>
+                  <li><button type="button" data-index="10">G1</button></li>
+                  <li><button type="button" data-index="12">A1</button></li>
+                  <li><button type="button" data-index="14">B1</button></li>
+                  <li><button type="button" data-index="15">C2</button></li>
+                  <li><button type="button" data-index="17">D2</button></li>
+                  <li><button type="button" data-index="19">E2</button></li>
+                  <li><button type="button" data-index="20">F2</button></li>
+                  <li><button type="button" data-index="22">G2</button></li>
+                  <li><button type="button" data-index="24">A2</button></li>
+                  <li><button type="button" data-index="26">B2</button></li>
+                  <li><button type="button" data-index="27">C3</button></li>
+                  <li><button type="button" data-index="29">D3</button></li>
+                  <li><button type="button" data-index="31">E3</button></li>
+                  <li><button type="button" data-index="32">F3</button></li>
+                  <li><button type="button" data-index="34">G3</button></li>
+                  <li><button type="button" data-index="36">A3</button></li>
+                  <li><button type="button" data-index="38">B3</button></li>
+                  <li><button type="button" data-index="39">C4</button></li>
+                  <li><button type="button" data-index="41">D4</button></li>
+                  <li><button type="button" data-index="43">E4</button></li>
+                  <li><button type="button" data-index="44">F4</button></li>
+                  <li><button type="button" data-index="46">G4</button></li>
+                  <li><button type="button" data-index="48">A4</button></li>
+                  <li><button type="button" data-index="50">B4</button></li>
+                  <li><button type="button" data-index="51">C5</button></li>
+                  <li><button type="button" data-index="53">D5</button></li>
+                  <li><button type="button" data-index="55">E5</button></li>
+                  <li><button type="button" data-index="56">F5</button></li>
+                  <li><button type="button" data-index="58">G5</button></li>
+                  <li><button type="button" data-index="60">A5</button></li>
+                  <li><button type="button" data-index="62">B5</button></li>
+                  <li><button type="button" data-index="63">C6</button></li>
+                  <li><button type="button" data-index="65">D6</button></li>
+                  <li><button type="button" data-index="67">E6</button></li>
+                  <li><button type="button" data-index="68">F6</button></li>
+                  <li><button type="button" data-index="70">G6</button></li>
+                  <li><button type="button" data-index="72">A6</button></li>
+                  <li><button type="button" data-index="74">B6</button></li>
+                  <li><button type="button" data-index="75">C7</button></li>
+                  <li><button type="button" data-index="77">D7</button></li>
+                  <li><button type="button" data-index="79">E7</button></li>
+                  <li><button type="button" data-index="80">F7</button></li>
+                  <li><button type="button" data-index="82">G7</button></li>
+                  <li><button type="button" data-index="84">A7</button></li>
+                  <li><button type="button" data-index="86">B7</button></li>
+                  <li><button type="button" data-index="87">C7</button></li>
+                </ul>
+                <ul class="black-keyboards">
+                  <li><button type="button" data-index="1">A0#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="4">C1#</button></li>
+                  <li><button type="button" data-index="6">D1#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="9">F1#</button></li>
+                  <li><button type="button" data-index="11">G1#</button></li>
+                  <li><button type="button" data-index="13">A1#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="16">C2#</button></li>
+                  <li><button type="button" data-index="18">D2#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="21">F2#</button></li>
+                  <li><button type="button" data-index="23">G2#</button></li>
+                  <li><button type="button" data-index="25">A2#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="28">C3#</button></li>
+                  <li><button type="button" data-index="30">D3#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="33">F3#</button></li>
+                  <li><button type="button" data-index="35">G3#</button></li>
+                  <li><button type="button" data-index="37">A3#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="40">C4#</button></li>
+                  <li><button type="button" data-index="42">D4#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="45">F4#</button></li>
+                  <li><button type="button" data-index="47">G4#</button></li>
+                  <li><button type="button" data-index="49">A4#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="52">C5#</button></li>
+                  <li><button type="button" data-index="54">D5#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="57">F5#</button></li>
+                  <li><button type="button" data-index="59">G5#</button></li>
+                  <li><button type="button" data-index="61">A5#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="64">C6#</button></li>
+                  <li><button type="button" data-index="66">D6#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="69">F6#</button></li>
+                  <li><button type="button" data-index="71">G6#</button></li>
+                  <li><button type="button" data-index="73">A6#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="76">C7#</button></li>
+                  <li><button type="button" data-index="78">D7#</button></li>
+                  <li class="hidden"></li>
+                  <li><button type="button" data-index="81">F7#</button></li>
+                  <li><button type="button" data-index="83">G7#</button></li>
+                  <li><button type="button" data-index="85">A7#</button></li>
+                </ul>
+              </div>
+              <dl>
+                <div>
+                  <dt><label for="range-glide-time">Glide Time</label></dt>
+                  <dd>
+                    <input type="range" id="range-glide-time" value="0" min="0" max="2" step="0.05" />
+                    <span id="print-glide-time-value">0.00</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Glide Type</dt>
+                  <dd>
+                    <form id="form-glide-type" class="form-glide-type">
+                      <label><input type="radio" name="radio-glide-type" value="linear" checked /><span>Linear</span></label>
+                      <label><input type="radio" name="radio-glide-type" value="exponential" /><span>Exponential</span></label>
+                    </form>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </section>
         </section>
       </section>
     </main>
