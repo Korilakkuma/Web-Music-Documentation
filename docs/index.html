@@ -12648,6 +12648,34 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
             </div>
           </section>
         </section>
+        <section id="section-effectors-by-audio-worklet">
+          <h3>AudioWorklet が必要なエフェクター</h3>
+          <p>
+            ここまでのセクションで解説したエフェクターは, <code>AudioNode</code> (のサブクラス) と <code>AudioNode</code> のサブクラス特有に定義されている
+            <code>AudioParam</code> のパラメータの設定, また, それらの接続を駆使する (LFO の接続やフィードバック接続など) ことで実装可能でした. 言い換えると,
+            直接サウンドデータにアクセスすることなく, すなわち, <b>AudioWorklet を必要とすることなく実装可能なエフェクターです</b>.
+          </p>
+          <p>
+            しかしながら, 現実世界に存在するエフェクターのなかには, そのアルゴリズムの複雑度に関わらず, 直接サウンドデータにアクセスしないと実装できない,
+            すなわち, AudioWorklet を必要とするエフェクターもあります. 例えば, すでに解説したボーカルキャンセラは, 言ってしまえば,
+            オーディオデータを減算するだけの単純な処理ですが, 現状の Web Audio API の仕様では, AudioWorklet を利用する以外に実装する手段はありません. 他にも,
+            ピッチシフターやノイズサプレッサーといったエフェクターも, 現状の Web Audio API の仕様では, AudioWorklet を利用しないと実装できません
+            (エフェクターの可能性を考えると, AudioWorklet を必要とするエフェクターのほうが圧倒的に多いと考えることもできます).
+          </p>
+          <p>
+            もっとも,
+            <b>Web Audio API の仕様設計の思想に従うと, <code>AudioNode</code> や <code>AudioParam</code> の組み合わせで実装できないかを検討することが大事です</b>. すでに解説した, オートワウやアンプシミュレーターなどは比較的, 複雑な実装をしていますが, AudioWorklet を必要とすることなく実装できました.
+            <b>アルゴリズムの複雑性と AudioWorklet の必要性はあまり関係ありません</b> (研究目的であれば高い相関があるかもしれませんが, 研究用途の場合, そもそも
+            Web Audio API を使うことが適さないと思われます (MATLAB や Python を使うのが一般的です). リアルタイム性自体が研究目的であっても,
+            その場合はプラットフォーム (ハードウェアや OS) に依存するので, 研究対象のプラットフォームで研究することになるでしょう).
+          </p>
+          <p>
+            それでも実装不可能な場合, <b>最終手段として</b> AudioWorklet で実装します (ただし, 他のオーディオ API 経験者からすると, AudioWorklet
+            ですべてのオーディオ信号処理を実装してしまうほうが学習コストが低いかもしれません. 特に, ビジネスの現場は,
+            教条的に思想に従うのはあまり意味がないので, そのあたりは柔軟な判断をしてください. このドキュメントでは, あくまで技術的な理想として, まずは, Web
+            Audio API の仕様設計の思想に従うことを最優先しました).
+          </p>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
