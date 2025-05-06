@@ -11764,6 +11764,518 @@ const glide = () => {
   });
 };
 
+const animateTimeAndFrequencyResolution128 = (svgTime, svgSpectrum) => {
+  const innerWidth = Number(svgTime.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svgTime.getAttribute('height')) - padding * 2;
+
+  createCoordinateRect(svgTime);
+
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 128, smoothingTimeConstant: 0.2 });
+
+  const buttonElement = document.getElementById('button-time-and-frequency-resolution-128-fft-size-animation');
+
+  const rectTopSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectTopSpectrum.setAttribute('x', padding.toString(10));
+  rectTopSpectrum.setAttribute('y', (padding - 1).toString(10));
+  rectTopSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectTopSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectTopSpectrum.setAttribute('stroke', 'none');
+  rectTopSpectrum.setAttribute('fill', alphaBaseColor);
+
+  svgSpectrum.appendChild(rectTopSpectrum);
+
+  const rectMiddleSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectMiddleSpectrum.setAttribute('x', padding.toString(10));
+  rectMiddleSpectrum.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+  rectMiddleSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectMiddleSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectMiddleSpectrum.setAttribute('stroke', 'none');
+  rectMiddleSpectrum.setAttribute('fill', alphaBaseColor);
+
+  svgSpectrum.appendChild(rectMiddleSpectrum);
+
+  const rectBottomSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectBottomSpectrum.setAttribute('x', padding.toString(10));
+  rectBottomSpectrum.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  rectBottomSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectBottomSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectBottomSpectrum.setAttribute('stroke', 'none');
+  rectBottomSpectrum.setAttribute('fill', baseColor);
+
+  svgSpectrum.appendChild(rectBottomSpectrum);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', padding.toString(10));
+  yRect.setAttribute('y', padding.toString(10));
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', innerHeight.toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svgSpectrum.appendChild(yRect);
+
+  const xText = document.createElementNS(xmlns, 'text');
+
+  xText.textContent = 'Frequency';
+
+  xText.setAttribute('x', (innerWidth + padding).toString(10));
+  xText.setAttribute('y', (padding + innerHeight - 8).toString(10));
+
+  xText.setAttribute('text-anchor', 'middle');
+  xText.setAttribute('stroke', 'none');
+  xText.setAttribute('fill', baseColor);
+  xText.setAttribute('font-size', '18px');
+
+  svgSpectrum.appendChild(xText);
+
+  const yText = document.createElementNS(xmlns, 'text');
+
+  yText.textContent = 'Amplitude';
+
+  yText.setAttribute('x', padding.toString(10));
+  yText.setAttribute('y', '24');
+
+  yText.setAttribute('text-anchor', 'middle');
+  yText.setAttribute('stroke', 'none');
+  yText.setAttribute('fill', baseColor);
+  yText.setAttribute('font-size', '18px');
+
+  svgSpectrum.appendChild(yText);
+
+  ['1.0', '0.5', '0.0'].forEach((text) => {
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = text;
+
+    yText.setAttribute('x', (padding - 16).toString(10));
+
+    switch (text) {
+      case '1.0': {
+        yText.setAttribute('y', (padding - 4).toString(10));
+        break;
+      }
+
+      case '0.5': {
+        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
+        break;
+      }
+
+      case '0.0': {
+        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
+        break;
+      }
+    }
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '16px');
+
+    svgSpectrum.appendChild(yText);
+  });
+
+  const timePath = document.createElementNS(xmlns, 'path');
+
+  timePath.setAttribute('stroke', waveColor);
+  timePath.setAttribute('fill', 'none');
+  timePath.setAttribute('stroke-width', lineWidth.toString(10));
+  timePath.setAttribute('stroke-linecap', lineCap);
+  timePath.setAttribute('stroke-linejoin', lineJoin);
+
+  const spectrumPath = document.createElementNS(xmlns, 'path');
+
+  spectrumPath.setAttribute('stroke', waveColor);
+  spectrumPath.setAttribute('fill', 'none');
+  spectrumPath.setAttribute('stroke-width', lineWidth.toString(10));
+  spectrumPath.setAttribute('stroke-linecap', lineCap);
+  spectrumPath.setAttribute('stroke-linejoin', lineJoin);
+
+  svgTime.appendChild(timePath);
+  svgSpectrum.appendChild(spectrumPath);
+
+  let timerId = null;
+
+  const drawOscillator = () => {
+    const times = new Float32Array(analyser.fftSize);
+    const spectrums = new Uint8Array(analyser.frequencyBinCount);
+
+    analyser.getFloatTimeDomainData(times);
+    analyser.getByteFrequencyData(spectrums);
+
+    timePath.removeAttribute('d');
+    spectrumPath.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0, len = times.length; n < len; n++) {
+      const x = (n / len) * innerWidth + padding;
+      const y = (1 - times[n]) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+
+      if (n % 16 === 0) {
+        const t = document.createElementNS(xmlns, 'text');
+
+        t.textContent = `${(n * (1 / audiocontext.sampleRate) * 1000).toFixed(1)} msec`;
+
+        t.setAttribute('x', x.toString(10));
+        t.setAttribute('y', (innerHeight / 2 + padding + 12).toString(10));
+        t.setAttribute('text-anchor', 'middle');
+        t.setAttribute('stroke', 'none');
+        t.setAttribute('fill', baseColor);
+        t.setAttribute('font-size', '12px');
+
+        svgTime.appendChild(t);
+      }
+    }
+
+    timePath.setAttribute('d', d);
+
+    d = '';
+
+    for (let k = 0, len = spectrums.length; k < len; k++) {
+      const x = k * (audiocontext.sampleRate / analyser.fftSize) * (innerWidth / len) + padding;
+      const y = (255 - spectrums[k]) * (innerHeight / 255) + padding;
+
+      if (x > padding + innerWidth) {
+        break;
+      }
+
+      if (k === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+
+      const hz = document.createElementNS(xmlns, 'text');
+
+      hz.textContent = `${Math.trunc(k * (audiocontext.sampleRate / analyser.fftSize))} Hz`;
+
+      hz.setAttribute('x', x.toString(10));
+      hz.setAttribute('y', (innerHeight + padding + 12).toString(10));
+      hz.setAttribute('text-anchor', 'middle');
+      hz.setAttribute('stroke', 'none');
+      hz.setAttribute('fill', baseColor);
+      hz.setAttribute('font-size', '12px');
+
+      svgSpectrum.appendChild(hz);
+    }
+
+    spectrumPath.setAttribute('d', d);
+
+    timerId = window.setTimeout(drawOscillator, 125);
+  };
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      oscillator.stop(0);
+      oscillator = null;
+    }
+
+    oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency: 27.5 });
+
+    oscillator.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    drawOscillator();
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+    oscillator = null;
+
+    buttonElement.textContent = 'start';
+
+    if (timerId) {
+      window.clearTimeout(timerId);
+      timerId = null;
+    }
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+};
+
+const animateTimeAndFrequencyResolution2048 = (svgTime, svgSpectrum) => {
+  const innerWidth = Number(svgTime.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svgTime.getAttribute('height')) - padding * 2;
+
+  createCoordinateRect(svgTime);
+
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 2048, smoothingTimeConstant: 0.2 });
+
+  const buttonElement = document.getElementById('button-time-and-frequency-resolution-2048-fft-size-animation');
+
+  const rectTopSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectTopSpectrum.setAttribute('x', padding.toString(10));
+  rectTopSpectrum.setAttribute('y', (padding - 1).toString(10));
+  rectTopSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectTopSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectTopSpectrum.setAttribute('stroke', 'none');
+  rectTopSpectrum.setAttribute('fill', alphaBaseColor);
+
+  svgSpectrum.appendChild(rectTopSpectrum);
+
+  const rectMiddleSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectMiddleSpectrum.setAttribute('x', padding.toString(10));
+  rectMiddleSpectrum.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+  rectMiddleSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectMiddleSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectMiddleSpectrum.setAttribute('stroke', 'none');
+  rectMiddleSpectrum.setAttribute('fill', alphaBaseColor);
+
+  svgSpectrum.appendChild(rectMiddleSpectrum);
+
+  const rectBottomSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectBottomSpectrum.setAttribute('x', padding.toString(10));
+  rectBottomSpectrum.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  rectBottomSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectBottomSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectBottomSpectrum.setAttribute('stroke', 'none');
+  rectBottomSpectrum.setAttribute('fill', baseColor);
+
+  svgSpectrum.appendChild(rectBottomSpectrum);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', padding.toString(10));
+  yRect.setAttribute('y', padding.toString(10));
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', innerHeight.toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svgSpectrum.appendChild(yRect);
+
+  const xText = document.createElementNS(xmlns, 'text');
+
+  xText.textContent = 'Frequency';
+
+  xText.setAttribute('x', (innerWidth + padding).toString(10));
+  xText.setAttribute('y', (padding + innerHeight - 8).toString(10));
+
+  xText.setAttribute('text-anchor', 'middle');
+  xText.setAttribute('stroke', 'none');
+  xText.setAttribute('fill', baseColor);
+  xText.setAttribute('font-size', '18px');
+
+  svgSpectrum.appendChild(xText);
+
+  const yText = document.createElementNS(xmlns, 'text');
+
+  yText.textContent = 'Amplitude';
+
+  yText.setAttribute('x', padding.toString(10));
+  yText.setAttribute('y', '24');
+
+  yText.setAttribute('text-anchor', 'middle');
+  yText.setAttribute('stroke', 'none');
+  yText.setAttribute('fill', baseColor);
+  yText.setAttribute('font-size', '18px');
+
+  svgSpectrum.appendChild(yText);
+
+  ['1.0', '0.5', '0.0'].forEach((text) => {
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = text;
+
+    yText.setAttribute('x', (padding - 16).toString(10));
+
+    switch (text) {
+      case '1.0': {
+        yText.setAttribute('y', (padding - 4).toString(10));
+        break;
+      }
+
+      case '0.5': {
+        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
+        break;
+      }
+
+      case '0.0': {
+        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
+        break;
+      }
+    }
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '16px');
+
+    svgSpectrum.appendChild(yText);
+  });
+
+  const timePath = document.createElementNS(xmlns, 'path');
+
+  timePath.setAttribute('stroke', waveColor);
+  timePath.setAttribute('fill', 'none');
+  timePath.setAttribute('stroke-width', lineWidth.toString(10));
+  timePath.setAttribute('stroke-linecap', lineCap);
+  timePath.setAttribute('stroke-linejoin', lineJoin);
+
+  const spectrumPath = document.createElementNS(xmlns, 'path');
+
+  spectrumPath.setAttribute('stroke', waveColor);
+  spectrumPath.setAttribute('fill', 'none');
+  spectrumPath.setAttribute('stroke-width', lineWidth.toString(10));
+  spectrumPath.setAttribute('stroke-linecap', lineCap);
+  spectrumPath.setAttribute('stroke-linejoin', lineJoin);
+
+  svgTime.appendChild(timePath);
+  svgSpectrum.appendChild(spectrumPath);
+
+  let timerId = null;
+
+  const drawOscillator = () => {
+    const times = new Float32Array(analyser.fftSize);
+    const spectrums = new Uint8Array(analyser.frequencyBinCount);
+
+    analyser.getFloatTimeDomainData(times);
+    analyser.getByteFrequencyData(spectrums);
+
+    timePath.removeAttribute('d');
+    spectrumPath.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0, len = times.length; n < len; n++) {
+      const x = (n / len) * innerWidth + padding;
+      const y = (1 - times[n]) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+
+      if (n % 256 === 0) {
+        const t = document.createElementNS(xmlns, 'text');
+
+        t.textContent = `${(n * (1 / audiocontext.sampleRate) * 1000).toFixed(1)} msec`;
+
+        t.setAttribute('x', x.toString(10));
+        t.setAttribute('y', (innerHeight / 2 + padding + 12).toString(10));
+        t.setAttribute('text-anchor', 'middle');
+        t.setAttribute('stroke', 'none');
+        t.setAttribute('fill', baseColor);
+        t.setAttribute('font-size', '12px');
+
+        svgTime.appendChild(t);
+      }
+    }
+
+    timePath.setAttribute('d', d);
+
+    d = '';
+
+    for (let k = 0, len = spectrums.length / 4; k < len; k++) {
+      const x = k * (audiocontext.sampleRate / analyser.fftSize) * (innerWidth / len) + padding;
+      const y = (255 - spectrums[k]) * (innerHeight / 255) + padding;
+
+      if (x > padding + innerWidth) {
+        break;
+      }
+
+      if (k === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+
+      const hz = document.createElementNS(xmlns, 'text');
+
+      hz.textContent = `${Math.trunc(k * (audiocontext.sampleRate / analyser.fftSize))} Hz`;
+
+      hz.setAttribute('x', x.toString(10));
+      hz.setAttribute('y', (innerHeight + padding + 12).toString(10));
+      hz.setAttribute('text-anchor', 'middle');
+      hz.setAttribute('stroke', 'none');
+      hz.setAttribute('fill', baseColor);
+      hz.setAttribute('font-size', '12px');
+
+      svgSpectrum.appendChild(hz);
+    }
+
+    spectrumPath.setAttribute('d', d);
+
+    timerId = window.setTimeout(drawOscillator, 125);
+  };
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      oscillator.stop(0);
+      oscillator = null;
+    }
+
+    oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency: 27.5 });
+
+    oscillator.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    drawOscillator();
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+    oscillator = null;
+
+    buttonElement.textContent = 'start';
+
+    if (timerId) {
+      window.clearTimeout(timerId);
+      timerId = null;
+    }
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -11926,3 +12438,13 @@ createNodeConnectionsForAutoPannerByTremolo(document.getElementById('svg-figure-
 autopannerByTremolo();
 
 glide();
+
+animateTimeAndFrequencyResolution128(
+  document.getElementById('svg-animation-time-and-frequency-high-resolution-time'),
+  document.getElementById('svg-animation-time-and-frequency-low-resolution-spectrum')
+);
+
+animateTimeAndFrequencyResolution2048(
+  document.getElementById('svg-animation-time-and-frequency-low-resolution-time'),
+  document.getElementById('svg-animation-time-and-frequency-high-resolution-spectrum')
+);

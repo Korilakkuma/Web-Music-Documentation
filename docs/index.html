@@ -12675,6 +12675,126 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
             教条的に思想に従うのはあまり意味がないので, そのあたりは柔軟な判断をしてください. このドキュメントでは, あくまで技術的な理想として, まずは, Web
             Audio API の仕様設計の思想に従うことを最優先しました).
           </p>
+          <section id="section-effectors-by-audio-worklet-time-and-frequency-resolution">
+            <h4>時間分解能と周波数分解能</h4>
+            <p>
+              ところで, 直接サウンドデータにアクセスしなければ実装できないオーディオ信号処理でも, <b>時間領域の演算のみで実装できる場合は</b>,
+              <code>AudioWorkletProcessCallback</code> メソッドで, <code>renderQuantumSize</code> (デフォルトは <code>128</code> サンプル)
+              ごとに処理を適用すれば問題ありません. 例えば, 時間領域でのボーカルキャンセラやノイズゲート, また, エフェクターではありませんが,
+              ノイズ生成もこれに該当します.
+            </p>
+            <p>
+              問題となるのは, <b>周波数領域での演算を必要とする</b>, つまり, <b>高速フーリエ変換を必要とする場合は</b>,
+              <b>周波数分解能の低さ</b>が問題となります. 結論から解説すると, デフォルトの <code>renderQuantumSize</code>, つまり,
+              <code>128</code> サンプルごとの処理では, 周波数分解が非常に低く, 周波数領域での演算精度が悪くなり, 結果として,
+              エフェクターが想定より効いていなかったり, 場合によってはノイズとなってしまっりといった諸問題が発生します. さらに,
+              <b>直接サウンドデータにアクセスしなければ実装できないオーディオ信号処理のほとんどは, 周波数領域での演算を必要とします</b>. 例えば,
+              ピッチシフターやノイズサプレッサー, 周波数領域でのボーカルキャンセラなどです (Web Audio API 1.1 では, 必ずしも
+              <code>128</code> サンプル固定ではないものの, 適用される <code>renderQuantumSize</code> はブラウザやプラットフォーム依存なので,
+              周波数分解能の低さを根本的に解決はできません).
+            </p>
+            <p>
+              AudioWorklet における (Web Audio API における) 周波数分解能の低さを解決する手法として, <b>オーバーラップアド</b> (<b>Overlap-Add method</b>:
+              <b>重畳加算法</b>) があります. イメージとしては, 過去の数フレーム (<code>renderQuantumSize</code> のオーディオデータ) をバッファに格納しておき,
+              過去のデータとつなぎ合わせて, (入出力以外の) オーディオの処理単位を (一般的には 2 の冪乗で) 任意のサイズで制御することができる手法です.
+              これによって, 高速フーリエ変換のサイズも <code>renderQuantumSize</code> に依存しない, つまり,
+              <code>128</code> サンプルよりも大きなサンプル数を指定できるので周波数分解能の問題を解決することができます.
+            </p>
+            <p>
+              では, 周波数分解能の説明をします. 周波数分解能 (<span class="math-inline">$f_{\mathrm{resolution}}$</span>) は以下の数式で定義されます. 分子の
+              <span class="math-inline">$f_{s}$</span> はサンプリング周波数, 分母の <span class="math-inline">$N$</span> は, 高速フーリエ変換のサイズです.
+            </p>
+            <div class="math-block">$f_{\mathrm{resolution}} = \frac{f_{s}}{N}$</div>
+            <p>
+              サンプリング周波数を一定, つまり, 定数とすると, 周波数分解能は, 高速フーリエ変換のサイズによって決まることになります. そして,
+              高速フーリエ変換のサイズである <span class="math-inline">$N$</span> の値を大きくしていくと, 周波数分解能 (<span class="math-inline"
+                >$f_{\mathrm{resolution}}$</span>) はより小さい値になっていきます. <b>周波数分解能の値が小さいほど, より精度の高い周波数演算ができるので周波数分解能が高くなります</b>.
+            </p>
+            <p>
+              具体的な値で算出すると, サンプリング周波数 <span class="math-inline">$f_{s}$</span> を <code>48000</code> で定数とします.
+              高速フーリエ変換のサイズを, デフォルトの <code>renderQuantumSize</code> の <code>128</code> サンプルとすると,
+              <span class="math-inline">$f_{\mathrm{resolution}} = \frac{48000}{128} = 375$</span> となり, 周波数領域での演算を
+              <code>375 Hz</code> 単位の粗い単位でしか実行できなくなり, 先に解説した諸問題が発生します. 一方で,
+              高速フーリエ変換のサイズをオーバーラップアドによって, <code>2048</code> サンプル (過去 15 フレーム (<code>renderQuantumSize</code>) 分と現在の 1
+              フレーム (<code>renderQuantumSize</code>) 分のサンプル (ただし, 厳密には, オーバーラップ, つまり, 重なるサンプルがあるので, 過去の必要なフレームは
+              15 フレームより多いです. あくまで, 理解のための概算と考えてください. <code>2048</code> サンプルは,
+              時間分解能とのバランスを考慮したよく利用されるサンプル数です) とすると,
+              <span class="math-inline">$f_{\mathrm{resolution}} = \frac{48000}{2048} = 23.4375$</span> となり, 周波数領域での演算を約
+              <code>24 Hz</code> 単位の細かい精度で実行できるので, 先に解説した諸問題は実用上発生しません (理論上は, デジタル信号である以上,
+              少なからず丸め誤差によるノイズなどはありますが).
+            </p>
+            <p>
+              ピアノ 88 鍵の音域で考えると, 高速フーリエ変換のサイズがデフォルトの <code>renderQuantumSize</code> の <code>128</code> サンプルでは, 低音域の 44
+              鍵がまったく演算できないことになりますが, <code>2048</code> サンプルにすると, 最も低い <code>27.5 Hz</code> から 88
+              鍵の音域をすべて演算可能できることになります. また, すでに解説したグラフィックイコライザーで考えると, 低音の帯域が <code>32 Hz</code> から
+              <code>250 Hz</code> となるので, 高速フーリエ変換のサイズがデフォルトの <code>renderQuantumSize</code> の <code>128</code> サンプルでは,
+              低音域をまったく演算できないことになりますが, <code>2048</code> サンプルにすると, 十分に低音域も演算できることになります.
+            </p>
+            <p>
+              ところで, 周波数分解能の低さが問題になるのであれば, なぜ, デフォルトの
+              <code>renderQuantumSize</code> をもっと大きな値に仕様策定していないのでしょうか ? 実は,
+              <b>周波数分解を高くすると時間分解能が低くなるというトレードオフの関係があるからです</b>. 時間分解能は, 1 フレームあたりのサンプル数です. Web Audio
+              API では, (デフォルトの実装で) <code>renderQuantumSize</code> が時間分解能です. また, 上記の周波数分解能の数式では, 高速フーリエ変換サイズである
+              <span class="math-inline">$N$</span> が時間分解能です. すなわち,
+              <b>単位時間あたりに処理するサンプル数が小さいほど時間分解能は高くなります</b> (高速フーリエ変換のサイズ (時間分解能である)
+              <span class="math-inline">$N$</span> を小さくするほど, 周波数分解能である
+              <span class="math-inline">$f_{\mathrm{resolution}}$</span> はより大きな値となります).
+              <b>時間分解能が高いほど</b> (単位時間あたりに処理するサンプル数が小さいほど), CPU の負荷を減らせるので, グリッチ (glitch) や遅延 (latency)
+              を軽減することができます. すなわち, <b>Web Audio API の設計では, 時間分解能を優先</b>しているということです (これは, 非推奨となった仕様である
+              <code>ScriptProcessorNode</code> のフィードバックから影響を受けています. また, このことからも, Web Audio API では, AudioWorklet
+              による実装を最終手段的に利用するべきという暗黙的な設計思想がうかがえます).
+            </p>
+            <p>
+              先ほどの周波数分解能の算出の例として, <b>時間分解能とのバランスを考慮した</b>のも, トレードオフの関係があるからです.
+              実用的によく利用される高速フーリエ変換のサイズは <code>512</code>, <code>1024</code>, <code>2048</code>, <code>4096</code> あたりです.
+              これより小さい, もしくは大きいと, 周波数分解能が低すぎる, または, 時間分解能が低すぎてそれぞれのケースにおける諸問題を発生させてしまいます.
+              参考までに, <code>AnalyserNode</code> の <code>fftSize</code> プロパティのデフォルト値も <code>2048</code> となっています.
+            </p>
+            <p>
+              視覚的にも, 時間分解能と周波数分解能を理解してみましょう. 以下の波形 (<code>OscillatorNode</code>) は, いずれも, ノコギリ波
+              (偶奇の倍音成分をもつので視覚的に理解しやすくなります) で, ピアノ 88 鍵盤の最も低い周波数である <code>27.5 Hz</code> です.
+            </p>
+            <p>
+              デフォルトの <code>renderQuantumSize</code> である <code>128</code> サンプルの場合, 時間分解能が高く 1 フレームあたり, 約
+              <code>2.5 msec</code> の高い精度で処理されています (Gibbs の現象の詳細を確認できるほどの時間分解能です). 一方で, 周波数分解能が
+              <code>375 Hz</code> で, <code>27.5 Hz</code> には程遠い帯域なので, まったく処理できていません (<code>128</code>
+              サンプルのスペクトルの描画はバグではなく, 周波数分解能が低すぎて描画されていません).
+            </p>
+            <figure>
+              <dl>
+                <dt>Time Domain</dt>
+                <dd><svg id="svg-animation-time-and-frequency-high-resolution-time" width="720" height="240" data-parameters="true" data-a="1" /></dd>
+                <dt>Frequency Domain (Spectrum)</dt>
+                <dd><svg id="svg-animation-time-and-frequency-low-resolution-spectrum" width="720" height="240" /></dd>
+              </dl>
+              <figcaption>
+                <span>時間分解能と周波数分解能</span>
+                <span
+                  >(<span class="math-inline">$N = 128$</span>, <span class="math-inline">$f_{s} = 48000 \space \mathrm{Hz}$</span>,
+                  <span class="math-inline">$f_{\mathrm{resolution}} = \frac{f_{s}}{N} = 375 \space \mathrm{Hz}$</span>)</span>
+                <button type="button" id="button-time-and-frequency-resolution-128-fft-size-animation">start</button>
+              </figcaption>
+            </figure>
+            <p>
+              <code>2048</code> サンプルの場合, 周波数分解能が高く, <code>27.5 Hz</code> の帯域と倍音成分が高い精度で処理されています. 一方で,
+              時間分解能が低くなるので, 1 フレームあたり, 約 <code>40 msec</code> と低い精度になっています (それにしたがって, レイテンシーも大きくなります).
+            </p>
+            <figure>
+              <dl>
+                <dt>Time Domain</dt>
+                <dd><svg id="svg-animation-time-and-frequency-low-resolution-time" width="720" height="240" data-parameters="true" data-a="1" /></dd>
+                <dt>Frequency Domain (Spectrum)</dt>
+                <dd><svg id="svg-animation-time-and-frequency-high-resolution-spectrum" width="720" height="240" /></dd>
+              </dl>
+              <figcaption>
+                <span>時間分解能と周波数分解能</span>
+                <span
+                  >(<span class="math-inline">$N = 2048$</span>, <span class="math-inline">$f_{s} = 48000 \space \mathrm{Hz}$</span>,
+                  <span class="math-inline">$f_{\mathrm{resolution}} = \frac{f_{s}}{N} = 23.4375 \space \mathrm{Hz}$</span>)</span>
+                <button type="button" id="button-time-and-frequency-resolution-2048-fft-size-animation">start</button>
+              </figcaption>
+            </figure>
+          </section>
         </section>
       </section>
     </main>
