@@ -12276,6 +12276,358 @@ const animateTimeAndFrequencyResolution2048 = (svgTime, svgSpectrum) => {
   buttonElement.addEventListener('touchend', onUp);
 };
 
+const createOverlapAddWithoutWindowFunction = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const render = (offset, overlapAdd) => {
+    const g = document.createElementNS(xmlns, 'g');
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', (padding / 2).toString(10));
+    xRect.setAttribute('y', (padding + offset + innerHeight / 4).toString(10));
+    xRect.setAttribute('width', (innerWidth + padding).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (padding - 1).toString(10));
+    yRect.setAttribute('y', (padding + offset).toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', (innerHeight / 2).toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = 'Time';
+
+    xText.setAttribute('x', (innerWidth + padding).toString(10));
+    xText.setAttribute('y', (padding + offset + innerHeight / 4 - 8).toString(10));
+
+    xText.setAttribute('text-anchor', 'middle');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '18px');
+
+    if (offset === 0) {
+      const yText = document.createElementNS(xmlns, 'text');
+
+      yText.textContent = 'Amplitude';
+
+      yText.setAttribute('x', padding.toString(10));
+      yText.setAttribute('y', (padding + offset - 20).toString(10));
+
+      yText.setAttribute('text-anchor', 'middle');
+      yText.setAttribute('stroke', 'none');
+      yText.setAttribute('fill', baseColor);
+      yText.setAttribute('font-size', '18px');
+
+      g.appendChild(yText);
+    }
+
+    const amplitudeTexts = document.createElementNS(xmlns, 'g');
+
+    ['1.0', '0.0', '-1.0'].forEach((amplitude) => {
+      const amplitudeText = document.createElementNS(xmlns, 'text');
+
+      amplitudeText.textContent = amplitude;
+
+      amplitudeText.setAttribute('x', (padding - 4).toString(10));
+      amplitudeText.setAttribute('y', (padding + offset + (innerHeight / 4) * (1 - Number(amplitude)) - 4).toString(10));
+
+      amplitudeText.setAttribute('text-anchor', 'end');
+      amplitudeText.setAttribute('stroke', 'none');
+      amplitudeText.setAttribute('fill', baseColor);
+      amplitudeText.setAttribute('font-size', '14px');
+
+      amplitudeTexts.appendChild(amplitudeText);
+    });
+
+    const w = 2 * Math.PI;
+    const f = 3;
+
+    if (overlapAdd) {
+      const numberOfFrames = 4;
+
+      let startX = 0;
+      let endX = 0;
+
+      for (let frame = 0; frame <= numberOfFrames; frame++) {
+        const path = document.createElementNS(xmlns, 'path');
+
+        let d = '';
+
+        for (let n = 0, len = f * sampleRate; n < len; n++) {
+          if (n > sampleRate * 0.666) {
+            endX = (n / len) * innerWidth + (frame > 0 ? (frame / 1.75) * (innerWidth / numberOfFrames) : 0) + padding;
+            break;
+          }
+
+          const v = Math.sin((w * f * n) / sampleRate);
+
+          const x = (n / len) * innerWidth + (frame > 0 ? (frame / 1.75) * (innerWidth / numberOfFrames) : 0) + padding;
+
+          const y = (1 - v) * (innerHeight / 4) + padding + offset;
+
+          if (n === 0) {
+            d += `M${x + lineWidth / 2} ${y}`;
+
+            startX = x + lineWidth / 2;
+          } else {
+            d += ` L${x} ${y}`;
+          }
+        }
+
+        path.setAttribute('d', d);
+
+        path.setAttribute('stroke', alphaWaveColor);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-width', lineWidth.toString(10));
+        path.setAttribute('stroke-linecap', lineCap);
+        path.setAttribute('stroke-linejoin', lineJoin);
+
+        g.appendChild(path);
+
+        const rect = document.createElementNS(xmlns, 'rect');
+
+        rect.setAttribute('x', startX.toString(10));
+        rect.setAttribute('y', (padding + offset).toString(10));
+        rect.setAttribute('width', ((innerWidth - padding) / 4).toString(10));
+        rect.setAttribute('height', (innerHeight / 2).toString(10));
+        rect.setAttribute('stroke', alphaLightWaveColor);
+        rect.setAttribute('stroke-width', lineWidth.toString(10));
+        rect.setAttribute('stroke-linecap', lineCap);
+        rect.setAttribute('stroke-linejoin', lineJoin);
+        rect.setAttribute('fill', 'rgba(255 0 255 / 8%)');
+
+        g.appendChild(rect);
+      }
+    } else {
+      const path = document.createElementNS(xmlns, 'path');
+
+      let d = '';
+
+      for (let n = 0, len = f * sampleRate; n < len; n++) {
+        const v = Math.sin((w * f * n) / sampleRate);
+
+        const x = (n / len) * innerWidth + padding;
+        const y = (1 - v) * (innerHeight / 4) + padding + offset;
+
+        if (n === 0) {
+          d += `M${x + lineWidth / 2} ${y}`;
+        } else {
+          d += ` L${x} ${y}`;
+        }
+      }
+
+      path.setAttribute('d', d);
+
+      path.setAttribute('stroke', waveColor);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke-width', lineWidth.toString(10));
+      path.setAttribute('stroke-linecap', lineCap);
+      path.setAttribute('stroke-linejoin', lineJoin);
+
+      g.appendChild(path);
+
+      for (let frame = 0; frame < 4; frame++) {
+        const rect = document.createElementNS(xmlns, 'rect');
+
+        rect.setAttribute('x', (padding + frame * (innerWidth / 4) - frame * 16).toString(10));
+        rect.setAttribute('y', (padding + offset).toString(10));
+        rect.setAttribute('width', ((innerWidth - padding) / 4).toString(10));
+        rect.setAttribute('height', (innerHeight / 2).toString(10));
+        rect.setAttribute('stroke', alphaLightWaveColor);
+        rect.setAttribute('stroke-width', lineWidth.toString(10));
+        rect.setAttribute('stroke-linecap', lineCap);
+        rect.setAttribute('stroke-linejoin', lineJoin);
+
+        if (frame === 3) {
+          rect.setAttribute('fill', 'rgba(255 0 255 / 8%)');
+        } else {
+          rect.setAttribute('fill', 'none');
+        }
+
+        g.appendChild(rect);
+      }
+    }
+
+    g.appendChild(xRect);
+    g.appendChild(yRect);
+    g.appendChild(xText);
+    g.appendChild(amplitudeTexts);
+
+    svg.appendChild(g);
+  };
+
+  render(0, false);
+  render((innerHeight + padding) / 2, true);
+};
+
+const createDFTSizeAndPeriod = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const render = (offset, isNTimes) => {
+    const g = document.createElementNS(xmlns, 'g');
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', (padding / 2).toString(10));
+    xRect.setAttribute('y', (padding + offset + innerHeight / 4).toString(10));
+    xRect.setAttribute('width', (innerWidth + padding).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (padding - 1).toString(10));
+    yRect.setAttribute('y', (padding + offset).toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', (innerHeight / 2).toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = 'Time';
+
+    xText.setAttribute('x', (innerWidth + padding).toString(10));
+    xText.setAttribute('y', (padding + offset + innerHeight / 4 - 8).toString(10));
+
+    xText.setAttribute('text-anchor', 'middle');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '18px');
+
+    if (offset === 0) {
+      const yText = document.createElementNS(xmlns, 'text');
+
+      yText.textContent = 'Amplitude';
+
+      yText.setAttribute('x', padding.toString(10));
+      yText.setAttribute('y', (padding + offset - 20).toString(10));
+
+      yText.setAttribute('text-anchor', 'middle');
+      yText.setAttribute('stroke', 'none');
+      yText.setAttribute('fill', baseColor);
+      yText.setAttribute('font-size', '18px');
+
+      g.appendChild(yText);
+    }
+
+    const amplitudeTexts = document.createElementNS(xmlns, 'g');
+
+    ['1.0', '0.0', '-1.0'].forEach((amplitude) => {
+      const amplitudeText = document.createElementNS(xmlns, 'text');
+
+      amplitudeText.textContent = amplitude;
+
+      amplitudeText.setAttribute('x', (padding - 4).toString(10));
+      amplitudeText.setAttribute('y', (padding + offset + (innerHeight / 4) * (1 - Number(amplitude)) - 4).toString(10));
+
+      amplitudeText.setAttribute('text-anchor', 'end');
+      amplitudeText.setAttribute('stroke', 'none');
+      amplitudeText.setAttribute('fill', baseColor);
+      amplitudeText.setAttribute('font-size', '14px');
+
+      amplitudeTexts.appendChild(amplitudeText);
+    });
+
+    const w = 2 * Math.PI;
+    const f = 3;
+
+    if (isNTimes) {
+      const path = document.createElementNS(xmlns, 'path');
+
+      let d = '';
+
+      for (let n = 0, len = f * sampleRate; n < len; n++) {
+        const v = Math.sin((w * f * n) / sampleRate);
+
+        const x = (n / len) * innerWidth + padding;
+        const y = (1 - v) * (innerHeight / 4) + padding + offset;
+
+        if (n === 0) {
+          d += `M${x + lineWidth / 2} ${y}`;
+        } else {
+          d += ` L${x} ${y}`;
+        }
+      }
+
+      path.setAttribute('d', d);
+
+      path.setAttribute('stroke', waveColor);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke-width', lineWidth.toString(10));
+      path.setAttribute('stroke-linecap', lineCap);
+      path.setAttribute('stroke-linejoin', lineJoin);
+
+      g.appendChild(path);
+    } else {
+      for (let m = 0; m < 4; m++) {
+        const path = document.createElementNS(xmlns, 'path');
+
+        let d = '';
+
+        for (let n = 0, len = f * sampleRate; n < len / 4.5; n++) {
+          const v = Math.sin((w * 2.6 * n) / sampleRate);
+
+          const x = (n / len) * innerWidth + padding + m * 135;
+          const y = (1 - v) * (innerHeight / 4) + padding + offset;
+
+          if (n === 0) {
+            d += `M${x + lineWidth / 2} ${y}`;
+          } else {
+            d += ` L${x} ${y}`;
+          }
+        }
+
+        path.setAttribute('d', d);
+
+        path.setAttribute('stroke', waveColor);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-width', lineWidth.toString(10));
+        path.setAttribute('stroke-linecap', lineCap);
+        path.setAttribute('stroke-linejoin', lineJoin);
+
+        g.appendChild(path);
+      }
+    }
+
+    for (let frame = 0; frame < 4; frame++) {
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', (padding + frame * (innerWidth / 4) - frame * 16).toString(10));
+      rect.setAttribute('y', (padding + offset).toString(10));
+      rect.setAttribute('width', ((innerWidth - padding) / 4).toString(10));
+      rect.setAttribute('height', (innerHeight / 2).toString(10));
+      rect.setAttribute('stroke', alphaLightWaveColor);
+      rect.setAttribute('stroke-width', lineWidth.toString(10));
+      rect.setAttribute('stroke-linecap', lineCap);
+      rect.setAttribute('stroke-linejoin', lineJoin);
+      rect.setAttribute('fill', 'none');
+
+      g.appendChild(rect);
+    }
+
+    g.appendChild(xRect);
+    g.appendChild(yRect);
+    g.appendChild(xText);
+    g.appendChild(amplitudeTexts);
+
+    svg.appendChild(g);
+  };
+
+  render(0, true);
+  render((innerHeight + padding) / 2, false);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -12448,3 +12800,7 @@ animateTimeAndFrequencyResolution2048(
   document.getElementById('svg-animation-time-and-frequency-low-resolution-time'),
   document.getElementById('svg-animation-time-and-frequency-high-resolution-spectrum')
 );
+
+createOverlapAddWithoutWindowFunction(document.getElementById('svg-figure-overlap-add-without-window-function'));
+
+createDFTSizeAndPeriod(document.getElementById('svg-figure-dft-size-and-period'));

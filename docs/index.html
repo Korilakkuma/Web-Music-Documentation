@@ -12795,6 +12795,48 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               </figcaption>
             </figure>
           </section>
+          <section id="section-effectors-by-audio-worklet-overlap-add">
+            <h4>オーバーラップアド</h4>
+            <p>
+              <b>オーバーラップアド</b> (<b>Overlap-Add method</b>: <b>重畳加算法</b>) とは, その命名のとおり,
+              フレームごとに区切ったオーディオデータのサンプルを 「<b>重ねて</b>」「<b>加算</b>」することです. 特に, リアルタイム処理においては,
+              過去のフレームをバッファに格納しておき, それぞれのフレームに対して, 1 つあとのフレームをスライディングして重ねて, 加算します.
+            </p>
+            <figure>
+              <svg id="svg-figure-overlap-add-without-window-function" width="720" height="400" />
+              <figcaption>オーバーラップアド</figcaption>
+            </figure>
+            <p>
+              ところで, 周波数分解能の問題だけであれば, わざわざ「重ねて」「加算」する必要はない, すなわち,
+              オーバーラップアドをわざわざ実装する必要はないように思われます. しかしながら, 周波数領域で演算する場合,
+              <b
+                >離散フーリエ変換後の信号は周期が <span class="math-inline">$N$</span> (離散フーリエ変換のサイズ. 実用上は, 高速フーリエ変換のサイズ)
+                であることを仮定しています</b>
+              (<span class="math-inline">$-\frac{f_{s}}{2}$</span> (負のナイキスト周波数) から
+              <span class="math-inline">$\frac{f_{s}}{2}$</span> (ナイキスト周波数) までが 1 周期で, その間のサンプル数は
+              <span class="math-inline">$N$</span> (<span class="math-inline">$0 \lt k \leq \frac{f_{s}}{2}$</span> の範囲で
+              <span class="math-inline">$\frac{N}{2}$</span>) となります). したがって,
+              <span class="math-inline">$N$</span> が対象の信号の周期の整数倍となっていない場合, <b>時間領域の波形に不連続点が発生してしまい</b>,
+              その波形を離散フーリエ変換することで, <b>本来は存在しない周波数成分が発生してしまいます</b>. そして, 現実のオーディオデータにおいて,
+              離散フーリエ変換のサイズが, 周期の整数倍になることは稀です.
+            </p>
+            <figure>
+              <svg id="svg-figure-dft-size-and-period" width="720" height="400" />
+              <figcaption>
+                <span class="math-inline">$N$</span> が周期の整数倍となる場合 (上) と周期の整数倍とならない場合 (下: 時間領域の波形で不連続点が発生しています)
+              </figcaption>
+            </figure>
+            <p>
+              この問題を緩和するために, (次のセクションで解説する) <b>窓関数</b>を利用しますが, 窓関数は, ほとんどが両端で <code>0</code> となるので (あるいは,
+              ハミング窓でもかなり減衰するので), フレーム両端のオーディオデータが失われてしまいます. そこで, オーバーラップアドによって,
+              <b>フレーム両端のオーディオデータを平滑化して保ちながら</b>, 本来は存在しない周波数成分が発生してしまう問題も緩和することができます. 特に,
+              <a href="#section-effectors-delay-and-reverb-cyclic-convolution">巡回畳み込み</a>で不可欠な処理となります.
+            </p>
+            <p>
+              また, オーバーラップアドの計算量を改良した, <b>オーバーラップセーブ</b> (<b>Overlap-Save method</b>: <b>重畳保留法</b>)
+              が利用されることもありますが, その処理の目的は同じです.
+            </p>
+          </section>
         </section>
       </section>
     </main>
