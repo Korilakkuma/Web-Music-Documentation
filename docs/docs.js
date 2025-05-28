@@ -12628,6 +12628,789 @@ const createDFTSizeAndPeriod = (svg) => {
   render((innerHeight + padding) / 2, false);
 };
 
+const createWindowFunctionSpectrum = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const renderSamples = 256;
+
+  const rectTop = document.createElementNS(xmlns, 'rect');
+
+  rectTop.setAttribute('x', padding.toString(10));
+  rectTop.setAttribute('y', (padding - 1).toString(10));
+  rectTop.setAttribute('width', innerWidth.toString(10));
+  rectTop.setAttribute('height', lineWidth.toString(10));
+  rectTop.setAttribute('stroke', 'none');
+  rectTop.setAttribute('fill', alphaBaseColor);
+
+  svg.appendChild(rectTop);
+
+  const rectMiddle = document.createElementNS(xmlns, 'rect');
+
+  rectMiddle.setAttribute('x', padding.toString(10));
+  rectMiddle.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+  rectMiddle.setAttribute('width', innerWidth.toString(10));
+  rectMiddle.setAttribute('height', lineWidth.toString(10));
+  rectMiddle.setAttribute('stroke', 'none');
+  rectMiddle.setAttribute('fill', alphaBaseColor);
+
+  svg.appendChild(rectMiddle);
+
+  const rectBottom = document.createElementNS(xmlns, 'rect');
+
+  rectBottom.setAttribute('x', padding.toString(10));
+  rectBottom.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  rectBottom.setAttribute('width', innerWidth.toString(10));
+  rectBottom.setAttribute('height', lineWidth.toString(10));
+  rectBottom.setAttribute('stroke', 'none');
+  rectBottom.setAttribute('fill', baseColor);
+
+  svg.appendChild(rectBottom);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', (padding + innerWidth / 2 - 1).toString(10));
+  yRect.setAttribute('y', padding.toString(10));
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', innerHeight.toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(yRect);
+
+  const xText = document.createElementNS(xmlns, 'text');
+
+  xText.textContent = 'Frequency';
+
+  xText.setAttribute('x', (innerWidth + padding).toString(10));
+  xText.setAttribute('y', (padding + innerHeight + 16).toString(10));
+
+  xText.setAttribute('text-anchor', 'middle');
+  xText.setAttribute('stroke', 'none');
+  xText.setAttribute('fill', baseColor);
+  xText.setAttribute('font-size', '16px');
+
+  svg.appendChild(xText);
+
+  const yText = document.createElementNS(xmlns, 'text');
+
+  yText.textContent = 'Amplitude';
+
+  yText.setAttribute('x', padding.toString(10));
+  yText.setAttribute('y', '28');
+
+  yText.setAttribute('text-anchor', 'middle');
+  yText.setAttribute('stroke', 'none');
+  yText.setAttribute('fill', baseColor);
+  yText.setAttribute('font-size', '18px');
+
+  svg.appendChild(yText);
+
+  [1, 0.5, 0].forEach((amplitude) => {
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.setAttribute('x', (padding - 4).toString(10));
+
+    switch (amplitude) {
+      case 1: {
+        yText.textContent = 'T';
+
+        yText.setAttribute('y', (padding + 2).toString(10));
+        break;
+      }
+
+      case 0.5: {
+        yText.textContent = 'T/2';
+
+        yText.setAttribute('y', (padding + innerHeight / 2 + 2).toString(10));
+        break;
+      }
+
+      case 0: {
+        yText.textContent = '0';
+
+        yText.setAttribute('y', (padding + innerHeight + 2).toString(10));
+        break;
+      }
+    }
+
+    yText.setAttribute('text-anchor', 'end');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '14px');
+
+    svg.appendChild(yText);
+  });
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  let m = -3;
+
+  for (let k = 0; k < renderSamples; k++) {
+    const x = k * (sampleRate / renderSamples) * (innerWidth / sampleRate) + padding;
+    const n = (k - renderSamples / 2) / 32;
+
+    const fText = document.createElementNS(xmlns, 'text');
+
+    if (k !== 0 && k % 32 === 0) {
+      if (n === 0) {
+        fText.textContent = '0';
+      } else if (m === -1) {
+        fText.textContent = '-ω';
+
+        m = 1;
+      } else if (m === 1) {
+        fText.textContent = 'ω';
+
+        ++m;
+      } else {
+        fText.textContent = `${m}ω`;
+
+        ++m;
+      }
+
+      fText.setAttribute('x', x.toString(10));
+      fText.setAttribute('y', (padding + innerHeight + 16).toString(10));
+      fText.setAttribute('text-anchor', 'middle');
+      fText.setAttribute('stroke', 'none');
+      fText.setAttribute('fill', baseColor);
+      fText.setAttribute('font-size', '14px');
+
+      g.appendChild(fText);
+    }
+  }
+
+  svg.appendChild(g);
+
+  const renderSpectrum = (windowFunction) => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    switch (windowFunction) {
+      case 'rect': {
+        path.setAttribute('stroke', waveColor);
+        break;
+      }
+
+      case 'hanning': {
+        path.setAttribute('stroke', lightWaveColor);
+        break;
+      }
+    }
+
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    let d = '';
+
+    const sinc = (n) => {
+      return Math.sin(Math.PI * n) / (Math.PI * n);
+    };
+
+    for (let k = 0; k < renderSamples; k++) {
+      const x = k * (sampleRate / renderSamples) * (innerWidth / sampleRate) + padding;
+
+      switch (windowFunction) {
+        case 'rect': {
+          const n = (k - renderSamples / 2) / 32;
+
+          const v = n === 0 ? 1 : Math.abs(Math.sin(Math.PI * n) / (Math.PI * n));
+          const y = (1 - v) * innerHeight + padding;
+
+          if (k === 0) {
+            d += `M${x + lineWidth / 2} ${y}`;
+          } else {
+            d += ` L${x} ${y}`;
+          }
+
+          break;
+        }
+
+        case 'hanning': {
+          const a = 0.5;
+          const s = 2 * Math.PI * (renderSamples / 32);
+
+          const n = (k - renderSamples / 2) / 64;
+
+          const v = n === 0 ? 0.5 : Math.abs(a * sinc(n) + ((1 - a) / 2) * (sinc(n + s) + sinc(n - s)));
+          const y = (1 - v) * innerHeight + padding;
+
+          if (k === 0) {
+            d += `M${x + lineWidth / 2} ${y}`;
+          } else {
+            d += ` L${x} ${y}`;
+          }
+
+          if (k === 0) {
+            d += `M${x + lineWidth / 2} ${y}`;
+          } else {
+            d += ` L${x} ${y}`;
+          }
+
+          break;
+        }
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    svg.appendChild(path);
+  };
+
+  const renderLobe = (windowFunction) => {
+    const mainlobeRect = document.createElementNS(xmlns, 'rect');
+    const sidelobePath = document.createElementNS(xmlns, 'path');
+
+    sidelobePath.setAttribute('stroke-width', lineWidth.toString(10));
+    sidelobePath.setAttribute('stroke-dasharray', '5,5');
+    sidelobePath.setAttribute('stroke-linecap', lineCap);
+    sidelobePath.setAttribute('stroke-linejoin', lineJoin);
+    sidelobePath.setAttribute('fill', 'none');
+
+    switch (windowFunction) {
+      case 'rect': {
+        mainlobeRect.setAttribute('x', (padding + (3 / 8) * innerWidth).toString(10));
+        mainlobeRect.setAttribute('y', padding.toString(10));
+        mainlobeRect.setAttribute('width', (innerWidth / 4).toString(10));
+        mainlobeRect.setAttribute('height', innerHeight.toString(10));
+        mainlobeRect.setAttribute('stroke', 'none');
+        mainlobeRect.setAttribute('fill', 'rgba(0 0 255 / 12%)');
+
+        sidelobePath.setAttribute('d', `M${padding} ${padding + (3 / 4) * innerHeight + 8} L${padding + innerWidth} ${padding + (3 / 4) * innerHeight + 8}`);
+        sidelobePath.setAttribute('stroke', alphaWaveColor);
+
+        break;
+      }
+
+      case 'hanning': {
+        mainlobeRect.setAttribute('x', (padding + (1 / 4) * innerWidth).toString(10));
+        mainlobeRect.setAttribute('y', (padding + innerHeight / 2).toString(10));
+        mainlobeRect.setAttribute('width', (innerWidth / 2).toString(10));
+        mainlobeRect.setAttribute('height', (innerHeight / 2).toString(10));
+        mainlobeRect.setAttribute('stroke', 'none');
+        mainlobeRect.setAttribute('fill', 'rgba(255 0 255 / 12%)');
+
+        sidelobePath.setAttribute('d', `M${padding} ${padding + (7 / 8) * innerHeight + 4} L${padding + innerWidth} ${padding + (7 / 8) * innerHeight + 4}`);
+        sidelobePath.setAttribute('stroke', alphaLightWaveColor);
+
+        break;
+      }
+    }
+
+    svg.appendChild(mainlobeRect);
+    svg.appendChild(sidelobePath);
+  };
+
+  renderLobe('hanning');
+  renderLobe('rect');
+
+  renderSpectrum('hanning');
+  renderSpectrum('rect');
+};
+
+function sinc(n) {
+  if (n === 0) {
+    return 1;
+  }
+
+  const t = 128;
+  const w = (2 * Math.PI) / t;
+
+  return Math.sin(w * n) / (w * n);
+}
+
+function FFT(reals, imags, size) {
+  const pow2 = (n) => 2 ** n;
+
+  const indexes = new Uint16Array(size); // FFT size is `0` between `65535`.
+
+  const numberOfStages = Math.log2(size);
+
+  for (let stage = 1; stage <= numberOfStages; stage++) {
+    for (let i = 0; i < pow2(stage - 1); i++) {
+      const rest = numberOfStages - stage;
+
+      for (let j = 0; j < pow2(rest); j++) {
+        const n = i * pow2(rest + 1) + j;
+        const m = pow2(rest) + n;
+        const w = 2.0 * Math.PI * j * pow2(stage - 1);
+
+        const areal = reals[n];
+        const aimag = imags[n];
+        const breal = reals[m];
+        const bimag = imags[m];
+        const wreal = Math.cos(w / size);
+        const wimag = -1 * Math.sin(w / size); // Clockwise
+
+        if (stage < numberOfStages) {
+          reals[n] = areal + breal;
+          imags[n] = aimag + bimag;
+          reals[m] = wreal * (areal - breal) - wimag * (aimag - bimag);
+          imags[m] = wreal * (aimag - bimag) + wimag * (areal - breal);
+        } else {
+          reals[n] = areal + breal;
+          imags[n] = aimag + bimag;
+          reals[m] = areal - breal;
+          imags[m] = aimag - bimag;
+        }
+      }
+    }
+  }
+
+  for (let stage = 1; stage <= numberOfStages; stage++) {
+    const rest = numberOfStages - stage;
+
+    for (let i = 0; i < pow2(stage - 1); i++) {
+      indexes[pow2(stage - 1) + i] = indexes[i] + pow2(rest);
+    }
+  }
+
+  for (let k = 0; k < size; k++) {
+    if (indexes[k] <= k) {
+      continue;
+    }
+
+    const real = reals[indexes[k]];
+    const imag = imags[indexes[k]];
+
+    reals[indexes[k]] = reals[k];
+    imags[indexes[k]] = imags[k];
+
+    reals[k] = real;
+    imags[k] = imag;
+  }
+}
+
+const animateWindowFunctions = (svgTime, svgSpectrum) => {
+  const innerWidth = Number(svgTime.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svgTime.getAttribute('height')) - padding * 2;
+
+  createCoordinateRect(svgTime);
+
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 1024 });
+
+  const minDecibels = -100;
+  const downSampleRate = 64000;
+  const renderSamples = 1024;
+
+  const buttonElement = document.getElementById('button-window-functions');
+  const selectWindowFunctionElement = document.getElementById('select-window-functions');
+
+  const rectTopSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectTopSpectrum.setAttribute('x', padding.toString(10));
+  rectTopSpectrum.setAttribute('y', (padding - 1).toString(10));
+  rectTopSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectTopSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectTopSpectrum.setAttribute('stroke', 'none');
+  rectTopSpectrum.setAttribute('fill', alphaBaseColor);
+
+  svgSpectrum.appendChild(rectTopSpectrum);
+
+  const rectMiddleSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectMiddleSpectrum.setAttribute('x', padding.toString(10));
+  rectMiddleSpectrum.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+  rectMiddleSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectMiddleSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectMiddleSpectrum.setAttribute('stroke', 'none');
+  rectMiddleSpectrum.setAttribute('fill', alphaBaseColor);
+
+  svgSpectrum.appendChild(rectMiddleSpectrum);
+
+  const rectBottomSpectrum = document.createElementNS(xmlns, 'rect');
+
+  rectBottomSpectrum.setAttribute('x', padding.toString(10));
+  rectBottomSpectrum.setAttribute('y', (padding + innerHeight - 1).toString(10));
+  rectBottomSpectrum.setAttribute('width', innerWidth.toString(10));
+  rectBottomSpectrum.setAttribute('height', lineWidth.toString(10));
+  rectBottomSpectrum.setAttribute('stroke', 'none');
+  rectBottomSpectrum.setAttribute('fill', baseColor);
+
+  svgSpectrum.appendChild(rectBottomSpectrum);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', padding.toString(10));
+  yRect.setAttribute('y', padding.toString(10));
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', innerHeight.toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svgSpectrum.appendChild(yRect);
+
+  const xText = document.createElementNS(xmlns, 'text');
+
+  xText.textContent = 'Frequency';
+
+  xText.setAttribute('x', (innerWidth + padding).toString(10));
+  xText.setAttribute('y', (padding + innerHeight - 8).toString(10));
+
+  xText.setAttribute('text-anchor', 'middle');
+  xText.setAttribute('stroke', 'none');
+  xText.setAttribute('fill', baseColor);
+  xText.setAttribute('font-size', '16px');
+
+  svgSpectrum.appendChild(xText);
+
+  const yText = document.createElementNS(xmlns, 'text');
+
+  yText.textContent = 'Amplitude';
+
+  yText.setAttribute('x', padding.toString(10));
+  yText.setAttribute('y', '28');
+
+  yText.setAttribute('text-anchor', 'middle');
+  yText.setAttribute('stroke', 'none');
+  yText.setAttribute('fill', baseColor);
+  yText.setAttribute('font-size', '18px');
+
+  svgSpectrum.appendChild(yText);
+
+  [0, -50, -100].forEach((dB) => {
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = `${dB} dB`;
+
+    yText.setAttribute('x', (padding - 4).toString(10));
+
+    switch (dB) {
+      case 0: {
+        yText.setAttribute('y', (padding + 2).toString(10));
+        break;
+      }
+
+      case -50: {
+        yText.setAttribute('y', (padding + innerHeight / 2 + 2).toString(10));
+        break;
+      }
+
+      case -100: {
+        yText.setAttribute('y', (padding + innerHeight + 2).toString(10));
+        break;
+      }
+    }
+
+    yText.setAttribute('text-anchor', 'end');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '14px');
+
+    svgSpectrum.appendChild(yText);
+  });
+
+  const timePath = document.createElementNS(xmlns, 'path');
+
+  timePath.setAttribute('stroke', waveColor);
+  timePath.setAttribute('fill', 'none');
+  timePath.setAttribute('stroke-width', lineWidth.toString(10));
+  timePath.setAttribute('stroke-linecap', lineCap);
+  timePath.setAttribute('stroke-linejoin', lineJoin);
+
+  const timeWindowFunctionPath = document.createElementNS(xmlns, 'path');
+
+  timeWindowFunctionPath.setAttribute('stroke', alphaLightWaveColor);
+  timeWindowFunctionPath.setAttribute('stroke-width', lineWidth.toString(10));
+  timeWindowFunctionPath.setAttribute('stroke-linecap', lineCap);
+  timeWindowFunctionPath.setAttribute('stroke-linejoin', lineJoin);
+  timeWindowFunctionPath.setAttribute('fill', 'rgba(255 0 255 / 8%)');
+
+  const spectrumPath = document.createElementNS(xmlns, 'path');
+
+  spectrumPath.setAttribute('stroke', waveColor);
+  spectrumPath.setAttribute('fill', 'none');
+  spectrumPath.setAttribute('stroke-width', lineWidth.toString(10));
+  spectrumPath.setAttribute('stroke-linecap', lineCap);
+  spectrumPath.setAttribute('stroke-linejoin', lineJoin);
+
+  const spectrumWindowFunctionPath = document.createElementNS(xmlns, 'path');
+
+  spectrumWindowFunctionPath.setAttribute('stroke', lightWaveColor);
+  spectrumWindowFunctionPath.setAttribute('fill', 'none');
+  spectrumWindowFunctionPath.setAttribute('stroke-width', lineWidth.toString(10));
+  spectrumWindowFunctionPath.setAttribute('stroke-linecap', lineCap);
+  spectrumWindowFunctionPath.setAttribute('stroke-linejoin', lineJoin);
+
+  svgTime.appendChild(timeWindowFunctionPath);
+  svgTime.appendChild(timePath);
+  svgSpectrum.appendChild(spectrumWindowFunctionPath);
+  svgSpectrum.appendChild(spectrumPath);
+
+  let timerId = null;
+
+  let windowFunction = 'rect';
+
+  const drawOscillator = () => {
+    const fftSize = analyser.fftSize;
+
+    const times = new Float32Array(fftSize);
+
+    analyser.getFloatTimeDomainData(times);
+
+    const reals = new Float32Array(fftSize);
+    const imags = new Float32Array(fftSize);
+
+    const windowFunctions = new Float32Array(fftSize);
+
+    switch (windowFunction) {
+      case 'rect': {
+        for (let n = 0; n < fftSize; n++) {
+          windowFunctions[n] = 1;
+        }
+
+        break;
+      }
+
+      case 'hanning': {
+        for (let n = 0; n < fftSize; n++) {
+          windowFunctions[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (fftSize - 1));
+        }
+
+        break;
+      }
+
+      case 'hamming': {
+        for (let n = 0; n < fftSize; n++) {
+          windowFunctions[n] = 0.54 - 0.46 * Math.cos((2 * Math.PI * n) / (fftSize - 1));
+        }
+
+        break;
+      }
+
+      case 'blackman': {
+        const alpha = 0.16;
+
+        for (let n = 0; n < fftSize; n++) {
+          windowFunctions[n] = (1 - alpha) / 2 - 0.5 * Math.cos((2 * Math.PI * n) / (fftSize - 1)) + (alpha / 2) * Math.cos((4 * Math.PI * n) / (fftSize - 1));
+        }
+
+        break;
+      }
+    }
+
+    for (let n = 0; n < fftSize; n++) {
+      reals[n] = windowFunctions[n] * times[n];
+    }
+
+    FFT(reals, imags, fftSize);
+
+    const spectrums = new Float32Array(fftSize);
+
+    for (let k = 0; k < fftSize; k++) {
+      spectrums[k] = Math.sqrt(reals[k] ** 2 + imags[k] ** 2);
+
+      if (spectrums[k] === 0) {
+        spectrums[k] = minDecibels;
+        continue;
+      }
+
+      spectrums[k] = 20 * Math.log10(spectrums[k]);
+      spectrums[k] = Math.max(spectrums[k], minDecibels);
+    }
+
+    timePath.removeAttribute('d');
+    timeWindowFunctionPath.removeAttribute('d');
+    spectrumPath.removeAttribute('d');
+    spectrumWindowFunctionPath.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0; n < fftSize; n++) {
+      const x = (n / fftSize) * innerWidth + padding;
+      const y = (1 - times[n]) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    timePath.setAttribute('d', d);
+
+    d = '';
+
+    for (let n = 0; n < fftSize; n++) {
+      const x = (n / fftSize) * innerWidth + padding;
+      const y = (1 - windowFunctions[n]) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${innerHeight / 2 + padding}`;
+        d += ` L${x + lineWidth / 2} ${y}`;
+      } else if (n === fftSize - 1) {
+        d += ` L${x + lineWidth / 2} ${innerHeight / 2 + padding}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    timeWindowFunctionPath.setAttribute('d', d);
+
+    d = '';
+
+    for (let k = 0; k < renderSamples; k++) {
+      const x = k * (downSampleRate / renderSamples) * (innerWidth / renderSamples) + padding;
+      const v = 1 - spectrums[k] / 64;
+      const y = v <= 1 ? v * innerHeight + padding : innerHeight + padding;
+
+      if (k === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+
+      const f = Math.trunc(k * (audiocontext.sampleRate / fftSize));
+
+      if (f > 750) {
+        break;
+      }
+
+      if (k % 2 === 0) {
+        const hz = document.createElementNS(xmlns, 'text');
+
+        hz.textContent = `${f} Hz`;
+
+        hz.setAttribute('x', x.toString(10));
+        hz.setAttribute('y', (innerHeight + padding + 12).toString(10));
+        hz.setAttribute('text-anchor', 'middle');
+        hz.setAttribute('stroke', 'none');
+        hz.setAttribute('fill', baseColor);
+        hz.setAttribute('font-size', '12px');
+
+        svgSpectrum.appendChild(hz);
+      }
+    }
+
+    spectrumPath.setAttribute('d', d);
+
+    d = '';
+
+    const s = 2 * Math.PI * (renderSamples / 32);
+
+    for (let k = 0; k < renderSamples; k++) {
+      const x = k * (downSampleRate / renderSamples) * (innerWidth / downSampleRate) + padding;
+      const n = k - renderSamples / 4 - 52;
+
+      switch (windowFunction) {
+        case 'rect': {
+          const v = Math.abs(sinc(n));
+          const y = (1 - v) * innerHeight + padding;
+
+          if (k === 0) {
+            d += `M${x + lineWidth / 2} ${y}`;
+          } else {
+            d += ` L${x} ${y}`;
+          }
+
+          break;
+        }
+
+        case 'hanning': {
+          const a = 0.5;
+
+          const v = Math.abs(n) < 0.67 * s ? Math.abs(a * sinc(n) + ((1 - a) / 2) * (sinc(n + s) + sinc(n - s))) : 0;
+          const y = (1 - v) * innerHeight + padding;
+
+          if (k === 0) {
+            d += `M${x + lineWidth / 2} ${y}`;
+          } else {
+            d += ` L${x} ${y}`;
+          }
+
+          break;
+        }
+
+        case 'hamming': {
+          const a = 0.54;
+
+          const v = Math.abs(n) < 0.67 * s ? Math.abs(a * sinc(n) + ((1 - a) / 2) * (sinc(n + s) + sinc(n - s))) : 0;
+          const y = (1 - v) * innerHeight + padding;
+
+          if (k === 0) {
+            d += `M${x + lineWidth / 2} ${y}`;
+          } else {
+            d += ` L${x} ${y}`;
+          }
+
+          break;
+        }
+
+        case 'blackman': {
+          const a = 0.42;
+          const b = 0.25;
+          const c = 0.04;
+
+          const v = Math.abs(n) < 0.67 * s ? Math.abs(a * sinc(n) + b * (sinc(n + s) + sinc(n - s)) + c * (sinc(n + 2 * s) + sinc(n - 2 * s))) : 0;
+          const y = (1 - v) * innerHeight + padding;
+
+          if (k === 0) {
+            d += `M${x + lineWidth / 2} ${y}`;
+          } else {
+            d += ` L${x} ${y}`;
+          }
+
+          break;
+        }
+      }
+    }
+
+    spectrumWindowFunctionPath.setAttribute('d', d);
+
+    timerId = window.setTimeout(drawOscillator, 125);
+  };
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      oscillator.stop(0);
+      oscillator = null;
+    }
+
+    oscillator = new OscillatorNode(audiocontext, { frequency: 220 });
+
+    oscillator.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    drawOscillator();
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+    oscillator = null;
+
+    buttonElement.textContent = 'start';
+
+    if (timerId) {
+      window.clearTimeout(timerId);
+      timerId = null;
+    }
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  selectWindowFunctionElement.addEventListener('change', (event) => {
+    windowFunction = event.currentTarget.value;
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -12804,3 +13587,7 @@ animateTimeAndFrequencyResolution2048(
 createOverlapAddWithoutWindowFunction(document.getElementById('svg-figure-overlap-add-without-window-function'));
 
 createDFTSizeAndPeriod(document.getElementById('svg-figure-dft-size-and-period'));
+
+createWindowFunctionSpectrum(document.getElementById('svg-figure-window-function-spectrum'));
+
+animateWindowFunctions(document.getElementById('svg-animation-window-functions-time'), document.getElementById('svg-animation-window-functions-spectrum'));
