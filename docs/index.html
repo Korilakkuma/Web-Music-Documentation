@@ -12837,6 +12837,162 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               が利用されることもありますが, その処理の目的は同じです.
             </p>
           </section>
+          <section id="section-effectors-by-audio-worklet-overlap-add-window-function">
+            <h4>窓関数</h4>
+            <p>
+              理論上, フレームのサイズを十分に大きくしていけば, 離散フーリエ変換のサイズが周期の整数倍になります. しかしながら,
+              フレームサイズを大きくしすぎると, 時間分解能が低下します. さらに, 高速フーリエ変換を適用するとなると 2 の冪乗単位でフレームを大きくする必要があり,
+              離散フーリエ変換のサイズが周期の整数倍 (かつ, 2 の冪乗) になるようにフレームサイズを大きくするというのは, 現実的には難しい解決手段です.
+            </p>
+            <p>
+              そこで, 周波数分解能の低下をある程度を許容して, 本来存在しない周波数成分 (不連続点が原因なので, <b>段差成分</b>と呼ばれることもあります)
+              を除去する (緩和する) ために, <b>窓関数</b>を<b>時間領域で乗算</b> (<b>周波数領域ではコンボリューション積分</b>) します. 窓関数によって,
+              フレーム両端の不連続点を除去 (緩和) して, 離散フーリエ変換のサイズが周期の整数倍になるように処理を適用します.
+            </p>
+            <p>
+              窓関数の振幅スペクトルの形状は, <b>メインローブ</b>と<b>サイドローブ</b>に分類できます. <b>メインローブの幅が狭いほど周波数分解能が高くなり</b>,
+              <b>サイドローブのピーク値が低いほど段差成分の周波数成分が発生するのを防ぐことができます</b>. 例えば, 矩形窓の場合,
+              その振幅スペクトルの形状はシンク関数 (<span class="math-inline"
+                >$\left|H_{rect}\left({\omega}\right)\right| = \left|\frac{\sin\left(\omega\right)}{\omega}\right|$</span>) になります.
+            </p>
+            <p></p>
+            <figure>
+              <svg id="svg-figure-window-function-spectrum" width="720" height="405" />
+              <figcaption>
+                窓関数の振幅スペクトルの形状 (周期を <span class="math-inline">$T$</span> とすると, 周波数分解能は
+                <span class="math-inline">$\omega = \frac{2 \pi}{T}$</span> となります)
+              </figcaption>
+            </figure>
+            <p></p>
+            <p>
+              矩形窓の振幅スペクトル (青色のパス) はメインローブの幅 (半透明の青) は狭くて, 周波数分解能は高くなりますが, サイドローブのピーク値
+              (青色の破線のパス) が高くなってしまうので, 段差成分の周波数成分を除去することができません. そのために, ハニング窓やハミング窓など (狭義での)
+              窓関数を利用します (ハニング窓の振幅スペクトルはマゼンタのパス, メインローブの幅を半透明のマゼンタ,
+              サイドローブのピーク値をマゼンタの破線のパスで描画しています).
+            </p>
+            <table class="nowrap-table">
+              <caption>
+                主な窓関数
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Window Function</th>
+                  <th scope="col">Formula <span class="math-inline">$\left(0 \leq n \leq N \right)$</span></th>
+                  <th scope="col">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>矩形窓</td>
+                  <td><span class="math-inline">$w\left(n\right) = 1$</span></td>
+                  <td>
+                    広義の窓関数で, 周波数分解能が最も高い. 一方で, サイドローブのピーク値が最も高く段差成分をまったく除去できません. コンテキストによっては
+                    (狭義には), 窓関数に含めていない場合もあるので注意.
+                  </td>
+                </tr>
+                <tr>
+                  <td>ハニング窓</td>
+                  <td><span class="math-inline">$w\left(n\right) = 0.5 - 0.5\cos\left(\frac{2 \pi n}{N}\right)$</span></td>
+                  <td>
+                    オーディオ信号処理において最もよく利用される窓関数で, 周波数分解能は矩形窓より低くなりますが, サイドローブのピーク値が他の窓関数より低く,
+                    両端においては段差成分を完全に除去できます. トレードオフである, 周波数分解能と段差成分の除去のバランスがとれていることが,
+                    オーディオ信号処理において最もよく利用される理由です.
+                  </td>
+                </tr>
+                <tr>
+                  <td>ハミング窓</td>
+                  <td><span class="math-inline">$w\left(n\right) = 0.54 - 0.46\cos\left(\frac{2 \pi n}{N}\right)$</span></td>
+                  <td>
+                    <b>両端に不連続点が存在するのが特徴</b>です. ハニング窓より周波数分解能は高くなりますが, サイドローブのピーク値は高くなります.
+                    イメージ的には, 矩形窓とハニング窓の間のような性能の窓関数です.
+                  </td>
+                </tr>
+                <tr>
+                  <td>ブラックマン窓</td>
+                  <td>
+                    <span class="math-inline">
+                      <!-- prettier-ignore -->
+                      $
+                        \begin{flalign}
+                          &\alpha = 0.16 \\
+                          &w\left(n\right) = \frac{1 - \alpha}{2} - \frac{1}{2}\cos\left(\frac{2 \pi n}{N}\right) + \frac{\alpha}{2}\cos\left(\frac{4 \pi n}{N}\right) \\
+                          & = 0.42 - 0.5\cos\left(\frac{2 \pi n}{N}\right) + 0.08\cos\left(\frac{4 \pi n}{N}\right) \\
+                        \end{flalign}
+                      $
+                    </span>
+                  </td>
+                  <td>
+                    Web Audio API の
+                    <a href="https://www.w3.org/TR/webaudio/#blackman-window" target="_blank" rel="noopener noreferrer"
+                      ><code>AnalyserNode</code> インスタンスの <code>getByteFrequencyData</code> メソッドや
+                      <code>getFloatFrequencyData</code> メソッドで利用されている窓関数</a>. ハニング窓より周波数分解能は低くなりますが, そのぶん, サイドローブのピーク値も低くなります. したがって,
+                    より正確なスペクトルを描画するために, 最適な窓関数と言えます.
+                  </td>
+                </tr>
+                <tr>
+                  <td>sine 窓, Vorbis 窓</td>
+                  <td>
+                    <span class="math-inline"
+                      >$w\left(n\right) = \sin\left(\pi n\right), \space w\left(n\right) = \sin\left(\frac{\pi}{2}\sin^{2}\left(\pi n\right)\right)$</span>
+                  </td>
+                  <td>
+                    <abbr title="MPEG-1 Audio Layer 3">MP3</abbr> や <abbr title="Advanced Audio Coding">AAC</abbr> など, オーディオコーデック
+                    (オーディオ圧縮アルゴリズム. <b>修正離散コサイン変換</b> (<b>MDCT</b>: <b>Modified Discrete Cosine Transform</b>)) で利用される窓関数です.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              上記の表で記載した以外にも, 窓関数がいくつも定義されているのは,
+              <b>メインローブの幅 (周波数分解能) とサイドローブのピーク値 (段差成分の有無) がトレードオフ</b>の関係にあるからです. したがって,
+              <b>ユースケースに応じて最適な窓関数を選択する必要があります</b>.
+            </p>
+            <figure>
+              <dl>
+                <dt>Time Domain</dt>
+                <dd><svg id="svg-animation-window-functions-time" width="720" height="240" data-parameters="true" data-a="1" /></dd>
+                <dt>Frequency Domain (Spectrum)</dt>
+                <dd><svg id="svg-animation-window-functions-spectrum" width="720" height="240" /></dd>
+                <dt><label for="select-window-functions">Window Function</label></dt>
+                <dd>
+                  <select id="select-window-functions">
+                    <option value="rect" selected>Rectangular Window</option>
+                    <option value="hanning">Hanning Window</option>
+                    <option value="hamming">Hamming Window</option>
+                    <option value="blackman">Blackman Window</option>
+                  </select>
+                </dd>
+              </dl>
+              <figcaption class="flexbox-column">
+                <div>
+                  <span>窓関数とスペクトル</span>
+                  <button type="button" id="button-window-functions">start</button>
+                </div>
+                <p>矩形窓とハミング窓は両端の不連続点が残るので, 描画フレームごとに, スペクトルの端が異なった値になっています</p>
+              </figcaption>
+            </figure>
+            <article id="section-effectors-by-audio-worklet-overlap-add-window-function-as-system">
+              <h5>システム (系) としての窓関数</h5>
+              <p>
+                現実世界のオーディオ信号処理システムは, 十分に長い時間, 入力と出力を観測すると, 多くのシステム (系) は, <b>非線形時変システム</b> (<b
+                  >Non-Linear Time-Variant system</b>) となります. 非線形, かつ, 時変システムをモデリングする (数式として表現する) のは一般的に複雑になります. しかしながら,
+                非線形時変システムであっても, ごく短時間だけを観測すれば, ほとんどは, <b>線形時不変システム</b> (<b>Linear Time-Invariant system</b>)
+                となりモデリングが容易となります. 窓関数は, 本来, 非線形時変システムであるオーディオの入出力を, ごく短時間で区切って,
+                線形時不変システムとしてモデリングすることを可能にしています (信号の定常性やエルゴード過程なども担保します).
+                周波数分解能と段差成分の除去のトレードオフの判断の必要はありますが, システムを単純にする役割も果たしています.
+              </p>
+              <dl>
+                <dt>定常性</dt>
+                <dd>確率的な信号において, その統計的性質 (期待値 (平均) や分散など) が時刻によらず一定であるような性質 (つまり, 時不変)</dd>
+                <dt>エルゴード過程</dt>
+                <dd>観測信号の期待値と時間平均が一致すると仮定して, 期待値を時間平均で代替可能な性質をもつ信号系列</dd>
+              </dl>
+              <p>
+                一方で, 人工知能の発展にともなって, 機械学習, 特に, ニューラルネットワークでは, データセットを元に, 非線形時変システムのまま,
+                モデリングする手法もすでに存在しています.
+              </p>
+            </article>
+          </section>
         </section>
       </section>
     </main>
