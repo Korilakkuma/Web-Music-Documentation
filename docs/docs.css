@@ -212,6 +212,10 @@ input[type="checkbox"] {
   table-layout: auto;
 }
 
+.nowrap-table th:first-of-type {
+  white-space: nowrap;
+}
+
 .flexbox {
   display: flex;
   flex-flow: row wrap;
