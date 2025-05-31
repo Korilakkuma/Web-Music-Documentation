@@ -12993,6 +12993,24 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               </p>
             </article>
           </section>
+          <section id="section-effectors-by-audio-worklet-overlap-add-audio-worklet-processor-and-window-function">
+            <h4>オーバーラップアド (AudioWorkletProcessor クラスの拡張) と窓関数の実装</h4>
+            <p>
+              一般的な (Web Audio API に限らない), オーディオ信号処理におけるオーバーラップアドと窓関数は, 以下のようなイメージで, フレームごとに,
+              オーバーラップする部分を最適な窓関数で平滑化します.
+            </p>
+            <figure>
+              <svg id="svg-figure-overlap-add-with-window-function" width="720" height="400" />
+              <figcaption>オーバーラップアドと窓関数 (矩形窓 (上) とハニング窓 (下))</figcaption>
+            </figure>
+            <p>
+              このセクションでは,
+              <a href="https://github.com/olvb/phaze" target="_blank" rel="noopener noreferrer">Phaze: a real-time web audio pitch-shifter</a> で利用されている,
+              <a href="https://github.com/olvb/phaze/blob/master/src/ola-processor.js" target="_blank" rel="noopener noreferrer"><code>OLAProcessor</code></a>
+              クラスの実装を参考に, 理解のために, 少し簡素化して, Web Audio API におけるオーバーラップアドの実装と, そのサブクラスの利用例
+              (窓関数と高速フーリエ変換の適用) を解説します.
+            </p>
+          </section>
         </section>
       </section>
     </main>
