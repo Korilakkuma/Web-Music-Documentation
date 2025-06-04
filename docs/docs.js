@@ -13624,6 +13624,138 @@ const createOverlapAddWithWindowFunction = (svg) => {
   render((innerHeight + padding) / 2, true);
 };
 
+const createOverlapAddByOverlapAddProcessor = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', padding.toString(10));
+  xRect.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+  xRect.setAttribute('width', (innerWidth + padding).toString(10));
+  xRect.setAttribute('height', lineWidth.toString(10));
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', (padding - 1).toString(10));
+  yRect.setAttribute('y', padding.toString(10));
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', innerHeight.toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  const xText = document.createElementNS(xmlns, 'text');
+
+  xText.textContent = 'Time';
+
+  xText.setAttribute('x', (innerWidth + padding).toString(10));
+  xText.setAttribute('y', (padding + innerHeight / 2 - 8).toString(10));
+  xText.setAttribute('text-anchor', 'middle');
+  xText.setAttribute('stroke', 'none');
+  xText.setAttribute('fill', baseColor);
+  xText.setAttribute('font-size', '18px');
+
+  const yText = document.createElementNS(xmlns, 'text');
+
+  yText.textContent = 'Amplitude';
+
+  yText.setAttribute('x', padding.toString(10));
+  yText.setAttribute('y', (padding - 20).toString(10));
+  yText.setAttribute('text-anchor', 'middle');
+  yText.setAttribute('stroke', 'none');
+  yText.setAttribute('fill', baseColor);
+  yText.setAttribute('font-size', '18px');
+
+  g.appendChild(yText);
+
+  const amplitudeTexts = document.createElementNS(xmlns, 'g');
+
+  ['1.0', '0.0', '-1.0'].forEach((amplitude) => {
+    const amplitudeText = document.createElementNS(xmlns, 'text');
+
+    amplitudeText.textContent = amplitude;
+
+    amplitudeText.setAttribute('x', (padding - 4).toString(10));
+    amplitudeText.setAttribute('y', (padding + (innerHeight / 2) * (1 - Number(amplitude)) - 4).toString(10));
+
+    amplitudeText.setAttribute('text-anchor', 'end');
+    amplitudeText.setAttribute('stroke', 'none');
+    amplitudeText.setAttribute('fill', baseColor);
+    amplitudeText.setAttribute('font-size', '14px');
+
+    amplitudeTexts.appendChild(amplitudeText);
+  });
+
+  const w = 2 * Math.PI;
+  const f = 3;
+
+  const numberOfOverlaps = 8;
+  const numberOfFrames = 8;
+
+  for (let overlap = 0; overlap < numberOfOverlaps; overlap++) {
+    let startX = padding + overlap * (innerWidth / numberOfFrames);
+
+    for (let frame = 0; frame < numberOfFrames; frame++) {
+      const path = document.createElementNS(xmlns, 'path');
+
+      let d = '';
+
+      for (let n = 0, len = f * sampleRate; n < len; n++) {
+        const v = Math.sin((w * f * n) / sampleRate);
+        const x = (n / len) * innerWidth + padding;
+        const y = (1 - v) * (innerHeight / 2) + padding;
+
+        if (n === 0) {
+          d += `M${x + lineWidth / 2} ${y}`;
+        } else {
+          d += ` L${x} ${y}`;
+        }
+      }
+
+      path.setAttribute('d', d);
+
+      path.setAttribute('stroke', alphaWaveColor);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke-width', lineWidth.toString(10));
+      path.setAttribute('stroke-linecap', lineCap);
+      path.setAttribute('stroke-linejoin', lineJoin);
+
+      g.appendChild(path);
+
+      if (startX > innerWidth) {
+        break;
+      }
+
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', startX.toString(10));
+      rect.setAttribute('y', padding.toString(10));
+      rect.setAttribute('width', (innerWidth / numberOfFrames).toString(10));
+      rect.setAttribute('height', (innerHeight / 2).toString(10));
+      rect.setAttribute('stroke', alphaLightWaveColor);
+      rect.setAttribute('stroke-width', lineWidth.toString(10));
+      rect.setAttribute('stroke-linecap', lineCap);
+      rect.setAttribute('stroke-linejoin', lineJoin);
+      rect.setAttribute('fill', 'rgba(255 0 255 / 8%)');
+
+      g.appendChild(rect);
+
+      startX += innerWidth / numberOfFrames;
+    }
+  }
+
+  g.appendChild(xRect);
+  g.appendChild(yRect);
+  g.appendChild(xText);
+  g.appendChild(amplitudeTexts);
+
+  svg.appendChild(g);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -13805,3 +13937,4 @@ createWindowFunctionSpectrum(document.getElementById('svg-figure-window-function
 animateWindowFunctions(document.getElementById('svg-animation-window-functions-time'), document.getElementById('svg-animation-window-functions-spectrum'));
 
 createOverlapAddWithWindowFunction(document.getElementById('svg-figure-overlap-add-with-window-function'));
+createOverlapAddByOverlapAddProcessor(document.getElementById('svg-figure-overlap-add-by-overlap-add-processor'));

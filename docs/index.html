@@ -13010,6 +13010,268 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               クラスの実装を参考に, 理解のために, 少し簡素化して, Web Audio API におけるオーバーラップアドの実装と, そのサブクラスの利用例
               (窓関数と高速フーリエ変換の適用) を解説します.
             </p>
+            <section id="section-effectors-by-audio-worklet-overlap-add-audio-worklet-processor-and-window-function-overlap-add-processor">
+              <h5>OverlapAddProcessor クラスの実装 (AudioWorkletProcessor クラスの拡張)</h5>
+              <p>
+                <a href="https://github.com/olvb/phaze/blob/master/src/ola-processor.js" target="_blank" rel="noopener noreferrer"><code>OLAProcessor</code></a>
+                クラスの実装を参考にして, 簡素化したオーバーラップアドのための <code>AudioWorkletProcessor</code> のサブクラスの実装は以下のようになります.
+                簡素化した実装は, <code>AudioWorkletNodeOptions</code> 型の <code>numberOfInputs</code> プロパティと <code>numberOfOutputs</code> プロパティは,
+                <b>指定しない</b>という制約 (コーディングルールレベルの制約ですが, TypeScript であれば型レベルで制約を実装することも可能です) の代わりに,
+                <code>AudioWorkletProcessCallback</code> の第 1 引数と第 2 引数に渡される, <code>FrozenArray</code> の
+                <code>0</code> 番目を固定で取得することで, ループ処理を減らして, 理解しやすい実装にしています (この理由は,
+                <code>AudioWorkletNodeOptions</code> 型の <code>numberOfInputs</code> プロパティと
+                <code>numberOfOutputs</code> プロパティを明示的に指定してしまうと, <code>AudioWorkletProcessCallback</code> の第 1 引数と第 2
+                引数の配列の構造が変わってしまうからです).
+              </p>
+              <p>
+                この制約と簡素化したループ処理を除けば, 本質的な実装は
+                <a href="https://github.com/olvb/phaze/blob/master/src/ola-processor.js" target="_blank" rel="noopener noreferrer"><code>OLAProcessor</code></a>
+                と同じです.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/overlap-add.js&apos;
+
+/**
+ * This class extends `AudioWorkletProcessor`.
+ */
+class OverlapAddProcessor extends AudioWorkletProcessor {
+  static RENDER_QUANTUM_SIZE = 128;
+
+  constructor(options) {
+    super(options);
+
+    this.frameSize = 2048;
+    this.hopSize   = 128;
+
+    this.numberOfOverlaps = this.frameSize / this.hopSize;
+
+    this.inputBuffers       = [[]];  /** @type {[Float32Array[]]} */
+    this.inputBuffersHead   = [[]];  /** @type {[Float32Array[]]} */
+    this.inputBuffersToSend = [[]];  /** @type {[Float32Array[]]} */
+
+    this.outputBuffers           = [[]];  /** @type {[Float32Array[]]} */
+    this.outputBuffersToRetrieve = [[]];  /** @type {[Float32Array[]]} */
+
+    if (options.processorOptions) {
+      this.frameSize = options.processorOptions.frameSize ?? 2048;
+    }
+
+    this.allocateInputChannels(1);
+    this.allocateOutputChannels(1);
+  }
+
+  /**
+   * @param {[Float32Array[]]} inputs
+   * @param {[Float32Array[]]} outputs
+   * @param {{ [parameterName: string]: Float32Array }} parameters
+   * @abstract
+   */
+  processOverlapAdd(inputs, outputs, parameters) {}
+
+  /**
+   * @param {[Float32Array[]]} inputs
+   * @param {[Float32Array[]]} outputs
+   * @param {{ [parameterName: string]: Float32Array }} parameters
+   * @override
+   */
+  process(inputs, outputs, parameters) {
+    this.reallocateChannelsIfNeeded(inputs, outputs);
+
+    this.readInputs(inputs);
+    this.shiftInputBuffers();
+    this.prepareInputBuffersToSend();
+    this.processOverlapAdd(this.inputBuffersToSend, this.outputBuffersToRetrieve, parameters);
+    this.handleOutputBuffersToRetrieve();
+    this.writeOutputs(outputs);
+    this.shiftOutputBuffers();
+
+    return true;
+  }
+
+  reallocateChannelsIfNeeded(inputs, outputs) {
+    const inputNumberOfChannels = inputs[0].length;
+
+    if (inputNumberOfChannels !== this.inputBuffers[0].length) {
+      this.allocateInputChannels(inputNumberOfChannels);
+    }
+
+    const outputNumberOfChannels = outputs[0].length;
+
+    if (outputNumberOfChannels !== this.outputBuffers[0].length) {
+      this.allocateOutputChannels(outputNumberOfChannels);
+    }
+  }
+
+  allocateInputChannels(numberOfChannels) {
+    this.inputBuffers = [[]];
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      this.inputBuffers[0][channelNumber] = new Float32Array(this.frameSize + OverlapAddProcessor.RENDER_QUANTUM_SIZE);
+    }
+
+    this.inputBuffersHead   = [[]];
+    this.inputBuffersToSend = [[]];
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      this.inputBuffersHead[0][channelNumber]   = this.inputBuffers[0][channelNumber].subarray(0, this.frameSize);
+      this.inputBuffersToSend[0][channelNumber] = new Float32Array(this.frameSize);
+    }
+  }
+
+  allocateOutputChannels(numberOfChannels) {
+    this.outputBuffers = [[]];
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      this.outputBuffers[0][channelNumber] = new Float32Array(this.frameSize);
+    }
+
+    this.outputBuffersToRetrieve = [[]];
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      this.outputBuffersToRetrieve[0][channelNumber] = new Float32Array(this.frameSize);
+    }
+  }
+
+  readInputs(inputs) {
+    if (inputs[0].length &amp;&amp; (inputs[0][0].length === 0)) {
+      for (let channelNumber = 0; channelNumber &lt; this.inputBuffers[0].length; channelNumber++) {
+        this.inputBuffers[0][channelNumber].fill(0, this.frameSize);
+      }
+
+      return;
+    }
+
+    for (let channelNumber = 0; channelNumber &lt; this.inputBuffers[0].length; channelNumber++) {
+      this.inputBuffers[0][channelNumber].set(inputs[0][channelNumber], this.frameSize);
+    }
+  }
+
+  writeOutputs(outputs) {
+    for (let channelNumber = 0; channelNumber &lt; this.inputBuffers[0].length; channelNumber++) {
+      outputs[0][channelNumber].set(this.outputBuffers[0][channelNumber].subarray(0, OverlapAddProcessor.RENDER_QUANTUM_SIZE));
+    }
+  }
+
+  shiftInputBuffers() {
+    for (let channelNumber = 0; channelNumber &lt; this.inputBuffers[0].length; channelNumber++) {
+      this.inputBuffers[0][channelNumber].copyWithin(0, OverlapAddProcessor.RENDER_QUANTUM_SIZE);
+    }
+  }
+
+  shiftOutputBuffers() {
+    for (let channelNumber = 0; channelNumber &lt; this.outputBuffers[0].length; channelNumber++) {
+      this.outputBuffers[0][channelNumber].copyWithin(0, OverlapAddProcessor.RENDER_QUANTUM_SIZE);
+      this.outputBuffers[0][channelNumber].subarray(this.frameSize - OverlapAddProcessor.RENDER_QUANTUM_SIZE).fill(0);
+    }
+  }
+
+  prepareInputBuffersToSend() {
+    for (let channelNumber = 0; channelNumber &lt; this.inputBuffers[0].length; channelNumber++) {
+      this.inputBuffersToSend[0][channelNumber].set(this.inputBuffersHead[0][channelNumber]);
+    }
+  }
+
+  handleOutputBuffersToRetrieve() {
+    for (let channelNumber = 0; channelNumber &lt; this.outputBuffers[0].length; channelNumber++) {
+      for (let n = 0; n &lt; this.frameSize; n++) {
+        this.outputBuffers[0][channelNumber][n] += this.outputBuffersToRetrieve[0][channelNumber][n] / this.numberOfOverlaps;
+      }
+    }
+  }
+}</code></pre>
+              <p>
+                実装を理解するには, <code>process</code> メソッド (<code>AudioWorkletProcessCallback</code>)
+                が呼び出しているメソッドをそれぞれ理解するのがよいでしょう. <code>process</code> メソッド (<code>AudioWorkletProcessCallback</code>)
+                が必要なメソッドを順に呼び出すようになっています (GoF の 23 のデザインパターンにあてはめると, Adapter (オーバーラップアドの抽象化) と Facade
+                (必要なメソッドの呼び出しのみの責務) のような役割を果たします).
+              </p>
+              <p>
+                <code>OverlapAddProcessor</code> クラスにおいて, 入力のための 3 つの多次元配列と, 出力のための 2 つの多次元配列は独立しています.
+                入力と出力をつなげるのは <code>processOverlapAdd</code> メソッドで, これはサブクラスの責務です.
+              </p>
+              <p>
+                入力処理は, <code>128</code> サンプルを <code>frameSize</code> サンプルのオーディオデータを格納する
+                <code>Float32Array</code> のバッファに格納するだけです. そのとき, サンプル数が不足していれば <code>0</code> 埋めして,
+                サンプル数が超過していれば, 最も古い <code>128</code> サンプルのデータを破棄します (つまり, オーバーラップアド処理のためのプリプロセス処理です).
+              </p>
+              <dl>
+                <dt><code>readInputs</code> メソッド</dt>
+                <dd>
+                  実際の入力オーディオデータ (<code>process</code> メソッド (<code>AudioWorkletProcessCallback</code>) の第 1 引数) を読み込んで,
+                  <code>inputBuffers</code> の末尾に追加するメソッドです.
+                </dd>
+                <dt><code>shiftInputBuffers</code> メソッド</dt>
+                <dd>
+                  <code>inputBuffers</code> に格納されているオーディオデータすべてを <code>128</code> サンプル先頭にシフトします. この時点で, 最も古い
+                  <code>128</code> サンプルのオーディオデータは破棄され, 直近の <code>readInputs</code> メソッドで読み込まれた
+                  <code>128</code> サンプルのオーディオデータが, <code>inputBuffersHead</code> の参照する末尾の <code>128</code> サンプルにシフトします.
+                </dd>
+                <dt><code>prepareInputBuffersToSend</code> メソッド</dt>
+                <dd>
+                  <code>inputBuffersHead</code> が参照する, <code>inputBuffers</code> の先頭から <code>frameSize</code> サンプル数のオーディオデータを
+                  <code>inputBuffersToSend</code> に格納して, <code>processOverlapAdd</code> メソッドで処理できるようにします.
+                </dd>
+              </dl>
+              <p>出力処理に関するメソッドは以下の 3 つで, <code>handleOutputBuffersToRetrieve</code> メソッドがオーバーラップアド処理を適用しています.</p>
+              <dl>
+                <dt><code>handleOutputBuffersToRetrieve</code> メソッド</dt>
+                <dd>
+                  <code>processOverlapAdd</code> メソッドで, <code>outputBuffersToRetrieve</code> に格納された
+                  <code>frameSize</code> サンプル数のオーディオデータを, 前の実行時までのオーバーラップアドを適用した, 出力オーディオデータを格納している
+                  <code>outputBuffers</code> に加算します. この加算は, オーバーラップ数 (<code>numberOfOverlaps</code>) だけ実行されるので,
+                  その平均を取るように, オーバーラップ数で除算します.
+                </dd>
+                <dt><code>writeOutputs</code> メソッド</dt>
+                <dd>
+                  実際の出力オーディオデータ (<code>process</code> メソッド (<code>AudioWorkletProcessCallback</code>) の第 2 引数) を読み込んで,
+                  <code>outputBuffers</code> の先頭から <code>128</code> サンプルを参照して出力します.
+                </dd>
+                <dt><code>shiftOutputBuffers</code> メソッド</dt>
+                <dd>
+                  <code>outputBuffers</code> に格納されているオーディオデータすべてを <code>128</code> サンプル先頭にシフトします. この時点で, 直近の
+                  <code>writeOutputs</code> メソッドで出力した <code>128</code> サンプルのオーディオデータは破棄されます. また, シフトした結果,
+                  <code>outputBuffers</code> の末尾の <code>128</code> サンプルは <code>0</code> 埋めしておきます.
+                </dd>
+              </dl>
+              <p>
+                説明の順序が逆転的ですが, コンストラクタでは, 各プロパティの初期化と, チャンネルごとの
+                <code>Float32Array</code> を格納する多次元配列の初期化メソッドを呼び出します.
+              </p>
+              <dl>
+                <dt><code>allocateInputChannels</code> メソッド</dt>
+                <dd>コンストラクタ呼び出し時と, <code>reallocateChannelsIfNeeded</code> メソッドから呼び出されます.</dd>
+                <dt><code>allocateOutputChannels</code> メソッド</dt>
+                <dd>コンストラクタ呼び出し時と, <code>reallocateChannelsIfNeeded</code> メソッドから呼び出されます.</dd>
+              </dl>
+              <p>
+                また, <code>process</code> メソッド (<code>AudioWorkletProcessCallback</code>) 実行ごとに, チャンネル数がリセットされたり,
+                変更されたりしていれば, 同様に配列の初期化を実行します (この処理は, <code>AudioWorkletProcessor</code> の仕様上必要な処理で,
+                オーバーラップアドの本質的な処理ではないので, 説明を最後にしました).
+              </p>
+              <dl>
+                <dt><code>reallocateChannelsIfNeeded</code> メソッド</dt>
+                <dd>
+                  <code>AudioWorkletProcessor</code> の仕様上, オーディオデータがない場合などは, チャンネル数が <code>0</code> になって,
+                  <code>FrozenArray</code> の構造が変わるので, <code>process</code> メソッドの最初で, 必要があれば (チャンネル数が異なっていれば),
+                  各チャンネルを <code>Float32Array</code> で初期化します (<code>allocateInputChannels</code> メソッドと<code>allocateOutputChannels</code>
+                  メソッドを呼び出します)
+                </dd>
+              </dl>
+              <p>上記の <code>OverlapAddProcessor</code> クラスによるオーバーラップアドは以下のようなイメージになります.</p>
+              <figure>
+                <svg id="svg-figure-overlap-add-by-overlap-add-processor" width="1080" height="300" />
+                <figcaption><code>OverlapAddProcessor</code> クラスによるオーバーラップアド</figcaption>
+              </figure>
+              <p>
+                <code>frameSize</code> を <code>1024</code> サンプル (8 フレーム) とした場合のイメージです. もし詳細が理解しにくければ,
+                <code>128</code> サンプル末尾に enqueue (入力) しつつ, <code>128</code> サンプルを dequeue (出力) するリングバッファのようなデータ構造をもち,
+                オーバーラップするオーディオデータは加算してその平均をとるという理解で十分です. また, オーディオデータが不足している場合,
+                <code>0</code> 埋めされたオーディオデータを加算するので, 加算回数はどのフレームも同じになります (上記のイラストだと,
+                前半のフレームは薄くなっていますが, 実際には <code>0</code> 埋めされたフレームが加算されてその平均が出力されています).
+              </p>
+            </section>
           </section>
         </section>
       </section>
