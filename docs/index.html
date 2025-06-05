@@ -13272,6 +13272,193 @@ class OverlapAddProcessor extends AudioWorkletProcessor {
                 前半のフレームは薄くなっていますが, 実際には <code>0</code> 埋めされたフレームが加算されてその平均が出力されています).
               </p>
             </section>
+            <section id="section-effectors-by-audio-worklet-overlap-add-audio-worklet-processor-and-window-function-extends-overlap-add-processor">
+              <h5>OverlapAddProcessor サブクラスの実装 (OverlapAddProcessor クラスの拡張)</h5>
+              <p>
+                <code>OverlapAddProcessor</code> クラスは直接 <code>registerProcessor</code> メソッドに指定するのではなく,
+                <code>OverlapAddProcessor</code> クラスを拡張 (継承) したサブクラスを指定します. そして, このサブクラスで
+                <code>processOverlapAdd</code> メソッドをオーバーライドします (したがって, TypeScript を使う場合は,
+                <code>processOverlapAdd</code> メソッドを抽象メソッドにして, <code>OverlapAddProcessor</code> クラスを抽象クラスにしておくと言語処理系レベルで,
+                この仕様を矯正できます).
+              </p>
+              <p>
+                具体的な解説として, 実用性はありませんが, <code>processOverlapAdd</code> メソッドで窓関数 (ハニング窓) を適用して, FFT したあと,
+                周波数領域では何もせず (Bypass), IFFT して, 再度, 時間領域で窓関数を適用して出力するだけの <code>OverlapAddProcessor</code> クラスの拡張である
+                <code>BypassOverlapAddProcessor</code> クラスの実装を記載します.
+              </p>
+              <p>
+                <code>processOverlapAdd</code> メソッドで呼び出している, <code>FFT</code> / <code>IFFT</code> 関数は,
+                <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装</a>セクションで記載している実装を
+                <code>AudioWorkletGlobalScope</code> 内で定義していると仮定してください.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/bypass-overlap-add.js&apos;
+
+/**
+ * This class extends `OverlapAddProcessor`.
+ */
+class BypassOverlapAddProcessor extends OverlapAddProcessor {
+  static createHanningWindow(size) {
+    const w = new Float32Array(size);
+
+    for (let n = 0; n &lt; size; n++) {
+      w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (size - 1));
+    }
+
+    return w;
+  }
+
+  constructor(options) {
+    super(options);
+
+    this.hanningWindow = BypassOverlapAddProcessor.createHanningWindow(this.frameSize);
+  }
+
+  /** @overdrive */
+  processOverlapAdd(inputs, outputs, parameters) {
+    const input  = inputs[0];
+    const output = outputs[0];
+
+    const numberOfChannels = input.length;
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      const reals = new Float32Array(this.frameSize);
+      const imags = new Float32Array(this.frameSize);
+
+      for (let n = 0; n &lt; this.frameSize; n++) {
+        reals[n] = this.hanningWindow[n] * input[channelNumber][n];
+      }
+
+      FFT(reals, imags, this.frameSize);
+
+      // Bypass
+
+      IFFT(reals, imags, this.frameSize);
+
+      for (let n = 0; n &lt; this.frameSize; n++) {
+        output[channelNumber][n] = this.hanningWindow[n] * reals[n];
+      }
+    }
+  }
+}
+
+registerProcessor(&apos;BypassOverlapAddProcessor&apos;, BypassOverlapAddProcessor);</code></pre>
+              <p>
+                実装としては, <code>OverlapAddProcessor</code> クラスを <code>extends</code> するのと,
+                <code>processOverlapAdd</code> メソッドをオーバーライドするだけで, 本質的なオーディオ処理の実装は, <code>AudioWorkletProcessor</code> クラスの
+                <code>process</code> メソッド (<code>AudioWorkletProcessCallback</code>) と同様に実装できます. 引数に渡されるチャンネルごとの
+                <code>Float32Array</code> のサイズが, <code>frameSize</code> となっていますが, 実装上, その違い意識することはあまりないと思います.
+              </p>
+              <p>
+                窓関数 (ハニング窓) を適用した, オーバーラップアドは, 以下ようなイメージになります. 1 フレームごとではなく, 指定したフレーム単位で適用されます
+                (以下のイラストは 8 フレーム (<code>1024</code> サンプル) 単位).
+              </p>
+              <figure>
+                <svg id="svg-figure-overlap-add-by-overlap-add-processor-with-window-function" width="1080" height="300" />
+                <figcaption><code>OverlapAddProcessor</code> サブクラスによるオーバーラップアドと窓関数</figcaption>
+              </figure>
+              <p>
+                あとは, メインスレッドからフレームサイズ (<code>frameSize</code>) を指定します. <code>AudioWorkletNode</code> インスタンスの第 3 引数は,
+                <b><code>AudioWorkletNodeOptions</code></b> 型のオブジェクトを指定できるようになっているので, その
+                <b><code>processorOptions</code></b> プロパティに, <code>frameSize</code> プロパティとしてフレームサイズを指定します (仕様では,
+                <code>processorOptions</code> プロパティは, プレインオブジェクトなので, 他にもメインスレッドから渡したい値があれば,
+                <code>AudioWorkletProcessor</code> クラスに渡すことができます).
+              </p>
+              <p>
+                また, すでに解説しましたが, <code>OverlapAddProcessor</code> クラスを使う場合には, <code>AudioWorkletNodeOptions</code> 型の
+                <code>numberOfInputs</code> プロパティと <code>numberOfOutputs</code> プロパティは指定しないように制約をつけてください.
+              </p>
+              <p>デフォルトのフレームサイズを利用するのであれば, <code>AudioWorkletNode</code> インスタンスの第 3 引数での指定は不要です.</p>
+              <pre data-prismjs-copy="クリップボードにコピー" data-prismjs-copy-success="コピーしました"><code class="language-js line-numbers">/**
+ * This class extends `AudioWorkletProcessor`.
+ */
+class OverlapAddProcessor extends AudioWorkletProcessor {
+  static RENDER_QUANTUM_SIZE = 128;
+
+  constructor(options) {
+    super(options);
+
+    // ...
+
+    if (options.processorOptions) {
+      this.frameSize = options.processorOptions.frameSize ?? 2048;
+    }
+
+    // ...
+  }
+
+  // ...
+}</code></pre>
+              <p>
+                そして, <code>OverlapAddProcessor</code> コンストラクタで, <code>processorOptions</code> プロパティが truthy な値であれば,
+                <code>frameSize</code> プロパティが設定されているかを判定して, 設定されていれば, そのフレームサイズで
+                <code>frameSize</code> プロパティをオーバーライドします.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-bypass-overlap-add-processor&quot;&gt;start&lt;/button&gt;</code></pre>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+// &apos;./audio-worklets/bypass-overlap-add.js&apos; is URL that has subclass that extends `OverlapAddProcessor`
+context.audioWorklet.addModule(&apos;./audio-worklets/bypass-overlap-add.js&apos;)
+  .then(() =&gt; {
+    let oscillator = null;
+    let processor  = null;
+
+    const onDown = () =&gt; {
+      if ((oscillator !== null) || (processor !== null)) {
+        return;
+      }
+
+      oscillator = new OscillatorNode(context);
+
+      processor = new AudioWorkletNode(context, &apos;BypassOverlapAddProcessor&apos;, {
+        processorOptions: {
+          frameSize: 1024
+        }
+      });
+
+      // OscillatorNode (Input) -&gt; AudioWorkletNode (Bypass) -&gt; AudioDestinationNode (Output)
+      oscillator.connect(processor);
+      processor.connect(context.destination);
+
+      oscillator.start(0);
+
+      buttonElement.textContent = &apos;stop&apos;
+    };
+
+    const onUp = () =&gt; {
+      if ((oscillator === null) || (processor === null)) {
+        return;
+      }
+
+      oscillator.stop(0);
+
+      processor.disconnect(context.destination);
+
+      oscillator = null;
+      processor  = null;
+
+      buttonElement.textContent = &apos;start&apos;
+    };
+
+    const buttonElement = document.getElementById(&apos;button-bypass-overlap-add-processor&apos;);
+
+    buttonElement.addEventListener(&apos;mousedown&apos;, onDown);
+    buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
+    buttonElement.addEventListener(&apos;mouseup&apos;, onUp);
+    buttonElement.addEventListener(&apos;touchend&apos;, onUp);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            </section>
           </section>
         </section>
       </section>
