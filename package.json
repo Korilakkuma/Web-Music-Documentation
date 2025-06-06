@@ -2,7 +2,7 @@
   "name": "web-music-documentation",
   "version": "0.0.0",
   "engines": {
-    "node": ">=20.0.0 <=22.15.x"
+    "node": ">=20.0.0 <=22.16.x"
   },
   "description": "Web Music Documentation for Web Audio API, Web MIDI API ... etc",
   "main": "docs/index.html",
