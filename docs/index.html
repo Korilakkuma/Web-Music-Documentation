@@ -13460,6 +13460,56 @@ context.audioWorklet.addModule(&apos;./audio-worklets/bypass-overlap-add.js&apos
   });</code></pre>
             </section>
           </section>
+          <section id="section-effectors-by-audio-worklet-noise-suppressor">
+            <h4>ノイズサプレッサー</h4>
+            <section id="section-effectors-by-audio-worklet-noise-suppressor-noise-gate">
+              <h5>ノイズゲート</h5>
+              <p>
+                ノイズを除去するためのエフェクターとしては, 単純なエフェクターだと<b>ノイズゲート</b>があります.
+                ノイズゲートは時間領域のみの演算で実装可能ですが, 一定レベルの振幅以下の信号を無音 (振幅が <code>0</code>) にするので, ノイズでなくても,
+                信号の振幅が指定したレベル以下であれば, 除去されてしまいます. また, 目的の信号と重なった (目的の信号に加算された)
+                ノイズを除去することができません. (ノイズゲートは, 単純なアルゴリズムでありますが, 現状の Web Audio API の仕様では, AudioWorklet
+                を利用しないと実装できません. 以下に, ノイズゲートの <code>AudioWorkletProcessor</code> のサブクラスの実装例を記載します).
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/noise-gate.js&apos;
+
+class NoiseGateProcessor extends AudioWorkletProcessor {
+  constructor(options) {
+    super(options);
+
+    this.level = 0;
+
+    this.port.onmessage = (event) =&gt; {
+      if ((event.data.level &gt;= 0) &amp;&amp; (event.data.level &lt;= 1))  {
+        this.level = event.data.level;
+      }
+    };
+  }
+
+  process(inputs, outputs) {
+    const input  = inputs[0];
+    const output = outputs[0];
+
+    const numberOfChannels = input.length;
+
+    for (let channelNumber = 0; channelNumber &lt; input.length; channelNumber++) {
+      const bufferSize = input[channelNumber].length;
+
+      for (let n = 0; n &lt; bufferSize; n++) {
+        output[channelNumber][n] = (Math.abs(input[channelNumber][n]) &gt; this.level) ? input[channelNumber][n] : 0;
+      }
+    }
+
+    return true;
+  }
+}
+
+registerProcessor(&apos;NoiseGateProcessor&apos;, NoiseGateProcessor);</code></pre>
+            </section>
+          </section>
         </section>
       </section>
     </main>
