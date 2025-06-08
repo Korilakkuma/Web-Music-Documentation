@@ -458,7 +458,8 @@ select {
 .app-vcf-auto-wah,
 .app-auto-wah,
 .app-auto-panner,
-.app-glide {
+.app-glide,
+.app-noise-suppressor {
   margin: 24px 0;
 }
 
@@ -474,7 +475,8 @@ select {
 .app-auto-wah dl dd,
 .app-amp-simulator-and-effectors-distortion dl dd,
 .app-auto-panner dl dd,
-.app-glide dl dd {
+.app-glide dl dd,
+.app-noise-suppressor dl dd {
   display: flex;
   gap: 8px;
   align-items: center;
