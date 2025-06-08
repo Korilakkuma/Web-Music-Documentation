@@ -13509,6 +13509,290 @@ class NoiseGateProcessor extends AudioWorkletProcessor {
 
 registerProcessor(&apos;NoiseGateProcessor&apos;, NoiseGateProcessor);</code></pre>
             </section>
+            <section id="section-effectors-by-audio-worklet-noise-suppressor-by-spectrum-subtraction">
+              <h5>スペクトルサブトラクション法によるノイズサプレッサー</h5>
+              <p>
+                <b>ノイズサプレッサー</b>では, ノイズのスペクトルの特性に着目して, 振幅スペクトルで演算を実行して, <b>ノイズを目的に除去します</b>. そして,
+                よく利用されるノイズサプレッサーのアルゴリズムとして, <b>スペクトルサブトラクション法</b>があります. スペクトルサブトラクション法では,
+                ノイズをホワイトノイズ (白色雑音) としてモデリングして, その振幅スペクトル (あるいは, その 2 乗のパワースペクトル) が,
+                <b>すべての周波数成分を一様に含んでいる</b> (<b>すべての周波数成分が同じパワーとなる</b>) ことを利用して, 振幅スペクトルからノイズの振幅の差分
+                (サブトラクション: subtraction) を, ノイズ除去後の信号の振幅スペクトルとするアルゴリズムです. また, 周波数領域での演算において,
+                <b>人間の聴覚は位相スペクトルの違いに鈍感</b>という特性も利用して, 位相スペクトルに対しては原音そのままに,
+                時間領域の信号に戻すときに利用するだけです.
+              </p>
+              <p>
+                これを形式的に, 数式で表現すると以下のようになります.
+                <span class="math-inline">$w\left(n\right), x\left(n\right), y\left(n\right)$</span> をそれぞれ, ノイズ信号, 入力信号, そして,
+                ノイズを含んだ出力信号とします.
+              </p>
+              <div class="math-block">$y\left(n\right) = x\left(n\right) + w\left(n\right)$</div>
+              <p>
+                これらの信号を, FFT (<span class="math-inline">$F$</span>) した複素関数をそれぞれ,
+                <span class="math-inline">$W\left(k\right), X\left(k\right), Y\left(k\right)$</span> とします.
+              </p>
+              <div class="math-block">
+                $F\left[w\left(n\right)\right] = W\left(k\right), \quad F\left[x\left(n\right)\right] = X\left(k\right), \quad F\left[y\left(n\right)\right] =
+                Y\left(k\right)$
+              </div>
+              <p>よって, 振幅スペクトル (絶対値) と位相スペクトル (偏角) の信号は以下のように表現できます.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{align}
+                    \begin{cases}
+                      &\left|Y\left(k\right)\right| = \left|X\left(k\right)\right| + \left|W\left(k\right)\right| \\
+                      &\tan^{-1}\left(\frac{\mathrm{imag}\left(Y\left(k\right)\right)}{\mathrm{real}\left(Y\left(k\right)\right)}\right) = \tan^{-1}\left(\frac{\mathrm{imag}\left(X\left(k\right)\right)}{\mathrm{real}\left(X\left(k\right)\right)}\right) + \tan^{-1}\left(\frac{\mathrm{imag}\left(W\left(k\right)\right)}{\mathrm{real}\left(W\left(k\right)\right)}\right) \\
+                    \end{cases}
+                  \end{align}
+                $
+              </div>
+              <p>
+                ここで, 極系式でこの振幅スペクトル (絶対値) の信号 (関数) と位相スペクトル (偏角) の信号 (関数) を 1 つにまとめて表現すると,
+                以下のように表現できます (<span class="math-inline">$j$</span> は <span class="math-inline">$j^{2} = -1$</span> となる虚数単位,
+                <span class="math-inline">$A_{W|X|Y}\left(k\right)$</span> は, 各信号の振幅スペクトの関数,
+                <span class="math-inline">$\theta_{W|X|Y}\left(k\right)$</span> は, 各信号のスペクトの関数を表しています.
+              </p>
+              <div class="math-block">
+                $A_{Y}\left(k\right)e^{j\theta_{Y}\left(k\right)} = A_{X}\left(k\right)e^{j\theta_{X}\left(k\right)} +
+                A_{W}\left(k\right)e^{j\theta_{W}\left(k\right)}$
+              </div>
+              <p>したがって, ノイズを除去した, 元の入力信号 (<span class="math-inline">$X\left(k\right)$</span>) のスペクトルは以下のように表現できます.</p>
+              <div class="math-block">
+                $X\left(k\right) = A_{Y}\left(k\right)e^{j\theta_{Y}\left(k\right)} - A_{W}\left(k\right)e^{j\theta_{W}\left(k\right)}$
+              </div>
+              <p>
+                厳密な数式の定義に基づくと, 位相スペクトルも演算対象に含める必要がありますが, ここで, 人間の聴覚特性を利用して位相スペクトルの演算は無視すると,
+                以下のような, 振幅スペクトルのみの差分演算となります (差分結果が, 負数となる場合は, 無音 (振幅スペクトルが <code>0</code>) とします.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{align}
+                    A_{X}\left(k\right) =
+                    \begin{cases}
+                      &A_{Y}\left(k\right) - A_{W}\left(k\right)  &\left(A_{Y}\left(k\right) - A_{W}\left(k\right) \ge 0 \right) \\
+                      &0                                          &\left(A_{Y}\left(k\right) - A_{W}\left(k\right) \lt 0 \right) \\
+                    \end{cases}
+                  \end{align}
+                $
+              </div>
+              <p>
+                あとは, オイラーの公式に従って, 絶対値と偏角をもとに, 実部の関数と虚部の関数に分解して, IFFT すれば, ノイズを除去した信号を得ることができます.
+              </p>
+              <div class="math-block">
+                $x_{\mathrm{subtraction}}\left(n\right) = F^{-1}\left[X\left(k\right)\right] =
+                F^{-1}\left[A_{X}\left(k\right)e^{j\theta_{X}\left(k\right)}\right] = F^{-1}\left[A_{X}\left(k\right)\cos\left(\theta_{X}\left(k\right)\right) +
+                jA_{X}\left(k\right)\sin\left(\theta_{X}\left(k\right)\right)\right]$
+              </div>
+              <p>
+                これを実装した, <code>OverlapAddProcessor</code> クラスを拡張した <code>NoiseSuppressorProcessor</code> サブクラスの実装です
+                (周波数分解能をデフォルトより高くするために, <code>OverlapAddProcessor</code> クラスを拡張します). また,
+                <code>processOverlapAdd</code> メソッドで呼び出している, <code>FFT</code> / <code>IFFT</code> 関数は,
+                <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装</a>セクションで記載している実装を
+                <code>AudioWorkletGlobalScope</code> 内で定義していると仮定してください.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/noise-suppressor.js&apos;
+
+class NoiseSuppressorProcessor extends OverlapAddProcessor {
+  static createHanningWindow(size) {
+    const w = new Float32Array(size);
+
+    for (let n = 0; n &lt; size; n++) {
+      w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (size - 1));
+    }
+
+    return w;
+  }
+
+  constructor(options) {
+    super(options);
+
+    this.threshold = 0;
+
+    this.hanningWindow = NoiseSuppressorProcessor.createHanningWindow(this.frameSize);
+
+    this.port.onmessage = (event) =&gt; {
+      if ((event.data.threshold &gt;= 0) &amp;&amp; (event.data.threshold &lt;= 1))  {
+        this.threshold = event.data.threshold;
+      }
+    };
+  }
+
+  /** @overdrive */
+  processOverlapAdd(inputs, outputs) {
+    const input  = inputs[0];
+    const output = outputs[0];
+
+    const numberOfChannels = input.length;
+
+    const fftSize = this.frameSize;
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      const reals = new Float32Array(fftSize);
+      const imags = new Float32Array(fftSize);
+
+      for (let n = 0; n &lt; fftSize; n++) {
+        reals[n] = this.hanningWindow[n] * input[channelNumber][n];
+      }
+
+      FFT(reals, imags, fftSize);
+
+      const amplitudes = new Float32Array(fftSize);
+      const phases     = new Float32Array(fftSize);
+
+      for (let k = 0; k &lt; fftSize; k++) {
+        amplitudes[k] = Math.sqrt((reals[k] ** 2) + (imags[k] ** 2));
+
+        if ((reals[k] !== 0) &amp;&amp; (imags[k] !== 0)) {
+          phases[k] = Math.atan2(imags[k], reals[k]);
+        }
+      }
+
+      for (let k = 0; k &lt; fftSize; k++) {
+        amplitudes[k] -= this.threshold;
+
+        if (amplitudes[k] &lt; 0) {
+          amplitudes[k] = 0;
+        }
+      }
+
+      // Euler&apos;s formula
+      for (let k = 0; k &lt; fftSize; k++) {
+        reals[k] = amplitudes[k] * Math.cos(phases[k]);
+        imags[k] = amplitudes[k] * Math.sin(phases[k]);
+      }
+
+      IFFT(reals, imags, fftSize);
+
+      for (let n = 0; n &lt; fftSize; n++) {
+        output[channelNumber][n] = this.hanningWindow[n] * reals[n];
+      }
+    }
+  }
+}
+
+registerProcessor(&apos;NoiseSuppressorProcessor&apos;, NoiseSuppressorProcessor);</code></pre>
+              <p>
+                ちなみに, <code>BypassOverlapAddProcessor</code> クラスでも, 同様の処理をしていますが, 窓関数の適用は, FFT の前だけでなく, IFFT
+                した後の時間領域の信号にも乗算します.
+              </p>
+              <p>最後に, メインスレッドの実装例です.</p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-noise-suppressor&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-noise-suppressor-threshold&quot;&gt;threshold&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-noise-suppressor-threshold&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-noise-suppressor-threshold-value&quot;&gt;0.00&lt;/span&gt;</code></pre>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const buttonElement = document.getElementById(&apos;button-noise-suppressor&apos;);
+const rangeElement  = document.getElementById(&apos;range-noise-suppressor-threshold&apos;);
+const spanElement   = document.getElementById(&apos;print-noise-suppressor-threshold-value&apos;);
+
+let processor   = null;
+let mediaStream = null;
+
+buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
+  buttonElement.setAttribute(&apos;disabled&apos;, &apos;disabled&apos;);
+
+  if (processor === null) {
+    // &apos;./audio-worklets/noise-suppressor.js&apos; is URL that has subclass that extends `OverlapAddProcessor`
+    await context.audioWorklet.addModule(&apos;./audio-worklets/noise-suppressor.js&apos;)
+  }
+
+  if (mediaStream) {
+    const audioTracks = mediaStream.getAudioTracks();
+
+    for (const audioTrack of audioTracks) {
+      audioTrack.stop();
+    }
+
+    mediaStream = null;
+
+    buttonElement.textContent = &apos;start&apos;;
+    buttonElement.removeAttribute(&apos;disabled&apos;);
+    return;
+  }
+
+  if (mediaStream === null) {
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  }
+
+  const source = new MediaStreamAudioSourceNode(context, { mediaStream });
+
+  processor = new AudioWorkletNode(context, &apos;NoiseSuppressorProcessor&apos;, {
+    processorOptions: {
+      frameSize: 512
+    }
+  });
+
+  // MediaStreamAudioSourceNode (Input) -&gt; AudioWorkletNode (Noise Suppressor) -&gt; AudioDestinationNode (Output)
+  source.connect(processor);
+  processor.connect(context.destination);
+
+  buttonElement.textContent = &apos;stop&apos;;
+  buttonElement.removeAttribute(&apos;disabled&apos;);
+});
+
+rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  const threshold = event.currentTarget.valueAsNumber;
+
+  if (processor) {
+    processor.port.postMessage({ threshold });
+  }
+
+  spanElement.textContent = threshold.toFixed(2);
+});</code></pre>
+              <div class="app-container app-noise-suppressor">
+                <div class="app-headline">
+                  <button type="button" id="button-noise-suppressor">start</button>
+                </div>
+                <div>
+                  <dl>
+                    <div>
+                      <dt><label for="range-noise-suppressor-threshold">threshold</label></dt>
+                      <dd>
+                        <input type="range" id="range-noise-suppressor-threshold" value="0" min="0" max="1" step="0.05" />
+                        <span id="print-noise-suppressor-threshold-value">0.00</span>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+              <article id="section-effectors-by-audio-worklet-noise-suppressor-white-noise-and-impulse-spectrum">
+                <h6>ホワイトノイズとインパルス音のスペクトル</h6>
+                <p>
+                  ホワイトノイズの振幅スペクトルはすべての周波数成分を一様に含んでいる説明しましたが, 実は,
+                  インパルス音の振幅スペクトルもすべての周波数成分を一様に含んでいます. これは, インパルス音のモデリング関数である, デルタ関数のフーリエ変換が
+                  <code>1</code> と定数になることから導出できます. したがって, インパルス音の位相スペクトルも <code>1</code> と定数であり,
+                  すべての周波数成分を一様に含んでいます (<a href="#section-effectors-delay-and-reverb-cyclic-convolution">巡回畳み込み</a>セクションを参照).
+                  一方, ホワイトノイズの位相スペクトルは, すべての周波数成分を含んでいますが, 一様ではなくランダムな値 (位相) となります.
+                  人間の聴覚は位相スペクトルの違いに鈍感ではありますが, ホワイトノイズとインパルス音の違いは, 時間領域の波形と位相スペクトルにあらわれており,
+                  人間の聴覚の不思議さとまだまだ明かされていない知覚能力があるのではないかと思います.
+                </p>
+                <figure>
+                  <dl>
+                    <dt>Time Domain</dt>
+                    <dd><svg id="svg-animation-white-noise-time" width="720" height="240" data-parameters="true" data-a="1" /></dd>
+                    <dt>Amplitude Spectrum</dt>
+                    <dd><svg id="svg-animation-white-noise-amplitude-spectrum" width="720" height="240" /></dd>
+                    <dt>Phase Spectrum</dt>
+                    <dd><svg id="svg-animation-white-noise-phase-spectrum" width="720" height="240" /></dd>
+                  </dl>
+                  <figcaption>
+                    <span>ホワイトノイズの振幅スペクトルと位相スペクトル</span>
+                    <button type="button" id="button-white-noise-spectrums">start</button>
+                  </figcaption>
+                </figure>
+              </article>
+            </section>
           </section>
         </section>
       </section>

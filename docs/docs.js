@@ -13914,6 +13914,423 @@ const createOverlapAddByOverlapAddProcessorWithWindowFunction = (svg) => {
   svg.appendChild(g);
 };
 
+const noisesuppressor = () => {
+  const buttonElement = document.getElementById('button-noise-suppressor');
+  const rangeElement = document.getElementById('range-noise-suppressor-threshold');
+  const spanElement = document.getElementById('print-noise-suppressor-threshold-value');
+
+  let processor = null;
+  let mediaStream = null;
+
+  buttonElement.addEventListener('click', async () => {
+    buttonElement.setAttribute('disabled', 'disabled');
+
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (processor === null) {
+      await audiocontext.audioWorklet.addModule('./audio-worklets/noise-suppressor.js');
+    }
+
+    if (mediaStream) {
+      const audioTracks = mediaStream.getAudioTracks();
+
+      for (const audioTrack of audioTracks) {
+        audioTrack.stop();
+      }
+
+      mediaStream = null;
+
+      buttonElement.textContent = 'start';
+      buttonElement.removeAttribute('disabled');
+      return;
+    }
+
+    if (mediaStream === null) {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }
+
+    const source = new MediaStreamAudioSourceNode(audiocontext, { mediaStream });
+
+    processor = new AudioWorkletNode(audiocontext, 'NoiseSuppressorProcessor', {
+      processorOptions: {
+        frameSize: 512
+      }
+    });
+
+    source.connect(processor);
+    processor.connect(audiocontext.destination);
+
+    buttonElement.textContent = 'stop';
+    buttonElement.removeAttribute('disabled');
+  });
+
+  rangeElement.addEventListener('input', (event) => {
+    const threshold = event.currentTarget.valueAsNumber;
+
+    if (processor) {
+      processor.port.postMessage({ threshold });
+    }
+
+    spanElement.textContent = threshold.toFixed(2);
+  });
+};
+
+const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpectrum) => {
+  const innerWidth = Number(svgTime.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svgTime.getAttribute('height')) - padding * 2;
+
+  const renderSpectrum = (svg, showAmplitude) => {
+    const rectTop = document.createElementNS(xmlns, 'rect');
+
+    rectTop.setAttribute('x', padding.toString(10));
+    rectTop.setAttribute('y', (padding - 1).toString(10));
+    rectTop.setAttribute('width', innerWidth.toString(10));
+    rectTop.setAttribute('height', lineWidth.toString(10));
+    rectTop.setAttribute('stroke', 'none');
+    rectTop.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rectTop);
+
+    const rectMiddle = document.createElementNS(xmlns, 'rect');
+
+    rectMiddle.setAttribute('x', padding.toString(10));
+    rectMiddle.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+    rectMiddle.setAttribute('width', innerWidth.toString(10));
+    rectMiddle.setAttribute('height', lineWidth.toString(10));
+    rectMiddle.setAttribute('stroke', 'none');
+    rectMiddle.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rectMiddle);
+
+    const rectBottom = document.createElementNS(xmlns, 'rect');
+
+    rectBottom.setAttribute('x', padding.toString(10));
+    rectBottom.setAttribute('y', (padding + innerHeight - 1).toString(10));
+    rectBottom.setAttribute('width', innerWidth.toString(10));
+    rectBottom.setAttribute('height', lineWidth.toString(10));
+    rectBottom.setAttribute('stroke', 'none');
+    rectBottom.setAttribute('fill', baseColor);
+
+    svg.appendChild(rectBottom);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', padding.toString(10));
+    yRect.setAttribute('y', padding.toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', innerHeight.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = 'Frequency';
+
+    xText.setAttribute('x', (innerWidth + padding).toString(10));
+    xText.setAttribute('y', (padding + innerHeight - 8).toString(10));
+
+    xText.setAttribute('text-anchor', 'end');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '18px');
+
+    svg.appendChild(xText);
+
+    const yText = document.createElementNS(xmlns, 'text');
+
+    if (showAmplitude) {
+      yText.textContent = 'Amplitude';
+      yText.setAttribute('text-anchor', 'middle');
+    } else {
+      yText.textContent = 'Phase';
+      yText.setAttribute('text-anchor', 'end');
+    }
+
+    yText.setAttribute('x', padding.toString(10));
+    yText.setAttribute('y', '24');
+
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '18px');
+
+    svg.appendChild(yText);
+
+    if (showAmplitude) {
+      ['1.0', '0.5', '0.0'].forEach((text) => {
+        const yText = document.createElementNS(xmlns, 'text');
+
+        yText.textContent = text;
+
+        yText.setAttribute('x', (padding - 16).toString(10));
+
+        switch (text) {
+          case '1.0': {
+            yText.setAttribute('y', (padding - 4).toString(10));
+            break;
+          }
+
+          case '0.5': {
+            yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
+            break;
+          }
+
+          case '0.0': {
+            yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
+            break;
+          }
+        }
+
+        yText.setAttribute('text-anchor', 'middle');
+        yText.setAttribute('stroke', 'none');
+        yText.setAttribute('fill', baseColor);
+        yText.setAttribute('font-size', '16px');
+
+        svg.appendChild(yText);
+      });
+    } else {
+      ['π', '0', '-π'].forEach((rad) => {
+        const yText = document.createElementNS(xmlns, 'text');
+
+        yText.textContent = `${rad} rad`;
+
+        yText.setAttribute('x', (padding - 8).toString(10));
+
+        switch (rad) {
+          case 'π': {
+            yText.setAttribute('y', (padding - 4).toString(10));
+            break;
+          }
+
+          case '0': {
+            yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
+            break;
+          }
+
+          case '-π': {
+            yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
+            break;
+          }
+        }
+
+        yText.setAttribute('text-anchor', 'end');
+        yText.setAttribute('stroke', 'none');
+        yText.setAttribute('fill', baseColor);
+        yText.setAttribute('font-size', '16px');
+
+        svg.appendChild(yText);
+      });
+    }
+  };
+
+  const timePath = document.createElementNS(xmlns, 'path');
+
+  timePath.setAttribute('stroke', waveColor);
+  timePath.setAttribute('fill', 'none');
+  timePath.setAttribute('stroke-width', lineWidth.toString(10));
+  timePath.setAttribute('stroke-linecap', lineCap);
+  timePath.setAttribute('stroke-linejoin', lineJoin);
+
+  const amplitudeSpectrumPath = document.createElementNS(xmlns, 'path');
+
+  amplitudeSpectrumPath.setAttribute('stroke', waveColor);
+  amplitudeSpectrumPath.setAttribute('fill', 'none');
+  amplitudeSpectrumPath.setAttribute('stroke-width', lineWidth.toString(10));
+  amplitudeSpectrumPath.setAttribute('stroke-linecap', lineCap);
+  amplitudeSpectrumPath.setAttribute('stroke-linejoin', lineJoin);
+
+  const phaseSpectrumPath = document.createElementNS(xmlns, 'path');
+
+  phaseSpectrumPath.setAttribute('stroke', waveColor);
+  phaseSpectrumPath.setAttribute('fill', 'none');
+  phaseSpectrumPath.setAttribute('stroke-width', lineWidth.toString(10));
+  phaseSpectrumPath.setAttribute('stroke-linecap', lineCap);
+  phaseSpectrumPath.setAttribute('stroke-linejoin', lineJoin);
+
+  svgTime.appendChild(timePath);
+  svgAmplitudeSpectrum.appendChild(amplitudeSpectrumPath);
+  svgPhaseSpectrum.appendChild(phaseSpectrumPath);
+
+  let processor = null;
+
+  const analyse = (data) => {
+    timePath.removeAttribute('d');
+    amplitudeSpectrumPath.removeAttribute('d');
+    phaseSpectrumPath.removeAttribute('d');
+
+    const length = data.length;
+
+    let d = '';
+
+    for (let n = 0; n < length; n++) {
+      const x = (n / length) * innerWidth + padding;
+      const y = (1 - data[n]) * (innerHeight / 2) + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+
+      if (n % 16 === 0) {
+        const t = document.createElementNS(xmlns, 'text');
+
+        t.textContent = `${(n * (1 / audiocontext.sampleRate) * 1000).toFixed(1)} msec`;
+
+        t.setAttribute('x', x.toString(10));
+        t.setAttribute('y', (innerHeight / 2 + padding + 12).toString(10));
+        t.setAttribute('text-anchor', 'middle');
+        t.setAttribute('stroke', 'none');
+        t.setAttribute('fill', baseColor);
+        t.setAttribute('font-size', '14px');
+
+        svgTime.appendChild(t);
+      }
+    }
+
+    timePath.setAttribute('d', d);
+
+    d = '';
+
+    const reals = new Float32Array(length);
+    const imags = new Float32Array(length);
+
+    for (let n = 0; n < length; n++) {
+      reals[n] = data[n];
+    }
+
+    FFT(reals, imags, length);
+
+    const frequencyBinCount = length / 2;
+
+    const amplitudes = new Float32Array(frequencyBinCount);
+    const phases = new Float32Array(frequencyBinCount);
+
+    for (let k = 0; k < frequencyBinCount; k++) {
+      amplitudes[k] = Math.sqrt(reals[k] ** 2 + imags[k] ** 2) / length;
+
+      if (reals[k] !== 0 && imags[k] !== 0) {
+        phases[k] = Math.atan2(imags[k], reals[k]);
+      }
+    }
+
+    const downSampleRate = 1000;
+
+    for (let k = 0; k < frequencyBinCount; k++) {
+      const x = k * (downSampleRate / length) * (innerWidth / frequencyBinCount) + padding;
+      const y = (1 - amplitudes[k]) * (innerHeight / 2) + padding;
+
+      if (x > innerWidth + padding) {
+        break;
+      }
+
+      if (k === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+
+      const hz = document.createElementNS(xmlns, 'text');
+
+      hz.textContent = `${Math.trunc(k * (downSampleRate / length))} Hz`;
+
+      hz.setAttribute('x', x.toString(10));
+      hz.setAttribute('y', (innerHeight + padding + 16).toString(10));
+      hz.setAttribute('text-anchor', 'middle');
+      hz.setAttribute('stroke', 'none');
+      hz.setAttribute('fill', baseColor);
+      hz.setAttribute('font-size', '14px');
+
+      svgAmplitudeSpectrum.appendChild(hz);
+    }
+
+    amplitudeSpectrumPath.setAttribute('d', d);
+
+    d = '';
+
+    for (let k = 0; k < frequencyBinCount; k++) {
+      const x = k * (downSampleRate / length) * (innerWidth / frequencyBinCount) + padding;
+      const y = -1 * (phases[k] / (2 * Math.PI)) * innerHeight + innerHeight / 2 + padding;
+
+      if (x > innerWidth + padding) {
+        break;
+      }
+
+      if (k === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+
+      const hz = document.createElementNS(xmlns, 'text');
+
+      hz.textContent = `${Math.trunc(k * (downSampleRate / length))} Hz`;
+
+      hz.setAttribute('x', x.toString(10));
+      hz.setAttribute('y', (innerHeight + padding + 16).toString(10));
+      hz.setAttribute('text-anchor', 'middle');
+      hz.setAttribute('stroke', 'none');
+      hz.setAttribute('fill', baseColor);
+      hz.setAttribute('font-size', '14px');
+
+      svgPhaseSpectrum.appendChild(hz);
+    }
+
+    phaseSpectrumPath.setAttribute('d', d);
+  };
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (processor === null) {
+      await audiocontext.audioWorklet.addModule('./audio-worklets/white-noise.js');
+    }
+
+    if (processor) {
+      processor.port.postMessage({ processing: false });
+      processor.disconnect(0);
+    }
+
+    processor = new AudioWorkletNode(audiocontext, 'WhiteNoiseGeneratorProcessor');
+
+    processor.connect(audiocontext.destination);
+
+    processor.port.postMessage({ processing: true });
+    processor.port.onmessage = (event) => {
+      if (event.data) {
+        analyse(event.data);
+      }
+    };
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (processor) {
+      processor.port.postMessage({ processing: false });
+      processor.disconnect(0);
+    }
+
+    buttonElement.textContent = 'start';
+  };
+
+  const buttonElement = document.getElementById('button-white-noise-spectrums');
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  createCoordinateRect(svgTime);
+  renderSpectrum(svgAmplitudeSpectrum, true);
+  renderSpectrum(svgPhaseSpectrum, false);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -14097,3 +14514,11 @@ animateWindowFunctions(document.getElementById('svg-animation-window-functions-t
 createOverlapAddWithWindowFunction(document.getElementById('svg-figure-overlap-add-with-window-function'));
 createOverlapAddByOverlapAddProcessor(document.getElementById('svg-figure-overlap-add-by-overlap-add-processor'));
 createOverlapAddByOverlapAddProcessorWithWindowFunction(document.getElementById('svg-figure-overlap-add-by-overlap-add-processor-with-window-function'));
+
+noisesuppressor();
+
+animateWhiteNoiseSpectrums(
+  document.getElementById('svg-animation-white-noise-time'),
+  document.getElementById('svg-animation-white-noise-amplitude-spectrum'),
+  document.getElementById('svg-animation-white-noise-phase-spectrum')
+);
