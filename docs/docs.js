@@ -14557,6 +14557,595 @@ const createResampling = (svg) => {
   render(padding + innerWidth / 2, false);
 };
 
+const createTimeStretchFast = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const a = Number(svg.getAttribute('data-a'));
+
+  const render = (offset, f, overlapAdded) => {
+    const h = innerHeight / 3;
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', padding.toString(10));
+    xRect.setAttribute('y', (offset + padding + h / 2 - 1).toString(10));
+    xRect.setAttribute('width', (innerWidth + padding).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (padding - 1).toString(10));
+    yRect.setAttribute('y', (offset + padding).toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', h.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    if (svg.getAttribute('data-parameters') === 'true') {
+      const xText = document.createElementNS(xmlns, 'text');
+
+      xText.textContent = 'Time';
+
+      xText.setAttribute('x', (innerWidth + padding + 24).toString(10));
+      xText.setAttribute('y', (offset + padding + h / 2 - 8).toString(10));
+      xText.setAttribute('text-anchor', 'start');
+      xText.setAttribute('stroke', 'none');
+      xText.setAttribute('fill', baseColor);
+      xText.setAttribute('font-size', '16px');
+
+      svg.appendChild(xText);
+
+      const yText = document.createElementNS(xmlns, 'text');
+
+      yText.textContent = 'Amplitude';
+
+      yText.setAttribute('x', padding.toString(10));
+      yText.setAttribute('y', (offset + padding / 2 - 8).toString(10));
+      yText.setAttribute('text-anchor', 'middle');
+      yText.setAttribute('stroke', 'none');
+      yText.setAttribute('fill', baseColor);
+      yText.setAttribute('font-size', '16px');
+
+      svg.appendChild(yText);
+
+      [a, 0, -1 * a].forEach((amplitude, index) => {
+        const rect = document.createElementNS(xmlns, 'rect');
+
+        rect.setAttribute('x', padding.toString(10));
+        rect.setAttribute('y', (offset + padding + (h / 2) * (1 - amplitude)).toString(10));
+        rect.setAttribute('width', (padding + innerWidth).toString(10));
+        rect.setAttribute('height', lineWidth.toString(10));
+        rect.setAttribute('stroke', 'none');
+        rect.setAttribute('fill', alphaBaseColor);
+
+        svg.appendChild(rect);
+
+        const text = document.createElementNS(xmlns, 'text');
+
+        text.textContent = amplitude.toFixed(1);
+
+        text.setAttribute('x', (padding - 4).toString(10));
+        text.setAttribute('y', (offset + padding / 2 + (h / 2) * (1 - amplitude) + 24).toString(10));
+        text.setAttribute('text-anchor', 'end');
+        text.setAttribute('stroke', 'none');
+        text.setAttribute('fill', baseColor);
+        text.setAttribute('font-size', '12px');
+
+        svg.appendChild(text);
+      });
+    }
+
+    const w = 2 * Math.PI;
+
+    const path = document.createElementNS(xmlns, 'path');
+
+    let d = '';
+
+    for (let n = 0, len = f * sampleRate; n < len; n++) {
+      const v = a * Math.sin((w * f * n) / sampleRate);
+
+      const x = (n / len) * innerWidth + padding;
+      const y = (1 - v) * (h / 2) + offset + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    svg.appendChild(path);
+
+    const g = document.createElementNS(xmlns, 'g');
+
+    ['0', 't', '2t', '3t'].forEach((t, index) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = t;
+
+      text.setAttribute('x', (padding + index * (innerWidth / 3) + 4).toString(10));
+      text.setAttribute('y', (offset + padding + h / 2 + 14).toString(10));
+      text.setAttribute('text-anchor', 'start');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '12px');
+
+      g.appendChild(text);
+    });
+
+    svg.appendChild(g);
+
+    if (overlapAdded) {
+      const path1 = document.createElementNS(xmlns, 'path');
+      const path2 = document.createElementNS(xmlns, 'path');
+
+      path1.setAttribute(
+        'd',
+        `M${padding} ${offset + padding + h / 2} L${padding + innerWidth / 3} ${offset + padding + h / 2} L${padding} ${offset + padding}`
+      );
+      path1.setAttribute('stroke', alphaBaseColor);
+      path1.setAttribute('fill', alphaLightWaveColor);
+      path1.setAttribute('stroke-width', lineWidth.toString(10));
+      path1.setAttribute('stroke-linecap', lineCap);
+      path1.setAttribute('stroke-linejoin', lineJoin);
+
+      path2.setAttribute(
+        'd',
+        `M${padding} ${offset + padding + h / 2} L${padding + innerWidth / 3} ${offset + padding + h / 2} L${padding + innerWidth / 3} ${offset + padding}`
+      );
+      path2.setAttribute('stroke', alphaBaseColor);
+      path2.setAttribute('fill', alphaLightWaveColor);
+      path2.setAttribute('stroke-width', lineWidth.toString(10));
+      path2.setAttribute('stroke-linecap', lineCap);
+      path2.setAttribute('stroke-linejoin', lineJoin);
+
+      svg.appendChild(path1);
+      svg.appendChild(path2);
+
+      const path3 = document.createElementNS(xmlns, 'path');
+      const path4 = document.createElementNS(xmlns, 'path');
+
+      path3.setAttribute('d', `M${padding} ${padding + h / 2} L${padding} ${offset + padding + h / 2}`);
+      path3.setAttribute('stroke', baseColor);
+      path3.setAttribute('fill', 'none');
+      path3.setAttribute('stroke-width', lineWidth.toString(10));
+      path3.setAttribute('stroke-linecap', lineCap);
+      path3.setAttribute('stroke-linejoin', lineJoin);
+      path3.setAttribute('stroke-dasharray', '5,5');
+
+      path4.setAttribute('d', `M${padding + innerWidth / 3} ${padding + h / 2} L${padding + innerWidth / 3} ${offset + padding + h / 2}`);
+      path4.setAttribute('stroke', baseColor);
+      path4.setAttribute('fill', 'none');
+      path4.setAttribute('stroke-width', lineWidth.toString(10));
+      path4.setAttribute('stroke-linecap', lineCap);
+      path4.setAttribute('stroke-linejoin', lineJoin);
+      path4.setAttribute('stroke-dasharray', '5,5');
+
+      svg.appendChild(path3);
+      svg.appendChild(path4);
+
+      const path5 = document.createElementNS(xmlns, 'path');
+      const path6 = document.createElementNS(xmlns, 'path');
+      const path7 = document.createElementNS(xmlns, 'path');
+
+      path5.setAttribute('d', `M${padding + innerWidth / 3} ${padding + h / 2} L${padding} ${offset + padding + h / 2}`);
+      path5.setAttribute('stroke', baseColor);
+      path5.setAttribute('fill', 'none');
+      path5.setAttribute('stroke-width', lineWidth.toString(10));
+      path5.setAttribute('stroke-linecap', lineCap);
+      path5.setAttribute('stroke-linejoin', lineJoin);
+      path5.setAttribute('stroke-dasharray', '5,5');
+
+      path6.setAttribute('d', `M${padding + 2 * (innerWidth / 3)} ${padding + h / 2} L${padding + innerWidth / 3} ${offset + padding + h / 2}`);
+      path6.setAttribute('stroke', baseColor);
+      path6.setAttribute('fill', 'none');
+      path6.setAttribute('stroke-width', lineWidth.toString(10));
+      path6.setAttribute('stroke-linecap', lineCap);
+      path6.setAttribute('stroke-linejoin', lineJoin);
+      path6.setAttribute('stroke-dasharray', '5,5');
+
+      path7.setAttribute('d', `M${padding + 3 * (innerWidth / 3)} ${padding + h / 2} L${padding + 2 * (innerWidth / 3)} ${offset + padding + h / 2}`);
+      path7.setAttribute('stroke', baseColor);
+      path7.setAttribute('fill', 'none');
+      path7.setAttribute('stroke-width', lineWidth.toString(10));
+      path7.setAttribute('stroke-linecap', lineCap);
+      path7.setAttribute('stroke-linejoin', lineJoin);
+      path7.setAttribute('stroke-dasharray', '5,5');
+
+      svg.appendChild(path5);
+      svg.appendChild(path6);
+      svg.appendChild(path7);
+
+      const offset10 = document.createElementNS(xmlns, 'text');
+      const offset11 = document.createElementNS(xmlns, 'text');
+
+      offset10.textContent = 'Current offset 1';
+      offset11.textContent = 'Next offset 1';
+
+      offset10.setAttribute('x', padding.toString(10));
+      offset10.setAttribute('y', (offset + padding + h + 16).toString(10));
+      offset10.setAttribute('text-anchor', 'middle');
+      offset10.setAttribute('stroke', 'none');
+      offset10.setAttribute('fill', baseColor);
+      offset10.setAttribute('font-size', '12px');
+
+      offset11.setAttribute('x', (padding + 2 * (innerWidth / 3)).toString(10));
+      offset11.setAttribute('y', (offset + padding + h + 16).toString(10));
+      offset11.setAttribute('text-anchor', 'middle');
+      offset11.setAttribute('stroke', 'none');
+      offset11.setAttribute('fill', baseColor);
+      offset11.setAttribute('font-size', '12px');
+
+      svg.appendChild(offset10);
+      svg.appendChild(offset11);
+    } else {
+      const path1 = document.createElementNS(xmlns, 'path');
+      const path2 = document.createElementNS(xmlns, 'path');
+
+      path1.setAttribute('d', `M${padding} ${padding + h / 2} L${padding + innerWidth / 3} ${padding + h / 2} L${padding} ${padding}`);
+      path1.setAttribute('stroke', alphaBaseColor);
+      path1.setAttribute('fill', alphaLightWaveColor);
+      path1.setAttribute('stroke-width', lineWidth.toString(10));
+      path1.setAttribute('stroke-linecap', lineCap);
+      path1.setAttribute('stroke-linejoin', lineJoin);
+
+      path2.setAttribute(
+        'd',
+        `M${padding + innerWidth / 3} ${padding + h / 2} L${padding + 2 * (innerWidth / 3)} ${padding + h / 2} L${padding + 2 * (innerWidth / 3)} ${padding}`
+      );
+      path2.setAttribute('stroke', alphaBaseColor);
+      path2.setAttribute('fill', alphaLightWaveColor);
+      path2.setAttribute('stroke-width', lineWidth.toString(10));
+      path2.setAttribute('stroke-linecap', lineCap);
+      path2.setAttribute('stroke-linejoin', lineJoin);
+
+      svg.appendChild(path1);
+      svg.appendChild(path2);
+
+      const offset00 = document.createElementNS(xmlns, 'text');
+      const offset01 = document.createElementNS(xmlns, 'text');
+
+      offset00.textContent = 'Current offset 0';
+      offset01.textContent = 'Next offset 0';
+
+      offset00.setAttribute('x', padding.toString(10));
+      offset00.setAttribute('y', (padding - 20).toString(10));
+      offset00.setAttribute('text-anchor', 'middle');
+      offset00.setAttribute('stroke', 'none');
+      offset00.setAttribute('fill', baseColor);
+      offset00.setAttribute('font-size', '12px');
+
+      offset01.setAttribute('x', (padding + 3 * (innerWidth / 3)).toString(10));
+      offset01.setAttribute('y', (padding - 20).toString(10));
+      offset01.setAttribute('text-anchor', 'middle');
+      offset01.setAttribute('stroke', 'none');
+      offset01.setAttribute('fill', baseColor);
+      offset01.setAttribute('font-size', '12px');
+
+      svg.appendChild(offset00);
+      svg.appendChild(offset01);
+    }
+  };
+
+  render(0, 1.74, false);
+  render(padding + innerHeight / 2, 1.74, true);
+};
+
+const createTimeStretchSlow = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const a = Number(svg.getAttribute('data-a'));
+
+  const render = (offset, f, overlapAdded) => {
+    const h = innerHeight / 3;
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', padding.toString(10));
+    xRect.setAttribute('y', (offset + padding + h / 2 - 1).toString(10));
+    xRect.setAttribute('width', (innerWidth + padding).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (padding - 1).toString(10));
+    yRect.setAttribute('y', (offset + padding).toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', h.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    if (svg.getAttribute('data-parameters') === 'true') {
+      const xText = document.createElementNS(xmlns, 'text');
+
+      xText.textContent = 'Time';
+
+      xText.setAttribute('x', (innerWidth + padding + 24).toString(10));
+      xText.setAttribute('y', (offset + padding + h / 2 - 8).toString(10));
+      xText.setAttribute('text-anchor', 'start');
+      xText.setAttribute('stroke', 'none');
+      xText.setAttribute('fill', baseColor);
+      xText.setAttribute('font-size', '16px');
+
+      svg.appendChild(xText);
+
+      const yText = document.createElementNS(xmlns, 'text');
+
+      yText.textContent = 'Amplitude';
+
+      yText.setAttribute('x', padding.toString(10));
+      yText.setAttribute('y', (offset + padding / 2 - 8).toString(10));
+      yText.setAttribute('text-anchor', 'middle');
+      yText.setAttribute('stroke', 'none');
+      yText.setAttribute('fill', baseColor);
+      yText.setAttribute('font-size', '16px');
+
+      svg.appendChild(yText);
+
+      [a, 0, -1 * a].forEach((amplitude, index) => {
+        const rect = document.createElementNS(xmlns, 'rect');
+
+        rect.setAttribute('x', padding.toString(10));
+        rect.setAttribute('y', (offset + padding + (h / 2) * (1 - amplitude)).toString(10));
+        rect.setAttribute('width', (padding + innerWidth).toString(10));
+        rect.setAttribute('height', lineWidth.toString(10));
+        rect.setAttribute('stroke', 'none');
+        rect.setAttribute('fill', alphaBaseColor);
+
+        svg.appendChild(rect);
+
+        const text = document.createElementNS(xmlns, 'text');
+
+        text.textContent = amplitude.toFixed(1);
+
+        text.setAttribute('x', (padding - 4).toString(10));
+        text.setAttribute('y', (offset + padding / 2 + (h / 2) * (1 - amplitude) + 24).toString(10));
+        text.setAttribute('text-anchor', 'end');
+        text.setAttribute('stroke', 'none');
+        text.setAttribute('fill', baseColor);
+        text.setAttribute('font-size', '12px');
+
+        svg.appendChild(text);
+      });
+    }
+
+    const w = 2 * Math.PI;
+
+    const path = document.createElementNS(xmlns, 'path');
+
+    let d = '';
+
+    for (let n = 0, len = f * sampleRate; n < len; n++) {
+      const v = a * Math.sin((w * f * n) / sampleRate);
+
+      const x = (n / len) * innerWidth + padding;
+      const y = (1 - v) * (h / 2) + offset + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    svg.appendChild(path);
+
+    const g = document.createElementNS(xmlns, 'g');
+
+    ['0', 't', '2t', '3t'].forEach((t, index) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = t;
+
+      text.setAttribute('x', (padding + index * (innerWidth / 3) + 4).toString(10));
+      text.setAttribute('y', (offset + padding + h / 2 + 14).toString(10));
+      text.setAttribute('text-anchor', 'start');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '12px');
+
+      g.appendChild(text);
+    });
+
+    svg.appendChild(g);
+
+    if (overlapAdded) {
+      const path1 = document.createElementNS(xmlns, 'path');
+      const path2 = document.createElementNS(xmlns, 'path');
+
+      path1.setAttribute(
+        'd',
+        `M${padding + innerWidth / 3} ${offset + padding + h / 2} L${padding + 2 * (innerWidth / 3)} ${offset + padding} L${padding + 2 * (innerWidth / 3)} ${offset + padding + h / 2}`
+      );
+      path1.setAttribute('stroke', alphaBaseColor);
+      path1.setAttribute('fill', alphaLightWaveColor);
+      path1.setAttribute('stroke-width', lineWidth.toString(10));
+      path1.setAttribute('stroke-linecap', lineCap);
+      path1.setAttribute('stroke-linejoin', lineJoin);
+
+      path2.setAttribute(
+        'd',
+        `M${padding + innerWidth / 3} ${offset + padding} L${padding + 2 * (innerWidth / 3)} ${offset + padding + h / 2} L${padding + innerWidth / 3} ${offset + padding + h / 2}`
+      );
+      path2.setAttribute('stroke', alphaBaseColor);
+      path2.setAttribute('fill', alphaLightWaveColor);
+      path2.setAttribute('stroke-width', lineWidth.toString(10));
+      path2.setAttribute('stroke-linecap', lineCap);
+      path2.setAttribute('stroke-linejoin', lineJoin);
+
+      svg.appendChild(path1);
+      svg.appendChild(path2);
+
+      const path3 = document.createElementNS(xmlns, 'path');
+      const path4 = document.createElementNS(xmlns, 'path');
+      const path5 = document.createElementNS(xmlns, 'path');
+
+      path3.setAttribute('d', `M${padding} ${padding + h / 2} L${padding} ${offset + padding + h / 2}`);
+      path3.setAttribute('stroke', baseColor);
+      path3.setAttribute('fill', 'none');
+      path3.setAttribute('stroke-width', lineWidth.toString(10));
+      path3.setAttribute('stroke-linecap', lineCap);
+      path3.setAttribute('stroke-linejoin', lineJoin);
+      path3.setAttribute('stroke-dasharray', '5,5');
+
+      path4.setAttribute('d', `M${padding + innerWidth / 3} ${padding + h / 2} L${padding + innerWidth / 3} ${offset + padding + h / 2}`);
+      path4.setAttribute('stroke', baseColor);
+      path4.setAttribute('fill', 'none');
+      path4.setAttribute('stroke-width', lineWidth.toString(10));
+      path4.setAttribute('stroke-linecap', lineCap);
+      path4.setAttribute('stroke-linejoin', lineJoin);
+      path4.setAttribute('stroke-dasharray', '5,5');
+
+      path5.setAttribute('d', `M${padding + 2 * (innerWidth / 3)} ${padding + h / 2} L${padding + 2 * (innerWidth / 3)} ${offset + padding + h / 2}`);
+      path5.setAttribute('stroke', baseColor);
+      path5.setAttribute('fill', 'none');
+      path5.setAttribute('stroke-width', lineWidth.toString(10));
+      path5.setAttribute('stroke-linecap', lineCap);
+      path5.setAttribute('stroke-linejoin', lineJoin);
+      path5.setAttribute('stroke-dasharray', '5,5');
+
+      svg.appendChild(path3);
+      svg.appendChild(path4);
+      svg.appendChild(path5);
+
+      const path6 = document.createElementNS(xmlns, 'path');
+      const path7 = document.createElementNS(xmlns, 'path');
+      const path8 = document.createElementNS(xmlns, 'path');
+
+      path6.setAttribute('d', `M${padding} ${padding + h / 2} L${padding + innerWidth / 3} ${offset + padding + h / 2}`);
+      path6.setAttribute('stroke', baseColor);
+      path6.setAttribute('fill', 'none');
+      path6.setAttribute('stroke-width', lineWidth.toString(10));
+      path6.setAttribute('stroke-linecap', lineCap);
+      path6.setAttribute('stroke-linejoin', lineJoin);
+      path6.setAttribute('stroke-dasharray', '5,5');
+
+      path7.setAttribute('d', `M${padding + innerWidth / 3} ${padding + h / 2} L${padding + 2 * (innerWidth / 3)} ${offset + padding + h / 2}`);
+      path7.setAttribute('stroke', baseColor);
+      path7.setAttribute('fill', 'none');
+      path7.setAttribute('stroke-width', lineWidth.toString(10));
+      path7.setAttribute('stroke-linecap', lineCap);
+      path7.setAttribute('stroke-linejoin', lineJoin);
+      path7.setAttribute('stroke-dasharray', '5,5');
+
+      path8.setAttribute('d', `M${padding + 2 * (innerWidth / 3)} ${padding + h / 2} L${padding + 3 * (innerWidth / 3)} ${offset + padding + h / 2}`);
+      path8.setAttribute('stroke', baseColor);
+      path8.setAttribute('fill', 'none');
+      path8.setAttribute('stroke-width', lineWidth.toString(10));
+      path8.setAttribute('stroke-linecap', lineCap);
+      path8.setAttribute('stroke-linejoin', lineJoin);
+      path8.setAttribute('stroke-dasharray', '5,5');
+
+      svg.appendChild(path5);
+      svg.appendChild(path6);
+      svg.appendChild(path7);
+      svg.appendChild(path8);
+
+      const offset10 = document.createElementNS(xmlns, 'text');
+      const offset11 = document.createElementNS(xmlns, 'text');
+
+      offset10.textContent = 'Current offset 1';
+      offset11.textContent = 'Next offset 1';
+
+      offset10.setAttribute('x', padding.toString(10));
+      offset10.setAttribute('y', (offset + padding + h + 16).toString(10));
+      offset10.setAttribute('text-anchor', 'middle');
+      offset10.setAttribute('stroke', 'none');
+      offset10.setAttribute('fill', baseColor);
+      offset10.setAttribute('font-size', '12px');
+
+      offset11.setAttribute('x', (padding + 2 * (innerWidth / 3)).toString(10));
+      offset11.setAttribute('y', (offset + padding + h + 16).toString(10));
+      offset11.setAttribute('text-anchor', 'middle');
+      offset11.setAttribute('stroke', 'none');
+      offset11.setAttribute('fill', baseColor);
+      offset11.setAttribute('font-size', '12px');
+
+      svg.appendChild(offset10);
+      svg.appendChild(offset11);
+    } else {
+      const path1 = document.createElementNS(xmlns, 'path');
+      const path2 = document.createElementNS(xmlns, 'path');
+
+      path1.setAttribute('d', `M${padding} ${padding + h / 2} L${padding + innerWidth / 3} ${padding + h / 2} L${padding + innerWidth / 3} ${padding}`);
+      path1.setAttribute('stroke', alphaBaseColor);
+      path1.setAttribute('fill', alphaLightWaveColor);
+      path1.setAttribute('stroke-width', lineWidth.toString(10));
+      path1.setAttribute('stroke-linecap', lineCap);
+      path1.setAttribute('stroke-linejoin', lineJoin);
+
+      path2.setAttribute(
+        'd',
+        `M${padding + innerWidth / 3} ${padding} L${padding + 2 * (innerWidth / 3)} ${padding + h / 2} L${padding + innerWidth / 3} ${padding + h / 2}`
+      );
+      path2.setAttribute('stroke', alphaBaseColor);
+      path2.setAttribute('fill', alphaLightWaveColor);
+      path2.setAttribute('stroke-width', lineWidth.toString(10));
+      path2.setAttribute('stroke-linecap', lineCap);
+      path2.setAttribute('stroke-linejoin', lineJoin);
+
+      svg.appendChild(path1);
+      svg.appendChild(path2);
+
+      const offset00 = document.createElementNS(xmlns, 'text');
+      const offset01 = document.createElementNS(xmlns, 'text');
+
+      offset00.textContent = 'Current offset 0';
+      offset01.textContent = 'Next offset 0';
+
+      offset00.setAttribute('x', padding.toString(10));
+      offset00.setAttribute('y', (padding - 20).toString(10));
+      offset00.setAttribute('text-anchor', 'middle');
+      offset00.setAttribute('stroke', 'none');
+      offset00.setAttribute('fill', baseColor);
+      offset00.setAttribute('font-size', '12px');
+
+      offset01.setAttribute('x', (padding + 3 * (innerWidth / 3)).toString(10));
+      offset01.setAttribute('y', (padding - 20).toString(10));
+      offset01.setAttribute('text-anchor', 'middle');
+      offset01.setAttribute('stroke', 'none');
+      offset01.setAttribute('fill', baseColor);
+      offset01.setAttribute('font-size', '12px');
+
+      svg.appendChild(offset00);
+      svg.appendChild(offset01);
+    }
+  };
+
+  render(0, 1.74, false);
+  render(padding + innerHeight / 2, 1.74, true);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -14750,3 +15339,5 @@ animateWhiteNoiseSpectrums(
 );
 
 createResampling(document.getElementById('svg-figure-resampling'));
+createTimeStretchFast(document.getElementById('svg-figure-time-stretch-fast'));
+createTimeStretchSlow(document.getElementById('svg-figure-time-stretch-slow'));
