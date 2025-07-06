@@ -13873,6 +13873,305 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
                 再生速度に関わらず同じですが, 再生速度が <code>1</code> より大きい場合と, 小さい場合では, 実装は少し異なるので, まずは,
                 それぞれのケースに対してシンプルに解説します.
               </p>
+              <section id="section-effectors-by-audio-worklet-pitch-shifter-by-resampling-and-time-stretch-fast">
+                <h6>再生速度を速くする場合</h6>
+                <p>
+                  まずは, 再生速度を速くする場合から解説します. 再生速度を速くする場合とは, 再生速度を
+                  <span class="math-inline">$\mathrm{rate}$</span> で表した場合, <span class="math-inline">$\mathrm{rate} \gt 1$</span> となる場合です.
+                  具体例として, <span class="math-inline">$\mathrm{rate} = 1.5 \left(= \frac{3}{2}\right)$</span> (<code>1.5</code> 倍速)
+                  でタイムストレッチする場合を考えます. この場合, 以下のイラストで表すように, 3 周期分の波形を 2
+                  周期に縮小する処理をオーディオデータ全体に適用します (すなわち, タイムストレッチ適用後のオーディオデータのサイズは,
+                  <span class="">$\frac{2}{3} = 0.66 \cdots$</span> 倍となります). ただし, 単純に波形を重ねて縮小するだけでは,
+                  <span class="math-inline">$n$</span> 番目の周期と <span class="math-inline">$n + 1$</span> 番目の周期が同時に再生されるだけなので,
+                  <span class="math-inline">$n$</span> 番目の周期には, <b>単調減少関数を乗算した波形</b>と,
+                  <span class="math-inline">$n + 1$</span> 番目の周期には, <b>単調増加関数を乗算した波形</b>を<b>オーバーラップアド</b>することによって,
+                  縮小部分における不連続点を除去, あるいは, 緩和しつつ, 再生速度を速くすることができます.
+                </p>
+                <p>
+                  この周期の縮小処理を, イラスト中の <span class="math-inline">$\mathrm{offset}$</span> を更新して, 逐次的に実行することで,
+                  オーディオデータ全体の再生速度を速くすることができます.
+                </p>
+                <figure>
+                  <svg id="svg-figure-time-stretch-fast" width="720" height="600" data-parameters="true" data-a="1" />
+                  <figcaption>タイムストレッチ (再生速度が <code>1</code> より大きい場合)</figcaption>
+                </figure>
+                <p>
+                  ところで, 説明を簡単にするために, あえてわかりやすい再生速度に設定しましたが, <code>1</code> より大きい
+                  <span class="math-inline">$\mathrm{rate}$</span> において, <span class="math-inline">$m$</span> 周期分の波形を,
+                  <span class="math-inline">$n$</span> 周期分の波形に縮小するというのは, 以下の関係式が定義できます.
+                </p>
+                <div class="math-block">$n = \mathrm{rate} \cdot m \quad \left(\mathrm{rate} \gt 1\right)$</div>
+                <p>
+                  <span class="math-inline">$\mathrm{rate} = 1.5 \left(= \frac{3}{2}\right)$</span> の場合,
+                  <span class="math-inline">$2n = 3m$</span> が成立します.
+                </p>
+                <p>
+                  この関係式と, (自己) 相関関数を利用すると, 逐次処理のために必要な <span class="math-inline">$\mathrm{offset}$</span> の値は,
+                  以下のように定義できます (<span class="math-inline">$\mathrm{period}$</span> は, 波形の周期です).
+                </p>
+                <div class="math-block">
+                  $\mathrm{offset} = \mathrm{round}\left(\frac{\mathrm{period}}{\mathrm{rate} - 1}\right) \quad \left(\mathrm{rate} \gt 1\right)$
+                </div>
+                <p><code>playbackRate</code> プロパティによるリサンプリングと, 上記のタイムストレッチのアルゴリズムを実装すると以下のようになります.</p>
+                <pre
+                  data-prismjs-copy="クリップボードにコピー"
+                  data-prismjs-copy-success="コピーしました"
+                ><code class="language-js line-numbers">const context = new AudioContext();
+
+// const rate  = 3 / 2;
+// const pitch = 1 / rate;
+
+const rate  = 1.5;
+const pitch = 0.66;
+
+fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then(async (arrayBuffer) =&gt; {
+    const audioBuffer = await context.decodeAudioData(arrayBuffer);
+
+    const numberOfChannels = audioBuffer.numberOfChannels;
+
+    const resampleRate = audioBuffer.sampleRate / pitch;
+
+    const length = Math.ceil(audioBuffer.length / rate);
+
+    const pitchShiftAudioBuffer = context.createBuffer(numberOfChannels, length, audioBuffer.sampleRate);
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      const inputBuffer  = audioBuffer.getChannelData(channelNumber);
+      const outputBuffer = new Float32Array(length);
+
+      // Time Stretch
+      const templateSize = Math.trunc(resampleRate * 0.01);
+
+      // Set the range that correlation function detects peaks is between 5 msec (0.005 sec) and 20 msec (0.02 sec)
+      const minPeriod = Math.trunc(resampleRate * 0.005);
+      const maxPeriod = Math.trunc(resampleRate * 0.02);
+
+      const x = new Float32Array(templateSize);
+      const y = new Float32Array(templateSize);
+      const r = new Float32Array(maxPeriod + 1);
+
+      let offset0 = 0;
+      let offset1 = 0;
+
+      while ((offset0 + (2 * maxPeriod)) &lt; inputBuffer.length) {
+        for (let n = 0; n &lt; templateSize; n++) {
+          x[n] = inputBuffer[offset0 + n];
+        }
+
+        let maxCorrelation = 0.0;
+
+        let period = minPeriod;
+
+        for (let m = minPeriod; m &lt;= maxPeriod; m++) {
+          for (let n = 0; n &lt; templateSize; n++) {
+            y[n] = inputBuffer[offset0 + m + n];
+          }
+
+          r[m] = 0.0;
+
+          // Correlation function
+          for (let n = 0; n &lt; templateSize; n++) {
+            r[m] += x[n] * y[n];
+          }
+
+          if (r[m] &gt; maxCorrelation) {
+            maxCorrelation = r[m];  // The peak of correlation function
+            period = m;
+          }
+        }
+
+        // Overlap-Add
+        for (let n = 0; n &lt; period; n++) {
+          outputBuffer[offset1 + n]  = inputBuffer[offset0 + n] * ((period - n) / period);  // Monotonically decreasing
+          outputBuffer[offset1 + n] += inputBuffer[offset0 + period + n] * (n / period);    // Monotonically increasing
+        }
+
+        const offset = Math.round(period / (rate - 1.0));
+
+        for (let n = period; n &lt; offset; n++) {
+          if ((offset0 + period + n) &gt;= inputBuffer.length) {
+            break;
+          }
+
+          outputBuffer[offset1 + n] = inputBuffer[offset0 + period + n];
+        }
+
+        offset0 += period + offset;
+        offset1 += offset;
+      }
+
+      pitchShiftAudioBuffer.copyToChannel(outputBuffer, channelNumber);
+    }
+
+    const source = new AudioBufferSourceNode(context, { buffer: pitchShiftAudioBuffer });
+
+    // Resampling
+    source.playbackRate.value = pitch;
+
+    source.connect(context.destination);
+
+    source.start(0);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+              </section>
+              <section id="section-effectors-by-audio-worklet-pitch-shifter-by-resampling-and-time-stretch-slow">
+                <h6>再生速度を遅くする場合</h6>
+                <p>
+                  同様に, 再生速度を遅くする場合を解説します. 再生速度を遅くする場合とは, 再生速度を
+                  <span class="math-inline">$\mathrm{rate}$</span> で表した場合, <span class="math-inline">$\mathrm{rate} \lt 1$</span> となる場合です. そして,
+                  <b>再生速度を速くする場合はオーディオデータを縮小</b>するのに対して, <b>再生速度を遅くする場合はオーディオデータを伸長</b>します (つまり,
+                  オーディオデータを伸縮するというアルゴリズムの本質は同じです). 具体例として,
+                  <span class="math-inline">$\mathrm{rate} = \frac{2}{3}$</span> (<span class="math-inline">$0.66 \cdots$</span> 倍速)
+                  でタイムストレッチする場合を考えます. この場合, 以下のイラストで表すように, 2 周期分の波形を 3
+                  周期に伸長する処理をオーディオデータ全体に適用します (すなわち, タイムストレッチ適用後のオーディオデータのサイズは,
+                  <span class="">$\frac{3}{2} = 1.5$</span> 倍となります). ただし, 単純に波形を重ねて伸長するだけでは,
+                  <span class="math-inline">$n$</span> 番目の周期と <span class="math-inline">$n + 1$</span> 番目の周期が同時に再生されるだけなので,
+                  <span class="math-inline">$n$</span> 番目の周期には, <b>単調増加関数を乗算した波形</b>と,
+                  <span class="math-inline">$n + 1$</span> 番目の周期には, <b>単調減少関数を乗算した波形</b>を<b>オーバーラップアド</b>することによって,
+                  伸長部分における不連続点を除去, あるいは, 緩和しつつ, 再生速度を遅くすることができます.
+                </p>
+                <p>
+                  この周期の伸長処理を, イラスト中の <span class="math-inline">$\mathrm{offset}$</span> を更新して, 逐次的に実行することで,
+                  オーディオデータ全体の再生速度を遅くすることができます.
+                </p>
+                <figure>
+                  <svg id="svg-figure-time-stretch-slow" width="720" height="600" data-parameters="true" data-a="1" />
+                  <figcaption>タイムストレッチ (再生速度が <code>1</code> より小さい場合)</figcaption>
+                </figure>
+                <p>
+                  ところで, 説明を簡単にするために, あえてわかりやすい再生速度に設定しましたが, <code>1</code> より小さい
+                  <span class="math-inline">$\mathrm{rate}$</span> において, <span class="math-inline">$m$</span> 周期分の波形を,
+                  <span class="math-inline">$n$</span> 周期分の波形に伸長するというのは, 再生速度を速くする場合と同様の, 以下の関係式が定義できます.
+                </p>
+                <div class="math-block">$n = \mathrm{rate} \cdot m \quad \left(0 \lt \mathrm{rate} \lt 1\right)$</div>
+                <p>
+                  <span class="math-inline">$\mathrm{rate} = 0.66 \cdots \left(= \frac{2}{3}\right)$</span> の場合,
+                  <span class="math-inline">$3n = 2m$</span> が成立します.
+                </p>
+                <p>
+                  この関係式と, (自己) 相関関数を利用すると, 逐次処理のために必要な <span class="math-inline">$\mathrm{offset}$</span> の値は,
+                  以下のように定義できます (<span class="math-inline">$\mathrm{period}$</span> は, 波形の周期です).
+                </p>
+                <div class="math-block">
+                  $\mathrm{offset} = \mathrm{round}\left(\frac{\mathrm{period} \cdot \mathrm{rate}}{1.0 - \mathrm{rate}}\right) \quad \left(0 \lt \mathrm{rate}
+                  \lt 1\right)$
+                </div>
+                <p><code>playbackRate</code> プロパティによるリサンプリングと, 上記のタイムストレッチのアルゴリズムを実装すると以下のようになります.</p>
+                <pre
+                  data-prismjs-copy="クリップボードにコピー"
+                  data-prismjs-copy-success="コピーしました"
+                ><code class="language-js line-numbers">const context = new AudioContext();
+
+// const rate  = 2 / 3;
+// const pitch = 1 / rate;
+
+const rate  = 0.66;
+const pitch = 1.5;
+
+fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then(async (arrayBuffer) =&gt; {
+    const audioBuffer = await context.decodeAudioData(arrayBuffer);
+
+    const numberOfChannels = audioBuffer.numberOfChannels;
+
+    const resampleRate = audioBuffer.sampleRate / pitch;
+
+    const length = Math.ceil(audioBuffer.length / rate);
+
+    const pitchShiftAudioBuffer = context.createBuffer(numberOfChannels, length, audioBuffer.sampleRate);
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      const inputBuffer  = audioBuffer.getChannelData(channelNumber);
+      const outputBuffer = new Float32Array(length);
+
+      // Time Stretch
+      const templateSize = Math.trunc(resampleRate * 0.01);
+
+      // Set the range that correlation function detects peaks is between 5 msec (0.005 sec) and 20 msec (0.02 sec)
+      const minPeriod = Math.trunc(resampleRate * 0.005);
+      const maxPeriod = Math.trunc(resampleRate * 0.02);
+
+      const x = new Float32Array(templateSize);
+      const y = new Float32Array(templateSize);
+      const r = new Float32Array(maxPeriod + 1);
+
+      let offset0 = 0;
+      let offset1 = 0;
+
+      while ((offset0 + (2 * maxPeriod)) &lt; inputBuffer.length) {
+        for (let n = 0; n &lt; templateSize; n++) {
+          x[n] = inputBuffer[offset0 + n];
+        }
+
+        let maxCorrelation = 0.0;
+        let period = minPeriod;
+
+        for (let m = minPeriod; m &lt;= maxPeriod; m++) {
+          for (let n = 0; n &lt; templateSize; n++) {
+            y[n] = inputBuffer[offset0 + m + n];
+          }
+
+          r[m] = 0.0;
+
+          // Correlation function
+          for (let n = 0; n &lt; templateSize; n++) {
+            r[m] += x[n] * y[n];
+          }
+
+          if (r[m] &gt; maxCorrelation) {
+            maxCorrelation = r[m];  // The peak of correlation function
+            period = m;
+          }
+        }
+
+        for (let n = 0; n &lt; period; n++) {
+          outputBuffer[offset1 + n] = inputBuffer[offset0 + n];
+        }
+
+        for (let n = 0; n &lt; period; n++) {
+          outputBuffer[offset1 + period + n]  = inputBuffer[offset0 + period + n] * ((period - n) / period);  // Monotonically decreasing
+          outputBuffer[offset1 + period + n] += inputBuffer[offset0 + n] * (n / period);                      // Monotonically increasing
+        }
+
+        const offset = Math.round((period * rate) / (1.0 - rate));
+
+        for (let n = period; n &lt; offset; n++) {
+          if ((offset0 + n) &gt;= inputBuffer.length) {
+            break;
+          }
+
+          outputBuffer[offset1 + period + n] = inputBuffer[offset0 + n];
+        }
+
+        offset0 += offset;
+        offset1 += period + offset;
+      }
+
+      pitchShiftAudioBuffer.copyToChannel(outputBuffer, channelNumber);
+    }
+
+    const source = new AudioBufferSourceNode(context, { buffer: pitchShiftAudioBuffer });
+
+    // Resampling
+    source.playbackRate.value = pitch;
+
+    source.connect(context.destination);
+
+    source.start(0);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+              </section>
             </section>
           </section>
         </section>
