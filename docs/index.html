@@ -14172,6 +14172,25 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
     // error handling
   });</code></pre>
               </section>
+              <article id="section-effectors-by-audio-worklet-pitch-shifter-by-resampling-and-time-stretch-correlation-functions">
+                <h6>相関関数</h6>
+                <p>
+                  相関関数は以下のように定義されます (ちなみに, <b>同じ信号系列</b>の過去の信号を積和しているので, より厳密には, <b>自己相関関数</b>の定義です).
+                  <span class="math-inline">$y\left(m\right)$</span> は (自己) 相関関数,
+                  <span class="math-inline">$x\left(n\right)$</span> は相関対象の信号系列, <span class="math-inline">$N$</span> は (自己)
+                  相関関数のサイズを表しています.
+                </p>
+                <div class="math-block">$y\left(m\right) = \sum_{n=0}^{N-1}x\left(n\right)x\left(n + m\right) \quad \left(0 \le m \le N - 1 \right)$</div>
+                <p>
+                  (自己) 相関関数は, 元の信号系列と, その <span class="math-inline">$m$</span> サンプル過去の信号を
+                  <span class="math-inline">$N$</span> 個の区間に限定して, 積和演算で算出します (演算の意味は異なりますが, 形式的に数式で考えると,
+                  コンボリューション積分 (畳み込み積分) と同じです).
+                </p>
+                <p>
+                  オーディオ信号処理においては, <b>相関関数は, 基本周期とその整数倍で正のピークを表すという特徴があります</b>. つまり,
+                  <b>波形データを走査してピークを検出することで, 近似的な周期を求めることができます</b>.
+                </p>
+              </article>
             </section>
           </section>
         </section>
