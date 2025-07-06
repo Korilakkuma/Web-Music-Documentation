@@ -13794,6 +13794,35 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               </article>
             </section>
           </section>
+          <section id="section-effectors-by-audio-worklet-pitch-shifter">
+            <h4>ピッチシフター</h4>
+            <p>
+              <b>ピッチシフター</b>とは, <b>再生速度 (音長) を変化させずに, 周波数を変化させる</b>エフェクターです (結果的に,
+              ピッチを変化させるエフェクターとなります). オーディオ処理を適用せずに, 再生速度を変化させると周波数も変化しますが, これは物理的な関係があり,
+              <b>再生速度と周波数は比例関係にあるからです</b>. 実際, <code>AudioBufferSourceNode</code> の <code>playbackRate</code> プロパティで再生速度を
+              <code>2</code> 倍にするとピッチも <code>2</code> 倍に, 逆に, 再生速度を <code>0.5</code> 倍にするとピッチも <code>0.5</code> 倍になって聴こえます.
+              一般的に, ピッチシフターは, <b>再生速度を変化させずに</b>, 周波数のみを変化させるエフェクターを意味します.
+            </p>
+            <p>
+              ピッチシフターは, <b>原音とオクターブ違いの音を合成するオクターバー</b>, <b>ピッチベンド</b> (エレキギターでは,
+              <b>ペダルでピッチを変化させるワーミー (Whammy)</b> と呼ばれることが多いです.
+              <a href="https://digitech.com/dp/whammy/" target="_blank" rel="noopener noreferrer">DigiTech の Whammy</a>),
+              <b>原音と 3 度音程の音 (ダイアトニック・スケール上のハーモニー) を合成するハーモナイザー</b>など, 派生するエフェクターが多くあります.
+            </p>
+            <p>ピッチシフターのアルゴリズムもいくつかあります. そのすべてを解説することはできないので, このセクションでは, 以下の 2 つを解説します.</p>
+            <ul>
+              <li>
+                時間領域の演算だけで実装できる<b>リサンプリング</b>と<b>タイムストレッチ</b>を利用した実装 (これは, Adobe Audition で利用されている
+                <b>SOLA</b> (<b>Synchronized Overlap-Add</b>) や, <b>PSOLA</b> (<b>Pitch Synchronous Overlap-Add</b>) の原始的なアルゴリズムです)
+              </li>
+              <li>周波数領域での演算が必要となりますが, より精度の高いピッチシフターが実現できる, <b>フェーズボコーダ</b>を利用した実装</li>
+            </ul>
+            <p>
+              周波数領域での演算による, ピッチシフターのアルゴリズムとしては, <b>正弦波モデル</b> (<b>スペクトルモデル</b>) による,
+              <b>McAulay &amp; Quatieri モデル</b> (<b>Sinusoidal Spectral Modeling</b>) や <b>SMS</b> (<b>Spectral Modeling Synthesis</b>) などがあります
+              (あるいは, これらのアルゴリズムが, フェーズボコーダに利用されている場合もあります).
+            </p>
+          </section>
         </section>
       </section>
     </main>
