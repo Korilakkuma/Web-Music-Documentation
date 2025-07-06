@@ -14191,6 +14191,129 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
                   <b>波形データを走査してピークを検出することで, 近似的な周期を求めることができます</b>.
                 </p>
               </article>
+              <article id="section-effectors-by-audio-worklet-pitch-shifter-by-resampling-and-time-stretch-resampling">
+                <h6>一般的なオーディオ信号処理におけるリサンプリング</h6>
+                <p>
+                  一般的なオーディオ信号処理におけるリサンプリングのアルゴリズムには, <b>線形補間</b>によるアルゴリズムと,
+                  <b>シンク関数</b>を利用したアルゴリズムがあります.
+                </p>
+                <p>以下は, 線形補間によるリサンプリングの実装例です</p>
+                <pre
+                  data-prismjs-copy="クリップボードにコピー"
+                  data-prismjs-copy-success="コピーしました"
+                ><code class="language-js line-numbers">const context = new AudioContext();
+
+// const pitch = 2 / 3;
+const pitch = 0.66;
+
+fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then(async (arrayBuffer) =&gt; {
+    const audioBuffer = await context.decodeAudioData(arrayBuffer);
+
+    const numberOfChannels = audioBuffer.numberOfChannels;
+
+    const length = Math.ceil(audioBuffer.length / pitch);
+
+    const resampledAudioBuffer = context.createBuffer(numberOfChannels, length, audioBuffer.sampleRate);
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      const inputBuffer  = audioBuffer.getChannelData(channelNumber);
+      const outputBuffer = new Float32Array(length);
+
+      // Resampling
+      for (let n = 0; n &lt; length; n++) {
+        const t = pitch * n;
+        const m = Math.trunc(t);
+
+        const delta = t - m;
+
+        if ((m &gt;= 0) &amp;&amp; ((m + 1) &lt; length)) {
+          outputBuffer[n] = (delta * inputBuffer[m + 1]) + ((1 - delta) * inputBuffer[m]);
+        }
+      }
+
+      resampledAudioBuffer.copyToChannel(outputBuffer, channelNumber);
+    }
+
+    const source = new AudioBufferSourceNode(context, { buffer: resampledAudioBuffer });
+
+    source.connect(context.destination);
+
+    source.start(0);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  }); </code></pre>
+                <p>
+                  もっとも, 線形補間は, リサンプル点を直線で補間するので, 実際の波形とは異なったオーディオデータとなってしまいます (ユースケースによっては,
+                  線形補間で十分な場合もあると思いますが). サンプリング定理にしたがったアルゴリズムは, シンク関数によるリサンプリングの一択です. 以下は,
+                  シンク関数のサイズを <code>24</code> とした場合の, リサンプリングの実装例です.
+                </p>
+                <pre
+                  data-prismjs-copy="クリップボードにコピー"
+                  data-prismjs-copy-success="コピーしました"
+                ><code class="language-js line-numbers">const SIZE_OF_SINC = 24;
+
+function sinc(n) {
+  if (n === 0) {
+    return 1;
+  }
+
+  return Math.sin(n) / n;
+}
+
+const context = new AudioContext();
+
+// const pitch = 2 / 3;
+const pitch = 0.66;
+
+fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then(async (arrayBuffer) =&gt; {
+    const audioBuffer = await context.decodeAudioData(arrayBuffer);
+
+    const numberOfChannels = audioBuffer.numberOfChannels;
+
+    const length = Math.ceil(audioBuffer.length / pitch);
+
+    const resampledAudioBuffer = context.createBuffer(numberOfChannels, length, audioBuffer.sampleRate);
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      const inputBuffer  = audioBuffer.getChannelData(channelNumber);
+      const outputBuffer = new Float32Array(length);
+
+      // Resampling
+      for (let n = 0; n &lt; length; n++) {
+        const t = pitch * n;
+        const offset = Math.trunc(t);
+
+        const halfOfSincSize = SIZE_OF_SINC / 2;
+
+        for (let m = (offset - halfOfSincSize); m &lt;= (offset + halfOfSincSize); m++) {
+          if ((m &gt;= 0) &amp;&amp; (m &lt; inputBuffer.length)) {
+            outputBuffer[n] += inputBuffer[m] * sinc(Math.PI * (t - m));
+          }
+        }
+      }
+
+      resampledAudioBuffer.copyToChannel(outputBuffer, channelNumber);
+    }
+
+    const source = new AudioBufferSourceNode(context, { buffer: resampledAudioBuffer });
+
+    source.connect(context.destination);
+
+    source.start(0);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+              </article>
             </section>
           </section>
         </section>
