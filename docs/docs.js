@@ -14331,6 +14331,232 @@ const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpect
   renderSpectrum(svgPhaseSpectrum, false);
 };
 
+const createResampling = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const a = Number(svg.getAttribute('data-a'));
+
+  const renderSine = (offsetX, offsetY, f, isDown, result, resampled) => {
+    const w = innerWidth / 3;
+    const h = innerHeight / 4;
+
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', (offsetX + padding).toString(10));
+    xRect.setAttribute('y', (offsetY + padding + h / 2 - 1).toString(10));
+    xRect.setAttribute('width', (w + padding).toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (offsetX + padding - 1).toString(10));
+    yRect.setAttribute('y', (offsetY + padding).toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', h.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    if (svg.getAttribute('data-parameters') === 'true') {
+      const xText = document.createElementNS(xmlns, 'text');
+
+      xText.textContent = 'Time';
+
+      xText.setAttribute('x', (offsetX + w + padding + 24).toString(10));
+      xText.setAttribute('y', (offsetY + padding + h / 2 - 8).toString(10));
+      xText.setAttribute('text-anchor', 'start');
+      xText.setAttribute('stroke', 'none');
+      xText.setAttribute('fill', baseColor);
+      xText.setAttribute('font-size', '16px');
+
+      svg.appendChild(xText);
+
+      const yText = document.createElementNS(xmlns, 'text');
+
+      yText.textContent = 'Amplitude';
+
+      yText.setAttribute('x', (offsetX + padding).toString(10));
+      yText.setAttribute('y', (offsetY + padding / 2).toString(10));
+      yText.setAttribute('text-anchor', 'middle');
+      yText.setAttribute('stroke', 'none');
+      yText.setAttribute('fill', baseColor);
+      yText.setAttribute('font-size', '16px');
+
+      svg.appendChild(yText);
+
+      [a, 0, -1 * a].forEach((amplitude, index) => {
+        const rect = document.createElementNS(xmlns, 'rect');
+
+        rect.setAttribute('x', (offsetX + padding).toString(10));
+        rect.setAttribute('y', (offsetY + padding + (h / 2) * (1 - amplitude)).toString(10));
+        rect.setAttribute('width', (w + padding).toString(10));
+        rect.setAttribute('height', lineWidth.toString(10));
+        rect.setAttribute('stroke', 'none');
+        rect.setAttribute('fill', alphaBaseColor);
+
+        svg.appendChild(rect);
+
+        const text = document.createElementNS(xmlns, 'text');
+
+        text.textContent = amplitude.toFixed(1);
+
+        text.setAttribute('x', (offsetX + padding - 4).toString(10));
+        text.setAttribute('y', (offsetY + padding / 2 + (h / 2) * (1 - amplitude) + 24).toString(10));
+        text.setAttribute('text-anchor', 'end');
+        text.setAttribute('stroke', 'none');
+        text.setAttribute('fill', baseColor);
+        text.setAttribute('font-size', '12px');
+
+        svg.appendChild(text);
+      });
+
+      if (isDown) {
+        const g = document.createElementNS(xmlns, 'g');
+
+        [0, 0.5, 1, 1.5, 2].forEach((t, index) => {
+          const text = document.createElementNS(xmlns, 'text');
+
+          if (result) {
+            text.textContent = (t / 2).toFixed(2);
+          } else {
+            text.textContent = t.toFixed(1);
+          }
+
+          text.setAttribute('x', (offsetX + padding + index * (w / 4) + 4).toString(10));
+          text.setAttribute('y', (offsetY + padding + h / 2 + 14).toString(10));
+          text.setAttribute('text-anchor', 'start');
+          text.setAttribute('stroke', 'none');
+          text.setAttribute('fill', baseColor);
+          text.setAttribute('font-size', '12px');
+
+          g.appendChild(text);
+        });
+
+        svg.appendChild(g);
+      } else {
+        const g = document.createElementNS(xmlns, 'g');
+
+        [0, 0.25, 0.5, 0.75, 1].forEach((t, index) => {
+          const text = document.createElementNS(xmlns, 'text');
+
+          if (result) {
+            text.textContent = (2 * t).toFixed(1);
+          } else {
+            text.textContent = t.toFixed(2);
+          }
+
+          text.setAttribute('x', (offsetX + padding + index * (w / 4) + 4).toString(10));
+          text.setAttribute('y', (offsetY + padding + h / 2 + 14).toString(10));
+          text.setAttribute('text-anchor', 'start');
+          text.setAttribute('stroke', 'none');
+          text.setAttribute('fill', baseColor);
+          text.setAttribute('font-size', '12px');
+
+          g.appendChild(text);
+        });
+
+        svg.appendChild(g);
+      }
+    }
+
+    const omega = 2 * Math.PI;
+
+    const path = document.createElementNS(xmlns, 'path');
+
+    let d = '';
+
+    for (let n = 0, len = f * sampleRate; n < len; n++) {
+      const v = a * Math.sin((omega * f * n) / sampleRate);
+
+      const x = (n / len) * w + offsetX + padding;
+      const y = (1 - v) * (h / 2) + offsetY + padding;
+
+      if (n === 0) {
+        d += `M${x + lineWidth / 2} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    path.setAttribute('stroke', alphaWaveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    svg.appendChild(path);
+
+    if (isDown) {
+      const g = document.createElementNS(xmlns, 'g');
+
+      const n = resampled ? 32 : 64;
+      const l = 8 * Math.PI;
+      const d = l / n;
+
+      for (let rad = 0; rad < l; rad += d) {
+        const path = document.createElementNS(xmlns, 'path');
+
+        const v = Math.sin(rad);
+        const x = (rad / d) * (1 / n) * w + offsetX + padding;
+        const y = (1 - v) * (h / 2) + offsetY + padding;
+
+        path.setAttribute('d', `M${x} ${y} L${x} ${offsetY + padding + h / 2}`);
+        path.setAttribute('stroke', lightWaveColor);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('stroke-linecap', 'square');
+
+        g.appendChild(path);
+      }
+
+      svg.appendChild(g);
+    } else {
+      const g = document.createElementNS(xmlns, 'g');
+
+      const n = resampled ? 64 : 32;
+      const l = 8 * Math.PI;
+      const d = l / n;
+
+      for (let rad = 0; rad < l; rad += d) {
+        const path = document.createElementNS(xmlns, 'path');
+
+        const v = Math.sin(rad);
+        const x = (rad / d) * (1 / n) * w + offsetX + padding;
+        const y = (1 - v) * (h / 2) + offsetY + padding;
+
+        path.setAttribute('d', `M${x} ${y} L${x} ${offsetY + padding + h / 2}`);
+        path.setAttribute('stroke', lightWaveColor);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('stroke-linecap', 'square');
+
+        g.appendChild(path);
+      }
+
+      svg.appendChild(g);
+    }
+  };
+
+  const render = (offsetX, isDown) => {
+    const baseOffsetY = innerHeight / 3 + padding / 2;
+
+    renderSine(offsetX, 0 * baseOffsetY, 2, isDown, false, false);
+    renderSine(offsetX, 1 * baseOffsetY, 2, isDown, false, true);
+    renderSine(offsetX, 2 * baseOffsetY, 2, isDown, true, true);
+  };
+
+  render(0, true);
+  render(padding + innerWidth / 2, false);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -14522,3 +14748,5 @@ animateWhiteNoiseSpectrums(
   document.getElementById('svg-animation-white-noise-amplitude-spectrum'),
   document.getElementById('svg-animation-white-noise-phase-spectrum')
 );
+
+createResampling(document.getElementById('svg-figure-resampling'));
