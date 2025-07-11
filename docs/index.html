@@ -14314,6 +14314,22 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
     // error handling
   });</code></pre>
               </article>
+              <article id="section-effectors-by-audio-worklet-pitch-shifter-by-resampling-and-time-stretch-web-audio-api-time-stretch">
+                <h6>Web Audio API におけるタイムストレッチ</h6>
+                <p>
+                  タイムストレッチのアルゴリズムは複雑になりますが, <code>MediaElementAudioSourceNode</code> を利用する場合, その音源となる,
+                  <code>HTMLAudioElement</code> や <code>HTMLVideoElement</code> の <code>playbackRate</code> プロパティは,
+                  タイムストレッチを効かせながら再生速度を変更することができます (<code>AudioBufferSourceNode</code> の <code>playbackRate</code> プロパティ
+                  (<code>AudioParam</code>) とは異なるので注意してください). したがって, タイムストレッチのみが目的であれば,
+                  <code>MediaElementAudioSourceNode</code> を利用して, <code>HTMLAudioElement</code> や <code>HTMLVideoElement</code> の
+                  <code>playbackRate</code> プロパティを制御すれば簡単に実装できます.
+                </p>
+                <p>
+                  ちなみに, <code>HTMLAudioElement</code> や <code>HTMLVideoElement</code> には <b><code>preservesPitch</code></b> プロパティが定義されており,
+                  デフォルト値が <code>true</code> なので, タイムストレッチが効きます. したがって, このプロパティを <code>false</code> にすると,
+                  タイムストレッチが無効になり, <code>playbackRate</code> プロパティ変更とともに, ピッチも変化します.
+                </p>
+              </article>
             </section>
           </section>
         </section>
