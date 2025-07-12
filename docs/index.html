@@ -14331,6 +14331,334 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
                 </p>
               </article>
             </section>
+            <section id="section-effectors-by-audio-worklet-pitch-shifter-by-phase-vocoder">
+              <h5>フェーズボコーダ</h5>
+              <p>
+                このセクションでは,
+                <a href="https://github.com/olvb/phaze" target="_blank" rel="noopener noreferrer">Phaze: a real-time web audio pitch-shifter</a>
+                で利用されている, フェーズボコーダを利用したピッチシフター (それと同時に可能な, タイムストレッチ) の実装を解説します.
+              </p>
+              <p>
+                フェーズボコーダのアルゴリズムは 1 つではなく, 例えば, 最初期のフェーズボコーダは, パンドパスフィルタ (フィルタバンク) を並列接続して,
+                それぞれの周波数帯域で <b>STFT</b> (<b>Short Time Fourier Transform</b>: <b>短時間フーリエ変換</b>. 実装上は単純に, サンプル数が少ない FFT です)
+                を適用して, ピッチ変換やスペクトルの伸縮を実行します. 変換対象のピッチの検出には, <b>瞬時周波数</b> (位相の時間微分) を利用します.
+              </p>
+              <p>
+                現代的なフェーズボコーダでは, バンドパスフィルタを利用するのではなく, 振幅スペクトルを走査して, ピークを探索して,
+                それぞれのピークをシフトするのが一般的です.
+                <a href="https://github.com/olvb/phaze" target="_blank" rel="noopener noreferrer">Phaze: a real-time web audio pitch-shifter</a>
+                のフェーズボコーダも, おおよそこのような実装となっています (さらにモダンで高度なフェーズボコーダだと,
+                振幅スペクトルのピークの帯域ごとに窓関数のサイズを可変にするといったより複雑な実装が適用されています.
+              </p>
+              <p>実装のステップは大きく 3 つです.</p>
+              <ol>
+                <li>STFT (FFT) を適用して, 振幅スペクトル (厳密には, その 2 乗なので, パワースペクトル) の配列を取得</li>
+                <li>パワースペクトルを走査して, スペクトルのピークのインデックスと, ピークの数を検出</li>
+                <li>
+                  ピークをピッチ (タイムストレッチもする場合は, 再生速度の逆数を乗算) に応じて, 実部と虚部でそれぞれシフトして, ISTFT (IFFT) で,
+                  ピッチシフトした時間領域の波形を取得
+                </li>
+              </ol>
+              <p>
+                <code>OverlapAddProcessor</code> クラスを拡張した <code>PitchShifterProcessor</code> サブクラスの実装です.
+                (周波数分解能をデフォルトより高くするために, <code>OverlapAddProcessor</code> クラスを拡張します). また,
+                <code>processOverlapAdd</code> メソッドで呼び出している, <code>FFT</code> / <code>IFFT</code> 関数は,
+                <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装</a>セクションで記載している実装を
+                <code>AudioWorkletGlobalScope</code> 内で定義していると仮定してください.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/pitch-shifter.js&apos;
+
+class PitchShifterProcessor extends OverlapAddProcessor {
+  static createHanningWindow(size) {
+    const w = new Float32Array(size);
+
+    for (let n = 0; n &lt; size; n++) {
+      w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (size - 1));
+    }
+
+    return w;
+  }
+
+  constructor(options) {
+    super(options);
+
+    this.pitch = 1;
+    this.speed = 1;
+
+    this.timeCursor = 0;
+
+    this.hanningWindow = PitchShifterProcessor.createHanningWindow(this.frameSize);
+
+    this.port.onmessage = (event) =&gt; {
+      if (event.data.pitch &gt; 0) {
+        this.pitch = event.data.pitch;
+      }
+
+      if (event.data.speed &gt; 0) {
+        this.speed = event.data.speed;
+      }
+    };
+  }
+
+  /** @overdrive */
+  processOverlapAdd(inputs, outputs) {
+    const input  = inputs[0];
+    const output = outputs[0];
+
+    const numberOfChannels = input.length;
+
+    const fftSize = this.frameSize;
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      const reals = new Float32Array(fftSize);
+      const imags = new Float32Array(fftSize);
+
+      for (let n = 0; n &lt; fftSize; n++) {
+        reals[n] = this.hanningWindow[n] * input[channelNumber][n];
+      }
+
+      FFT(reals, imags, fftSize);
+
+      const halfOfFFTSizze = fftSize / 2;
+      const bufferSize     = halfOfFFTSizze + 1;
+
+      const magnitudes  = new Float32Array(bufferSize);
+      const peakIndexes = new Uint16Array(bufferSize);
+
+      for (let k = 0; k &lt; bufferSize; k++) {
+        magnitudes[k] = (reals[k] ** 2) + (imags[k] ** 2);
+      }
+
+      let numberOfPeaks = 0;
+
+      // Find peaks
+      let index = 2;
+
+      const end = halfOfFFTSizze + 1 - 2;
+
+      while (index &lt; end) {
+        const magnitude = magnitudes[index];
+
+        if ((magnitudes[index - 1] &gt;= magnitude) || (magnitudes[index - 2] &gt;= magnitude)) {
+          ++index;
+          continue;
+        }
+
+        if ((magnitudes[index + 1] &gt;= magnitude) || (magnitudes[index + 2] &gt;= magnitude)) {
+          ++index;
+          continue;
+        }
+
+        peakIndexes[numberOfPeaks++] = index;
+
+        index += 2;
+      }
+
+      // Shift peaks
+      const shiftedReals = new Float32Array(fftSize);
+      const shiftedImags = new Float32Array(fftSize);
+
+      for (let k = 0; k &lt; numberOfPeaks; k++) {
+        const peakIndex = peakIndexes[k];
+
+        const shiftedPeakIndex = Math.round(peakIndex * this.pitch * (1 / this.speed));
+
+        if (shiftedPeakIndex &gt; bufferSize) {
+          break;
+        }
+
+        let startIndex = 0;
+        let endIndex   = fftSize;;
+
+        if (k &gt; 0) {
+          const peakIndexBefore = peakIndexes[k - 1];
+
+          startIndex = peakIndex - Math.floor((peakIndex - peakIndexBefore) / 2);
+        }
+
+        if (k &lt; (numberOfPeaks - 1)) {
+          const peakIndexAfter = peakIndexes[k + 1];
+
+          endIndex = peakIndex + Math.ceil((peakIndexAfter - peakIndex) / 2);
+        }
+
+        const startOffset = startIndex - peakIndex;
+        const endOffset   = endIndex   - peakIndex;
+
+        for (let m = startOffset; m &lt; endOffset; m++) {
+          const binCountIndex = peakIndex + m;
+
+          const shiftedBinCountIndex = shiftedPeakIndex + m;
+
+          if (shiftedBinCountIndex &gt;= bufferSize) {
+            break;
+          }
+
+          const omega = (2 * Math.PI * (shiftedBinCountIndex - binCountIndex)) / fftSize;
+
+          const shiftedReal = Math.cos(omega * this.timeCursor);
+          const shiftedImag = Math.sin(omega * this.timeCursor);
+
+          shiftedReals[shiftedBinCountIndex] += (reals[binCountIndex] * shiftedReal) - (imags[binCountIndex] * shiftedImag);
+          shiftedImags[shiftedBinCountIndex] += (reals[binCountIndex] * shiftedImag) + (imags[binCountIndex] * shiftedReal);
+        }
+      }
+
+      for (let k = 1; k &lt; halfOfFFTSizze; k++) {
+        shiftedReals[fftSize - k] = 0.0 + shiftedReals[k];
+        shiftedImags[fftSize - k] = 0.0 - shiftedImags[k];
+      }
+
+      IFFT(shiftedReals, shiftedImags, fftSize);
+
+      for (let n = 0; n &lt; fftSize; n++) {
+        output[channelNumber][n] = this.hanningWindow[n] * shiftedReals[n];
+      }
+    }
+
+    this.timeCursor += this.hopSize;
+  }
+}
+
+registerProcessor(&apos;PitchShifterProcessor&apos;, PitchShifterProcessor);</code></pre>
+              <p>メインスレッドの実装例です.</p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-pitch-shifter&quot; disabled&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-pitch-shifter&quot;&gt;pitch&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-pitch-shifter&quot; disabled value=&quot;1&quot; min=&quot;0.5&quot; max=&quot;4&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-pitch-shifter-value&quot;&gt;1.00&lt;/span&gt;
+&lt;label for=&quot;range-time-stretch&quot;&gt;speed&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-time-stretch&quot; disabled value=&quot;1&quot; min=&quot;0.5&quot; max=&quot;4&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-time-stretch-value&quot;&gt;1.00&lt;/span&gt;</code></pre>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const buttonElement = document.getElementById(&apos;button-pitch-shifter&apos;);
+
+const rangePitchElement = document.getElementById(&apos;range-pitch-shifter&apos;);
+const rangeSpeedElement = document.getElementById(&apos;range-time-stretch&apos;);
+const spanPitchElement  = document.getElementById(&apos;print-pitch-shifter-value&apos;);
+const spanSpeedElement  = document.getElementById(&apos;print-time-stretch-value&apos;);
+
+let source    = null;
+let processor = null;
+
+let pitch = 1;
+let speed = 1;
+
+fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then(async (arrayBuffer) =&gt; {
+     // &apos;./audio-worklets/pitch-shifter.js&apos; is URL that has subclass that extends `OverlapAddProcessor`
+     await context.audioWorklet.addModule(&apos;./audio-worklets/pitch-shifter.js&apos;)
+
+     const buffer = await context.decodeAudioData(arrayBuffer);
+
+     buttonElement.removeAttribute(&apos;disabled&apos;);
+     rangePitchElement.removeAttribute(&apos;disabled&apos;);
+     rangeSpeedElement.removeAttribute(&apos;disabled&apos;);
+
+     buttonElement.addEventListener(&apos;click&apos;, () =&gt; {
+       if ((source === null) &amp;&amp; (processor === null)) {
+         source    = new AudioBufferSourceNode(context, { buffer, playbackRate: speed });
+         processor = new AudioWorkletNode(context, &apos;PitchShifterProcessor&apos;);
+
+         processor.port.postMessage({ pitch, speed });
+
+         // AudioBufferSourceNode (Input) -&gt; AudioWorkletNode (Pitch Shifter) -&gt; AudioDestinationNode (Output)
+         source.connect(processor);
+         processor.connect(context.destination);
+
+         source.start(0);
+
+         source.onended = () =&gt; {
+           source = null;
+
+           if (processor) {
+             processor.disconnect();
+             processor = null;
+           }
+
+           buttonElement.textContent = &apos;start&apos;
+         };
+
+         buttonElement.textContent = &apos;stop&apos;
+       } else {
+         source.stop(0);
+
+         source = null;
+
+         if (processor) {
+           processor.disconnect();
+           processor = null;
+         }
+
+         buttonElement.textContent = &apos;start&apos;
+       }
+     });
+
+     rangePitchElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+       pitch = event.currentTarget.valueAsNumber;
+
+       if (processor) {
+         processor.port.postMessage({ pitch });
+       }
+
+       spanPitchElement.textContent = pitch.toFixed(2);
+     });
+
+     rangeSpeedElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+       speed = event.currentTarget.valueAsNumber;
+
+       if (source &amp;&amp; processor) {
+         source.playbackRate.value = speed;
+         processor.port.postMessage({ speed });
+       }
+
+       spanSpeedElement.textContent = speed.toFixed(2);
+     });
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+              <div class="app-container app-pitch-shifter">
+                <div class="app-headline">
+                  <button type="button" id="button-pitch-shifter" disabled>start</button>
+                </div>
+                <div>
+                  <dl>
+                    <div>
+                      <dt><label for="range-pitch-shifter">pitch</label></dt>
+                      <dd>
+                        <input type="range" id="range-pitch-shifter" disabled value="1" min="0.5" max="4" step="0.05" /><span id="print-pitch-shifter-value"
+                          >1.00</span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt><label for="range-time-stretch">speed</label></dt>
+                      <dd>
+                        <input type="range" id="range-time-stretch" disabled value="1" min="0.5" max="4" step="0.05" /><span id="print-time-stretch-value"
+                          >1.00</span>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+              <p>
+                このセクションでは, 原音をピッチシフトしましたが, 原音とピッチシフトしたエフェクト音をミックスすることで,
+                オクターバーやハーモナイザーを実装できます. また, <code>pitch</code> を <code>AudioParamDescriptor</code> として実装して,
+                メインスレッド側でパラメータをオートメーションすれば, ピッチベンドも実装できるでしょう.
+              </p>
+            </section>
           </section>
         </section>
       </section>
