@@ -15146,6 +15146,99 @@ const createTimeStretchSlow = (svg) => {
   render(padding + innerHeight / 2, 1.74, true);
 };
 
+const pitchshifter = () => {
+  const buttonElement = document.getElementById('button-pitch-shifter');
+
+  const rangePitchElement = document.getElementById('range-pitch-shifter');
+  const rangeSpeedElement = document.getElementById('range-time-stretch');
+  const spanPitchElement = document.getElementById('print-pitch-shifter-value');
+  const spanSpeedElement = document.getElementById('print-time-stretch-value');
+
+  let source = null;
+  let processor = null;
+
+  let pitch = 1;
+  let speed = 1;
+
+  fetch('./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3')
+    .then((response) => {
+      return response.arrayBuffer();
+    })
+    .then(async (arrayBuffer) => {
+      await audiocontext.audioWorklet.addModule('./audio-worklets/pitch-shifter.js');
+
+      const buffer = await audiocontext.decodeAudioData(arrayBuffer);
+
+      buttonElement.removeAttribute('disabled');
+      rangePitchElement.removeAttribute('disabled');
+      rangeSpeedElement.removeAttribute('disabled');
+
+      buttonElement.addEventListener('click', async () => {
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
+
+        if (source === null && processor === null) {
+          source = new AudioBufferSourceNode(audiocontext, { buffer, playbackRate: speed });
+          processor = new AudioWorkletNode(audiocontext, 'PitchShifterProcessor');
+
+          processor.port.postMessage({ pitch, speed });
+
+          source.connect(processor);
+          processor.connect(audiocontext.destination);
+
+          source.start(0);
+
+          source.onended = () => {
+            source = null;
+
+            if (processor) {
+              processor.disconnect();
+              processor = null;
+            }
+
+            buttonElement.textContent = 'start';
+          };
+
+          buttonElement.textContent = 'stop';
+        } else {
+          source.stop(0);
+
+          source = null;
+
+          if (processor) {
+            processor.disconnect();
+            processor = null;
+          }
+
+          buttonElement.textContent = 'start';
+        }
+      });
+
+      rangePitchElement.addEventListener('input', (event) => {
+        pitch = event.currentTarget.valueAsNumber;
+
+        if (processor) {
+          processor.port.postMessage({ pitch });
+        }
+
+        spanPitchElement.textContent = pitch.toFixed(2);
+      });
+
+      rangeSpeedElement.addEventListener('input', (event) => {
+        speed = event.currentTarget.valueAsNumber;
+
+        if (source && processor) {
+          source.playbackRate.value = speed;
+          processor.port.postMessage({ speed });
+        }
+
+        spanSpeedElement.textContent = speed.toFixed(2);
+      });
+    })
+    .catch(console.error);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -15341,3 +15434,5 @@ animateWhiteNoiseSpectrums(
 createResampling(document.getElementById('svg-figure-resampling'));
 createTimeStretchFast(document.getElementById('svg-figure-time-stretch-fast'));
 createTimeStretchSlow(document.getElementById('svg-figure-time-stretch-slow'));
+
+pitchshifter();
