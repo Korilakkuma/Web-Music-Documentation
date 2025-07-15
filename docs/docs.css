@@ -203,6 +203,12 @@ input[type="checkbox"] {
   -webkit-touch-callout: none;
 }
 
+input[type="file"] {
+  cursor: pointer;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .copy-to-clipboard-button {
   cursor: pointer;
 }
@@ -460,7 +466,8 @@ select {
 .app-auto-panner,
 .app-glide,
 .app-noise-suppressor,
-.app-pitch-shifter {
+.app-pitch-shifter,
+.app-vocal-canceler {
   margin: 24px 0;
 }
 
@@ -478,7 +485,8 @@ select {
 .app-auto-panner dl dd,
 .app-glide dl dd,
 .app-noise-suppressor dl dd,
-.app-pitch-shifter dl dd {
+.app-pitch-shifter dl dd,
+.app-vocal-canceler dl dd {
   display: flex;
   gap: 8px;
   align-items: center;

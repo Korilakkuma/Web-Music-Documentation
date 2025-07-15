@@ -14660,6 +14660,369 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
               </p>
             </section>
           </section>
+          <section id="section-effectors-by-audio-worklet-vocal-canceler-on-spectrum">
+            <h4>スペクトル領域でのボーカルキャンセラ</h4>
+            <p>
+              AudioWorklet によるオーディオ信号処理の実装例として,
+              <a href="#section-audio-worklet-examples-vocal-canceler">時間領域でのボーカルキャンセラ</a>の実装を解説しました. しかしながら,
+              時間領域でのボーカルキャンセラは実装はシンプルですが, ドラムなど中央に位置する楽器音も取り除かれてしまう, また,
+              ボーカルキャンセラ後の左右のチャンネルのデータは同じになるので, モノラル再生になってしまうというデメリットがありました.
+            </p>
+            <p>
+              スペクトル領域でのボーカルキャンセラは, 実装は複雑になりますが, ボーカル以外の中央に位置する楽器音は残しつつ, かつ,
+              左右のチャンネルのデータの特徴は保ちながらステレオ再生が可能になります. 具体的に説明すれば, スペクトル領域での演算にすることで,
+              ボーカルの周波数帯域に範囲を限定して, 左右のチャンネルを減算することで,
+              時間領域のボーカルキャンセラよりも精度のよいボーカルキャンセラを実装することが可能となります.
+            </p>
+            <p>
+              時間領域ではボーカル音を対象に除去しているのではなく, 音源の位置関係から結果として除去しているのに対して,
+              <b>スペクトル領域でのボーカルキャンセラは, ボーカル音を対象にして除去するアルゴリズムです</b>.
+            </p>
+            <p>
+              ただし, スペクトル領域でのボーカルキャンセラでも, 左右のチャンネルデータが必要なので,
+              対象のオーディオデータはステレオである必要があることには変わりません.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/vocal-canceler-on-spectrum.js&apos;
+
+class SpectrumVocalCancelerProcessor extends OverlapAddProcessor {
+  // Safe positive minimum on `float` (6 digits)
+  static MINIMUM_AMPLITUDE = 0.000001;
+
+  static createHanningWindow(size) {
+    const w = new Float32Array(size);
+
+    for (let n = 0; n &lt; size; n++) {
+      w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (size - 1));
+    }
+
+    return w;
+  }
+
+  constructor(options) {
+    super(options);
+
+    this.depth        = 0;
+    this.minFrequency = 200;
+    this.maxFrequency = 8000;
+    this.threshold    = 0.05;
+
+    this.hanningWindow = SpectrumVocalCancelerProcessor.createHanningWindow(this.frameSize);
+
+    this.port.onmessage = (event) =&gt; {
+      if ((event.data.depth &gt;= 0) &amp;&amp; (event.data.depth &lt;= 1)) {
+        this.depth = event.data.depth;
+      }
+
+      if ((event.data.minFrequency &gt;= 0) &amp;&amp; (event.data.minFrequency &lt; this.maxFrequency)) {
+        this.minFrequency = event.data.minFrequency;
+      }
+
+      if (event.data.maxFrequency &gt;= this.minFrequency) {
+        this.maxFrequency = event.data.maxFrequency;
+      }
+
+      if ((event.data.threshold &gt;= 0) &amp;&amp; (event.data.threshold &lt;= 1)) {
+        this.threshold = event.data.threshold;
+      }
+    };
+  }
+
+  /** @override */
+  processOverlapAdd(inputs, outputs) {
+    const input  = inputs[0];
+    const output = outputs[0];
+
+    if ((input.length === 0) || (output.length === 0)) {
+      return true;
+    }
+
+    if ((input.length !== 2) || (output.length !== 2)) {
+      for (let channelNumber = 0, numberOfChannels = input.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+        output[channelNumber].set(input[channelNumber]);
+      }
+
+      return true;
+    }
+
+    if (this.depth === 0) {
+      for (let channelNumber = 0, numberOfChannels = input.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+        output[channelNumber].set(input[channelNumber]);
+      }
+
+      return true;
+    }
+
+    const inputLs = input[0];
+    const inputRs = input[1];
+
+    const outputLs = output[0];
+    const outputRs = output[1];
+
+    const fftSize = this.frameSize;
+
+    const realLs = new Float32Array(fftSize);
+    const realRs = new Float32Array(fftSize);
+    const imagLs = new Float32Array(fftSize);
+    const imagRs = new Float32Array(fftSize);
+
+    for (let n = 0; n &lt; fftSize; n++) {
+      realLs[n] = this.hanningWindow[n] * inputLs[n];
+      realRs[n] = this.hanningWindow[n] * inputRs[n];
+    }
+
+    FFT(realLs, imagLs, fftSize);
+    FFT(realRs, imagRs, fftSize);
+
+    const absLs = new Float32Array(fftSize);
+    const absRs = new Float32Array(fftSize);
+    const argLs = new Float32Array(fftSize);
+    const argRs = new Float32Array(fftSize);
+
+    for (let k = 0; k &lt; fftSize; k++) {
+      absLs[k] = Math.sqrt((realLs[k] ** 2) + (imagLs[k] ** 2));
+      absRs[k] = Math.sqrt((realRs[k] ** 2) + (imagRs[k] ** 2));
+      argLs[k] = Math.atan2(imagLs[k], realLs[k]);
+      argRs[k] = Math.atan2(imagRs[k], realRs[k]);
+    }
+
+    const minIndex = Math.trunc(this.minFrequency * (fftSize / sampleRate));
+    const maxIndex = Math.trunc(this.maxFrequency * (fftSize / sampleRate));
+
+    for (let k = minIndex; k &lt; maxIndex; k++) {
+      const numerator   = Math.pow((absLs[k] - absRs[k]), 2);
+      const denominator = Math.pow((absLs[k] + absRs[k]), 2);
+
+      if (denominator != 0.0) {
+        const diff = numerator / denominator;
+
+        if (diff &lt; this.threshold) {
+          absLs[k] = SpectrumVocalCancelerProcessor.MINIMUM_AMPLITUDE;
+          absRs[k] = SpectrumVocalCancelerProcessor.MINIMUM_AMPLITUDE;
+
+          absLs[fftSize - k] = absLs[k];
+          absRs[fftSize - k] = absRs[k];
+        }
+      }
+    }
+
+    for (let k = 0; k &lt; fftSize; k++) {
+      realLs[k] = absLs[k] * Math.cos(argLs[k]);
+      realRs[k] = absRs[k] * Math.cos(argRs[k]);
+      imagLs[k] = absLs[k] * Math.sin(argLs[k]);
+      imagRs[k] = absRs[k] * Math.sin(argRs[k]);
+    }
+
+    IFFT(realLs, imagLs, fftSize);
+    IFFT(realRs, imagRs, fftSize);
+
+    for (let n = 0; n &lt; fftSize; n++) {
+      outputLs[n] = ((1 - this.depth) * inputLs[n]) + (this.depth * (this.hanningWindow[n] * realLs[n]));
+      outputRs[n] = ((1 - this.depth) * inputRs[n]) + (this.depth * (this.hanningWindow[n] * realRs[n]));
+    }
+
+    return true;
+  }
+}
+
+registerProcessor(&apos;SpectrumVocalCancelerProcessor&apos;, SpectrumVocalCancelerProcessor);</code></pre>
+            <p>
+              上記の, スペクトル領域でのボーカルキャンセラでは, ボーカルの周波数帯域を <code>200 Hz</code> ~ <code>8000 Hz</code> と仮定して,
+              その間の振幅スペクトルから, 以下の式で定義される閾値を算出します (<span class="math-inline">$X_{L}\left(k\right)$</span>
+              は左チャンネルの振幅スペクトル (の配列), <span class="math-inline">$X_{R}\left(k\right)$</span> は右チャンネルの振幅スペクトル (の配列)
+              を表しています).
+            </p>
+            <div class="math-block">
+              $D\left(k\right) = \frac{\left|X_{L}\left(k\right) - X_{R}\left(k\right)\right|^{2}}{\left|X_{L}\left(k\right) + X_{R}\left(k\right)\right|^{2}}$
+            </div>
+            <p>
+              この算出した閾値 (<span class="math-inline">$D\left(k\right)$</span>) が, あらかじめ指定した閾値 (変数 <code>threshold</code>) を下回っていれば,
+              ボーカル音とみなして, 32 bit 浮動小数点の保証される正の最小値 (およそ, 小数点以下 6 桁) の振幅に設定することで除去しています (また,
+              振幅スペクトルは, ナイキスト周波数を軸に線対称となるので, 線対称となる後半のインデックスにも同様の値を設定します).
+            </p>
+            <p>
+              あとは, メインスレッドの実装例です. <code>threshold</code> はハードコーディングでもよいですが, アプリケーション側から設定可能にすると,
+              除去レベルを調整しやすいので, 以下のメインスレッドの実装例では, ユーザーインタラクティブに制御可能にしています.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;input type=&quot;file&quot; id=&quot;file-vocal-canceler&quot; /&gt;
+&lt;audio id=&quot;audio-vocal-canceler&quot; controls&gt;&lt;/audio&gt;
+&lt;label for=&quot;range-vocal-canceler-depth&quot;&gt;depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-vocal-canceler-depth&quot; disabled value=&quot;0&quot; min=&quot;0.5&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-vocal-canceler-depth-value&quot;&gt;0.00&lt;/span&gt;
+&lt;label for=&quot;range-vocal-canceler-min-frequency&quot;&gt;minFrequency&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-vocal-canceler-min-frequency&quot; disabled value=&quot;200&quot; min=&quot;100&quot; max=&quot;16000&quot; step=&quot;100&quot; /&gt;
+&lt;span id=&quot;print-vocal-canceler-min-frequency-value&quot;&gt;2000 Hz&lt;/span&gt;
+&lt;label for=&quot;range-vocal-canceler-range&quot;&gt;range (maxFrequency)&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-vocal-canceler-range&quot; disabled value=&quot;7800&quot; min=&quot;100&quot; max=&quot;16000&quot; step=&quot;100&quot; /&gt;
+&lt;span id=&quot;print-vocal-canceler-range-value&quot;&gt;7800 Hz (8000 Hz)&lt;/span&gt;
+&lt;label for=&quot;range-vocal-canceler-threshold&quot;&gt;threshold&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-vocal-canceler-threshold&quot; disabled value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;span id=&quot;print-vocal-canceler-threshold-value&quot;&gt;0.50&lt;/span&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const inputElement = document.getElementById(&apos;file-vocal-canceler&apos;);
+const audioElement = document.getElementById(&apos;audio-vocal-canceler&apos;);
+
+const rangeDepthElement        = document.getElementById(&apos;range-vocal-canceler-depth&apos;);
+const rangeMinFrequencyElement = document.getElementById(&apos;range-vocal-canceler-min-frequency&apos;);
+const rangeRangeElement        = document.getElementById(&apos;range-vocal-canceler-range&apos;);
+const rangeThresholdElement    = document.getElementById(&apos;range-vocal-canceler-threshold&apos;);
+const spanDepthElement         = document.getElementById(&apos;print-vocal-canceler-depth-value&apos;);
+const spanMinFrequencyElement  = document.getElementById(&apos;print-vocal-canceler-min-frequency-value&apos;);
+const spanRangeElement         = document.getElementById(&apos;print-vocal-canceler-range-value&apos;);
+const spanThresholdElement     = document.getElementById(&apos;print-vocal-canceler-threshold-value&apos;);
+
+let source    = null;
+let processor = null;
+
+let depth        = 0;
+let minFrequency = 200;
+let maxFrequency = 8000;
+let threshold    = 0.5;
+
+inputElement.addEventListener(&apos;click&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  rangeDepthElement.removeAttribute(&apos;disabled&apos;);
+  rangeMinFrequencyElement.removeAttribute(&apos;disabled&apos;);
+  rangeRangeElement.removeAttribute(&apos;disabled&apos;);
+  rangeThresholdElement.removeAttribute(&apos;disabled&apos;);
+
+  context.audioWorklet.addModule(&apos;./audio-worklets/vocal-canceler-on-spectrum.js&apos;)
+    .then(() =&gt; {
+      processor = new AudioWorkletNode(context, &apos;SpectrumVocalCancelerProcessor&apos;);
+
+      processor.port.postMessage({ depth });
+      processor.port.postMessage({ minFrequency });
+      processor.port.postMessage({ maxFrequency });
+      processor.port.postMessage({ threshold });
+    })
+    .catch((error) =&gt; {
+      // error handling
+    })
+}, { once: true });
+
+inputElement.addEventListener(&apos;change&apos;, (event) =&gt; {
+  const file = event.currentTarget.files[0];
+
+  audioElement.src = window.URL.createObjectURL(file);
+});
+
+audioElement.addEventListener(&apos;loadstart&apos;, () =&gt; {
+  if (processor === null) {
+    return;
+  }
+
+  if (source === null) {
+    source = new MediaElementAudioSourceNode(context, { mediaElement: audioElement });
+
+    // MediaElementAudioSourceNode (Input) -&gt; AudioWorkletNode (Vocal Canceler) -&gt; AudioDestinationNode (Output)
+    source.connect(processor);
+    processor.connect(context.destination);
+  }
+});
+
+rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  depth = event.currentTarget.valueAsNumber;
+
+  if (processor) {
+    processor.port.postMessage({ depth });
+  }
+
+  spanDepthElement.textContent = depth.toFixed(2);
+});
+
+rangeMinFrequencyElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  minFrequency = event.currentTarget.valueAsNumber;
+
+  if (processor) {
+    processor.port.postMessage({ minFrequency });
+  }
+
+  spanMinFrequencyElement.textContent = `${minFrequency} Hz`;
+});
+
+rangeRangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  const range = event.currentTarget.valueAsNumber;
+
+  maxFrequency = minFrequency + range;
+
+  if (processor) {
+    processor.port.postMessage({ maxFrequency });
+  }
+
+  spanRangeElement.textContent = `${range} Hz (${maxFrequency} Hz)`;
+});
+
+rangeThresholdElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  threshold = event.currentTarget.valueAsNumber;
+
+  if (processor) {
+    processor.port.postMessage({ threshold });
+  }
+
+  spanThresholdElement.textContent = threshold.toFixed(2);
+});</code></pre>
+            <div class="app-container app-vocal-canceler">
+              <div class="app-headline">
+                <label for="file-vocal-canceler">Upload Audio File</label>
+                <input type="file" id="file-vocal-canceler" accept="audio/*" />
+                <audio id="audio-vocal-canceler" controls></audio>
+              </div>
+              <div>
+                <dl>
+                  <div>
+                    <dt><label for="range-vocal-canceler-depth">depth</label></dt>
+                    <dd>
+                      <input type="range" id="range-vocal-canceler-depth" disabled value="0" min="0.5" max="1" step="0.05" /><span
+                        id="print-vocal-canceler-depth-value"
+                        >0.00</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-vocal-canceler-min-frequency">minFrequency</label></dt>
+                    <dd>
+                      <input type="range" id="range-vocal-canceler-min-frequency" disabled value="200" min="100" max="16000" step="100" /><span
+                        id="print-vocal-canceler-min-frequency-value"
+                        >200 Hz</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-vocal-canceler-range">range (maxFrequency)</label></dt>
+                    <dd>
+                      <input type="range" id="range-vocal-canceler-range" disabled value="7800" min="100" max="16000" step="100" /><span
+                        id="print-vocal-canceler-range-value"
+                        >7800 Hz (8000 Hz)</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt><label for="range-vocal-canceler-threshold">threshold</label></dt>
+                    <dd>
+                      <input type="range" id="range-vocal-canceler-threshold" disabled value="0.5" min="0" max="1" step="0.05" /><span
+                        id="print-vocal-canceler-threshold-value"
+                        >0.50</span>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+            <p>
+              スペクトル領域のボーカルキャンセラでも, 音源によってはあまり除去できない場合もあるかと思います. また,
+              ボーカルの周波数帯域と重なるような楽器音などがある場合は, その楽器音も除去されてしまいます. 実は, ボーカルキャンセラを含めた, <b>音源分離</b>は,
+              まだ完璧なアプローチがない, 研究対象のテーマであり, 今後は, 人工知能の発展とともに, 信号処理のアプローチだけでなく,
+              機械学習や深層学習のアプローチも取り入れられて発展していくと思われます.
+            </p>
+          </section>
         </section>
       </section>
     </main>

@@ -15239,6 +15239,116 @@ const pitchshifter = () => {
     .catch(console.error);
 };
 
+const vocalcanceler = () => {
+  const inputElement = document.getElementById('file-vocal-canceler');
+  const audioElement = document.getElementById('audio-vocal-canceler');
+
+  const rangeDepthElement = document.getElementById('range-vocal-canceler-depth');
+  const rangeMinFrequencyElement = document.getElementById('range-vocal-canceler-min-frequency');
+  const rangeRangeElement = document.getElementById('range-vocal-canceler-range');
+  const rangeThresholdElement = document.getElementById('range-vocal-canceler-threshold');
+  const spanDepthElement = document.getElementById('print-vocal-canceler-depth-value');
+  const spanMinFrequencyElement = document.getElementById('print-vocal-canceler-min-frequency-value');
+  const spanRangeElement = document.getElementById('print-vocal-canceler-range-value');
+  const spanThresholdElement = document.getElementById('print-vocal-canceler-threshold-value');
+
+  let source = null;
+  let processor = null;
+
+  let depth = 0;
+  let minFrequency = 200;
+  let maxFrequency = 7800;
+  let threshold = 0.5;
+
+  inputElement.addEventListener(
+    'click',
+    async () => {
+      if (audiocontext.state !== 'running') {
+        await audiocontext.resume();
+      }
+
+      rangeDepthElement.removeAttribute('disabled');
+      rangeMinFrequencyElement.removeAttribute('disabled');
+      rangeRangeElement.removeAttribute('disabled');
+      rangeThresholdElement.removeAttribute('disabled');
+
+      audiocontext.audioWorklet
+        .addModule('./audio-worklets/vocal-canceler-on-spectrum.js')
+        .then(() => {
+          processor = new AudioWorkletNode(audiocontext, 'SpectrumVocalCancelerProcessor');
+
+          processor.port.postMessage({ depth });
+          processor.port.postMessage({ minFrequency });
+          processor.port.postMessage({ maxFrequency });
+          processor.port.postMessage({ threshold });
+        })
+        .catch(console.error);
+    },
+    { once: true }
+  );
+
+  inputElement.addEventListener('change', (event) => {
+    const file = event.currentTarget.files[0];
+
+    audioElement.src = window.URL.createObjectURL(file);
+  });
+
+  audioElement.addEventListener('loadstart', () => {
+    if (processor === null) {
+      return;
+    }
+
+    if (source === null) {
+      source = new MediaElementAudioSourceNode(audiocontext, { mediaElement: audioElement });
+
+      source.connect(processor);
+      processor.connect(audiocontext.destination);
+    }
+  });
+
+  rangeDepthElement.addEventListener('input', (event) => {
+    depth = event.currentTarget.valueAsNumber;
+
+    if (processor) {
+      processor.port.postMessage({ depth });
+    }
+
+    spanDepthElement.textContent = depth.toFixed(2);
+  });
+
+  rangeMinFrequencyElement.addEventListener('input', (event) => {
+    minFrequency = event.currentTarget.valueAsNumber;
+
+    if (processor) {
+      processor.port.postMessage({ minFrequency });
+    }
+
+    spanMinFrequencyElement.textContent = `${minFrequency} Hz`;
+  });
+
+  rangeRangeElement.addEventListener('input', (event) => {
+    const range = event.currentTarget.valueAsNumber;
+
+    maxFrequency = minFrequency + range;
+
+    if (processor) {
+      processor.port.postMessage({ maxFrequency });
+    }
+
+    spanRangeElement.textContent = `${range} Hz (${maxFrequency} Hz)`;
+  });
+
+  rangeThresholdElement.addEventListener('input', (event) => {
+    threshold = event.currentTarget.valueAsNumber;
+
+    if (processor) {
+      processor.port.postMessage({ threshold });
+    }
+
+    spanThresholdElement.textContent = threshold.toFixed(2);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -15436,3 +15546,5 @@ createTimeStretchFast(document.getElementById('svg-figure-time-stretch-fast'));
 createTimeStretchSlow(document.getElementById('svg-figure-time-stretch-slow'));
 
 pitchshifter();
+
+vocalcanceler();
