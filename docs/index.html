@@ -15024,6 +15024,109 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             </p>
           </section>
         </section>
+        <section id="section-effectors-connection-order">
+          <h3>エフェクターの接続順</h3>
+          <p>
+            ここまでのセクションで様々なエフェクター (空間系, モジュレーション系, フィルタ系, 歪み系など) を解説してきました. 最後に, 解説しておくこととして, 1
+            つのエフェクーだけを利用する場合は考慮する必要のない問題ですが, 多くの場合, 複数のエフェクターを同時に利用することになるでしょう.
+            <a href="#section-effectors-amp-simulator-and-effectors-distortion">アンプシミュレーターと歪み系エフェクターによるディストーションサウンド</a>のセクションでも記載しましたが, <b>エフェクターの接続順は出力されるサウンドに大きく影響を与えます</b>.
+          </p>
+          <p>
+            もちろん, 仕様的に決まりがあるわけではないので, 利用するエフェクターの個数の階乗 (<span class="math-inline">$n!$</span>)
+            も接続順が存在することになります. しかしながら, <b>エフェクターの接続順にはおおよその定石があります</b>.
+          </p>
+          <p>
+            このセクションでは, ローランド社のマルチエフェクターの ME シリーズである,
+            <a href="https://www.boss.info/jp/products/me-70/" target="_blank" rel="noopener noreferrer">ME-70</a> と
+            <a href="https://www.boss.info/jp/products/me-80/" target="_blank" rel="noopener noreferrer">ME-80</a> にもとづいて,
+            エフェクターの接続順の定石を解説します (いずれの機種も, 生産・販売終了していますが, コンパクトエフェクター並べたような UI で直感的で使えるのと,
+            デジタルすぎないサウンドメイクができることから, まだまだ現役で利用されているギタリストは多くいらっしゃいます).
+          </p>
+          <ol>
+            <li>入力 (ギター, ベースなど)</li>
+            <li>ワウ, Whammy など飛び道具系</li>
+            <li>コンプレッサー</li>
+            <li>歪み系エフェクター (ブースター, オーバードライブ, ファズなど</li>
+            <li>アンプシミュレーター (もしくは, 実機のアンプにリターン接続) とイコライザー</li>
+            <li>ノイズリダクション (ノイズサプレッサー)</li>
+            <li>モジュレーション系 (コーラス・フランジャー, トレモロ, フェイザーなど)</li>
+            <li>ディレイ</li>
+            <li>リバーブ</li>
+            <li>出力 (スピーカー, レコーダー端子など)</li>
+          </ol>
+          <p>実機のアンプを利用する場合などは, センド・リターン端子を利用するので接続自体は複雑になりますが, エフェクターの接続順の定石は変わりません.</p>
+          <p>
+            また, ME-70 と ME-80 にもとづいたエフェクターの接続順の定石を記載しましたが, ローランド社が公開している,
+            <a href="https://articles.boss.info/ja/the-ultimate-guide-to-guitar-effects-pedal-order-and-signal-chain/" target="_blank" rel="noopener noreferrer"
+              >ギター用エフェクトの接続順ガイド</a>も非常に参考になると思います.
+          </p>
+          <table>
+            <caption>
+              実機のマルチエフェクターの接続順例
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Effector</th>
+                <th scope="col">Description</th>
+                <th scope="col" style="width: 440px">Image</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="white-space: nowrap">BOSS ME-70</td>
+                <td>
+                  筐体右上に, エフェクターの接続順がプリントされています. BOSS ME シリーズは, コンパクトエフェクターを並べたような UI と, ノブによる操作が主で,
+                  非常に直感的なサウンドメイクが可能です. コンパクトエフェクターのパイオニアである, BOSS 製品らしいマルチエフェクターと言えます.
+                </td>
+                <td><img src="images/boss-me-70.png" alt="BOSS ME-70" width="3588" height="566" loading="lazy" /></td>
+              </tr>
+              <tr>
+                <td style="white-space: nowrap"><a href="https://www.boss.info/jp/products/gt-1/" target="_blank" rel="noopener noreferrer">BOSS GT-1</a></td>
+                <td>
+                  ディスプレイ下のボタンの並びが一般的なエフェクターの接続順となっていますが, 右側のノブで選択したエフェクターの接続順を変更可能で,
+                  ディスプレイ上の接続で確認できます
+                </td>
+                <td><img src="images/boss-gt-1.png" alt="BOSS GT-1" width="3900" height="2385" loading="lazy" /></td>
+              </tr>
+              <tr>
+                <td style="white-space: nowrap"><a href="https://line6.jp/helix/helix-lt.html" target="_blank" rel="noopener noreferrer">LINE6 HELIX LT</a></td>
+                <td>
+                  ディスプレイにエフェクターの接続順が表示されており, その接続順を変えることが可能です. また, アイコンでエフェクターのタイプ (歪み系,
+                  モジュレーション系など) が認識しやすいようになっています. エフェクターのパラメータは, ディスプレイと対応する下のノブで調整します.
+                </td>
+                <td><img src="images/line6-helix-lt.png" alt="LINE6 HELIX LT" width="3639" height="2939" loading="lazy" /></td>
+              </tr>
+              <tr>
+                <td style="white-space: nowrap">
+                  <a href="https://www.vintagedigital.com.au/digitech-2112/" target="_blank" rel="noopener noreferrer">DigiTech GSP 2112</a>
+                </td>
+                <td>
+                  X JAPAN の
+                  <a href="https://www.youtube.com/watch?v=E_hAH_8I0co" target="_blank" rel="noopener noreferrer">DAHLIA</a>
+                  のギターパートやボーカルエフェクトにも利用されたことでも有名な
+                  <a href="https://www.tube-tester.com/sites/gsp2101/sites/gsp2101main.htm" target="_blank" rel="noopener noreferrer">DigiTech GSP 2101</a>
+                  の後継機種で, 1997 年に発売された, ラック式の真空管プリアンプ &amp; マルチエフェクターです.
+                  ディスプレイにエフェクターの接続順や設定値が表示されていますが, GSP 2101 と比較すると,
+                  ディスプレイの表示と設定するパラメータのコントロールが劇的にわかりやすくなっています. また, プリセットを MIDI
+                  フットコントローラーでも切り替え可能です. Web MIDI API によってこのような MIDI 機器からの MIDI
+                  メッセージをブラウザでも受信することが可能になります. (かなり, 個人的な見解ですが, X JAPAN の
+                  <a href="https://www.youtube.com/watch?v=E_hAH_8I0co" target="_blank" rel="noopener noreferrer">DAHLIA</a> は, エフェクターを限界まで駆使した
+                  (スラッシュメタルな歪みと GSP 2101 のクリーンサウンド, 空間系, ワウ, Whammy, スライサー, サスティナーなど多彩なエフェクターと, 20
+                  トラック以上のギターパートやオーケストラのミキシング・マスタリング技術), まさに, Music と Technology が融合した Art と言える名曲です. この
+                  Technology 側を継承・創造してくことが, ドキュメント制作のモチベーションでもあります). ちなみに, GSP 2112 は, hide
+                  さんが最後に購入した機種とも言われています.
+                </td>
+                <td><img src="images/digitech-gsp-2112.png" alt="DigiTech GSP 2112" width="3705" height="1332" loading="lazy" /></td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            もっとも, あくまで定石であって, 必ずしも上記の接続順である必要はありません. エフェクターの接続順を学び,
+            創造していくのは「守破離」の概念と似ています. 「守」はまず基本や定石を学ぶこと, 知ること. 「破」は「守」を基に, 自分の好みに合う接続にしたり,
+            エフェクター個々の特性に合わせて, エフェクターの接続順をカスタマイズしたりしていくこと. 「離」は, 「守」「破」を経験したうえで,
+            まだこの世の中にはないようなサウンドエフェクトを創造したり, アンチパターンと思われていたことをあえて利用できるジャンルを創造したりしていくことです.
+          </p>
+        </section>
       </section>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>

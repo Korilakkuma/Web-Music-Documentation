@@ -73,14 +73,15 @@ ol {
 ul > li,
 ol > li {
   padding: 4px 0;
-  margin: 0 0 0 var(--base-margin);
 }
 
 ul > li {
+  margin: 0 0 0 var(--base-margin);
   list-style-type: circle;
 }
 
 ol > li {
+  margin: 0 0 0 24px;
   list-style-type: decimal;
 }
 
