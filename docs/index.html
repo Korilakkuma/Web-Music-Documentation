@@ -25,8 +25,10 @@
     <link rel="stylesheet" href="docs.css" type="text/css" media="all" />
   </head>
   <body>
+    <header>
+      <h1 lang="en">Web Music Documentation</h1>
+    </header>
     <main id="document-top">
-      <h1>Web Music ドキュメント</h1>
       <section id="section-about-web-music">
         <h2>Web Music</h2>
         <p>
@@ -15152,11 +15154,20 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, (event) =&gt; {
           </p>
         </section>
       </section>
+      <footer>
+        <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
+        <span><a href="https://github.com/Korilakkuma/Web-Music-Documentation" target="_blank" rel="noopener noreferrer">Korilakkuma</a> (Tomohiro IKEDA)</span>
+      </footer>
     </main>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/prism.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/line-numbers/prism-line-numbers.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/toolbar/prism-toolbar.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/prismjs@latest/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
+    <script>
+      const date = new Date();
+
+      document.getElementById("copyright-end-year").textContent = date.getFullYear().toString(10);
+    </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>
       MathJax = {
