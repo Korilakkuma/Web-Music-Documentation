@@ -15167,6 +15167,27 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, (event) =&gt; {
           </p>
         </section>
       </section>
+      <section id="section-spatialization-audo">
+        <h2>3D オーディオ (立体音響)</h2>
+        <p>
+          Web Audio API では, 3D オーディオ (立体音響, 仕様では, 「Spatialization 」という単語が適用されています) でも, 実装を抽象化するクラスがあります.
+          <b><code>PannerNode</code></b> クラスと <b><code>AudioListener</code></b> クラスです.
+        </p>
+        <p>
+          <code>PannerNode</code> クラスは <code>AudioNode</code> のサブクラスで, <b>音源の空間的なパラメータ</b>が定義されています.
+          <code>AudioListener</code> クラスは, <code>AudioContext</code> インスタンスの <b>listener</b> プロパティに,
+          シングルトンとしてインスタンスが設定されています. こちらは, <b>音を聴く側の空間的なパラメータ</b>が定義されています (<code>AudioListener</code>
+          インスタンスは生成できません. <code>AudioContext</code> インスタンスにあるシングルトンの <code>AudioListener</code> インスタンスを参照して利用します).
+          命名にも表れていますが, <code>AudioListener</code> クラスは <code>AudioNode</code> のサブクラスではないことに注意してください. さらに,
+          <code>AudioListener</code> の設定だけを変更することはできず (変更しても, 値が有効になりません),
+          <b>1 つ以上の <code>PannerNode</code> インスタンスを生成して, 他の <code>AudioNode</code> に接続することで有効になります</b>.
+        </p>
+        <p>
+          Web Audio API の 3D オーディオ, つまり, <code>PannerNode</code> と <code>AudioListener</code> の仕様の多くは,
+          <a href="https://openal.org/" target="_blank" rel="noopener noreferrer">OpenAL</a> にもとづいています. したがって, OpenAL に理解がある場合, 比較的,
+          Web Audio API の 3D オーディオも理解しやすいと思います.
+        </p>
+      </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
         <span><a href="https://github.com/Korilakkuma/Web-Music-Documentation" target="_blank" rel="noopener noreferrer">Korilakkuma</a> (Tomohiro IKEDA)</span>
