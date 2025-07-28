@@ -15187,6 +15187,31 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, (event) =&gt; {
           <a href="https://openal.org/" target="_blank" rel="noopener noreferrer">OpenAL</a> にもとづいています. したがって, OpenAL に理解がある場合, 比較的,
           Web Audio API の 3D オーディオも理解しやすいと思います.
         </p>
+        <section id="section-spatialization-x-y-x">
+          <h3>3D オーディオの座標系</h3>
+          <p>
+            <code>PannerNode</code> と <code>AudioListener</code> の各プロパティを理解するためには, Web Audio API における 3D
+            空間の座標系の定義を理解しておく必要があります.
+          </p>
+          <dl>
+            <dt>x 軸</dt>
+            <dd>x 軸は横方向 (左右) の座標を表します. x 軸の値が大きいほど右側に音源やリスナーが位置することになります</dd>
+            <dt>y 軸</dt>
+            <dd>
+              y 軸は高さ方向の座標を表します. y 軸の値が大きいほど高い位置に音源やリスナーが位置することになります. 数学や物理においては, z
+              軸で高さ方向の座標を表すことが多いですが, Web Audio API の 3D オーディオの座標系では, y 軸が高さ方向なので注意してください
+            </dd>
+            <dt>z 軸</dt>
+            <dd>
+              z 軸は奥行方向の座標を表します. z 軸の値が大きいほど前方に音源やリスナーが位置することになります. x 軸と z 軸の座標によって, (理論上は)
+              すべての平面上の音源やリスナーの位置を決定することができます (もちろん, 数値型には最大・最小値があるので, 厳密にはすべてではありませんが)
+            </dd>
+          </dl>
+          <figure>
+            <svg id="svg-figure-3-dimensional-coordinate" width="600" height="600" />
+            <figcaption>Web Audio API の 3D オーディオの座標系</figcaption>
+          </figure>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
