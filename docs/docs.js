@@ -15349,6 +15349,125 @@ const vocalcanceler = () => {
   });
 };
 
+const create3DimensionalCoordinate = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const xPath = document.createElementNS(xmlns, 'path');
+
+  xPath.setAttribute('d', `M${padding} ${padding + innerHeight / 2 - 2} L${padding + innerWidth} ${padding + innerHeight / 2 - 2}`);
+  xPath.setAttribute('stroke', alphaBaseColor);
+  xPath.setAttribute('fill', 'none');
+  xPath.setAttribute('stroke-width', '4');
+  xPath.setAttribute('stroke-linecap', lineCap);
+  xPath.setAttribute('stroke-linejoin', lineJoin);
+
+  const yPath = document.createElementNS(xmlns, 'path');
+
+  yPath.setAttribute('d', `M${padding + innerWidth / 2 - 2} ${padding + innerHeight} L${padding + innerWidth / 2 - 2} ${padding}`);
+  yPath.setAttribute('stroke', alphaBaseColor);
+  yPath.setAttribute('fill', 'none');
+  yPath.setAttribute('stroke-width', '4');
+  yPath.setAttribute('stroke-linecap', lineCap);
+  yPath.setAttribute('stroke-linejoin', lineJoin);
+
+  const zPath = document.createElementNS(xmlns, 'path');
+
+  zPath.setAttribute(
+    'd',
+    `M${padding + (3 * innerWidth) / 4 - 4} ${padding + innerHeight / 4} L${padding + innerWidth / 4 - 4} ${padding + (3 * innerHeight) / 4}`
+  );
+  zPath.setAttribute('stroke', alphaBaseColor);
+  zPath.setAttribute('fill', 'none');
+  zPath.setAttribute('stroke-width', '4');
+  zPath.setAttribute('stroke-linecap', lineCap);
+  zPath.setAttribute('stroke-linejoin', lineJoin);
+
+  const xArrow = document.createElementNS(xmlns, 'path');
+
+  xArrow.setAttribute(
+    'd',
+    `M${padding + innerWidth - 12} ${padding + innerHeight / 2 - 2 - 8} L${padding + innerHeight} ${padding + innerHeight / 2 - 2} L${padding + innerWidth - 12} ${padding + innerHeight / 2 - 2 + 8}`
+  );
+  xArrow.setAttribute('stroke', 'none');
+  xArrow.setAttribute('fill', baseColor);
+
+  const yArrow = document.createElementNS(xmlns, 'path');
+
+  yArrow.setAttribute(
+    'd',
+    `M${padding + innerWidth / 2 - 2} ${padding} L${padding + innerWidth / 2 - 2 - 8} ${padding + 12} L${padding + innerWidth / 2 - 2 + 8} ${padding + 12}`
+  );
+  yArrow.setAttribute('stroke', 'none');
+  yArrow.setAttribute('fill', baseColor);
+
+  const zArrow = document.createElementNS(xmlns, 'path');
+
+  zArrow.setAttribute(
+    'd',
+    `M${padding + innerWidth / 4 - 4 + 2} ${padding + (3 * innerHeight) / 4 - 12} L${padding + innerWidth / 4 - 4} ${padding + (3 * innerHeight) / 4 + 4} L${padding + innerWidth / 4 - 4 + 18} ${padding + (3 * innerHeight) / 4 + 4 - 12}`
+  );
+  zArrow.setAttribute('stroke', 'none');
+  zArrow.setAttribute('fill', baseColor);
+
+  const x = document.createElementNS(xmlns, 'text');
+
+  x.textContent = 'x';
+
+  x.setAttribute('x', (padding + innerWidth + 4).toString(10));
+  x.setAttribute('y', (padding + innerHeight / 2 + 4).toString(10));
+  x.setAttribute('text-anchor', 'start');
+  x.setAttribute('stroke', 'none');
+  x.setAttribute('fill', baseColor);
+  x.setAttribute('font-size', '20px');
+
+  const y = document.createElementNS(xmlns, 'text');
+
+  y.textContent = 'y';
+
+  y.setAttribute('x', (padding + innerWidth / 2 - 2).toString(10));
+  y.setAttribute('y', (padding - 8).toString(10));
+  y.setAttribute('text-anchor', 'middle');
+  y.setAttribute('stroke', 'none');
+  y.setAttribute('fill', baseColor);
+  y.setAttribute('font-size', '20px');
+
+  const z = document.createElementNS(xmlns, 'text');
+
+  z.textContent = 'z';
+
+  z.setAttribute('x', (padding + innerWidth / 4 - 8).toString(10));
+  z.setAttribute('y', (padding + (3 * innerHeight) / 4 + 16).toString(10));
+  z.setAttribute('text-anchor', 'middle');
+  z.setAttribute('stroke', 'none');
+  z.setAttribute('fill', baseColor);
+  z.setAttribute('font-size', '20px');
+
+  const o = document.createElementNS(xmlns, 'text');
+
+  o.textContent = '(0, 0, 0)';
+
+  o.setAttribute('x', (padding + innerWidth / 2 + 4).toString(10));
+  o.setAttribute('y', (padding + innerHeight / 2 + 16).toString(10));
+  o.setAttribute('text-anchor', 'start');
+  o.setAttribute('stroke', 'none');
+  o.setAttribute('fill', baseColor);
+  o.setAttribute('font-size', '16px');
+
+  svg.appendChild(xPath);
+  svg.appendChild(yPath);
+  svg.appendChild(zPath);
+
+  svg.appendChild(xArrow);
+  svg.appendChild(yArrow);
+  svg.appendChild(zArrow);
+
+  svg.appendChild(x);
+  svg.appendChild(y);
+  svg.appendChild(z);
+  svg.appendChild(o);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -15548,3 +15667,5 @@ createTimeStretchSlow(document.getElementById('svg-figure-time-stretch-slow'));
 pitchshifter();
 
 vocalcanceler();
+
+create3DimensionalCoordinate(document.getElementById('svg-figure-3-dimensional-coordinate'));
