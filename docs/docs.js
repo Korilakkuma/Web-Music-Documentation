@@ -15468,6 +15468,214 @@ const create3DimensionalCoordinate = (svg) => {
   svg.appendChild(o);
 };
 
+const animateVectors = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const xPath = document.createElementNS(xmlns, 'path');
+
+  xPath.setAttribute('d', `M${padding} ${padding + innerHeight / 2 - 2} L${padding + innerWidth} ${padding + innerHeight / 2 - 2}`);
+  xPath.setAttribute('stroke', alphaBaseColor);
+  xPath.setAttribute('fill', 'none');
+  xPath.setAttribute('stroke-width', '4');
+  xPath.setAttribute('stroke-linecap', lineCap);
+  xPath.setAttribute('stroke-linejoin', lineJoin);
+
+  const yPath = document.createElementNS(xmlns, 'path');
+
+  yPath.setAttribute('d', `M${padding + innerWidth / 2 - 2} ${padding + innerHeight} L${padding + innerWidth / 2 - 2} ${padding}`);
+  yPath.setAttribute('stroke', alphaBaseColor);
+  yPath.setAttribute('fill', 'none');
+  yPath.setAttribute('stroke-width', '4');
+  yPath.setAttribute('stroke-linecap', lineCap);
+  yPath.setAttribute('stroke-linejoin', lineJoin);
+
+  const xArrow = document.createElementNS(xmlns, 'path');
+
+  xArrow.setAttribute(
+    'd',
+    `M${padding + innerWidth - 12} ${padding + innerHeight / 2 - 2 - 8} L${padding + innerHeight} ${padding + innerHeight / 2 - 2} L${padding + innerWidth - 12} ${padding + innerHeight / 2 - 2 + 8}`
+  );
+  xArrow.setAttribute('stroke', 'none');
+  xArrow.setAttribute('fill', baseColor);
+
+  const yArrow = document.createElementNS(xmlns, 'path');
+
+  yArrow.setAttribute(
+    'd',
+    `M${padding + innerWidth / 2 - 2} ${padding} L${padding + innerWidth / 2 - 2 - 8} ${padding + 12} L${padding + innerWidth / 2 - 2 + 8} ${padding + 12}`
+  );
+  yArrow.setAttribute('stroke', 'none');
+  yArrow.setAttribute('fill', baseColor);
+
+  const x = document.createElementNS(xmlns, 'text');
+
+  x.textContent = 'x';
+
+  x.setAttribute('x', (padding + innerWidth + 4).toString(10));
+  x.setAttribute('y', (padding + innerHeight / 2 + 4).toString(10));
+  x.setAttribute('text-anchor', 'start');
+  x.setAttribute('stroke', 'none');
+  x.setAttribute('fill', baseColor);
+  x.setAttribute('font-size', '20px');
+
+  const y = document.createElementNS(xmlns, 'text');
+
+  y.textContent = 'y';
+
+  y.setAttribute('x', (padding + innerWidth / 2 - 2).toString(10));
+  y.setAttribute('y', (padding - 8).toString(10));
+  y.setAttribute('text-anchor', 'middle');
+  y.setAttribute('stroke', 'none');
+  y.setAttribute('fill', baseColor);
+  y.setAttribute('font-size', '20px');
+
+  const o = document.createElementNS(xmlns, 'text');
+
+  o.textContent = '(0, 0)';
+
+  o.setAttribute('x', (padding + innerWidth / 2 + 4).toString(10));
+  o.setAttribute('y', (padding + innerHeight / 2 + 16).toString(10));
+  o.setAttribute('text-anchor', 'start');
+  o.setAttribute('stroke', 'none');
+  o.setAttribute('fill', baseColor);
+  o.setAttribute('font-size', '16px');
+
+  const vector = document.createElementNS(xmlns, 'path');
+
+  vector.setAttribute('stroke', lightWaveColor);
+  vector.setAttribute('fill', 'none');
+  vector.setAttribute('stroke-width', '4');
+  vector.setAttribute('stroke-linecap', lineCap);
+  vector.setAttribute('stroke-linejoin', lineJoin);
+
+  const vectorX = document.createElementNS(xmlns, 'path');
+
+  vectorX.setAttribute('stroke', alphaWaveColor);
+  vectorX.setAttribute('fill', 'none');
+  vectorX.setAttribute('stroke-width', '4');
+  vectorX.setAttribute('stroke-linecap', lineCap);
+  vectorX.setAttribute('stroke-linejoin', lineJoin);
+
+  const vectorY = document.createElementNS(xmlns, 'path');
+
+  vectorY.setAttribute('stroke', alphaWaveColor);
+  vectorY.setAttribute('fill', 'none');
+  vectorY.setAttribute('stroke-width', '4');
+  vectorY.setAttribute('stroke-linecap', lineCap);
+  vectorY.setAttribute('stroke-linejoin', lineJoin);
+
+  const vectorArrow = document.createElementNS(xmlns, 'polygon');
+
+  vectorArrow.setAttribute('storke', 'none');
+  vectorArrow.setAttribute('fill', lightWaveColor);
+
+  const vectorArrowX = document.createElementNS(xmlns, 'path');
+
+  vectorArrowX.setAttribute('stroke', 'none');
+  vectorArrowX.setAttribute('fill', alphaWaveColor);
+
+  const vectorArrowY = document.createElementNS(xmlns, 'path');
+
+  vectorArrowY.setAttribute('stroke', 'none');
+  vectorArrowY.setAttribute('fill', alphaWaveColor);
+
+  svg.appendChild(xPath);
+  svg.appendChild(yPath);
+
+  svg.appendChild(xArrow);
+  svg.appendChild(yArrow);
+
+  svg.appendChild(x);
+  svg.appendChild(y);
+  svg.appendChild(o);
+
+  svg.appendChild(vector);
+  svg.appendChild(vectorX);
+  svg.appendChild(vectorY);
+
+  svg.appendChild(vectorArrow);
+  svg.appendChild(vectorArrowX);
+  svg.appendChild(vectorArrowY);
+
+  const spanPrintVectorXElement = document.getElementById('print-vector-x-value');
+  const spanPrintVectorYElement = document.getElementById('print-vector-y-value');
+  const spanPrintVectorScalarElement = document.getElementById('print-vector-scalar-value');
+  const spanPrintVectorRadianElement = document.getElementById('print-vector-radian-value');
+
+  const cx = padding + innerWidth / 2 - 2;
+  const cy = padding + innerHeight / 2 - 2;
+
+  const halfWidth = Number(svg.getAttribute('width')) / 2;
+  const halfHeight = Number(svg.getAttribute('height')) / 2;
+
+  const onMove = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+
+    let x = event.clientX - (rect.x + rect.width) + halfWidth;
+    let y = -1 * (event.clientY - (rect.y + rect.height) + halfHeight);
+
+    const scalar = Math.sqrt(x ** 2 + y ** 2);
+    const radian = Math.atan2(y, x);
+
+    if (x < padding - halfWidth) {
+      x = padding - halfWidth;
+    } else if (x > halfWidth - padding) {
+      x = halfWidth - padding - 12;
+    }
+
+    if (y > halfHeight - padding) {
+      y = halfHeight - padding - 12;
+    } else if (y < padding - halfHeight) {
+      y = padding - halfHeight;
+    }
+
+    spanPrintVectorXElement.textContent = (x / 50).toFixed(6);
+    spanPrintVectorYElement.textContent = (y / 50).toFixed(6);
+    spanPrintVectorScalarElement.textContent = (scalar / 50).toFixed(6);
+    spanPrintVectorRadianElement.textContent = radian.toFixed(6);
+
+    if (x === 0 && y === 0) {
+      vector.removeAttribute('d');
+      vector.removeAttribute('transform');
+
+      vectorArrow.removeAttribute('points');
+      vectorArrow.removeAttribute('transform');
+    } else {
+      vector.setAttribute('d', `M${cx} ${cy} L${cx + x} ${cy - y}`);
+      vector.setAttribute('tranform', `rotate(${(radian * 180) / Math.PI} 0 0)`);
+
+      vectorArrow.setAttribute('points', `${cx} ${cy - 8}, ${cx + 12} ${cy}, ${cx} ${cy + 8}`);
+      vectorArrow.setAttribute('transform', ` translate(${x} ${-y}) rotate(${(-1 * (radian * 180)) / Math.PI} ${cx} ${cy})`);
+    }
+
+    vectorX.setAttribute('d', `M${cx} ${cy} L${cx + x} ${cy}`);
+    vectorY.setAttribute('d', `M${cx} ${cy} L${cx} ${cy - y}`);
+
+    if (x === 0) {
+      vectorArrowX.removeAttribute('d');
+    } else if (x > 0) {
+      vectorArrowX.setAttribute('d', `M${cx + x + 12} ${cy} L${cx + x} ${cy - 8} L${cx + x} ${cy + 8}`);
+    } else {
+      vectorArrowX.setAttribute('d', `M${cx + x - 12} ${cy} L${cx + x} ${cy - 8} L${cx + x} ${cy + 8}`);
+    }
+
+    if (y === 0) {
+      vectorArrowY.removeAttribute('d');
+      vectorArrowY.removeAttribute('transform');
+    } else if (y > 0) {
+      vectorArrowY.setAttribute('d', `M${cx} ${cy - y + 12} L${cx - 8} ${cy - y + 12} L${cx} ${cy - y} L${cx + 8} ${cy - y + 12}`);
+      vectorArrowY.setAttribute('transform', 'translate(0 -12)');
+    } else {
+      vectorArrowY.setAttribute('d', `M${cx} ${cy - y - 12} L${cx - 8} ${cy - y - 12} L${cx} ${cy - y} L${cx + 8} ${cy - y - 12}`);
+      vectorArrowY.setAttribute('transform', 'translate(0 12)');
+    }
+  };
+
+  svg.addEventListener('mousemove', onMove, true);
+  svg.addEventListener('touchmove', onMove, true);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -15669,3 +15877,5 @@ pitchshifter();
 vocalcanceler();
 
 create3DimensionalCoordinate(document.getElementById('svg-figure-3-dimensional-coordinate'));
+
+animateVectors(document.getElementById('svg-animation-vectors'));
