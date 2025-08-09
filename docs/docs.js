@@ -15676,6 +15676,30 @@ const animateVectors = (svg) => {
   svg.addEventListener('touchmove', onMove, true);
 };
 
+const createNodeConnectionsForPannerNode = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode('OscillatorNode', 0, 0);
+  const pannerNodeRect = createAudioNode('PannerNode', 0, 200);
+  const audioDestinationNodeRect = createAudioNode('AudioDestinationNode', 0, 400);
+
+  const oscillatorNodeAndPannerNodePath = createConnection(150 - 2, 100, 150 - 2, 300);
+  const pannerNodeAndAudiodDestinationNodePath = createConnection(150 - 2, 300, 150 - 2, 400);
+
+  const oscillatorNodeAndWaveShaperNodeArrow = createConnectionArrow(150 - 2, 200 - 14, 'down');
+  const pannerNodeAndAudiodDestinationNodeArrow = createConnectionArrow(150 - 2, 400 - 14, 'down');
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndPannerNodePath);
+  g.appendChild(oscillatorNodeAndWaveShaperNodeArrow);
+  g.appendChild(pannerNodeRect);
+  g.appendChild(pannerNodeAndAudiodDestinationNodePath);
+  g.appendChild(pannerNodeAndAudiodDestinationNodeArrow);
+  g.appendChild(audioDestinationNodeRect);
+
+  svg.appendChild(g);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -15879,3 +15903,5 @@ vocalcanceler();
 create3DimensionalCoordinate(document.getElementById('svg-figure-3-dimensional-coordinate'));
 
 animateVectors(document.getElementById('svg-animation-vectors'));
+
+createNodeConnectionsForPannerNode(document.getElementById('svg-figure-node-connections-for-panner-node'));

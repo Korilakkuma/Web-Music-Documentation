@@ -15351,6 +15351,131 @@ console.log(v.radian);  // 0.9272952180016122 ... ≒ acos(3/5) ≒ 53.13°</cod
             </p>
           </article>
         </section>
+        <section id="section-spatialization-audio-panner-node">
+          <h3>PannerNode</h3>
+          <p>
+            <code>PannerNode</code> インスタンスを生成するには, コンストラクタ呼び出しか <b><code>createPanner</code></b> メソッドを呼び出します.
+            コンストラクタ形式であれば, 第 2 引数に, <b><code>PannerOptions</code></b> 型で初期化時に,
+            <code>PannerNode</code> のプロパティを設定することができます.
+          </p>
+          <p>
+            概要でも解説しましたが, <code>PannerNode</code> インスタンスを他の <code>AudioNode</code> に接続することによって,
+            <code>AudioListener</code> インスタンスの値が 3D オーディオに影響するようになります.
+          </p>
+          <figure>
+            <svg id="svg-figure-node-connections-for-panner-node" width="400" height="520" />
+            <figcaption><code>PannerNode</code> のノード接続図</figcaption>
+          </figure>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);
+const panner     = new PannerNode(context, { positionX: 5 });
+
+// If use `createPanner`
+// const panner = context.createPanner();
+//
+// panner.positionX.value = 5;
+
+// OscillatorNode (Input) -&gt; PannerNode (Panner) -&gt; AudioDestinationNode (Output)
+// Then, the instance of `AudioListener` is available
+oscillator.connect(panner);
+panner.connect(context.destination);
+
+// Start oscillator immediately
+oscillator.start(0);
+
+// Stop oscillator after 5 sec
+oscillator.stop(context.currentTime + 5);</code></pre>
+          <img src="images/panner-node.png" alt="PannerNode" width="1232" height="770" loading="lazy" />
+          <p><code>PannerNode</code> のプロパティは多いので, まずは, すべてをリストアップして概要を記載します.</p>
+          <table class="auto-table">
+            <caption>
+              PannerNode のプロパティ
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Property</th>
+                <th scope="col">Description</th>
+                <th scope="col">Default</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>panningModel</td>
+                <td>空間音響のアルゴリズム</td>
+                <td><code>&apos;equalpower&apos;</code></td>
+              </tr>
+              <tr>
+                <td>distanceModel</td>
+                <td>音がリスナーに伝達する際の音量減衰のアルゴリズム</td>
+                <td><code>&apos;inverse&apos;</code></td>
+              </tr>
+              <tr>
+                <td>positionX</td>
+                <td>音源の x 座標</td>
+                <td><code>0</code> (<code>AudioParam</code> の <code>value</code>)</td>
+              </tr>
+              <tr>
+                <td>positionY</td>
+                <td>音源の y 座標</td>
+                <td><code>0</code> (<code>AudioParam</code> の <code>value</code>)</td>
+              </tr>
+              <tr>
+                <td>positionZ</td>
+                <td>音源の z 座標</td>
+                <td><code>0</code> (<code>AudioParam</code> の <code>value</code>)</td>
+              </tr>
+              <tr>
+                <td>orientationX</td>
+                <td>音源の向き (ベクトルの x 成分)</td>
+                <td><code>1</code> (<code>AudioParam</code> の <code>value</code>)</td>
+              </tr>
+              <tr>
+                <td>orientationY</td>
+                <td>音源の向き (ベクトルの y 成分)</td>
+                <td><code>0</code> (<code>AudioParam</code> の <code>value</code>)</td>
+              </tr>
+              <tr>
+                <td>orientationZ</td>
+                <td>音源の向き (ベクトルの z 成分)</td>
+                <td><code>0</code> (<code>AudioParam</code> の <code>value</code>)</td>
+              </tr>
+              <tr>
+                <td>refDistance</td>
+                <td>音量減衰の算出に影響する</td>
+                <td><code>1</code></td>
+              </tr>
+              <tr>
+                <td>maxDistance</td>
+                <td>音量減衰の算出に影響する</td>
+                <td><code>10000</code></td>
+              </tr>
+              <tr>
+                <td>rolloffFactor</td>
+                <td>音量減衰の算出に影響する</td>
+                <td><code>1</code></td>
+              </tr>
+              <tr>
+                <td>coneInnerAngle</td>
+                <td>音の指向性に影響する</td>
+                <td><code>360</code></td>
+              </tr>
+              <tr>
+                <td>coneOuterAngle</td>
+                <td>音の指向性に影響する</td>
+                <td><code>360</code></td>
+              </tr>
+              <tr>
+                <td>coneOuterGain</td>
+                <td>音の指向性に影響する</td>
+                <td><code>0</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
