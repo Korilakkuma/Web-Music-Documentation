@@ -15475,6 +15475,40 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               </tr>
             </tbody>
           </table>
+          <section id="section-spatialization-audio-panner-node-panning-model">
+            <h4>panningModel プロパティ</h4>
+            <p>
+              <b><code>panningModel</code></b> プロパティは, 空間音響アルゴリズムを決定するプロパティです. もう少し平易なテキストで説明すると, どれぐらい忠実に
+              3D オーディオ空間, つまり, 実際の音響空間をシミュレートするかを決定するプロパティです. 指定可能なアルゴリズム (<b
+                ><code>PanningModelType</code></b>
+              列挙型) は 2 種類です.
+            </p>
+            <table>
+              <caption>
+                PanningModelType
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Value</th>
+                  <th scope="col">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>&apos;equalpower&apos;</code></td>
+                  <td>各チャンネルに対して等しく音を伝達する (デフォルト値)</td>
+                </tr>
+                <tr>
+                  <td><code>&apos;HRTF&apos;</code></td>
+                  <td>人の頭部 (頭や耳) が音の伝達に影響している状態, つまり, <b>HRTF</b> (<b>頭部伝達関数</b>) を利用する</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              <code>&apos;equalpower&apos;</code> よりも <code>&apos;HRTF&apos;</code> のほうがより高度な音響空間のアルゴリズムなので, (理論上は)
+              <code>&apos;HRTF&apos;</code>のほうがより忠実に実際の音響空間をシミュレートします.
+            </p>
+          </section>
         </section>
       </section>
       <footer>
