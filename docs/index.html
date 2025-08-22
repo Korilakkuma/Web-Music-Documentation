@@ -15509,6 +15509,57 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               <code>&apos;HRTF&apos;</code>のほうがより忠実に実際の音響空間をシミュレートします.
             </p>
           </section>
+          <section id="section-spatialization-audio-panner-node-distance-model">
+            <h4>distanceModel プロパティ</h4>
+            <p>
+              <b><code>distanceModel</code></b> プロパティは, 音がリスナーに伝達するまでの音量減衰のアルゴリズムを決定するプロパティです. 一般的な音響空間では,
+              近くの音は大きく, 遠くの音は小さく知覚されるはずです. すなわち, その音量減衰現象を Web Audio API でシミュレートするためのアルゴリズムを決定します.
+              指定可能なアルゴリズム (<b><code>DistanceModelType</code></b> 列挙型) は 3 種類です. また, それぞれのアルゴリズにおいて,
+              減衰の算出式が定義されています.
+            </p>
+            <p>
+              <span class="math-inline">$f$</span> は, <code>rolloffFactor</code> プロパティ, <span class="math-inline">$d$</span> は, 音源からの距離 (<code
+                >positionX</code>
+              などから算出), <span class="math-inline">$d_{\mathrm{max}}$</span> は, <code>maxDistance</code> プロパティ,
+              <span class="math-inline">$d_{\mathrm{ref}}$</span> は, <code>refDistance</code> プロパティです.
+            </p>
+            <table class="nowrap-table">
+              <caption>
+                DistanceModelType
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Value</th>
+                  <th scope="col">Description</th>
+                  <th scope="col">Formula</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>&apos;linear&apos;</code></td>
+                  <td>線形減衰</td>
+                  <td>
+                    <span class="math-inline"
+                      >$1 - f\frac{\mathrm{max}\left[\mathrm{min}\left(d, d_{\mathrm{max}}'\right), d_{\mathrm{ref}}'\right] -
+                      d_{\mathrm{ref}}'}{d_{\mathrm{max}}' - d_{\mathrm{ref}}'}$</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>&apos;inverse&apos;</code></td>
+                  <td>逆数減衰 (デフォルト値)</td>
+                  <td>
+                    <span class="math-inline"
+                      >$\frac{d_{\mathrm{ref}}}{d_{\mathrm{ref}} + f\left[\mathrm{max}\left(d, d_{\mathrm{ref}}\right) - d_{\mathrm{ref}}\right]}$</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>&apos;exponential&apos;</code></td>
+                  <td>指数減衰</td>
+                  <td><span class="math-inline">$\left[\frac{\mathrm{max}\left(d, d_{\mathrm{ref}}\right)}{d_{\mathrm{ref}}}\right]^{-f}$</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
         </section>
       </section>
       <footer>
