@@ -15560,6 +15560,33 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               </tbody>
             </table>
           </section>
+          <section id="section-spatialization-audio-panner-node-position-xyz">
+            <h4>positionX / positionY / positionZ プロパティ</h4>
+            <p>
+              音源 (パン) の位置を設定するプロパティで, <code>AudioParam</code> 型です. デフォルト値は, いずれも <code>0</code> なので, 原点 (<code
+                >(0, 0, 0)</code>) に音源が位置することになります.
+            </p>
+            <p>
+              初期の仕様では, これらのプロパティは <code>AudioParam</code> 型ではなかったので,
+              <b><code>setPosition(x, y, z)</code></b> メソッドで音源の位置を設定する必要がありました. 最新の仕様でも,
+              <code>setPosition</code> メソッドは残っていますが, <b>非推奨</b>となっているので利用しないほうがよいでしょう.
+            </p>
+            <figure>
+              <svg id="svg-figure-panner-node-position" width="800" height="400" />
+              <img src="images/pan.svg" alt="音源の位置 (デフォルト値)" width="32" height="32" loading="lazy" style="transform: translate(-590px, -188px)" />
+              <img src="images/pan.svg" alt="音源の位置 (-1, 1, 1)" width="32" height="32" loading="lazy" style="transform: translate(-320px, -230px)" />
+              <figcaption>positionX / positionY / positionZ プロパティ (左は, デフォルト値である原点に位置しています)</figcaption>
+            </figure>
+            <article id="section-spatialization-audio-panner-node-position-xyz-vs-stereo-panner-node">
+              <h5>PannerNode の positionX と StereoPannerNode</h5>
+              <p>
+                すでに気づかれたかもしれませんが, <code>PannerNode</code> の <code>positionX</code> プロパティは, <code>AudioParam</code> 型なので, ここに LFO
+                を接続することでもオートパンを実装することは可能です. しかしながら, 左右に (x 軸方向に) 音源を振るだけであれば,
+                <code>StereoPannerNode</code> を使うべきです. <code>PannerNode</code> は, あくまで 3D オーディオをユースケースとしているので,
+                <code>positionX</code> を変更するだけでも, <code>StereoPannerNode</code> よりも CPU の負荷が大きく, パフォーマンスの点で不利となるからです.
+              </p>
+            </article>
+          </section>
         </section>
       </section>
       <footer>
