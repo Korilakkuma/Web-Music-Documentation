@@ -15823,6 +15823,18 @@ const render3DimensionalCoordinate = (svg, offset, isOrigin, coordinate) => {
         break;
       }
 
+      case '(1, -√2, 1)': {
+        o.textContent = coordinate;
+
+        o.setAttribute('x', (offset + padding + innerWidth / 3).toString(10));
+        o.setAttribute('y', (padding + (3 * innerHeight) / 4).toString(10));
+        o.setAttribute('text-anchor', 'start');
+        o.setAttribute('stroke', 'none');
+        o.setAttribute('fill', baseColor);
+        o.setAttribute('font-size', '16px');
+
+        break;
+      }
     }
   }
 
@@ -15845,6 +15857,13 @@ const createPannerNodePosition = (svg) => {
 
   render3DimensionalCoordinate(svg, 0, true);
   render3DimensionalCoordinate(svg, innerWidth / 2 + padding / 2, false, '(-1, 1, 1)');
+};
+
+const createPannerNodeOrientation = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+
+  render3DimensionalCoordinate(svg, 0, true);
+  render3DimensionalCoordinate(svg, innerWidth / 2 + padding / 2, false, '(1, -√2, 1)');
 };
 
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
@@ -16054,3 +16073,5 @@ animateVectors(document.getElementById('svg-animation-vectors'));
 createNodeConnectionsForPannerNode(document.getElementById('svg-figure-node-connections-for-panner-node'));
 
 createPannerNodePosition(document.getElementById('svg-figure-panner-node-position'));
+
+createPannerNodeOrientation(document.getElementById('svg-figure-panner-node-orientation'));

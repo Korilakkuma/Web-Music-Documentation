@@ -15587,6 +15587,38 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               </p>
             </article>
           </section>
+          <section id="section-spatialization-audio-panner-node-orientation-xyz">
+            <h4>orientationX / orientationY / orientationZ プロパティ</h4>
+            <p>
+              音源 (パン) の向きを設定するプロパティで, <code>AudioParam</code> 型です.
+              <b>デフォルト値は, <code>(1, 0, 0)</code> なので, x 軸の正の方向 (リスナーの初期位置から見て, 右側方向) を向いています</b>.
+              <b>ベクトルのなす角のみを決定するので, x, y, z それぞれの値の比率が重要となります</b>. 例えば, 初期値をいくら乗算しても, x
+              軸の方向のどちらかを向くだけです.
+            </p>
+            <p>
+              音源の向き (なす角) を y 軸や, z 軸方向にも向ける例として, <code>(1, -√2, 1)</code> とすると, 平面手前向きに
+              <span class="math-inline">$\frac{\pi}{4}$</span>, 高さ下方向にも <span class="math-inline">$\frac{\pi}{4}$</span> の方向を向いた音源に設定できます
+              (ベクトルの大きさは, <code>positionX</code> / <code>positionY</code> / <code>positionZ</code> によって決定されます).
+            </p>
+            <figure>
+              <svg id="svg-figure-panner-node-orientation" width="800" height="400" />
+              <img src="images/pan.svg" alt="音源の向き (デフォルト値)" width="32" height="32" loading="lazy" style="transform: translate(-590px, -188px)" />
+              <img
+                src="images/pan.svg"
+                alt="音源の向き (1, -√2, 1)"
+                width="32"
+                height="32"
+                loading="lazy"
+                style="transform: translate(-260px, -188px) rotateZ(45deg)"
+              />
+              <figcaption>orientationX / orientationY / orientationZ プロパティ (左は, デフォルト値である x 軸の正の方向を向いています)</figcaption>
+            </figure>
+            <p>
+              初期の仕様では, これらのプロパティは <code>AudioParam</code> 型ではなかったので,
+              <b><code>setOrientation(x, y, z)</code></b> メソッドで音源の向きを設定する必要がありました. 最新の仕様でも,
+              <code>setOrientation</code> メソッドは残っていますが, <b>非推奨</b>となっているので利用しないほうがよいでしょう.
+            </p>
+          </section>
         </section>
       </section>
       <footer>
