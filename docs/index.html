@@ -15619,6 +15619,22 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               <code>setOrientation</code> メソッドは残っていますが, <b>非推奨</b>となっているので利用しないほうがよいでしょう.
             </p>
           </section>
+          <section id="section-spatialization-audio-panner-node-reduce-volume">
+            <h4>refDistance / maxDistance / rolloffFactor プロパティ</h4>
+            <p>音量減衰を算出するためのプロパティです (すでに解説しましたが, アルゴリズムは <code>DistanceModelType</code> ごとに異なります).</p>
+            <p>
+              最も音量減衰への影響が大きいのは, <b><code>refDistance</code></b> プロパティです. <code>refDistance</code> プロパティのデフォルト値は
+              <code>1</code> です.
+            </p>
+            <p>
+              <b><code>maxDistance</code></b> プロパティは, 音量減衰の限界となる距離を決定するプロパティで, この値を超える距離まで音源とリスナーが離れると,
+              それ以上の音量減衰は発生しません. <code>maxDistance</code> プロパティのデフォルト値は <code>10000</code> です.
+            </p>
+            <p>
+              <b><code>rolloffFactor</code></b> プロパティは, 音量減衰の速さを決定するプロパティで, この値が小さいほど緩やかに音量減衰して,
+              大きいほど急激に音量減衰します. <code>rolloffFactor</code> プロパティのデフォルト値は <code>1</code> です.
+            </p>
+          </section>
         </section>
       </section>
       <footer>
