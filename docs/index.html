@@ -15635,6 +15635,48 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               大きいほど急激に音量減衰します. <code>rolloffFactor</code> プロパティのデフォルト値は <code>1</code> です.
             </p>
           </section>
+          <section id="section-spatialization-audio-panner-node-sound-cone">
+            <h4>coneInnerAngle / coneOuterAngle / coneOuterGain プロパティ</h4>
+            <p>
+              これらのプロパティは, <b>サウンドコーン</b>と呼ばれる, 指向性のラウドネスを記述するモデルに関連するので, まずは, サウンドコーンについて解説します.
+            </p>
+            <section id="section-spatialization-audio-panner-node-sound-cone-about-sound-cone">
+              <h5>サウンドコーン</h5>
+              <p>
+                向きをもたないパン (<b>無指向性の音源</b>) は, どの向きにおいても距離に応じて音量が決まります. 向きをもつパン (<b>指向性をもつ音源</b>) は,
+                向きに応じて音量が変化します. この, 指向性をもつ音源の音量を表すモデルがサウンドコーンです. サウンドコーンは,
+                <b>内部コーン</b>と<b>外部コーン</b>によって構成されます.
+              </p>
+              <figure>
+                <svg id="svg-figure-sound-cone" width="800" height="600" />
+                <figcaption>サウンドコーン (左は無指向性音源の場合, 右は指向性音源の場合)</figcaption>
+              </figure>
+              <p>
+                より詳細な解説は, Windows DirectX XAudio2 API の
+                <a href="https://learn.microsoft.com/en-us/windows/win32/xaudio2/sound-cones" target="_blank" rel="noopener noreferrer">Sound Cones</a>
+                が参考になるかもしれません.
+              </p>
+            </section>
+            <p>
+              <b><code>coneInnerAngle</code></b> プロパティは, 内部コーンの範囲を決定するプロパティです. 内部コーンの内側では音量減衰が発生しません.
+              <code>coneInnerAngle</code> プロパティのデフォルト値は <code>360</code> (ラジアンではなく, 度数) です.
+            </p>
+            <p>
+              <b><code>coneOuterAngle</code></b> プロパティは, 外部コーンの範囲を決定するプロパティです. 内部コーンの外側で, かつ, 外部コーンの内側では
+              <code>coneOuterGain</code> プロパティで設定された音量減衰の減衰率に徐々に近づくように音量減衰が発生します. そして, 外部コーンの外側では
+              <code>coneOuterGain</code> プロパティで設定された値に応じて, 常に一定量の音量減衰が発生します.
+              <code>coneOuterAngle</code> プロパティのデフォルト値は <code>360</code> (ラジアンではなく, 度数) です.
+            </p>
+            <p>
+              <b><code>coneOuterGain</code></b> プロパティは, 外部コーンの外側における音量減衰の減衰率を決定するプロパティです.
+              <code>coneOuterGain</code> プロパティのデフォルト値は <code>0</code> です.
+            </p>
+            <p>
+              サウンドコーンを決定するこれら 3 つのプロパティがデフォルト値の場合, パンは向きをもちません (つまり, 無指向性の音源となります). したがって,
+              <code>PannerNode</code> の <code>orientationX</code> / <code>orientationY</code> / <code>orientationZ</code> で指定するパンの向きは 3D
+              オーディオに影響しなくなります.
+            </p>
+          </section>
         </section>
       </section>
       <footer>

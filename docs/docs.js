@@ -15866,6 +15866,192 @@ const createPannerNodeOrientation = (svg) => {
   render3DimensionalCoordinate(svg, innerWidth / 2 + padding / 2, false, '(1, -√2, 1)');
 };
 
+const createSoundCone = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const renderOmnidirectionalSoundCone = () => {
+    const width = innerWidth / 2;
+    const height = innerHeight;
+
+    const baseX = padding + width / 2;
+    const baseY = height / 2;
+
+    const outerCircle = document.createElementNS(xmlns, 'circle');
+
+    outerCircle.setAttribute('cx', (padding + width / 2).toString(10));
+    outerCircle.setAttribute('cy', (height / 2).toString(10));
+    outerCircle.setAttribute('r', '120');
+    outerCircle.setAttribute('stroke', lightWaveColor);
+    outerCircle.setAttribute('stroke-width', '4');
+    outerCircle.setAttribute('fill', alphaLightWaveColor);
+
+    const outerArrow = document.createElementNS(xmlns, 'path');
+
+    outerArrow.setAttribute('d', `M${baseX + 120} ${baseY} L${baseX + 120 - 12} ${baseY} L${baseX + 120} ${baseY - 20} L${baseX + 120 + 12} ${baseY}`);
+    outerArrow.setAttribute('stroke', 'none');
+    outerArrow.setAttribute('fill', lightWaveColor);
+
+    const outerText = document.createElementNS(xmlns, 'text');
+
+    outerText.textContent = 'coneOuterAngle 360°';
+
+    outerText.setAttribute('x', baseX.toString(10));
+    outerText.setAttribute('y', (height / 5 + 8).toString(10));
+    outerText.setAttribute('text-anchor', 'middle');
+    outerText.setAttribute('stroke', 'none');
+    outerText.setAttribute('fill', grayColor);
+    outerText.setAttribute('font-size', '18px');
+
+    svg.appendChild(outerCircle);
+    svg.appendChild(outerArrow);
+    svg.appendChild(outerText);
+
+    const innerCircle = document.createElementNS(xmlns, 'circle');
+
+    innerCircle.setAttribute('cx', (padding + width / 2).toString(10));
+    innerCircle.setAttribute('cy', (height / 2).toString(10));
+    innerCircle.setAttribute('r', '60');
+    innerCircle.setAttribute('stroke', waveColor);
+    innerCircle.setAttribute('stroke-width', '4');
+    innerCircle.setAttribute('fill', alphaWaveColor);
+
+    const innerArrow = document.createElementNS(xmlns, 'path');
+
+    innerArrow.setAttribute('d', `M${baseX + 60} ${baseY} L${baseX + 60 - 12} ${baseY} L${baseX + 60} ${baseY - 20} L${baseX + 60 + 12} ${baseY}`);
+    innerArrow.setAttribute('stroke', 'none');
+    innerArrow.setAttribute('fill', waveColor);
+
+    const innerText = document.createElementNS(xmlns, 'text');
+
+    innerText.textContent = 'coneInnerAngle 360°';
+
+    innerText.setAttribute('x', baseX.toString(10));
+    innerText.setAttribute('y', (baseY - 72).toString(10));
+    innerText.setAttribute('text-anchor', 'middle');
+    innerText.setAttribute('stroke', 'none');
+    innerText.setAttribute('fill', grayColor);
+    innerText.setAttribute('font-size', '18px');
+
+    svg.appendChild(innerCircle);
+    svg.appendChild(innerArrow);
+    svg.appendChild(innerText);
+  };
+
+  const renderDirectionalSoundCone = () => {
+    const width = innerWidth / 2;
+    const height = innerHeight;
+    const offset = innerWidth / 2 + 120;
+
+    const baseX = offset + width / 2;
+
+    const outerEllipse = document.createElementNS(xmlns, 'ellipse');
+
+    outerEllipse.setAttribute('cx', (offset + width / 2).toString(10));
+    outerEllipse.setAttribute('cy', height.toString(10));
+    outerEllipse.setAttribute('rx', (width / 2).toString(10));
+    outerEllipse.setAttribute('ry', (height / 8).toString(10));
+    outerEllipse.setAttribute('stroke', 'none');
+    outerEllipse.setAttribute('fill', alphaLightWaveColor);
+
+    const outerCone = document.createElementNS(xmlns, 'polygon');
+
+    outerCone.setAttribute('points', `${baseX} ${padding}, ${baseX - 170} ${height}, ${baseX + 170} ${height}`);
+    outerCone.setAttribute('stroke', 'none');
+    outerCone.setAttribute('fill', 'rgba(255 0 255 / 20%)');
+
+    const outerPath = document.createElementNS(xmlns, 'path');
+
+    outerPath.setAttribute('d', `M0, 0 L-168, 0 a168 66 180 0 1 335, 0 z`);
+    outerPath.setAttribute('stroke', lightWaveColor);
+    outerPath.setAttribute('fill', 'none');
+    outerPath.setAttribute('stroke-width', '4');
+    outerPath.setAttribute('stroke-linecap', lineCap);
+    outerPath.setAttribute('stroke-linejoin', lineJoin);
+    outerPath.setAttribute('transform', `translate(${baseX} ${height})`);
+
+    const outerArrow = document.createElementNS(xmlns, 'path');
+
+    outerArrow.setAttribute(
+      'd',
+      `M${baseX - 168} ${height - 12} L${baseX - 168 - 12} ${height - 12} L${baseX - 168} ${height} L${baseX - 168 + 20} ${height - 12}`
+    );
+    outerArrow.setAttribute('stroke', 'none');
+    outerArrow.setAttribute('fill', lightWaveColor);
+
+    const outerText = document.createElementNS(xmlns, 'text');
+
+    outerText.textContent = 'coneOuterAngle 180°';
+
+    outerText.setAttribute('x', baseX.toString(10));
+    outerText.setAttribute('y', (height - 72).toString(10));
+    outerText.setAttribute('text-anchor', 'middle');
+    outerText.setAttribute('stroke', 'none');
+    outerText.setAttribute('fill', grayColor);
+    outerText.setAttribute('font-size', '18px');
+
+    svg.appendChild(outerEllipse);
+    svg.appendChild(outerCone);
+    svg.appendChild(outerPath);
+    svg.appendChild(outerArrow);
+    svg.appendChild(outerText);
+
+    const innerEllipse = document.createElementNS(xmlns, 'ellipse');
+
+    innerEllipse.setAttribute('cx', (offset + width / 2).toString(10));
+    innerEllipse.setAttribute('cy', height.toString(10));
+    innerEllipse.setAttribute('rx', (width / 5).toString(10));
+    innerEllipse.setAttribute('ry', (height / 16).toString(10));
+    innerEllipse.setAttribute('stroke', 'none');
+    innerEllipse.setAttribute('fill', alphaWaveColor);
+
+    const innerCone = document.createElementNS(xmlns, 'polygon');
+
+    innerCone.setAttribute('points', `${offset + width / 2} ${padding}, ${offset + width / 2 - 65} ${height}, ${offset + width / 2 + 65} ${height}`);
+    innerCone.setAttribute('stroke', 'none');
+    innerCone.setAttribute('fill', 'rgba(0 0 255 / 20%)');
+
+    const innerPath = document.createElementNS(xmlns, 'path');
+
+    innerPath.setAttribute('d', `M0, 0 L-64, 0 a30 14 180 0 1 128, 0 z`);
+    innerPath.setAttribute('stroke', waveColor);
+    innerPath.setAttribute('fill', 'none');
+    innerPath.setAttribute('stroke-width', '4');
+    innerPath.setAttribute('stroke-linecap', lineCap);
+    innerPath.setAttribute('stroke-linejoin', lineJoin);
+    innerPath.setAttribute('transform', `translate(${baseX} ${height})`);
+
+    const innerArrow = document.createElementNS(xmlns, 'path');
+
+    innerArrow.setAttribute(
+      'd',
+      `M${baseX - 66} ${height - 12} L${baseX - 66 - 12} ${height - 12} L${baseX - 66} ${height} L${baseX - 66 + 20} ${height - 12}`
+    );
+    innerArrow.setAttribute('stroke', 'none');
+    innerArrow.setAttribute('fill', waveColor);
+
+    const innerText = document.createElementNS(xmlns, 'text');
+
+    innerText.textContent = 'coneInnerAngle 180°';
+
+    innerText.setAttribute('x', baseX.toString(10));
+    innerText.setAttribute('y', (height - 36).toString(10));
+    innerText.setAttribute('text-anchor', 'middle');
+    innerText.setAttribute('stroke', 'none');
+    innerText.setAttribute('fill', grayColor);
+    innerText.setAttribute('font-size', '18px');
+
+    svg.appendChild(innerEllipse);
+    svg.appendChild(innerCone);
+    svg.appendChild(innerPath);
+    svg.appendChild(innerArrow);
+    svg.appendChild(innerText);
+  };
+
+  renderOmnidirectionalSoundCone();
+  renderDirectionalSoundCone();
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -16075,3 +16261,5 @@ createNodeConnectionsForPannerNode(document.getElementById('svg-figure-node-conn
 createPannerNodePosition(document.getElementById('svg-figure-panner-node-position'));
 
 createPannerNodeOrientation(document.getElementById('svg-figure-panner-node-orientation'));
+
+createSoundCone(document.getElementById('svg-figure-sound-cone'));
