@@ -15678,6 +15678,40 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             </p>
           </section>
         </section>
+        <section id="section-spatialization-audio-audio-listener">
+          <h3>AudioListener</h3>
+          <p>
+            <code>AudioListener</code> インスタンスを利用するには, <code>Panner</code> インスタンスを生成した, 他の
+            <code>AudioNode</code> に接続することによって, <code>AudioContext</code> インスタンスの <code>listener</code> プロパティでアクセス可能になります.
+          </p>
+          <p>
+            概要でも解説しましたが, <code>PannerNode</code> インスタンスを他の <code>AudioNode</code> に接続することによって,
+            <code>AudioListener</code> インスタンスの値が 3D オーディオに影響するようになります.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);
+const panner     = new PannerNode(context);
+
+// OscillatorNode (Input) -&gt; PannerNode (Panner) -&gt; AudioDestinationNode (Output)
+// Then, the instance of `AudioListener` is available
+oscillator.connect(panner);
+panner.connect(context.destination);
+
+// Set listener position
+context.listener.setPosition(-5, 0, 0);
+
+// Start oscillator immediately
+oscillator.start(0);
+
+// Stop oscillator after 5 sec
+oscillator.stop(context.currentTime + 5);</code></pre>
+          <img src="images/audio-listener.png" alt="AudioListener" width="1232" height="770" loading="lazy" />
+          <p><code>PannerNode</code> に比べると, プロパティは少ないです. リスナーの位置と向きを設定する <code>AudioParam</code> 型のプロパティのみです.</p>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
