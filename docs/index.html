@@ -15711,6 +15711,33 @@ oscillator.start(0);
 oscillator.stop(context.currentTime + 5);</code></pre>
           <img src="images/audio-listener.png" alt="AudioListener" width="1232" height="770" loading="lazy" />
           <p><code>PannerNode</code> に比べると, プロパティは少ないです. リスナーの位置と向きを設定する <code>AudioParam</code> 型のプロパティのみです.</p>
+          <section id="section-spatialization-audio-listener-position-xyz">
+            <h4>positionX / positionY / positionZ プロパティ</h4>
+            <p>
+              リスナーの位置を設定するプロパティで, <code>AudioParam</code> 型です. 音源 (パン) と同様に, デフォルト値は, いずれも <code>0</code> なので, 原点
+              (<code>(0, 0, 0)</code>) にリスナーが位置しています.
+            </p>
+            <figure>
+              <svg id="svg-figure-audio-listener-position" width="800" height="400" />
+              <img
+                src="images/listener-default.svg"
+                alt="リスナーの位置 (デフォルト値)"
+                width="32"
+                height="32"
+                loading="lazy"
+                style="opacity: 0.3; transform: translate(-590px, -188px)"
+              />
+              <img
+                src="images/listener-default.svg"
+                alt="リスナーの位置 (-5, 0, 0)"
+                width="32"
+                height="32"
+                loading="lazy"
+                style="opacity: 0.3; transform: translate(-320px, -188px)"
+              />
+              <figcaption>positionX / positionY / positionZ プロパティ (左は, デフォルト値である原点に位置しています)</figcaption>
+            </figure>
+          </section>
         </section>
       </section>
       <footer>
