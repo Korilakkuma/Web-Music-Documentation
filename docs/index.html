@@ -15738,6 +15738,39 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               <figcaption>positionX / positionY / positionZ プロパティ (左は, デフォルト値である原点に位置しています)</figcaption>
             </figure>
           </section>
+          <section id="section-spatialization-audio-listener-forward-xyz">
+            <h4>forwardX / forwardY / forwardZ プロパティ</h4>
+            <p>
+              リスナーの向きを設定するプロパティで, <code>AudioParam</code> 型です.
+              <b>デフォルト値は, <code>(0, 0, -1)</code> なので, z 軸の負の方向を向いています</b>. したがって, 上記のサンプルコードでは, x 軸の
+              <code>-5</code> にリスナーの位置を移動させたことで, 右側から音が聴こえます. リスナーの位置は同じでも, 逆向き (<code>(0, 0, 1)</code>)
+              に変更すると, 左側から音が聴こえます.
+            </p>
+            <p>
+              また, <code>PannerNode</code> の <code>orientationX</code> / <code>orientationY</code> / <code>orientationZ</code> プロパティと同様に,
+              <b>ベクトルのなす角のみを決定するので, x, y, z それぞれの値の比率が重要となります</b>.
+            </p>
+            <figure>
+              <svg id="svg-figure-audio-listener-forward" width="800" height="400" />
+              <img
+                src="images/listener-default.svg"
+                alt="リスナーの向き (デフォルト値)"
+                width="32"
+                height="32"
+                loading="lazy"
+                style="opacity: 0.3; transform: translate(-590px, -188px)"
+              />
+              <img
+                src="images/listener-00-1.svg"
+                alt="リスナーの向き (0, 0, 1)"
+                width="32"
+                height="32"
+                loading="lazy"
+                style="opacity: 0.3; transform: translate(-260px, -188px)"
+              />
+              <figcaption>forwardX / forwardY / forwardZ プロパティ (左は, デフォルト値である z 軸の負の方向を向いています)</figcaption>
+            </figure>
+          </section>
         </section>
       </section>
       <footer>

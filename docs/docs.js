@@ -15848,6 +15848,32 @@ const render3DimensionalCoordinate = (svg, offset, isOrigin, coordinate) => {
 
         break;
       }
+
+      case '(0, 0, -1)': {
+        o.textContent = coordinate;
+
+        o.setAttribute('x', (offset + padding + innerWidth / 4).toString(10));
+        o.setAttribute('y', (padding + innerHeight / 2 - 20).toString(10));
+        o.setAttribute('text-anchor', 'start');
+        o.setAttribute('stroke', 'none');
+        o.setAttribute('fill', baseColor);
+        o.setAttribute('font-size', '16px');
+
+        break;
+      }
+
+      case '(0, 0, 1)': {
+        o.textContent = coordinate;
+
+        o.setAttribute('x', (offset + padding + innerWidth / 4 - 40).toString(10));
+        o.setAttribute('y', (padding + innerHeight / 2 + 20).toString(10));
+        o.setAttribute('text-anchor', 'start');
+        o.setAttribute('stroke', 'none');
+        o.setAttribute('fill', baseColor);
+        o.setAttribute('font-size', '16px');
+
+        break;
+      }
     }
   }
 
@@ -16072,6 +16098,13 @@ const createAudioListenerPosition = (svg) => {
   render3DimensionalCoordinate(svg, innerWidth / 2 + padding / 2, false, '(-5, 0, 0)');
 };
 
+const createAudioListenerForward = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+
+  render3DimensionalCoordinate(svg, 0, false, '(0, 0, -1)');
+  render3DimensionalCoordinate(svg, innerWidth / 2 + padding / 2, false, '(0, 0, 1)');
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -16285,3 +16318,5 @@ createPannerNodeOrientation(document.getElementById('svg-figure-panner-node-orie
 createSoundCone(document.getElementById('svg-figure-sound-cone'));
 
 createAudioListenerPosition(document.getElementById('svg-figure-audio-listener-position'));
+
+createAudioListenerForward(document.getElementById('svg-figure-audio-listener-forward'));
