@@ -15803,6 +15803,22 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               <figcaption>upX / upY / upZ プロパティ (左は, デフォルト値である y 軸の正の方向を向いています)</figcaption>
             </figure>
           </section>
+          <article id="section-spatialization-audio-listener-set-position">
+            <h4>Firefox での positionX / positionY / positionZ の設定</h4>
+            <p>
+              Firefox 142 の時点では, <code>positionX</code> / <code>positionY</code> / <code>positionZ</code> プロパティが実装されていないので, Firefox
+              も対応ブラウザに含む場合は, 非推奨ではありますが <code>AudioListener</code> の
+              <b><code>setPosition(x, y, z)</code></b> メソッドを利用する必要があります.
+            </p>
+          </article>
+          <article id="section-spatialization-audio-listener-set-orientation">
+            <h4>Firefox での forwardX / forwardY / forwardZ / upX / upY / upZ の設定</h4>
+            <p>
+              同じく, Firefox 142 の時点では, <code>forwardX</code> / <code>forwardY</code> / <code>forwardZ</code> プロパティ, および, <code>upX</code> /
+              <code>upY</code> / <code>upZ</code> プロパティが実装されていないので, Firefox も対応ブラウザに含む場合は, 非推奨ではありますが
+              <code>AudioListener</code> の <b><code>setOrientation(forwardX, forwardY, forwardZ, upX, upY, upZ)</code></b> メソッドを利用する必要があります.
+            </p>
+          </article>
         </section>
       </section>
       <footer>
