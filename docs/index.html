@@ -15771,6 +15771,38 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               <figcaption>forwardX / forwardY / forwardZ プロパティ (左は, デフォルト値である z 軸の負の方向を向いています)</figcaption>
             </figure>
           </section>
+          <section id="section-spatialization-audio-listener-up-xyz">
+            <h4>upX / upY / upZ プロパティ</h4>
+            <p>
+              リスナーの向きを設定するプロパティですが, リスナーの頭部の向きを設定します. ざっくりと言ってしまえば,
+              上の方を見ている状態や下の方を見ている状態を設定できるということです. これらのプロパティも, <code>AudioParam</code> 型です.
+              <b>デフォルト値は, <code>(0, 1, 0)</code> なので, 正面を向いている状態ということになります</b>.
+            </p>
+            <p>
+              したがって, 例えば, <code>(1, 1, 0)</code> にすると, x 軸方向に <span class="math-inline">$\frac{\pi}{4}$</span> 傾いた y
+              軸の正の方向に頭部が向くことになります.
+            </p>
+            <figure>
+              <svg id="svg-figure-audio-listener-up" width="800" height="400" />
+              <img
+                src="images/listener-default.svg"
+                alt="リスナーの頭部の向き (デフォルト値)"
+                width="32"
+                height="32"
+                loading="lazy"
+                style="opacity: 0.3; transform: translate(-590px, -188px)"
+              />
+              <img
+                src="images/listener-default.svg"
+                alt="リスナーの頭部の向き (1, 1, 0)"
+                width="32"
+                height="32"
+                loading="lazy"
+                style="opacity: 0.3; transform: translate(-250px, -188px) rotate(45deg)"
+              />
+              <figcaption>upX / upY / upZ プロパティ (左は, デフォルト値である y 軸の正の方向を向いています)</figcaption>
+            </figure>
+          </section>
         </section>
       </section>
       <footer>
