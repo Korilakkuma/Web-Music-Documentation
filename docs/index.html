@@ -15821,6 +15821,22 @@ oscillator.stop(context.currentTime + 5);</code></pre>
           </article>
         </section>
       </section>
+      <section id="section-sound-visualization">
+        <h2>音の視覚化</h2>
+        <p>
+          これまでの解説やデモでもすでに音の視覚化は実装していましたが, このセクションでは, オーディオ信号処理の再習をしつつ, 音の視覚化のためのクラスである
+          <b><code>AnalyserNode</code></b> クラスのプロパティやメソッドを主に解説します (これらを理解するために, オーディオ信号処理の理解が必要になります).
+        </p>
+        <p>
+          <code>AnalyserNode</code> による波形描画はあくまで, <b>リアルタイムの波形描画</b>をユースケースとしてします. 一方で, 波形エディタなどでは,
+          リアルタイムの波形描画は必要なく事前の (オフラインの) 波形描画が必要になることもあります. このセクションでは,
+          リアルタイム・オフラインどちらも解説します.
+        </p>
+        <p>
+          ところで, 音を視覚化するためには, 何らかのグラフィックス API を利用する必要があります. Web Audio API の仕様においては, グラフィックス API
+          までは含まれていないので, アプリケーションの要件に応じた適切なグラフィックス API を選択する必要があります.
+        </p>
+      </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
         <span><a href="https://github.com/Korilakkuma/Web-Music-Documentation" target="_blank" rel="noopener noreferrer">Korilakkuma</a> (Tomohiro IKEDA)</span>
