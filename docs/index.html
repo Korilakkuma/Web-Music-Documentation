@@ -15836,6 +15836,115 @@ oscillator.stop(context.currentTime + 5);</code></pre>
           ところで, 音を視覚化するためには, 何らかのグラフィックス API を利用する必要があります. Web Audio API の仕様においては, グラフィックス API
           までは含まれていないので, アプリケーションの要件に応じた適切なグラフィックス API を選択する必要があります.
         </p>
+        <section id="section-sound-visualization-graphic-apis">
+          <h3>グラフィックス API</h3>
+          <section id="section-sound-visualization-graphic-apis-html-and-css">
+            <h4>HTML / CSS</h4>
+            <p>
+              グラフィックス API ではありませんが, HTML と CSS を駆使することで, もっと言ってしまえば, HTML のボックスモデルの矩形を CSS
+              で装飾することで波形描画することができます. しかしながら, 本来の利用目的とは言いがたく, また, 描画のスタイルによってはパス (線)
+              で描画したいケースもあるので, その場合は対応できません.
+            </p>
+          </section>
+          <section id="section-sound-visualization-graphic-apis-svg">
+            <h4>SVG</h4>
+            <p>
+              HTML と同様の API, つまり, DOM で描画できるグラフィックス API が SVG です (実体は, XML なので DOM で操作できます). SVG の
+              <abbr title="Multipurpose Internet Mail Extensions">MIME</abbr> タイプは <code>image/svg+xml</code> で画像データとして扱うことができます. また,
+              ベクター形式なので, 拡大しても鮮明に描画できます (SVG: Scalable Vector Graphics). 描画可能なオブジェクトも, 矩形やパスだけでなく, 多角形,
+              円や楕円, べジュ曲線などさまざまです (もっとも, 音の視覚化だけであれば, 最低限, 矩形とパス, テキストの描画ができれば十分でしょう).
+              デメリットとしては, Canvas と比較すると DOM 操作による描画 (要素の追加や属性値の設定) なので, パフォーマンスが劣ることです.
+            </p>
+          </section>
+          <section id="section-sound-visualization-graphic-apis-canvas">
+            <h4>Canvas</h4>
+            <p>
+              ビットマップで <code>1px</code> 単位で RGBA の値を設定して描画することが可能で, Canvas そのものは <code>HTMLElement</code> の 1 つで,
+              画像コーデックではありませんが (実体 (描画データ) は, <code>ImageData</code> クラスの <code>data</code> プロパティである
+              <code>Uint8ClampedArray</code> の数値データです), JPEG や PNG など様々な画像コーデックにエクスポートすることができます. ローレイヤーな描画 (<code
+                >ImageData</code>
+              クラスを利用した描画) では <code>1px</code> 単位での描画が可能ですが, 抽象度の高い, 矩形やパス, 楕円, べジュ曲線, テキストなど,
+              オブジェクトの描画やスタイルの設定の API も定義されています. デメリットとしては, ビットマップ形式での描画なので, 鮮明に描画するためには,
+              デバイスピクセルレシオ (<code>devicePixelRatio</code> プロパティ) を考慮して座標やサイズを計算する必要があります.
+            </p>
+          </section>
+          <section id="section-sound-visualization-graphic-apis-web-gl">
+            <h4>WebGL</h4>
+            <p>
+              3D のグラフィックス API です. おそらく, 3D オーディオをメインに利用する Web アプリケーションでは必須になるでしょう. しかし,
+              <a href="https://wgld.org/sitemap.html" target="_blank" rel="noopener noreferrer"
+                >WebGL は仕様が膨大で, さらに, その基礎として CG の学習コストも大きいので</a>, このドキュメンントでは扱いません.
+            </p>
+            <p>音の視覚化の本質的なロジックを理解するためには, Canvas や SVG などの 2D グラフィックス API で十分だからです.</p>
+            <p>
+              ちなみに, WebGL の次世代の仕様として, <a href="https://www.w3.org/TR/webgpu/" target="_blank" rel="noopener noreferrer">WebGPU</a> が 2025 年 8 月
+              27 日時点で Candidate Recommendation (勧告候補) の段階にあります.
+            </p>
+          </section>
+          <table>
+            <caption>
+              グラフィックス API
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col" style="white-space: nowrap">Graphics API</th>
+                <th scope="col">Dimension</th>
+                <th scope="col">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>HTML / CSS</td>
+                <td>2D</td>
+                <td>ベクター形式で学習コストも少ない. パスの描画が難しい</td>
+              </tr>
+              <tr>
+                <td><a href="https://svgwg.org/svg2-draft/" target="_blank" rel="noopener noreferrer">SVG</a></td>
+                <td>2D</td>
+                <td>
+                  ベクター形式で API も DOM なので学習コストが低い. <code>image/svg+xml</code> として画像データとして保存できる. Canvas と比較すると, DOM
+                  操作による描画なのでパフォーマンスが劣る
+                </td>
+              </tr>
+              <tr>
+                <td><a href="https://html.spec.whatwg.org/#the-canvas-element" target="_blank" rel="noopener noreferrer">Canvas</a></td>
+                <td>2D</td>
+                <td>
+                  ビットマップ形式で, オブジェクトを描画する API から, ローレイヤー (<code>ImageData</code> クラス) で <code>1px</code> ごとの RGBA を描画可能.
+                  また, 様々な画像コーデックとして保存できる. デバイスピクセルレシオを考慮する必要があるのと, SVG と比べると学習コストが高い
+                </td>
+              </tr>
+              <tr>
+                <td><a href="https://registry.khronos.org/webgl/specs/latest/" target="_blank" rel="noopener noreferrer">WebGL</a></td>
+                <td>2D or 3D</td>
+                <td>アプリケーションの要件によっては必要になる. もっとも学習コストが高い</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>このドキュメントでは, グラフィックス API として SVG と Canvas を利用します. 理由は以下の 2 つです.</p>
+          <ul>
+            <li>
+              物理的な音の視覚化の実装に注力することで, 音響学・オーディオ信号処理の理解を深める (3D グラフィックス API は, その本質から外れる解説が多くなる)
+            </li>
+            <li>
+              また, そのために, ユーザーに視覚的効果を与えることが主目的の, いわゆる VJ アプリは想定せず, あくまでも,
+              波形・スペクトルアナライザーとしての実装を解説する
+            </li>
+          </ul>
+          <p>描画オブジェクトも以下の 3 つができれば十分です.</p>
+          <dl>
+            <dt>パス</dt>
+            <dd>波形の描画</dd>
+            <dt>矩形</dt>
+            <dd>座標 (x 軸と y 軸) の描画</dd>
+            <dt>テキスト</dt>
+            <dd>時間や周波数, 振幅など値の描画</dd>
+          </dl>
+          <p>
+            もっとも, 3D グラフィックス API による描画や VJ アプリでも, 基礎となるのは 2D グラフィックスでのアナライザーとしての波形描画なので,
+            これを理解しておけば, その応用で実装することができるはずです.
+          </p>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
