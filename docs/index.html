@@ -15945,6 +15945,110 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             これを理解しておけば, その応用で実装することができるはずです.
           </p>
         </section>
+        <section id="section-sound-visualization-analyser-node">
+          <h3>AnalyserNode</h3>
+          <p>
+            <code>AnalyserNode</code> で波形データを取得するためのは, 対象のオーディオグラフ (<code>AudioNode</code> の接続) に
+            <code>AnalyserNode</code> インスタンスを接続している必要があります. <code>AnalyserNode</code> インスタンスので生成は,
+            <code>AnalyserNode</code> コンストラクタ呼び出しか, <code>AudioContext</code> インスタンスの
+            <b><code>createAnalyser</code></b> メソッドを呼び出す必要があります. コンストラクタ呼び出しであれば, 第 2 引数 (<b><code>AnalyserOptions</code></b>
+            型) で初期値を設定することが可能です.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator = new OscillatorNode(context);
+const gain       = new GainNode(context, { gain: 0.5 });
+const analyser   = new AnalyserNode(context);
+
+// If use `createAnalyser`
+// const analyser = context.createAnalyser();
+
+// OscillatorNode (Input) -&gt; GainNode (Gain) -&gt; AnalyserNode (Analyser) -&gt; AudioDestinationNode (Output)
+oscillator.connect(gain);
+gain.connect(analyser);
+analyser.connect(context.destination);
+
+// Start oscillator immediately
+oscillator.start(0);
+
+// Stop oscillator after 5 sec
+oscillator.stop(context.currentTime + 5);</code></pre>
+          <p>
+            1 つ注意すべきなのでは, <code>AnalyserNode</code> インスタンスの接続順です. 上記のコード例であれば,
+            <code>GainNode</code> の影響を受けた波形を取得することになります. ここで, 原音の波形を取得したければ,
+            <code>OscillatorNode</code> インスタンスの直後に接続する必要があります.
+          </p>
+          <p>
+            ちなみに, <code>AnalyserNode</code> インスタンスは <code>AudioDestinationNode</code> に接続する必要はありません (接続しても問題ありません.
+            このあたりはコーディング規約などで制約してください).
+          </p>
+          <img src="images/analyser-node.png" alt="AnalyserNode" width="1232" height="770" loading="lazy" />
+          <table class="auto-table">
+            <caption>
+              AnalyserNode のプロパティ
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col" style="white-space: nowrap">Property</th>
+                <th scope="col">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>fftSize</code></td>
+                <td>
+                  <code>32</code> から <code>32768</code> までの 2 の冪乗. 時間領域では 1 回のメソッド実行で取得するデータサイズで, 周波数領域では FFT サイズ.
+                  デフォルト値は <code>2048</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>frequencyBinCount</code></td>
+                <td>
+                  <code>fftSize</code> プロパティの <span class="math-inline">$\frac{1}{2}$</span> の値. 読み取り専用. <code>frequencyBinCount</code> は,
+                  <b>ナイキスト周波数に相当するインデックス</b>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>maxDecibels</code></td>
+                <td>
+                  振幅スペクトルのデシベル値から, <code>getByteFrequencyData</code> メソッドの値の最大値の変換に利用される. デフォルト値は
+                  <code>-30</code> (dB). <code>getByteFrequencyData</code> メソッド以外には影響しないプロパティ.
+                </td>
+              </tr>
+              <tr>
+                <td><code>minDecibels</code></td>
+                <td>
+                  振幅スペクトルのデシベル値から, <code>getByteFrequencyData</code> メソッドの値の最小値の変換に利用される. デフォルト値は
+                  <code>-100</code> (dB). <code>getByteFrequencyData</code> メソッド以外には影響しないプロパティ.
+                </td>
+              </tr>
+              <tr>
+                <td><code>smoothingTimeConstant</code></td>
+                <td>スペクトルの更新フレームの頻度を設定するプロパティ. デフォルト値は <code>0.8</code>. 時間領域の波形描画には影響しない.</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            まとめると, <code>AnalyserNode</code> のプロパティで, <code>fftSize</code> プロパティのみがすべての波形描画のメソッドにおいて関係しています. また,
+          </p>
+          <ul>
+            <li>時間領域の波形描画は, <code>fftSize</code> プロパティ以外は関係しません</li>
+            <li><code>getByteFrequencyData</code> メソッドのみ, すべてのプロパティが関係します</li>
+          </ul>
+          <p>したがって, まずは時間領域の波形描画から解説します. また, ここで, SVG と Canvas の API を理解しておきましょう.</p>
+          <p>また, 以降のセクションでは, 以下のような SVG または, Canvas の HTML タグが記述されている前提でコードを解説します.</p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-html line-numbers">&lt;svg id=&quot;svg&quot; width=&quot;720&quot; height=&quot;180&quot;&gt;&lt;/svg&gt;</code></pre>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-html line-numbers">&lt;canvas id=&quot;canvas&quot; width=&quot;720&quot; height=&quot;180&quot;&gt;&lt;/canvas&gt;</code></pre>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
