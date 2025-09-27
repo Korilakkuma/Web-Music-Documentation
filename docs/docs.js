@@ -16138,6 +16138,581 @@ const createAudioListenerUp = (svg) => {
   render3DimensionalCoordinate(svg, innerWidth / 2 + padding / 2, false, '(1, 1, 0)');
 };
 
+const createMappingAmplitudeAndHeight = (svg, uint8) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  createCoordinateRect(svg);
+
+  if (uint8) {
+    const g = document.createElementNS(xmlns, 'g');
+
+    [255, 128, 0].forEach((amplitude) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = amplitude.toString(10);
+
+      text.setAttribute('x', '80');
+      text.setAttribute('y', (padding + (1 - amplitude / 255) * innerHeight - 6).toString(10));
+      text.setAttribute('text-anchor', 'start');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '16px');
+
+      g.appendChild(text);
+    });
+
+    svg.appendChild(g);
+  }
+
+  const label = document.createElementNS(xmlns, 'text');
+
+  label.textContent = 'Height';
+
+  label.setAttribute('x', (padding + innerWidth).toString(10));
+  label.setAttribute('y', (padding / 2 - 4).toString(10));
+  label.setAttribute('text-anchor', 'middle');
+  label.setAttribute('stroke', 'none');
+  label.setAttribute('fill', baseColor);
+  label.setAttribute('font-size', '18px');
+
+  svg.appendChild(label);
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  [0, 0.5, 1].forEach((h) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    let t = '';
+
+    switch (h) {
+      case 0: {
+        t = '0';
+        break;
+      }
+
+      case 0.5: {
+        t = 'height / 2';
+        break;
+      }
+
+      case 1: {
+        t = 'height';
+        break;
+      }
+    }
+
+    text.textContent = t;
+
+    text.setAttribute('x', (2 * padding + innerWidth).toString(10));
+    text.setAttribute('y', (padding + h * innerHeight + (h === 0.5 ? 20 : 0)).toString(10));
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+    text.setAttribute('font-style', 'italic');
+
+    g.appendChild(text);
+  });
+
+  svg.appendChild(g);
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  let d = '';
+
+  for (let n = 0, len = sampleRate; n < len; n++) {
+    const v = Math.sin((2 * Math.PI * n) / sampleRate);
+
+    const x = (n / len) * innerWidth + padding;
+    const y = (1 - v) * (innerHeight / 2) + padding;
+
+    if (n === 0) {
+      d += `M${x + lineWidth / 2} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute('d', d);
+
+  path.setAttribute('stroke', alphaWaveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+};
+
+const createSamplingPeriodToTimeText = (svg) => {
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const innerWidth = width - padding * 2;
+  const innerHeight = height - padding * 2;
+  const middle = height / 2;
+
+  createCoordinateRect(svg);
+  createSinFunctionPath(svg, alphaWaveColor);
+
+  const n = 8;
+  const d = (2 * Math.PI) / n;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  for (let rad = 0, i = 0; rad < 2 * Math.PI; rad += d, i++) {
+    const path = document.createElementNS(xmlns, 'path');
+
+    const v = Math.sin(rad);
+    const x = (rad / d) * (1 / n) * innerWidth + padding;
+    const y = (1 - v) * (innerHeight / 2) + padding;
+
+    path.setAttribute('d', `M${x} ${y} L${x} ${middle}`);
+    path.setAttribute('stroke', alphaWaveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', '4');
+    path.setAttribute('stroke-linecap', 'square');
+
+    g.appendChild(path);
+
+    const text = document.createElementNS(xmlns, 'text');
+    const indexText = document.createElementNS(xmlns, 'text');
+
+    if (i < 6) {
+      text.textContent = 't';
+      indexText.textContent = i.toString(10);
+    } else {
+      text.textContent = '...';
+    }
+
+    if (i === 4) {
+      const timeText = document.createElementNS(xmlns, 'text');
+
+      timeText.textContent = '...';
+
+      timeText.setAttribute('x', (x - 4).toString(10));
+      timeText.setAttribute('y', (middle - 8).toString(10));
+      timeText.setAttribute('stroke', 'none');
+      timeText.setAttribute('fill', baseColor);
+      timeText.setAttribute('font-size', '16px');
+      timeText.setAttribute('font-style', 'italic');
+
+      g.appendChild(timeText);
+    }
+
+    if (i === 1 || i === 7) {
+      const timeText = document.createElementNS(xmlns, 'text');
+      const timeSubText = document.createElementNS(xmlns, 'text');
+
+      if (i === 1) {
+        text.textContent = 't';
+        indexText.textContent = '1';
+
+        timeText.textContent = 'T';
+        timeSubText.textContent = 's';
+
+        timeText.setAttribute('x', (x + 4).toString(10));
+        timeSubText.setAttribute('x', (x + 12).toString(10));
+      } else {
+        text.textContent = 't';
+        indexText.textContent = 'n';
+
+        timeText.textContent = 'n・T';
+        timeSubText.textContent = 's';
+
+        timeText.setAttribute('x', (x - 16).toString(10));
+        timeSubText.setAttribute('x', (x + 18).toString(10));
+      }
+
+      timeText.setAttribute('y', (middle - 4).toString(10));
+      timeText.setAttribute('stroke', 'none');
+      timeText.setAttribute('fill', baseColor);
+      timeText.setAttribute('font-size', '16px');
+      timeText.setAttribute('font-style', 'italic');
+
+      timeSubText.setAttribute('y', (middle - 4).toString(10));
+      timeSubText.setAttribute('stroke', 'none');
+      timeSubText.setAttribute('fill', baseColor);
+      timeSubText.setAttribute('font-size', '12px');
+      timeSubText.setAttribute('font-style', 'italic');
+
+      g.appendChild(timeText);
+      g.appendChild(timeSubText);
+    }
+
+    text.setAttribute('x', (x - 2).toString(10));
+    text.setAttribute('y', (padding - 12).toString(10));
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+    text.setAttribute('font-style', 'italic');
+
+    indexText.setAttribute('x', (x + 4).toString(10));
+    indexText.setAttribute('y', (padding - 8).toString(10));
+    indexText.setAttribute('stroke', 'none');
+    indexText.setAttribute('fill', baseColor);
+    indexText.setAttribute('font-size', '12px');
+    indexText.setAttribute('font-style', 'italic');
+
+    g.appendChild(text);
+    g.appendChild(indexText);
+  }
+
+  svg.appendChild(g);
+};
+
+const animateTimeDomainWaveToSVG = (svg, button, displayGraph, displayText) => {
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 128 });
+  const gain = new GainNode(audiocontext, { gain: 0.9 });
+
+  const width = Number(svg.getAttribute('width') ?? '0');
+  const height = Number(svg.getAttribute('height') ?? '0');
+
+  let innerWidth = width;
+
+  if (displayGraph) {
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', '0');
+    xRect.setAttribute('y', (height / 2 - 1).toString(10));
+    xRect.setAttribute('width', width.toString(10));
+    xRect.setAttribute('height', '2');
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', '24');
+    yRect.setAttribute('y', '0');
+    yRect.setAttribute('width', '2');
+    yRect.setAttribute('height', height.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    innerWidth -= 24;
+  }
+
+  if (displayText) {
+    const g = document.createElementNS(xmlns, 'g');
+
+    [1.0, 0.0, -1.0].forEach((amplitude, index) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = amplitude.toFixed(1);
+
+      let h = 0;
+
+      switch (amplitude) {
+        case 1.0: {
+          h = 12;
+          break;
+        }
+
+        case 0.0: {
+          h = -4;
+          break;
+        }
+
+        case -1.0: {
+          h = 0;
+          break;
+        }
+      }
+
+      text.setAttribute('x', '24');
+      text.setAttribute('y', ((1 - amplitude) * (height / 2) + h).toString(10));
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '12px');
+
+      g.appendChild(text);
+    });
+
+    for (let n = 0; n < analyser.fftSize; n++) {
+      if (n % 16 !== 0) {
+        continue;
+      }
+
+      const x = n * (innerWidth / analyser.fftSize) + 24 + 4;
+
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = `${(n * (1 / sampleRate) * 1000).toFixed(2)} msec`;
+
+      text.setAttribute('x', x);
+      text.setAttribute('y', (height / 2 + 12).toString(10));
+      text.setAttribute('text-anchor', 'start');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '12px');
+
+      g.appendChild(text);
+    }
+
+    svg.appendChild(g);
+
+    const xLabel = document.createElementNS(xmlns, 'text');
+
+    xLabel.textContent = 'Time';
+
+    xLabel.setAttribute('x', width.toString(10));
+    xLabel.setAttribute('y', (height / 2 - 8).toString(10));
+    xLabel.setAttribute('text-anchor', 'end');
+    xLabel.setAttribute('stroke', 'none');
+    xLabel.setAttribute('fill', baseColor);
+    xLabel.setAttribute('font-size', '14px');
+
+    const yLabel = document.createElementNS(xmlns, 'text');
+
+    yLabel.textContent = 'Amplitude';
+
+    yLabel.setAttribute('x', '28');
+    yLabel.setAttribute('y', '12');
+    yLabel.setAttribute('text-anchor', 'start');
+    yLabel.setAttribute('stroke', 'none');
+    yLabel.setAttribute('fill', baseColor);
+    yLabel.setAttribute('font-size', '14px');
+
+    svg.appendChild(xLabel);
+    svg.appendChild(yLabel);
+  }
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  let animationId = null;
+
+  const render = () => {
+    const data = new Float32Array(analyser.fftSize);
+
+    analyser.getFloatTimeDomainData(data);
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0; n < analyser.fftSize; n++) {
+      const x = n * (innerWidth / analyser.fftSize);
+      const y = (1 - data[n]) * (height / 2);
+
+      if (d === '') {
+        d += `M${x} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    animationId = window.requestAnimationFrame(() => {
+      render();
+    });
+  };
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    oscillator.connect(gain);
+    gain.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    render();
+
+    button.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    if (animationId) {
+      window.cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+
+    button.textContent = 'start';
+  };
+
+  button.addEventListener('mousedown', onDown);
+  button.addEventListener('touchstart', onDown);
+  button.addEventListener('mouseup', onUp);
+  button.addEventListener('touchend', onUp);
+};
+
+const animateTimeDomainWaveToCanvas = (canvas, button, displayGraph, displayText) => {
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 128 });
+  const gain = new GainNode(audiocontext, { gain: 0.9 });
+
+  const renderingContext = canvas.getContext('2d');
+
+  const width = canvas.width;
+  const height = canvas.height;
+
+  const innerWidth = displayGraph ? width - 24 : width;
+
+  let animationId = null;
+
+  const render = () => {
+    const data = new Float32Array(analyser.fftSize);
+
+    analyser.getFloatTimeDomainData(data);
+
+    renderingContext.clearRect(0, 0, width, height);
+
+    if (displayGraph) {
+      renderingContext.fillStyle = baseColor;
+      renderingContext.fillRect(0, height / 2 - 1, width, 2);
+      renderingContext.fillRect(24, 0, 2, height);
+    }
+
+    if (displayText) {
+      renderingContext.font = 'Roboto 12px';
+      renderingContext.fillStyle = baseColor;
+
+      [1.0, 0.0, -1.0].forEach((amplitude, index) => {
+        let h = 0;
+
+        switch (amplitude) {
+          case 1.0: {
+            h = 12;
+            break;
+          }
+
+          case 0.0: {
+            h = -4;
+            break;
+          }
+
+          case -1.0: {
+            h = 0;
+            break;
+          }
+        }
+
+        renderingContext.textAlign = 'end';
+        renderingContext.fillText(amplitude.toFixed(1), 24, (1 - amplitude) * (height / 2) + h);
+      });
+
+      for (let n = 0; n < analyser.fftSize; n++) {
+        if (n % 16 !== 0) {
+          continue;
+        }
+
+        const x = n * (innerWidth / analyser.fftSize) + 24 + 4;
+
+        renderingContext.textAlign = 'start';
+        renderingContext.fillText(`${(n * (1 / sampleRate) * 1000).toFixed(2)} msec`, x, height / 2 + 12);
+      }
+
+      renderingContext.font = 'Roboto 14px';
+
+      renderingContext.textAlign = 'end';
+      renderingContext.fillText('Time', width, height / 2 - 8);
+
+      renderingContext.textAlign = 'start';
+      renderingContext.fillText('Amplitude', 28, 12);
+    }
+
+    renderingContext.beginPath();
+
+    for (let n = 0; n < analyser.fftSize; n++) {
+      const x = n * (innerWidth / analyser.fftSize);
+      const y = (1 - data[n]) * (height / 2);
+
+      if (n === 0) {
+        renderingContext.moveTo(x, y);
+      } else {
+        renderingContext.lineTo(x, y);
+      }
+    }
+
+    renderingContext.lineWidth = 1.5;
+    renderingContext.strokeStyle = waveColor;
+
+    renderingContext.stroke();
+
+    animationId = window.requestAnimationFrame(() => {
+      render();
+    });
+  };
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    oscillator.connect(gain);
+    gain.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    render();
+
+    button.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    if (animationId) {
+      window.cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+
+    button.textContent = 'start';
+  };
+
+  button.addEventListener('mousedown', onDown);
+  button.addEventListener('touchstart', onDown);
+  button.addEventListener('mouseup', onUp);
+  button.addEventListener('touchend', onUp);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -16355,3 +16930,49 @@ createAudioListenerPosition(document.getElementById('svg-figure-audio-listener-p
 createAudioListenerForward(document.getElementById('svg-figure-audio-listener-forward'));
 
 createAudioListenerUp(document.getElementById('svg-figure-audio-listener-up'));
+
+createMappingAmplitudeAndHeight(document.getElementById('svg-figure-mapping-amplitude-and-height-in-float32'), false);
+
+createSamplingPeriodToTimeText(document.getElementById('svg-figure-sampling-period-to-time-text'));
+
+animateTimeDomainWaveToSVG(
+  document.getElementById('svg-animation-time-domain-wave-path'),
+  document.getElementById('button-svg-time-domain-wave-path'),
+  false,
+  false
+);
+
+animateTimeDomainWaveToCanvas(
+  document.getElementById('canvas-animation-time-domain-wave-path'),
+  document.getElementById('button-canvas-time-domain-wave-path'),
+  false,
+  false
+);
+
+animateTimeDomainWaveToSVG(
+  document.getElementById('svg-animation-time-domain-wave-path-with-coordinate'),
+  document.getElementById('button-svg-time-domain-wave-path-with-coordinate'),
+  true,
+  false
+);
+
+animateTimeDomainWaveToCanvas(
+  document.getElementById('canvas-animation-time-domain-wave-path-with-coordinate'),
+  document.getElementById('button-canvas-time-domain-wave-path-with-coordinate'),
+  true,
+  false
+);
+
+animateTimeDomainWaveToSVG(
+  document.getElementById('svg-animation-time-domain-wave-path-with-coordinate-and-texts'),
+  document.getElementById('button-svg-time-domain-wave-path-with-coordinate-and-texts'),
+  true,
+  true
+);
+
+animateTimeDomainWaveToCanvas(
+  document.getElementById('canvas-animation-time-domain-wave-path-with-coordinate-and-texts'),
+  document.getElementById('button-canvas-time-domain-wave-path-with-coordinate-and-texts'),
+  true,
+  true
+);
