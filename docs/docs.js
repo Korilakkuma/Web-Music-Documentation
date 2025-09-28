@@ -16713,6 +16713,351 @@ const animateTimeDomainWaveToCanvas = (canvas, button, displayGraph, displayText
   button.addEventListener('touchend', onUp);
 };
 
+const animateTimeDomainUint8WaveToSVG = (svg) => {
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 128 });
+  const gain = new GainNode(audiocontext, { gain: 0.9 });
+
+  const width = Number(svg.getAttribute('width') ?? '0');
+  const height = Number(svg.getAttribute('height') ?? '0');
+
+  const innerWidth = width - 24;
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', '0');
+  xRect.setAttribute('y', (height / 2 - 1).toString(10));
+  xRect.setAttribute('width', width.toString(10));
+  xRect.setAttribute('height', '2');
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', '24');
+  yRect.setAttribute('y', '0');
+  yRect.setAttribute('width', '2');
+  yRect.setAttribute('height', height.toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(yRect);
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  [1.0, 0.0, -1.0].forEach((amplitude, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = amplitude.toFixed(1);
+
+    let h = 0;
+
+    switch (amplitude) {
+      case 1.0: {
+        h = 12;
+        break;
+      }
+
+      case 0.0: {
+        h = -4;
+        break;
+      }
+
+      case -1.0: {
+        h = 0;
+        break;
+      }
+    }
+
+    text.setAttribute('x', '24');
+    text.setAttribute('y', ((1 - amplitude) * (height / 2) + h).toString(10));
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  });
+
+  for (let n = 0; n < analyser.fftSize; n++) {
+    if (n % 16 !== 0) {
+      continue;
+    }
+
+    const x = n * (innerWidth / analyser.fftSize) + 24 + 4;
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${(n * (1 / sampleRate) * 1000).toFixed(2)} msec`;
+
+    text.setAttribute('x', x);
+    text.setAttribute('y', (height / 2 + 12).toString(10));
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  }
+
+  svg.appendChild(g);
+
+  const xLabel = document.createElementNS(xmlns, 'text');
+
+  xLabel.textContent = 'Time';
+
+  xLabel.setAttribute('x', width.toString(10));
+  xLabel.setAttribute('y', (height / 2 - 8).toString(10));
+  xLabel.setAttribute('text-anchor', 'end');
+  xLabel.setAttribute('stroke', 'none');
+  xLabel.setAttribute('fill', baseColor);
+  xLabel.setAttribute('font-size', '14px');
+
+  const yLabel = document.createElementNS(xmlns, 'text');
+
+  yLabel.textContent = 'Amplitude';
+
+  yLabel.setAttribute('x', '28');
+  yLabel.setAttribute('y', '12');
+  yLabel.setAttribute('text-anchor', 'start');
+  yLabel.setAttribute('stroke', 'none');
+  yLabel.setAttribute('fill', baseColor);
+  yLabel.setAttribute('font-size', '14px');
+
+  svg.appendChild(xLabel);
+  svg.appendChild(yLabel);
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  let animationId = null;
+
+  const render = () => {
+    const data = new Uint8Array(analyser.fftSize);
+
+    analyser.getByteTimeDomainData(data);
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0; n < analyser.fftSize; n++) {
+      const x = n * (innerWidth / analyser.fftSize);
+      const y = (1 - data[n] / 255) * height;
+
+      if (d === '') {
+        d += `M${x} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    animationId = window.requestAnimationFrame(() => {
+      render();
+    });
+  };
+
+  const buttonElement = document.getElementById('button-svg-time-domain-wave-path-with-coordinate-and-texts-in-uint8');
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    oscillator.connect(gain);
+    gain.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    render();
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    if (animationId) {
+      window.cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+};
+
+const animateTimeDomainUint8WaveToCanvas = (canvas) => {
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 128 });
+  const gain = new GainNode(audiocontext, { gain: 0.9 });
+
+  const renderingContext = canvas.getContext('2d');
+
+  const width = canvas.width;
+  const height = canvas.height;
+
+  const innerWidth = width - 24;
+
+  let animationId = null;
+
+  const render = () => {
+    const data = new Uint8Array(analyser.fftSize);
+
+    analyser.getByteTimeDomainData(data);
+
+    renderingContext.clearRect(0, 0, width, height);
+
+    renderingContext.fillStyle = baseColor;
+    renderingContext.fillRect(0, height / 2 - 1, width, 2);
+    renderingContext.fillRect(24, 0, 2, height);
+
+    renderingContext.font = 'Roboto 12px';
+    renderingContext.fillStyle = baseColor;
+
+    [1.0, 0.0, -1.0].forEach((amplitude, index) => {
+      let h = 0;
+
+      switch (amplitude) {
+        case 1.0: {
+          h = 12;
+          break;
+        }
+
+        case 0.0: {
+          h = -4;
+          break;
+        }
+
+        case -1.0: {
+          h = 0;
+          break;
+        }
+      }
+
+      renderingContext.textAlign = 'end';
+      renderingContext.fillText(amplitude.toFixed(1), 24, (1 - amplitude) * (height / 2) + h);
+    });
+
+    for (let n = 0; n < analyser.fftSize; n++) {
+      if (n % 16 !== 0) {
+        continue;
+      }
+
+      const x = n * (innerWidth / analyser.fftSize) + 24 + 4;
+
+      renderingContext.textAlign = 'start';
+      renderingContext.fillText(`${(n * (1 / sampleRate) * 1000).toFixed(2)} msec`, x, height / 2 + 12);
+    }
+
+    renderingContext.font = 'Roboto 14px';
+
+    renderingContext.textAlign = 'end';
+    renderingContext.fillText('Time', width, height / 2 - 8);
+
+    renderingContext.textAlign = 'start';
+    renderingContext.fillText('Amplitude', 28, 12);
+
+    renderingContext.beginPath();
+
+    for (let n = 0; n < analyser.fftSize; n++) {
+      const x = n * (innerWidth / analyser.fftSize);
+      const y = (1 - data[n] / 255) * height;
+
+      if (n === 0) {
+        renderingContext.moveTo(x, y);
+      } else {
+        renderingContext.lineTo(x, y);
+      }
+    }
+
+    renderingContext.lineWidth = 1.5;
+    renderingContext.strokeStyle = waveColor;
+
+    renderingContext.stroke();
+
+    animationId = window.requestAnimationFrame(() => {
+      render();
+    });
+  };
+
+  const buttonElement = document.getElementById('button-canvas-time-domain-wave-path-with-coordinate-and-texts-in-uint8');
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    oscillator.connect(gain);
+    gain.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    render();
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    if (animationId) {
+      window.cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -16976,3 +17321,8 @@ animateTimeDomainWaveToCanvas(
   true,
   true
 );
+
+createMappingAmplitudeAndHeight(document.getElementById('svg-figure-mapping-amplitude-and-height-in-uint8'), true);
+
+animateTimeDomainUint8WaveToSVG(document.getElementById('svg-animation-time-domain-wave-path-with-coordinate-and-texts-in-uint8'));
+animateTimeDomainUint8WaveToCanvas(document.getElementById('canvas-animation-time-domain-wave-path-with-coordinate-and-texts-in-uint8'));

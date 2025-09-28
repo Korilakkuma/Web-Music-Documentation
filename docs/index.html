@@ -17172,6 +17172,398 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                 </p>
               </section>
             </section>
+            <section id="section-sound-visualization-analyser-node-render-time-domain-get-byte-time-domain-data">
+              <h5>getByteTimeDomainData メソッド</h5>
+              <p>
+                <b><code>getByteTimeDomainData</code></b> メソッドは, <code>Uint8Array</code> を引数にとり,
+                <code>Uint8Array</code> のサイズだけ時間領域の振幅を格納します. その値の範囲は <b><code>0</code> ~ <code>255</code></b> です. ただし,
+                引数に指定する <code>Uint8Array</code> のサイズが <code>fftSize</code> プロパティより大きい場合, 超過した要素は <code>0</code> のままです. また,
+                <code>fftSize</code> プロパティより小さい場合は, 不足した分の値は無視されます. したがって, イディオム的には,
+                <code>fftSize</code> プロパティのサイズの <code>Uint8Array</code> を引数に指定します. サイズと格納される値の仕様は
+                <code>getFloatTimeDomainData</code> メソッドと同じです.
+              </p>
+              <p><code>getFloatTimeDomainData</code> メソッドと異なるのは, 格納される値の型が異なるので, 振幅と y 座標のマッピングのみです.</p>
+              <ul>
+                <li><code>255</code> の場合, 振幅が <code>1</code> で, y 座標は <code>0</code></li>
+                <li><code>0</code> の場合, 振幅が <code>-1</code> で, y 座標は <code>height</code></li>
+                <li><code>128</code> の場合, 振幅が <code>0</code> で, y 座標は <code>height</code> の半分</li>
+              </ul>
+              <p>
+                つまり, <code>getFloatTimeDomainData</code> メソッドで取得できる <code>Float32Array</code> の値を
+                <span class="math-inline">$x\left[n\right]$</span>, <code>getByteTimeDomainData</code> メソッで取得できる <code>Uint8Array</code> の値を
+                <span class="math-inline">$b\left[n\right]$</span> とすると以下のような値の関係にあります.
+              </p>
+              <div class="math-block">$b\left[n\right] = \lfloor 128 \cdot \left(1 + x\left[n\right]\right) \rfloor$</div>
+              <figure>
+                <svg id="svg-figure-mapping-amplitude-and-height-in-uint8" width="720" height="360" data-parameters="true" data-a="1.0" />
+                <figcaption>振幅 (<code>Uint8Array</code>) と <code>height</code> のマッピング</figcaption>
+              </figure>
+              <p>この対応関係から, y 座標の値は <code>(1 - (data[n] / 255)) * height</code> で算出することができます.</p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const analyser = new AnalyserNode(context, { fftSize: 128 });
+
+const samplingPeriod = 1 / context.sampleRate;
+
+const svg = document.getElementById(&apos;svg-animation-time-domain-wave-path-with-coordinate-and-texts-in-uint8&apos;);
+
+const width  = Number(svg.getAttribute(&apos;width&apos;) ?? &apos;0&apos;);
+const height = Number(svg.getAttribute(&apos;height&apos;) ?? &apos;0&apos;);
+
+const innerWidth = width - 24;
+
+const xRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+xRect.setAttribute(&apos;x&apos;, &apos;0&apos;);
+xRect.setAttribute(&apos;y&apos;, ((height / 2) - 1).toString(10));
+xRect.setAttribute(&apos;width&apos;, width.toString(10));
+xRect.setAttribute(&apos;height&apos;, &apos;2&apos;);
+xRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+xRect.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+
+svg.appendChild(xRect);
+
+const yRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+yRect.setAttribute(&apos;x&apos;, &apos;24&apos;);
+yRect.setAttribute(&apos;y&apos;, &apos;0&apos;);
+yRect.setAttribute(&apos;width&apos;, &apos;2&apos;);
+yRect.setAttribute(&apos;height&apos;, height.toString(10));
+yRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+yRect.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+
+svg.appendChild(yRect);
+
+const g = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;g&apos;);
+
+[1.0, 0.0, -1.0].forEach((amplitude, index) =&gt; {
+  const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  text.textContent = amplitude.toFixed(1);
+
+  let h = 0;
+
+  switch (amplitude) {
+    case 1.0: {
+      h = 12;
+      break;
+    }
+
+    case 0.0: {
+      h = -4;
+      break;
+    }
+
+    case -1.0: {
+      h = 0;
+      break;
+    }
+  }
+
+  text.setAttribute(&apos;x&apos;, &apos;24&apos;);
+  text.setAttribute(&apos;y&apos;, ((1 - amplitude) * (height / 2) + h).toString(10));
+  text.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+  text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  text.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+  text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+  g.appendChild(text);
+});
+
+for (let n = 0; n &lt; analyser.fftSize; n++) {
+  if (n % 16 !== 0) {
+    continue;
+  }
+
+  const x = n * (innerWidth / analyser.fftSize) + 24 + 4;
+
+  const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  text.textContent = `${(n * samplingPeriod * 1000).toFixed(2)} msec`;
+
+  text.setAttribute(&apos;x&apos;, x);
+  text.setAttribute(&apos;y&apos;, (height / 2 + 12).toString(10));
+  text.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+  text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  text.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+  text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+  g.appendChild(text);
+}
+
+svg.appendChild(g);
+
+const xLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+xLabel.textContent = &apos;Time&apos;;
+
+xLabel.setAttribute(&apos;x&apos;, width.toString(10));
+xLabel.setAttribute(&apos;y&apos;, (height / 2 - 8).toString(10));
+xLabel.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+xLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+xLabel.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+xLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+const yLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+yLabel.textContent = &apos;Amplitude&apos;;
+
+yLabel.setAttribute(&apos;x&apos;, &apos;28&apos;);
+yLabel.setAttribute(&apos;y&apos;, &apos;12&apos;);
+yLabel.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+yLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+yLabel.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+yLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+svg.appendChild(xLabel);
+svg.appendChild(yLabel);
+
+const path = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;path&apos;);
+
+path.setAttribute(&apos;stroke&apos;, &apos;rgb(0 0 255)&apos;);
+path.setAttribute(&apos;fill&apos;, &apos;none&apos;);
+path.setAttribute(&apos;stroke-width&apos;, &apos;2&apos;);
+path.setAttribute(&apos;stroke-linecap&apos;, &apos;round&apos;);
+path.setAttribute(&apos;stroke-linejoin&apos;, &apos;miter&apos;);
+
+svg.appendChild(path);
+
+let animationId = null;
+
+const render = () =&gt; {
+  const data = new Uint8Array(analyser.fftSize);
+
+  analyser.getByteTimeDomainData(data);
+
+  path.removeAttribute(&apos;d&apos;);
+
+  let d = &apos;&apos;;
+
+  for (let n = 0; n &lt; analyser.fftSize; n++) {
+    const x = n * (innerWidth / analyser.fftSize);
+    const y = (1 - data[n] / 255) * height;
+
+    if (d === &apos;&apos;) {
+      d += `M${x} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute(&apos;d&apos;, d);
+
+  animationId = window.requestAnimationFrame(() =&gt; {
+    render();
+  });
+};
+
+const buttonElement = document.getElementById(&apos;button-svg-time-domain-wave-path-with-coordinate-and-texts-in-uint8&apos;);
+
+let oscillator = null;
+
+const onDown = async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  if (oscillator !== null) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context);
+
+  oscillator.connect(analyser);
+  analyser.connect(context.destination);
+
+  oscillator.start(0);
+
+  render();
+
+  buttonElement.textContent = &apos;stop&apos;;
+};
+
+const onUp = () =&gt; {
+  if (oscillator === null) {
+    return;
+  }
+
+  oscillator.stop(0);
+
+  oscillator = null;
+
+  if (animationId) {
+    window.cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  buttonElement.textContent = &apos;start&apos;;
+};
+
+buttonElement.addEventListener(&apos;mousedown&apos;,  onDown);
+buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
+buttonElement.addEventListener(&apos;mouseup&apos;,    onUp);
+buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
+              <figure>
+                <svg id="svg-animation-time-domain-wave-path-with-coordinate-and-texts-in-uint8" width="720" height="180"></svg>
+                <figcaption>
+                  <span><code>getByteTimeDomainData</code> メソッドによる時間領域の波形描画 (SVG)</span>
+                  <button type="button" id="button-svg-time-domain-wave-path-with-coordinate-and-texts-in-uint8">start</button>
+                </figcaption>
+              </figure>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const analyser = new AnalyserNode(context, { fftSize: 128 });
+
+const canvas           = document.getElementById(&apos;canvas-animation-time-domain-wave-path-with-coordinate-and-texts-in-uint8&apos;);
+const renderingContext = canvas.getContext(&apos;2d&apos;);
+
+const width  = canvas.width;
+const height = canvas.height;
+
+const innerWidth = width - 24;
+
+let animationId = null;
+
+const render = () =&gt; {
+  const data = new Uint8Array(analyser.fftSize);
+
+  analyser.getByteTimeDomainData(data);
+
+  renderingContext.clearRect(0, 0, width, height);
+
+  renderingContext.fillStyle = &apos;rgb(153 153 153)&apos;;
+  renderingContext.fillRect(0, ((height / 2) - 1), width, 2);
+  renderingContext.fillRect(24, 0, 2, height);
+
+  renderingContext.font      = &apos;Roboto 12px&apos;;
+  renderingContext.fillStyle = &apos;rgb(153 153 153)&apos;;
+
+  [1.0, 0.0, -1.0].forEach((amplitude, index) =&gt; {
+    let h = 0;
+
+    switch (amplitude) {
+      case 1.0: {
+        h = 12;
+        break;
+      }
+
+      case 0.0: {
+        h = -4;
+        break;
+      }
+
+      case -1.0: {
+        h = 0;
+        break;
+      }
+    }
+
+    renderingContext.textAlign = &apos;end&apos;;
+    renderingContext.fillText(amplitude.toFixed(1), 24, (((1 - amplitude) * (height / 2)) + h));
+  });
+
+  for (let n = 0; n &lt; analyser.fftSize; n++) {
+    if (n % 16 !== 0) {
+      continue;
+    }
+
+    const x = (n * (innerWidth / analyser.fftSize)) + 24 + 4;
+
+    renderingContext.textAlign = &apos;start&apos;;
+    renderingContext.fillText(`${(n * samplingPeriod * 1000).toFixed(2)} msec`, x, ((height / 2) + 12));
+  }
+
+  renderingContext.font = &apos;Roboto 14px&apos;;
+
+  renderingContext.textAlign = &apos;end&apos;;
+  renderingContext.fillText(&apos;Time&apos;, width, ((height / 2) - 8));
+
+  renderingContext.textAlign = &apos;start&apos;;
+  renderingContext.fillText(&apos;Amplitude&apos;, 28, 12);
+
+  renderingContext.beginPath();
+
+  for (let n = 0; n &lt; analyser.fftSize; n++) {
+    const x = n * (innerWidth / analyser.fftSize);
+    const y = (1 - (data[n] / 255)) * height;
+
+    if (n === 0) {
+      renderingContext.moveTo(x, y);
+    } else {
+      renderingContext.lineTo(x, y);
+    }
+  }
+
+  renderingContext.lineWidth   = 1.5;
+  renderingContext.strokeStyle = &apos;rgb(0 0 255)&apos;;
+
+  renderingContext.stroke();
+
+  animationId = window.requestAnimationFrame(() =&gt; {
+    render();
+  });
+};
+
+const buttonElement = document.getElementById(&apos;button-canvas-time-domain-wave-path-with-coordinate-and-texts-in-uint8&apos;);
+
+let oscillator = null;
+
+const onDown = async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  if (oscillator !== null) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context);
+
+  oscillator.connect(analyser);
+  analyser.connect(context.destination);
+
+  oscillator.start(0);
+
+  render();
+
+  buttonElement.textContent = &apos;stop&apos;;
+};
+
+const onUp = () =&gt; {
+  if (oscillator === null) {
+    return;
+  }
+
+  oscillator.stop(0);
+
+  oscillator = null;
+
+  if (animationId) {
+    window.cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  buttonElement.textContent = &apos;start&apos;;
+};
+
+buttonElement.addEventListener(&apos;mousedown&apos;,  onDown);
+buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
+buttonElement.addEventListener(&apos;mouseup&apos;,    onUp);
+buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
+              <figure>
+                <canvas id="canvas-animation-time-domain-wave-path-with-coordinate-and-texts-in-uint8" width="720" height="180"></canvas>
+                <figcaption>
+                  <span><code>getByteTimeDomainData</code> メソッドによる時間領域の波形描画 (Canvas)</span>
+                  <button type="button" id="button-canvas-time-domain-wave-path-with-coordinate-and-texts-in-uint8">start</button>
+                </figcaption>
+              </figure>
+            </section>
           </section>
         </section>
       </section>
