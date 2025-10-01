@@ -17565,6 +17565,32 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
               </figure>
             </section>
           </section>
+          <section id="section-sound-visualization-analyser-node-render-frequency-domain">
+            <h4>周波数領域領域の波形描画 (振幅スペクトルの描画)</h4>
+            <p>
+              周波数領域のスペクトル描画で関係のある, <code>AnalyserNode</code> のプロパティは, <code>getFloatFrequencyData</code> メソッドの場合,
+              <code>fftSize</code> プロパティ (その <span class="math-inline">$\frac{1}{2}$</span> の値となる <code>frequencyBinCount</code> プロパティ) と
+              <code>smoothingTimeConstant</code> プロパティのみです. <code>getByteFrequencyData</code> メソッドの場合, これらのプロパティに追加して,
+              <code>maxDecibels</code> プロパティと <code>minDecibels</code> プロパティが関連してきます.
+              <a href="#section-effectors-by-audio-worklet-time-and-frequency-resolution">時間分解能と周波数分解能</a>で解説しましたが,
+              スペクトル描画のみ場合は, <code>fftSize</code> プロパティはある程度大きくして, 周波数分解能を高くするほうが精度のよい描画となります (もっとも,
+              デフォルトの <code>2048</code> サンプルでも十分ですが).
+            </p>
+            <p>
+              また, <code>getFloatFrequencyData</code> メソッド, <code>getByteFrequencyData</code> メソッドで利用される (FFT のプリプロセス処理となる)
+              <b>窓関数は<a href="#section-effectors-by-audio-worklet-overlap-add-window-function">ブラックマン窓</a></b>です.
+            </p>
+            <section id="section-sound-visualization-analyser-node-render-frequency-domain-smoothing-time-constant">
+              <h5>smoothingTimeConstant プロパティ</h5>
+              <p>
+                <b><code>smoothingTimeConstant</code></b> プロパティに関しては, どちらのメソッドにも関係するのと,
+                振幅スペクトルの描画ロジックには関わらないので, 先に解説しておきます. <code>smoothingTimeConstant</code> プロパティは
+                <code>0 ~ 1</code> までの値を設定可能で, この値が小さいほどスペクトルのアニメーションが速くなり, 大きいほど遅くなります. また,
+                <code>1</code> に設定するとスペクトルが更新されなくなります. この設定によって, 時間領域の処理には影響しません (オーディオ API
+                一般的なパラメータではなく, Web Audio API 特有のパラメータと思われます).
+              </p>
+            </section>
+          </section>
         </section>
       </section>
       <footer>
