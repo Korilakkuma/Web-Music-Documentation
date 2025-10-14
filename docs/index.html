@@ -18557,6 +18557,395 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                 </figure>
               </section>
             </section>
+            <section id="section-sound-visualization-analyser-node-render-frequency-domain-get-byte-frequency-data">
+              <h5>getByteFrequencyData メソッド</h5>
+              <p>
+                <b><code>getByteFrequencyData</code></b> メソッドは, <code>Uint8Array</code> を引数にとり,
+                <code>Uint8Array</code> のサイズだけ振幅スペクトル格納します. 振幅スペクトルの範囲は <b><code>0</code> ~ <code>255</code></b> です. ただし,
+                引数に指定する <code>Uint8Array</code> のサイズが <code>frequencyBinCount</code> プロパティより大きい場合, 超過した要素は
+                <code>0</code> のままです. <code>frequencyBinCount</code> プロパティより小さい場合は, 不足した分の値は無視されます. したがって,
+                イディオム的には, <code>frequencyBinCount</code> プロパティのサイズの <code>Uint8Array</code> を引数に指定します. これら仕様は
+                <code>getFloatFrequencyData</code> メソッドと同じです.
+              </p>
+              <p><code>getFloatFrequencyData</code> メソッドと異なるのは, 格納される値の型が異なるので, 振幅と y 座標のマッピングのみです.</p>
+              <ul>
+                <li>
+                  <code>255</code> の場合, 振幅が <b><code>maxDecibels</code> プロパティで指定されているデシベル</b> (デフォルト値は, <code>-30 dB</code>) で, y
+                  座標は <code>0</code>
+                </li>
+                <li>
+                  <code>0</code> の場合, 振幅が <b><code>minDecibels</code> プロパティで指定されているデシベル</b> (デフォルト値は, <code>-100 dB</code>) で, y
+                  座標は <code>height</code>
+                </li>
+              </ul>
+              <p>
+                つまり, <code>getFloatTimeDomainData</code> メソッドで取得できる <code>Float32Array</code> の値を
+                <span class="math-inline">$X\left[k\right]$</span>, <code>getByteTimeDomainData</code> メソッで取得できる <code>Uint8Array</code> の値を
+                <span class="math-inline">$B\left[k\right]$</span>, <code>maxDecibels</code> プロパティの値を
+                <span class="math-inline">$\mathrm{dB_{max}}$</span>, <code>minDecibels</code> プロパティの値を
+                <span class="math-inline">$\mathrm{dB_{min}}$</span> とすると以下のような値の関係にあります.
+              </p>
+              <div class="math-block">
+                $B\left[k\right] = \lfloor \left(\frac{255}{\mathrm{dB_{max}} - \mathrm{dB_{min}}}\right) \cdot \left(X\left[k\right] - \mathrm{dB_{min}}\right)
+                \rfloor$
+              </div>
+              <p>
+                少し理解しにくい関係式ですが, 端的には, <code>getFloatFrequencyData</code> で取得できる振幅スペクトルのデシベル値を, 符号なし 8 bit の範囲
+                (<code>0</code> ~ <code>255</code>) にマッピングしているということです. そして, そのマッピングの対象となるデシベルの範囲を,
+                <code>maxDecibels</code> プロパティと <code>minDecibels</code> プロパティで決定しています.
+              </p>
+              <figure>
+                <svg id="svg-figure-relation-get-float-frequency-data-and-get-byte-frequency-data" width="800" height="450" />
+                <figcaption><code>getFloatFrequencyData</code> メソッドと <code>getByteFrequencyData</code> メソッドの関係</figcaption>
+              </figure>
+              <p>
+                振幅スペクトル, および, そのテキストは, 符号なし 8 bit の最大値の <code>255</code> で除算して <code>0</code> ~
+                <code>1</code> の範囲で正規化して描画するのがよいでしょう (振幅スペクトルは絶対値なので, 負数はありません). また,
+                <code>maxDecibels</code> プロパティと <code>minDecibels</code> プロパティも多くのケースにおいてはデフォルト値のままで問題ないですが,
+                以下のコードとデモでは, あえて変更して, <code>getFloatFrequencyData</code> メソッドで描画したコード例と合わせるように,
+                <code>maxDecibels</code> プロパティを <code>0</code> (<code>dB</code>), <code>minDecibels</code> プロパティを <code>-60</code> (<code>dB</code>)
+                に設定して実装します.
+              </p>
+              <p>振幅スペクトルを正規化すると, y 座標の値は <code>(1 - (data[n] / 255)) * height</code> で算出することができます.</p>
+              <figure>
+                <svg id="svg-figure-mapping-amplitude-spectrum-and-height-in-uint8" width="720" height="360" />
+                <figcaption>正規化した振幅スペクトルと <code>height</code> のマッピング</figcaption>
+              </figure>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const analyser = new AnalyserNode(context, { fftSize: 16384, maxDecibels: 0, minDecibels: -60 });
+
+const frequencyResolution = context.sampleRate / analyser.fftSize;
+
+const svg = document.getElementById(&apos;svg-animation-amplitude-spectrum-path-with-coordinate-and-texts-in-uint8&apos;);
+
+const width  = Number(svg.getAttribute(&apos;width&apos;) ?? &apos;0&apos;);
+const height = Number(svg.getAttribute(&apos;height&apos;) ?? &apos;0&apos;);
+
+const innerWidth  = width - 48;
+const innerHeight = height - 48;
+const translateX  = 48;
+const translateY  = 24;
+
+const path = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;path&apos;);
+
+path.setAttribute(&apos;stroke&apos;, &apos;rgb(0 0 255)&apos;);
+path.setAttribute(&apos;fill&apos;, &apos;none&apos;);
+path.setAttribute(&apos;stroke-width&apos;, lineWidth.toString(10));
+path.setAttribute(&apos;stroke-linecap&apos;, lineCap);
+path.setAttribute(&apos;stroke-linejoin&apos;, lineJoin);
+
+svg.appendChild(path);
+
+const xRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+xRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+xRect.setAttribute(&apos;y&apos;, (height - translateY - 1).toString(10));
+xRect.setAttribute(&apos;width&apos;, innerWidth.toString(10));
+xRect.setAttribute(&apos;height&apos;, &apos;2&apos;);
+xRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+xRect.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+
+svg.appendChild(xRect);
+
+const yRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+yRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+yRect.setAttribute(&apos;y&apos;, translateY.toString(10));
+yRect.setAttribute(&apos;width&apos;, &apos;2&apos;);
+yRect.setAttribute(&apos;height&apos;, innerHeight.toString(10));
+yRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+yRect.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+
+svg.appendChild(yRect);
+
+const g = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;g&apos;);
+
+[1.0, 0.5, 0.0].forEach((amplitude, index) =&gt; {
+  const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  text.textContent = amplitude.toFixed(1);
+
+  text.setAttribute(&apos;x&apos;, &apos;44&apos;);
+  text.setAttribute(&apos;y&apos;, (index * (innerHeight / 2) + translateY).toString(10));
+  text.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+  text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  text.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+  text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+  g.appendChild(text);
+});
+
+for (let k = 0; k &lt; analyser.frequencyBinCount; k++) {
+  if (k % 1024 !== 0) {
+    continue;
+  }
+
+  const x = k * (innerWidth / analyser.frequencyBinCount) + translateX;
+
+  const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  text.textContent = `${Math.trunc(k * frequencyResolution)} Hz`;
+
+  text.setAttribute(&apos;x&apos;, x);
+  text.setAttribute(&apos;y&apos;, (height - 8).toString(10));
+  text.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+  text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  text.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+  text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+  g.appendChild(text);
+}
+
+svg.appendChild(g);
+
+const xLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+xLabel.textContent = &apos;Frequency (Hz)&apos;;
+
+xLabel.setAttribute(&apos;x&apos;, width.toString(10));
+xLabel.setAttribute(&apos;y&apos;, (height - translateY - 8).toString(10));
+xLabel.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+xLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+xLabel.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+xLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+const yLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+yLabel.textContent = &apos;Amplitude&apos;;
+
+yLabel.setAttribute(&apos;x&apos;, &apos;28&apos;);
+yLabel.setAttribute(&apos;y&apos;, &apos;12&apos;);
+yLabel.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+yLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+yLabel.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+yLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+svg.appendChild(xLabel);
+svg.appendChild(yLabel);
+
+let animationId = null;
+
+const render = () =&gt; {
+  const data = new Uint8Array(analyser.frequencyBinCount);
+
+  analyser.getByteFrequencyData(data);
+
+  path.removeAttribute(&apos;d&apos;);
+
+  let d = &apos;&apos;;
+
+  for (let k = 0; k &lt; analyser.frequencyBinCount; k++) {
+    const x = k * (innerWidth / analyser.frequencyBinCount) + translateX;
+    const y = (1 - data[k] / 255) * innerHeight + translateY;
+
+    if (d === &apos;&apos;) {
+      d += `M${x} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute(&apos;d&apos;, d);
+
+  animationId = window.requestAnimationFrame(() =&gt; {
+    render();
+  });
+};
+
+const buttonElement = document.getElementById(&apos;button-svg-amplitude-spectrum-path-with-coordinate-and-texts-in-uint8&apos;);
+
+let oscillator = null;
+
+const onDown = async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  if (oscillator !== null) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+
+  oscillator.connect(analyser);
+  analyser.connect(context.destination);
+
+  oscillator.start(0);
+
+  render();
+
+  buttonElement.textContent = &apos;stop&apos;;
+};
+
+const onUp = () =&gt; {
+  if (oscillator === null) {
+    return;
+  }
+
+  oscillator.stop(0);
+
+  oscillator = null;
+
+  if (animationId) {
+    window.cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  buttonElement.textContent = &apos;start&apos;;
+};
+
+buttonElement.addEventListener(&apos;mousedown&apos;,  onDown);
+buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
+buttonElement.addEventListener(&apos;mouseup&apos;,    onUp);
+buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
+              <figure>
+                <svg id="svg-animation-amplitude-spectrum-path-with-coordinate-and-texts-in-uint8" width="720" height="180"></svg>
+                <figcaption>
+                  <span><code>getByteFrequencyData</code> メソッドによる周波数領域 (振幅スペクトル) の波形描画 (SVG)</span>
+                  <button type="button" id="button-svg-amplitude-spectrum-path-with-coordinate-and-texts-in-uint8">start</button>
+                </figcaption>
+              </figure>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const analyser = new AnalyserNode(context, { fftSize: 16384, maxDecibels: 0, minDecibels: -60 });
+
+const frequencyResolution = context.sampleRate / analyser.fftSize;
+
+const canvas           = document.getElementById(&apos;canvas-animation-amplitude-spectrum-path-with-coordinate-and-texts-in-uint8&apos;);
+const renderingContext = canvas.getContext(&apos;2d&apos;);
+
+const width  = canvas.width;
+const height = canvas.height;
+
+const innerWidth  = width - 48;
+const innerHeight = height - 48;
+const translateX  = 48;
+const translateY  = 24;
+
+let animationId = null;
+
+const render = () =&gt; {
+  const data = new Uint8Array(analyser.frequencyBinCount);
+
+  analyser.getByteFrequencyData(data);
+
+  renderingContext.clearRect(0, 0, width, height);
+
+  renderingContext.beginPath();
+
+  for (let k = 0; k &lt; analyser.frequencyBinCount; k++) {
+    const x = k * (innerWidth / analyser.frequencyBinCount) + translateX;
+    const y = (1 - data[k] / 255) * innerHeight + translateY;
+
+    if (k === 0) {
+      renderingContext.moveTo(x, y);
+    } else {
+      renderingContext.lineTo(x, y);
+    }
+  }
+
+  renderingContext.lineWidth = 1.5;
+  renderingContext.strokeStyle = &apos;rgb(0 0 255)&apos;;
+
+  renderingContext.stroke();
+
+  renderingContext.fillStyle = &apos;rgb(153 153 153)&apos;;
+  renderingContext.fillRect(translateX, height - translateY - 1, innerWidth, 2);
+  renderingContext.fillRect(translateX, translateY, 2, innerHeight);
+
+  renderingContext.font = &apos;Roboto 12px&apos;;
+  renderingContext.fillStyle = &apos;rgb(153 153 153)&apos;;
+
+  [1.0, 0.5, 0.0].forEach((amplitude, index) =&gt; {
+    renderingContext.textAlign = &apos;end&apos;;
+    renderingContext.fillText(amplitude.toFixed(1), 44, index * (innerHeight / 2) + translateY);
+  });
+
+  for (let k = 0; k &lt; analyser.frequencyBinCount; k++) {
+    if (k % 1024 !== 0) {
+      continue;
+    }
+
+    const x = k * (innerWidth / analyser.frequencyBinCount) + translateX;
+
+    renderingContext.textAlign = &apos;start&apos;;
+    renderingContext.fillText(`${k * frequencyResolution} Hz`, x, height - 8);
+  }
+
+  renderingContext.font = &apos;Roboto 16px&apos;;
+
+  renderingContext.textAlign = &apos;end&apos;;
+  renderingContext.fillText(&apos;Frequency (Hz)&apos;, width, height - translateY - 8);
+
+  renderingContext.textAlign = &apos;start&apos;;
+  renderingContext.fillText(&apos;Amplitude&apos;, 28, 12);
+
+  animationId = window.requestAnimationFrame(() =&gt; {
+    render();
+  });
+};
+
+const buttonElement = document.getElementById(&apos;button-canvas-amplitude-spectrum-path-with-coordinate-and-texts-in-uint8&apos;);
+
+let oscillator = null;
+
+const onDown = async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  if (oscillator !== null) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+
+  oscillator.connect(analyser);
+  analyser.connect(context.destination);
+
+  oscillator.start(0);
+
+  render();
+
+  buttonElement.textContent = &apos;stop&apos;;
+};
+
+const onUp = () =&gt; {
+  if (oscillator === null) {
+    return;
+  }
+
+  oscillator.stop(0);
+
+  oscillator = null;
+
+  if (animationId) {
+    window.cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  buttonElement.textContent = &apos;start&apos;;
+};
+
+buttonElement.addEventListener(&apos;mousedown&apos;,  onDown);
+buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
+buttonElement.addEventListener(&apos;mouseup&apos;,    onUp);
+buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
+              <figure>
+                <canvas id="canvas-animation-amplitude-spectrum-path-with-coordinate-and-texts-in-uint8" width="720" height="180"></canvas>
+                <figcaption>
+                  <span><code>getByteFrequencyData</code> メソッドによる周波数領域 (振幅スペクトル) の波形描画 (Canvas)</span>
+                  <button type="button" id="button-canvas-amplitude-spectrum-path-with-coordinate-and-texts-in-uint8">start</button>
+                </figcaption>
+              </figure>
+            </section>
           </section>
         </section>
       </section>
