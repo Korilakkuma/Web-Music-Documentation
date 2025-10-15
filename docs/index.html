@@ -18946,6 +18946,335 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                 </figcaption>
               </figure>
             </section>
+            <article id="section-sound-visualization-analyser-node-render-frequency-domain-phase">
+              <h5>位相スペクトルの描画</h5>
+              <p>
+                <code>AnalyserNode</code> クラスには, <code>getFloatFrequencyData</code> メソッドのような,
+                位相スペクトルを取得するためのメソッドは仕様にありません (すでに解説していますが, 人間の聴覚は位相スペクトルの違いに鈍感という特性があり, 実際,
+                エフェクターの実装などにおいても, 位相スペクトルで演算をするということが非常に稀なケースであるからです. しかしながら, API
+                として定義されていなくても, 離散フーリエ変換 (高速フーリエ変換) を直接適用することができるので, FFT を適用した結果の複素数の配列から,
+                偏角の配列を取得して, 周波数を横軸に位相をプロットしていくことで位相スペクトルを視覚化することができます.
+              </p>
+              <p>
+                また, 位相スペクトルが必要なケースでも, <code>BiquadFilterNode</code> によるフィルタの位相特性を取得する場合は,
+                <code>BiquadFilterNode</code> インスタンスの <b><code>getFrequencyResponse</code></b> メソッドを利用することで可能です (<a
+                  href="#section-effectors-filter-biquad-filter-node-allpass"
+                  >All-Pass Filter の周波数特性 (位相スペクトル)</a>
+                は, FFT を実装することなく, <code>getFrequencyResponse</code> メソッドで位相スペクトルを取得することで視覚化しています).
+              </p>
+              <p>
+                位相スペクトルの視覚化の解説として,
+                <a href="#section-effectors-by-audio-worklet-overlap-add-audio-worklet-processor-and-window-function-overlap-add-processor"
+                  ><code>OverlapAddProcessor</code> クラス</a>を拡張子したクラスを利用して実装します (<code>AudioWorkletProcessor</code> クラスで実装すると, FFT サイズが
+                <code>renderQuantumSize</code> (<code>128</code> サンプル) で固定されてしまい, 十分な周波数分解能が確保できないからです).
+                <code>processOverlapAdd</code> メソッドで呼び出している, <code>FFT</code> 関数は,
+                <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装</a>セクションで記載している実装を
+                <code>AudioWorkletGlobalScope</code> 内で定義していると仮定してください.
+              </p>
+              <p>
+                窓関数は, 位相スペクトルを描画に利用するだけなので, <code>AnalyserNode</code> と同じく, ブラックマン窓を FFT の実行前に適用すればよいでしょう.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/phase-spectrum.js&apos;
+
+/**
+ * This class extends `OverlapAddProcessor`.
+ */
+class PhaseSpectrumOverlapAddProcessor extends OverlapAddProcessor {
+  constructor(options) {
+    super(options);
+
+    this.blackmanWindow = this.createBlackmanWindow(this.frameSize);
+
+    this.frequencyBinCount = this.frameSize / 2;
+  }
+
+  /** @overdrive */
+  processOverlapAdd(inputs, outputs) {
+    const input  = inputs[0];
+    const output = outputs[0];
+
+    const numberOfChannels = input.length;
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      // Bypass
+      output[channelNumber].set(input[channelNumber]);
+
+      const phases = new Float32Array(this.frequencyBinCount);
+
+      const reals = new Float32Array(this.frameSize);
+      const imags = new Float32Array(this.frameSize);
+
+      for (let n = 0; n &lt; this.frameSize; n++) {
+        reals[n] = this.blackmanWindow[n] * input[channelNumber][n];
+      }
+
+      FFT(reals, imags, this.frameSize);
+
+      const plot = Math.trunc(440 * (this.frameSize / sampleRate));
+
+      for (let k = 0; k &lt; this.frequencyBinCount; k++) {
+        if (k !== plot) {
+          continue;
+        }
+
+        if ((reals[k] !== 0) &amp;&amp; (imags[k] !== 0)) {
+          phases[k] = Math.atan2(imags[k], reals[k]);
+        }
+      }
+
+      // Post to main thread
+      this.port.postMessage(phases);
+    }
+  }
+
+  createBlackmanWindow(size) {
+    const w = new Float32Array(size);
+
+    const alpha = 0.16;
+
+    const a0 = (1 - alpha) / 2;
+    const a1 = 1 / 2;
+    const a2 = alpha / 2;
+
+    for (let n = 0; n &lt; size; n++) {
+      w[n] = a0 - a1 * Math.cos((2 * Math.PI * n) / size) + a2 * Math.cos((4 * Math.PI * n) / size);
+    }
+
+    return w;
+  }
+}
+
+registerProcessor('PhaseSpectrumOverlapAddProcessor', PhaseSpectrumOverlapAddProcessor);</code></pre>
+              <p>
+                <b>位相スペクトルはナイキスト周波数を軸に点対称</b>となります. 線対称か点対称かの違いはありますが, 振幅スペクトと同じく,
+                ナイキスト周波数までの位相スペクトルが取得できればよいので, FFT サイズの値を <code>1/2</code> にして
+                <code>frequencyBinCount</code> プロパティとして算出しています. したがって, メインスレッドに <code>postMessage</code> される
+                <code>Float32Array</code> のサイズは, <code>frequencyBinCount</code> サイズとなります. また, 偏角はすでに解説していますが,
+                <code>Math.atan2</code> メソッドに, 対応するインデックスの虚軸の値と実軸の値を引数に指定することで, ラジアンとして算出できます.
+              </p>
+              <p>
+                メインスレッドでは, <code>MessagePort</code> の <code>onmessage</code> イベントハンドラで取得した位相スペクトルを描画します. 位相のプロット範囲
+                (プロットの下限と上限) の設定はいくつか考えられるので (<span class="math-inline">$0 \leq \theta \leq 2 \pi$</span>, <code>0°</code> ~
+                <code>360°</code> など), ここでは, <span class="math-inline">$- \pi \leq \theta \leq \pi$</span> の範囲で位相スペクトルを描画することにします.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const fftSize = 2048;
+
+const numberOfPlots = fftSize / 64;
+
+const frequencyResolution = context.sampleRate / fftSize;
+
+const svg = document.getElementById(&apos;svg-animation-phase-spectrum-path-with-coordinate-and-texts&apos;);
+
+const width  = Number(svg.getAttribute(&apos;width&apos;) ?? &apos;0&apos;);
+const height = Number(svg.getAttribute(&apos;height&apos;) ?? &apos;0&apos;);
+
+const innerWidth  = width - 48;
+const innerHeight = height - 48;
+const translateX  = 48;
+const translateY  = 24;
+
+const path = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;path&apos;);
+
+path.setAttribute(&apos;stroke&apos;, &apos;rgb(0 0 255)&apos;);
+path.setAttribute(&apos;fill&apos;, &apos;none&apos;);
+path.setAttribute(&apos;stroke-width&apos;, &apos;2&apos;);
+path.setAttribute(&apos;stroke-linecap&apos;, &apos;round&apos;);
+path.setAttribute(&apos;stroke-linejoin&apos;, &apos;miter&apos;);
+
+svg.appendChild(path);
+
+const xRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+xRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+xRect.setAttribute(&apos;y&apos;, (height - translateY - 1).toString(10));
+xRect.setAttribute(&apos;width&apos;, (width - translateX).toString(10));
+xRect.setAttribute(&apos;height&apos;, &apos;2&apos;);
+xRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+xRect.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+
+svg.appendChild(xRect);
+
+const yRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+yRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+yRect.setAttribute(&apos;y&apos;, translateY.toString(10));
+yRect.setAttribute(&apos;width&apos;, &apos;2&apos;);
+yRect.setAttribute(&apos;height&apos;, (height - translateX).toString(10));
+yRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+yRect.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+
+svg.appendChild(yRect);
+
+const g = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;g&apos;);
+
+[&apos;π&apos;, &apos;π/2&apos;, &apos;0&apos;, &apos;-π/2&apos;, &apos;-π&apos;].forEach((radian, index) =&gt; {
+  const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  text.textContent = `${radian} rad`;
+
+  text.setAttribute(&apos;x&apos;, &apos;44&apos;);
+  text.setAttribute(&apos;y&apos;, (index * (innerHeight / 4) + translateY).toString(10));
+  text.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+  text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  text.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+  text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+  g.appendChild(text);
+});
+
+for (let k = 0; k &lt; numberOfPlots; k++) {
+  if ((k % 2) !== 0) {
+    continue;
+  }
+
+  const x = k * (innerWidth / numberOfPlots) + translateX;
+
+  const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  text.textContent = `${Math.trunc(k * frequencyResolution)} Hz`;
+
+  text.setAttribute(&apos;x&apos;, x);
+  text.setAttribute(&apos;y&apos;, (height - 8).toString(10));
+  text.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+  text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  text.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+  text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+  g.appendChild(text);
+}
+
+svg.appendChild(g);
+
+const xLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+xLabel.textContent = &apos;Frequency (Hz)&apos;;
+
+xLabel.setAttribute(&apos;x&apos;, width.toString(10));
+xLabel.setAttribute(&apos;y&apos;, (height - translateY - 8).toString(10));
+xLabel.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+xLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+xLabel.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+xLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+const yLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+yLabel.textContent = &apos;Phase (radian)&apos;;
+
+yLabel.setAttribute(&apos;x&apos;, translateY.toString(10));
+yLabel.setAttribute(&apos;y&apos;, &apos;12&apos;);
+yLabel.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+yLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+yLabel.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+yLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+svg.appendChild(xLabel);
+svg.appendChild(yLabel);
+
+const render = (data) =&gt; {
+  path.removeAttribute(&apos;d&apos;);
+
+  let d = &apos;&apos;;
+
+  for (let k = 0; k &lt; numberOfPlots; k++) {
+    const x = k * (innerWidth / numberOfPlots) + translateX;
+    const y = ((Math.PI - data[k]) / Math.PI) * (innerHeight / 2) + translateY;
+
+    if (d === &apos;&apos;) {
+      d += `M${x} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute(&apos;d&apos;, d);
+};
+
+const buttonElement = document.getElementById(&apos;button-svg-phase-spectrum-path-with-coordinate-and-texts&apos;);
+
+let processor  = null;
+let oscillator = null;
+
+const onDown = async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  if (processor === null) {
+    await context.audioWorklet.addModule(&apos;./audio-worklets/phase-spectrum.js&apos;);
+
+    processor = new AudioWorkletNode(context, &apos;PhaseSpectrumOverlapAddProcessor&apos;, {
+      processorOptions: {
+        frameSize: fftSize
+      }
+    });
+
+    processor.port.onmessage = (event) =&gt; {
+      render(event.data);
+    };
+  }
+
+  if (oscillator !== null) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context);
+
+  // OscillatorNode (Input) -&gt; AudioWorkletNode (Phase Spectrum Analyser) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(processor);
+  processor.connect(context.destination);
+
+  oscillator.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+};
+
+const onUp = () =&gt; {
+  if (oscillator === null) {
+    return;
+  }
+
+  oscillator.stop(0);
+
+  oscillator = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+};
+
+buttonElement.addEventListener(&apos;mousedown&apos;,  onDown);
+buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
+buttonElement.addEventListener(&apos;mouseup&apos;,    onUp);
+buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
+              <figure>
+                <svg id="svg-animation-phase-spectrum-path-with-coordinate-and-texts" width="720" height="180"></svg>
+                <figcaption>
+                  <span>周波数領域 (位相スペクトル) の波形描画 (<code>440 Hz</code> の正弦波. 段差成分あり)</span>
+                  <button type="button" id="button-svg-phase-spectrum-path-with-coordinate-and-texts">start</button>
+                </figcaption>
+              </figure>
+              <p>
+                しかしながら, リアルタイム処理では, 窓関数を適用しても完全に段差成分を除去することはできないので,
+                本来は存在しない周波数成分の位相もシフトしてしまいます. 特に, 振幅スペクトルと異なり, 段差成分も
+                <span class="math-inline">$- \pi \leq \theta \leq \pi$</span> の範囲でシフトするので, 位相スペクトルの段差成分は,
+                より目立って視覚化されてしまいます (それでも, <code>440 Hz</code> の成分が
+                <span class="math-inline">$- \pi \leq \theta \leq \pi$</span> の範囲でシフトしていることも確認はできると思います).
+              </p>
+              <p><code>440 Hz</code> 正弦波の (本来の) 位相スペクトルは以下のようになります.</p>
+              <figure>
+                <svg id="svg-animation-440-hz-sin-phase-spectrum-path-with-coordinate-and-texts" width="720" height="180"></svg>
+                <figcaption>
+                  <span>周波数領域 (位相スペクトル) の波形描画 (<code>440 Hz</code> の正弦波. 段差成分除去)</span>
+                  <button type="button" id="button-svg-440-hz-sin-phase-spectrum-path-with-coordinate-and-texts">start</button>
+                </figcaption>
+              </figure>
+            </article>
           </section>
         </section>
       </section>

@@ -17192,7 +17192,7 @@ const createMappingAmplitudeSpectrumAndHeight = (svg) => {
 
   path.setAttribute('d', d);
 
-  path.setAttribute('stroke', waveColor);
+  path.setAttribute('stroke', alphaWaveColor);
   path.setAttribute('fill', 'none');
   path.setAttribute('stroke-width', lineWidth.toString(10));
   path.setAttribute('stroke-linecap', lineCap);
@@ -18102,7 +18102,7 @@ const createMappingNormalizedAmplitudeSpectrumAndHeight = (svg) => {
 
   path.setAttribute('d', d);
 
-  path.setAttribute('stroke', waveColor);
+  path.setAttribute('stroke', alphaWaveColor);
   path.setAttribute('fill', 'none');
   path.setAttribute('stroke-width', lineWidth.toString(10));
   path.setAttribute('stroke-linecap', lineCap);
@@ -18418,6 +18418,190 @@ const animateAmplitudeSpectrumUint8WaveToCanvas = (canvas) => {
   buttonElement.addEventListener('touchstart', onDown);
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
+};
+
+const animatePhaseSpectrumToSVG = (svg, button, isActual) => {
+  const fftSize = 2048;
+
+  const numberOfPlots = fftSize / 64;
+
+  const width = Number(svg.getAttribute('width') ?? '0');
+  const height = Number(svg.getAttribute('height') ?? '0');
+
+  const innerWidth = width - 48;
+  const innerHeight = height - 48;
+  const translateX = 48;
+  const translateY = 24;
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+  path.setAttribute('stroke', 'rgb(0 0 255)');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', '2');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('stroke-linejoin', 'miter');
+
+  svg.appendChild(path);
+
+  const xRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+
+  xRect.setAttribute('x', translateX.toString(10));
+  xRect.setAttribute('y', (height - translateY - 1).toString(10));
+  xRect.setAttribute('width', (width - translateX).toString(10));
+  xRect.setAttribute('height', '2');
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', 'rgb(153 153 153)');
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+
+  yRect.setAttribute('x', translateX.toString(10));
+  yRect.setAttribute('y', translateY.toString(10));
+  yRect.setAttribute('width', '2');
+  yRect.setAttribute('height', (height - translateX).toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', 'rgb(153 153 153)');
+
+  svg.appendChild(yRect);
+
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+  ['π', 'π/2', '0', '-π/2', '-π'].forEach((radian, index) => {
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+    text.textContent = `${radian} rad`;
+
+    text.setAttribute('x', '44');
+    text.setAttribute('y', (index * (innerHeight / 4) + translateY).toString(10));
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', 'rgb(153 153 153)');
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  });
+
+  for (let k = 0; k < numberOfPlots; k++) {
+    if (k % 2 !== 0) {
+      continue;
+    }
+
+    const x = k * (innerWidth / numberOfPlots) + translateX;
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+    text.textContent = `${Math.trunc(k * (audiocontext.sampleRate / fftSize))} Hz`;
+
+    text.setAttribute('x', x);
+    text.setAttribute('y', (height - 8).toString(10));
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', 'rgb(153 153 153)');
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  }
+
+  svg.appendChild(g);
+
+  const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+  xLabel.textContent = 'Frequency (Hz)';
+
+  xLabel.setAttribute('x', width.toString(10));
+  xLabel.setAttribute('y', (height - translateY - 8).toString(10));
+  xLabel.setAttribute('text-anchor', 'end');
+  xLabel.setAttribute('stroke', 'none');
+  xLabel.setAttribute('fill', 'rgb(153 153 153)');
+  xLabel.setAttribute('font-size', '14px');
+
+  const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+  yLabel.textContent = 'Phase (radian)';
+
+  yLabel.setAttribute('x', translateY.toString(10));
+  yLabel.setAttribute('y', '12');
+  yLabel.setAttribute('text-anchor', 'start');
+  yLabel.setAttribute('stroke', 'none');
+  yLabel.setAttribute('fill', 'rgb(153 153 153)');
+  yLabel.setAttribute('font-size', '14px');
+
+  svg.appendChild(xLabel);
+  svg.appendChild(yLabel);
+
+  const render = (data) => {
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let k = 0; k < numberOfPlots; k++) {
+      const x = k * (innerWidth / numberOfPlots) + translateX;
+      const y = ((Math.PI - data[k]) / Math.PI) * (innerHeight / 2) + translateY;
+
+      if (d === '') {
+        d += `M${x} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+  };
+
+  let processor = null;
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (processor === null) {
+      await audiocontext.audioWorklet.addModule('./audio-worklets/phase-spectrum.js');
+
+      processor = new AudioWorkletNode(audiocontext, 'PhaseSpectrumOverlapAddProcessor', {
+        processorOptions: {
+          frameSize: fftSize,
+          isActual
+        }
+      });
+
+      processor.port.onmessage = (event) => {
+        render(event.data);
+      };
+    }
+
+    if (oscillator !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    oscillator.connect(processor);
+    processor.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    button.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    button.textContent = 'start';
+  };
+
+  button.addEventListener('mousedown', onDown);
+  button.addEventListener('touchstart', onDown);
+  button.addEventListener('mouseup', onUp);
+  button.addEventListener('touchend', onUp);
 };
 
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
@@ -18740,3 +18924,15 @@ createMappingNormalizedAmplitudeSpectrumAndHeight(document.getElementById('svg-f
 
 animateAmplitudeSpectrumUint8WaveToSVG(document.getElementById('svg-animation-amplitude-spectrum-path-with-coordinate-and-texts-in-uint8'));
 animateAmplitudeSpectrumUint8WaveToCanvas(document.getElementById('canvas-animation-amplitude-spectrum-path-with-coordinate-and-texts-in-uint8'));
+
+animatePhaseSpectrumToSVG(
+  document.getElementById('svg-animation-phase-spectrum-path-with-coordinate-and-texts'),
+  document.getElementById('button-svg-phase-spectrum-path-with-coordinate-and-texts'),
+  true
+);
+
+animatePhaseSpectrumToSVG(
+  document.getElementById('svg-animation-440-hz-sin-phase-spectrum-path-with-coordinate-and-texts'),
+  document.getElementById('button-svg-440-hz-sin-phase-spectrum-path-with-coordinate-and-texts'),
+  false
+);
