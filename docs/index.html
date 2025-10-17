@@ -19275,6 +19275,289 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                 </figcaption>
               </figure>
             </article>
+            <article id="section-sound-visualization-analyser-node-render-frequency-logarithmic-scale">
+              <h5>周波数軸の対数スケール表示</h5>
+              <p>
+                これまでの周波数軸でのスペクトル描画の, 周波数軸はすべて線形スケールで表示していました. しかしながら, スペクトルの場合,
+                低音域から高音域まで視覚化したいユースケースも多くあります. 線形スケールでは, 現実的なグラフィックス API の領域の幅
+                (デスクトップサイズで横スクロールが発生しない幅として, 13 インチで <code>1400 px</code> ぐらい) では, 低音域を詳細に視覚化すると,
+                高音域が視覚化できなくなり (視認できなくなり), 小音域まで視覚化すると, 低音域の詳細が視覚化できなく (視認できなく) なります.
+                この問題を解決するために, 周波数軸を対数スケールで表示するケースがよくあります (すでに,
+                フィルタの周波数特性などでは対数スケールで表示していますが). このセクションでは, 対数スケールで, 振幅スペクトルを描画する実装を解説します.
+              </p>
+              <p>
+                対数スケールの尺度は様々ですが, このセクションでは, <code>10</code> を低とする<b>常用対数</b> (<code>Math.log10</code>) を利用して, 10
+                帯域のグラフィックイコライザーの帯域を視覚化できるように, <code>32 Hz</code> から, 約 2 倍ずつステップした, <code>32 Hz</code>,
+                <code>62.5 Hz</code>, <code>125 Hz</code>, <code>250 Hz</code>, <code>500 Hz</code>, <code>1000 Hz</code>, <code>2000 Hz</code>,
+                <code>4000 Hz</code>, <code>8000 Hz</code>, <code>16000 Hz</code> の 10 つの周波数 (帯域) を対数スケールで描画します.
+              </p>
+              <p>
+                周波数のテキストの座標は線形スケールと考え方は同じです. 10 帯域を描画対象の幅で, 等間隔に描画するので <code>width / 10</code> で算出できます
+                (<code>10</code> は帯域数です).
+              </p>
+              <p>
+                線形スケールと異なるのは, 振幅スペクトルのパスの x 座標の算出です. 描画範囲の幅を <code>1</code> として, 対数スケールでプロットする最小周波数を
+                <span class="math-inline">$f_{\mathrm{min}}$</span>, 最大周波数を <span class="math-inline">$f_{\mathrm{max}}$</span> とすると, インデックス
+                <span class="math-inline">$k$</span> 番目に対応する対数スケールの周波数を <span class="math-inline">$f_{k}$</span> の, プロットする x 座標
+                <span class="math-inline">$x_{k}$</span> の算出は,
+              </p>
+              <div class="math-block">
+                $x_{k} = \frac{\log_{10}\left(\frac{f_{k}}{f_{\mathrm{min}}}\right)}{\log_{10}\left(\frac{f_{\mathrm{max}}}{f_{\mathrm{min}}}\right)}$
+              </div>
+              <p>対数の性質より, 真数の除算は, 減算に展開可能なので, 以下の式と等価です (算出式の意味としては, こちらのほうが理解しやすいかもしれません).</p>
+              <div class="math-block">
+                $x_{k} = \frac{\log_{10}\left(f_{k}\right) - \log_{10}\left(f_{\mathrm{min}}\right)}{\log_{10}\left(f_{\mathrm{max}}\right) -
+                \log_{10}\left(f_{\mathrm{min}}\right)}$
+              </div>
+              <p>
+                プロット対象の周波数の描画対象の最小周波数からの x 軸のオフセット (分子) が, 描画範囲の周波数 (分母) に対して,
+                どの程度の割合かを常用対数で算出しているのが上記の式の意味です (この算出の本質的な考え方は,
+                <a href="#section-sound-visualization-analyser-node-render-frequency-domain-get-byte-frequency-data"
+                  ><code>getFloatFrequencyData</code> メソッドと <code>getByteFrequencyData</code> メソッドの関係式</a>でも同じです).
+              </p>
+              <p>
+                算出したプロット対象の x 座標の値 (オフセット比) は, 描画範囲の幅を <code>1</code> としているので,
+                <span class="math-inline">$x_{k}$</span> に実際の描画範囲の幅を乗算すればよいでしょう.
+              </p>
+              <p>
+                <span class="math-inline">$f_{\mathrm{min}}$</span> と <span class="math-inline">$f_{\mathrm{max}}$</span> は, このセクションの実装では,
+                それぞれ <code>32</code> (<code>Hz</code>) と <code>16000</code> (<code>Hz</code>) となります.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const analyser = new AnalyserNode(context, { fftSize: 16384 });
+
+const frequencies = [32, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+
+const minFrequency = frequencies[0];
+const maxFrequency = frequencies[frequencies.length - 1];
+
+const ratio      = maxFrequency / minFrequency;
+const log10Ratio = Math.log10(ratio);
+
+const frequencyResolution = context.sampleRate / analyser.fftSize;
+
+const svg = document.getElementById(&apos;svg-animation-logarithmic-scale-amplitude-spectrum&apos;);
+
+const width  = Number(svg.getAttribute(&apos;width&apos;) ?? &apos;0&apos;);
+const height = Number(svg.getAttribute(&apos;height&apos;) ?? &apos;0&apos;);
+
+const innerWidth  = width - 48;
+const innerHeight = height - 48;
+const translateX  = 48;
+const translateY  = 24;
+
+const maxDecibels = 0;
+const minDecibels = -60;
+
+const path = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;path&apos;);
+
+path.setAttribute(&apos;stroke&apos;, &apos;rgb(0 0 255)&apos;);
+path.setAttribute(&apos;fill&apos;, &apos;none&apos;);
+path.setAttribute(&apos;stroke-width&apos;, &apos;2&apos;);
+path.setAttribute(&apos;stroke-linecap&apos;, &apos;round&apos;);
+path.setAttribute(&apos;stroke-linejoin&apos;, &apos;miter&apos;);
+
+svg.appendChild(path);
+
+const xRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+xRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+xRect.setAttribute(&apos;y&apos;, (height - translateY - 1).toString(10));
+xRect.setAttribute(&apos;width&apos;, (width - translateX).toString(10));
+xRect.setAttribute(&apos;height&apos;, &apos;2&apos;);
+xRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+xRect.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+
+svg.appendChild(xRect);
+
+const yRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+yRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+yRect.setAttribute(&apos;y&apos;, translateY.toString(10));
+yRect.setAttribute(&apos;width&apos;, &apos;2&apos;);
+yRect.setAttribute(&apos;height&apos;, (height - translateX).toString(10));
+yRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+yRect.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+
+svg.appendChild(yRect);
+
+const g = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;g&apos;);
+
+[0, -10, -20, -30, -40, -50, -60].forEach((dB, index) =&gt; {
+  const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  text.textContent = `${dB} dB`;
+
+  text.setAttribute(&apos;x&apos;, &apos;44&apos;);
+  text.setAttribute(&apos;y&apos;, (index * (innerHeight / 6) + translateY).toString(10));
+  text.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+  text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  text.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+  text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+  g.appendChild(text);
+});
+
+frequencies.forEach((frequency, index) =&gt; {
+  const x = (index * (innerWidth / frequencies.length)) + translateX;
+  const y = height - 8;
+
+  const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  if (frequency &gt;= 1000) {
+    text.textContent = `${Math.trunc(frequency / 1000)} kHz`;
+  } else {
+    text.textContent = `${frequency} Hz`;
+  }
+
+  text.setAttribute(&apos;x&apos;, x.toString(10));
+  text.setAttribute(&apos;y&apos;, y.toString(10));
+  text.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+  text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  text.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+  text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+  g.appendChild(text);
+});
+
+svg.appendChild(g);
+
+const xLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+xLabel.textContent = &apos;Frequency (Hz)&apos;;
+
+xLabel.setAttribute(&apos;x&apos;, width.toString(10));
+xLabel.setAttribute(&apos;y&apos;, (height - translateY - 8).toString(10));
+xLabel.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+xLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+xLabel.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+xLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+const yLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+yLabel.textContent = &apos;Amplitude (dB)&apos;;
+
+yLabel.setAttribute(&apos;x&apos;, translateY.toString(10));
+yLabel.setAttribute(&apos;y&apos;, &apos;12&apos;);
+yLabel.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+yLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+yLabel.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+yLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+svg.appendChild(xLabel);
+svg.appendChild(yLabel);
+
+let animationId = null;
+
+const render = () =&gt; {
+  const data = new Float32Array(analyser.frequencyBinCount);
+
+  analyser.getFloatFrequencyData(data);
+
+  path.removeAttribute(&apos;d&apos;);
+
+  let d = &apos;&apos;;
+
+  for (let k = 0; k &lt; analyser.frequencyBinCount; k++) {
+    if (k === 0) {
+      continue;
+    }
+
+    // for Chrome
+    if (!Number.isFinite(data[k])) {
+      continue;
+    }
+
+    const frequency = k * frequencyResolution;
+
+    const x = ((Math.log10(frequency / minFrequency) / log10Ratio) * innerWidth) + translateX;
+    const y = Math.min(((0 - data[k]) * (innerHeight / (maxDecibels - minDecibels)) - translateY), (height - translateY));
+
+    if (x &lt; translateX) {
+      continue;
+    }
+
+    if (d === &apos;&apos;) {
+      d += `M${translateX} ${translateY + innerHeight}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute(&apos;d&apos;, d);
+
+  animationId = window.requestAnimationFrame(() =&gt; {
+    render();
+  });
+};
+
+const buttonElement = document.getElementById(&apos;button-svg-logarithmic-scale-amplitude-spectrum&apos;);
+
+let oscillator = null;
+
+const onDown = async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  if (oscillator !== null) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+
+  // OscillatorNode (Input) -&gt; AnalyserNode (Spectrum Analyser) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(analyser);
+  analyser.connect(context.destination);
+
+  oscillator.start(0);
+
+  render();
+
+  buttonElement.textContent = &apos;stop&apos;;
+};
+
+const onUp = () =&gt; {
+  if (oscillator === null) {
+    return;
+  }
+
+  oscillator.stop(0);
+
+  oscillator = null;
+
+  if (animationId) {
+    window.cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  buttonElement.textContent = &apos;start&apos;;
+};
+
+buttonElement.addEventListener(&apos;mousedown&apos;,  onDown);
+buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
+buttonElement.addEventListener(&apos;mouseup&apos;,    onUp);
+buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
+              <p>
+                <code>getFloatFrequencyData</code> メソッド取得した, 振幅スペクトルの <code>Float32Array</code> の <code>0</code> 番目のインデックスは
+                <code>0 Hz</code> に対応しますが, 対数の定義より, <b>対数の真数は <code>0</code> より大きくなければならない</b>ので,
+                振幅スペクトルの座標をプロットするループで, <code>0</code> 番目のインデックスは <code>continue</code> していることに着目してください (これは,
+                <code>getByteFrequencyData</code> メソッドを利用した場合でも同じです).
+              </p>
+              <figure>
+                <svg id="svg-animation-logarithmic-scale-amplitude-spectrum" width="720" height="180"></svg>
+                <figcaption>
+                  <span>対数スケールによる振幅スペクトル</span>
+                  <button type="button" id="button-svg-logarithmic-scale-amplitude-spectrum">start</button>
+                </figcaption>
+              </figure>
+              <p>ちなみに, 振幅スペクトルもデシベル単位でプロットしているので, 周波数軸も振幅軸も対数スケールで視覚化していることになります.</p>
+              <p>また, 周波数軸を対数スケールにするので, 位相スペクトルも同様の実装で対応できます.</p>
+            </article>
           </section>
         </section>
       </section>

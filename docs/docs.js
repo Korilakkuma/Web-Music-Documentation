@@ -18604,6 +18604,220 @@ const animatePhaseSpectrumToSVG = (svg, button, isActual) => {
   button.addEventListener('touchend', onUp);
 };
 
+const animateLogarithmicScaleAmplitudeSpectrumToSVG = (svg) => {
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 16384 });
+
+  const frequencies = [32, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+
+  const minFrequency = frequencies[0];
+  const maxFrequency = frequencies[frequencies.length - 1];
+
+  const ratio = maxFrequency / minFrequency;
+  const log10Ratio = Math.log10(ratio);
+
+  const frequencyResolution = sampleRate / analyser.fftSize;
+
+  const width = Number(svg.getAttribute('width') ?? '0');
+  const height = Number(svg.getAttribute('height') ?? '0');
+
+  const innerWidth = width - 48;
+  const innerHeight = height - 48;
+  const translateX = 48;
+  const translateY = 24;
+
+  const maxDecibels = 0;
+  const minDecibels = -60;
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', translateX.toString(10));
+  xRect.setAttribute('y', (height - translateY - 1).toString(10));
+  xRect.setAttribute('width', (width - translateX).toString(10));
+  xRect.setAttribute('height', lineWidth.toString(10));
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', translateX.toString(10));
+  yRect.setAttribute('y', translateY.toString(10));
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', (height - translateX).toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(yRect);
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  [0, -10, -20, -30, -40, -50, -60].forEach((dB, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${dB} dB`;
+
+    text.setAttribute('x', '44');
+    text.setAttribute('y', (index * (innerHeight / 6) + translateY).toString(10));
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  });
+
+  frequencies.forEach((frequency, index) => {
+    const x = index * (innerWidth / frequencies.length) + translateX;
+    const y = height - 8;
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    if (frequency >= 1000) {
+      text.textContent = `${Math.trunc(frequency / 1000)} kHz`;
+    } else {
+      text.textContent = `${frequency} Hz`;
+    }
+
+    text.setAttribute('x', x.toString(10));
+    text.setAttribute('y', y.toString(10));
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  });
+
+  svg.appendChild(g);
+
+  const xLabel = document.createElementNS(xmlns, 'text');
+
+  xLabel.textContent = 'Frequency (Hz)';
+
+  xLabel.setAttribute('x', width.toString(10));
+  xLabel.setAttribute('y', (height - translateY - 8).toString(10));
+  xLabel.setAttribute('text-anchor', 'end');
+  xLabel.setAttribute('stroke', 'none');
+  xLabel.setAttribute('fill', baseColor);
+  xLabel.setAttribute('font-size', '14px');
+
+  const yLabel = document.createElementNS(xmlns, 'text');
+
+  yLabel.textContent = 'Amplitude (dB)';
+
+  yLabel.setAttribute('x', translateY.toString(10));
+  yLabel.setAttribute('y', '12');
+  yLabel.setAttribute('text-anchor', 'start');
+  yLabel.setAttribute('stroke', 'none');
+  yLabel.setAttribute('fill', baseColor);
+  yLabel.setAttribute('font-size', '14px');
+
+  svg.appendChild(xLabel);
+  svg.appendChild(yLabel);
+
+  let animationId = null;
+
+  const render = () => {
+    const data = new Float32Array(analyser.frequencyBinCount);
+
+    analyser.getFloatFrequencyData(data);
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let k = 0; k < analyser.frequencyBinCount; k++) {
+      if (k === 0) {
+        continue;
+      }
+
+      // for Chrome
+      if (!Number.isFinite(data[k])) {
+        continue;
+      }
+
+      const frequency = k * frequencyResolution;
+
+      const x = (Math.log10(frequency / minFrequency) / log10Ratio) * innerWidth + translateX;
+      const y = Math.min((0 - data[k]) * (innerHeight / (maxDecibels - minDecibels)) - translateY, height - translateY);
+
+      if (x < translateX) {
+        continue;
+      }
+
+      if (d === '') {
+        d += `M${translateX} ${translateY + innerHeight}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    animationId = window.requestAnimationFrame(() => {
+      render();
+    });
+  };
+
+  const buttonElement = document.getElementById('button-svg-logarithmic-scale-amplitude-spectrum');
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth' });
+
+    oscillator.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    render();
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    if (animationId) {
+      window.cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -18936,3 +19150,5 @@ animatePhaseSpectrumToSVG(
   document.getElementById('button-svg-440-hz-sin-phase-spectrum-path-with-coordinate-and-texts'),
   false
 );
+
+animateLogarithmicScaleAmplitudeSpectrumToSVG(document.getElementById('svg-animation-logarithmic-scale-amplitude-spectrum'));
