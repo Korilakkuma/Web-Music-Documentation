@@ -19560,6 +19560,534 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
             </article>
           </section>
         </section>
+        <section id="section-sound-visualization-audio-buffer">
+          <h3>オーディオデータ全体の視覚化</h3>
+          <p>
+            <code>AnalyserNode</code> クラスを利用した波形描画は, リアルタイムの描画でした. 一方で, 波形エディターなど, リアルタイム性は必要なく,
+            オーディオデータ全体の波形描画が必要なケースも多くあります. このセクションでは, その実装を解説します.
+          </p>
+          <p>
+            前提条件として, <b>描画前にオーディオデータ全体を取得できる必要がある</b>ので, <code>AudioBuffer</code> インスタンスが必要となります. つまり,
+            オーディオソースとしては. <code>AudioBufferSourceNode</code> を利用します.
+          </p>
+          <p>
+            <code>MediaElementAudioSourceNode</code> は, オーディオデータ全体を取得する API がありません. 取得するには, Audio Worklet が必要で,
+            バッファに再生データを格納し続ける必要があります. さらに, 一度再生完了しないと, オーディオデータ全体を取得することができません.
+          </p>
+          <p>
+            楽曲データーのような場合, <code>MediaElementAudioSourceNode</code> を利用するのがユースケースとしては正しいのですが,
+            オーディオデータ全体の描画と再生を考慮すると, <code>AudioBufferSourceNode</code> と <code>AudioBuffer</code> を利用するのが合理的と言えます.
+          </p>
+          <p>
+            <code>AudioBuffer</code> インスタンスの <code>getChannelData</code> メソッドで取得できるオーディオデータの型は, <code>Float32Array</code> なので,
+            波形描画の実装は, <code>getFloatTimeDomainData</code> メソッドを利用しする場合と同じです. 描画対象の <code>Float32Array</code> サイズが
+            <code>AudioBuffer</code> インスタンスの <code>length</code> プロパティの値になっていることが異なるぐらいです.
+          </p>
+          <p>
+            波形のプロットするサンプルの座標の算出は <code>getFloatTimeDomainData</code> と同じですが, 楽曲データの場合は
+            (オーディオデータのサイズにもよりますが), 取得したすべてのサンプルをプロットしてしまうと, 描画のコストが大きすぎたり,
+            メモリ不足によってエラーが発生したりします. したがって, リアルタイム処理の場合とは異なり, 波形のパス (<code>SVGPathElement</code>)
+            のプロットもある程度間引くなどプロット数を減らす必要があります. オーディオデータ全体の波形の場合,
+            ある程度多いサンプル数で間引いても概形にはあまり影響しません. 以下のコードでは, サンプリング周波数が <code>48000 Hz</code> の場合,
+            <code>480</code> サンプルごとにプロットしています (間引き処理では, 剰余を算出するので, 1
+            以上の整数になるようにキャストしていることにも着目してください. 変数から算出する場合は整数になっていなかったなど, うっかりがあるので注意が必要です).
+            時間軸のテキストを描画する場合も同じく間引きますが, リアルタイムの描画より多くのサンプル数で間引きます. 以下のコードでは,
+            <code>60 sec</code> ごとに時間軸のテキストを描画しています.
+          </p>
+          <p>
+            また, Autoplay Policy によって, ユーザーインタラクティブなイベント発火後に Autoplay Policy を解除しないと,
+            <code>AudioBuffer</code> インスタンスを取得できない (<code>decodeAudioData</code> メソッドが機能しない) ので, <code>click</code> イベント後に
+            Autoplay Policy を解除して, <code>AudioBuffer</code> インスタンスを取得して, 1 度だけ波形描画しています.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+let source      = null;
+let audioBuffer = null;
+
+let rendered = false;
+
+const width  = 720;
+const height = 180;
+
+const innerWidth  = width - 48;
+const innerHeight = height - 48;
+const translateX  = 24;
+const translateY  = 24;
+
+const render = (svg, data, channelNumber, sampleRate, length) =&gt; {
+  const samplingPeriod = 1 / sampleRate;
+
+  const plotInterval = Math.max(Math.trunc(sampleRate / 10), 1);  // Plot path (x, y) every ${sampleRate / 10} sample
+  const textInterval = Math.max(Math.trunc(60 * sampleRate), 1);  // Render text every 60 sec
+
+  const path = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;path&apos;);
+
+  let d = &apos;&apos;;
+
+  for (let n = 0; n &lt; length; n++) {
+    if ((n % plotInterval) !== 0) {
+      continue;
+    }
+
+    const x = n * (innerWidth / length) + translateX;
+    const y = (1 - data[n]) * (innerHeight / 2) + translateY;
+
+    if (d === &apos;&apos;) {
+      d += `M${x} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute(&apos;d&apos;, d);
+
+  path.setAttribute(&apos;stroke&apos;, &apos;rgba(0 0 255 / 30%)&apos;);
+  path.setAttribute(&apos;fill&apos;, &apos;none&apos;);
+  path.setAttribute(&apos;stroke-width&apos;, &apos;2&apos;);
+  path.setAttribute(&apos;stroke-linecap&apos;, &apos;round&apos;);
+  path.setAttribute(&apos;stroke-linejoin&apos;, &apos;miter&apos;);
+
+  svg.appendChild(path);
+
+  const xRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+  xRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+  xRect.setAttribute(&apos;y&apos;, ((innerHeight / 2) + translateY - 1).toString(10));
+  xRect.setAttribute(&apos;width&apos;, innerWidth.toString(10));
+  xRect.setAttribute(&apos;height&apos;, &apos;2&apos;);
+  xRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  xRect.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+  yRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+  yRect.setAttribute(&apos;y&apos;, translateY.toString(10));
+  yRect.setAttribute(&apos;width&apos;, &apos;2&apos;);
+  yRect.setAttribute(&apos;height&apos;, innerHeight.toString(10));
+  yRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  yRect.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+
+  svg.appendChild(yRect);
+
+  const g = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;g&apos;);
+
+  [1.0, 0.0, -1.0].forEach((amplitude, index) =&gt; {
+    const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+    text.textContent = amplitude.toFixed(1);
+    text.setAttribute(&apos;x&apos;, (translateX - 4).toString(10));
+    text.setAttribute(&apos;y&apos;, ((1 - amplitude) * (innerHeight / 2) + translateY).toString(10));
+    text.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+    text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+    text.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+    text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+    g.appendChild(text);
+  });
+
+  for (let n = 0; n &lt; length; n++) {
+    if ((n % textInterval) !== 0) {
+      continue;
+    }
+
+    const x = n * (innerWidth / length) + translateX;
+
+    const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+    text.textContent = `${n * samplingPeriod} sec`;
+
+    text.setAttribute(&apos;x&apos;, (x + 4).toString(10));
+    text.setAttribute(&apos;y&apos;, ((innerHeight / 2) + translateY + 12).toString(10));
+    text.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+    text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+    text.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+    text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+    g.appendChild(text);
+  }
+
+  svg.appendChild(g);
+
+  const xLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  xLabel.textContent = &apos;Time&apos;;
+
+  xLabel.setAttribute(&apos;x&apos;, innerWidth.toString(10));
+  xLabel.setAttribute(&apos;y&apos;, ((innerHeight / 2) + translateY - 8).toString(10));
+  xLabel.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+  xLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  xLabel.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+  xLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+  const yLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  yLabel.textContent = &apos;Amplitude&apos;;
+
+  yLabel.setAttribute(&apos;x&apos;, (translateX / 2).toString(10));
+  yLabel.setAttribute(&apos;y&apos;, (translateY / 2).toString(10));
+  yLabel.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+  yLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  yLabel.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+  yLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+  svg.appendChild(xLabel);
+  svg.appendChild(yLabel);
+};
+
+fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then(async (arrayBuffer) =&gt; {
+    const onClick = async () =&gt; {
+      buttonElement.setAttribute(&apos;disabled&apos;, &apos;disabled&apos;);
+
+      if (context.state !== &apos;running&apos;) {
+        await context.resume();
+      }
+
+      if (audioBuffer === null) {
+        buttonElement.textContent = &apos;decoding ...&apos;;
+
+        audioBuffer = await context.decodeAudioData(arrayBuffer);
+      }
+
+      if (source === null) {
+        const sampleRate       = audioBuffer.sampleRate;
+        const length           = audioBuffer.length;
+        const duration         = audioBuffer.duration;
+        const numberOfChannels = audioBuffer.numberOfChannels;
+
+        if (!rendered) {
+          buttonElement.textContent = &apos;rendering ...&apos;;
+
+          for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+            render(document.getElementById(`svg-animation-time-overview-channel-${channelNumber}`), audioBuffer.getChannelData(channelNumber), channelNumber, sampleRate, length);
+          }
+
+          rendered = true;
+        }
+
+        source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
+
+        // AudioBufferSourceNode (Input) -&gt; AudioDestinationNode (Output)
+        source.connect(context.destination);
+
+        // Start at 0 sec always
+        source.start(0);
+
+        buttonElement.textContent = &apos;stop&apos;;
+      } else {
+        source.stop(0);
+
+        source.disconnect();
+
+        source = null;
+
+        buttonElement.textContent = &apos;start&apos;;
+      }
+
+      buttonElement.removeAttribute(&apos;disabled&apos;);
+    };
+
+    const buttonElement = document.getElementById(&apos;button-svg-animation-time-overview&apos;);
+
+    buttonElement.addEventListener(&apos;click&apos;, onClick);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  })</code></pre>
+          <p>
+            波形描画, および, グラフィックス API に十分に慣れてきた場合は, 少しチャレンジングな実装として,
+            オーディオデータの現在の再生位置までを半透明の矩形でオーバーレイさせる実装を理解してみてください
+            (オーディオデータの再生位置の視覚化の実装の一例です).
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+let source      = null;
+let audioBuffer = null;
+
+let rendered = false;
+
+let animationId = null;
+let startTime   = 0;
+
+const width  = 720;
+const height = 180;
+
+const innerWidth  = width - 48;
+const innerHeight = height - 48;
+const translateX  = 24;
+const translateY  = 24;
+
+const currentTimeRects = [];
+
+const render = (svg, data, channelNumber, sampleRate, length) =&gt; {
+  const samplingPeriod = 1 / sampleRate;
+
+  const plotInterval = Math.max(Math.trunc(sampleRate / 10), 1);  // Plot path (x, y) every ${sampleRate / 10} sample
+  const textInterval = Math.max(Math.trunc(60 * sampleRate), 1);  // Render text every 60 sec
+
+  const path = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;path&apos;);
+
+  let d = &apos;&apos;;
+
+  for (let n = 0; n &lt; length; n++) {
+    if ((n % plotInterval) !== 0) {
+      continue;
+    }
+
+    const x = n * (innerWidth / length) + translateX;
+    const y = (1 - data[n]) * (innerHeight / 2) + translateY;
+
+    if (d === &apos;&apos;) {
+      d += `M${x} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute(&apos;d&apos;, d);
+
+  path.setAttribute(&apos;stroke&apos;, &apos;rgba(0 0 255 / 30%)&apos;);
+  path.setAttribute(&apos;fill&apos;, &apos;none&apos;);
+  path.setAttribute(&apos;stroke-width&apos;, &apos;2&apos;);
+  path.setAttribute(&apos;stroke-linecap&apos;, &apos;round&apos;);
+  path.setAttribute(&apos;stroke-linejoin&apos;, &apos;miter&apos;);
+
+  svg.appendChild(path);
+
+  const xRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+  xRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+  xRect.setAttribute(&apos;y&apos;, ((innerHeight / 2) + translateY - 1).toString(10));
+  xRect.setAttribute(&apos;width&apos;, innerWidth.toString(10));
+  xRect.setAttribute(&apos;height&apos;, &apos;2&apos;);
+  xRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  xRect.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+  yRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+  yRect.setAttribute(&apos;y&apos;, translateY.toString(10));
+  yRect.setAttribute(&apos;width&apos;, &apos;2&apos;);
+  yRect.setAttribute(&apos;height&apos;, innerHeight.toString(10));
+  yRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  yRect.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+
+  svg.appendChild(yRect);
+
+  const g = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;g&apos;);
+
+  [1.0, 0.0, -1.0].forEach((amplitude, index) =&gt; {
+    const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+    text.textContent = amplitude.toFixed(1);
+    text.setAttribute(&apos;x&apos;, (translateX - 4).toString(10));
+    text.setAttribute(&apos;y&apos;, ((1 - amplitude) * (innerHeight / 2) + translateY).toString(10));
+    text.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+    text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+    text.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+    text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+    g.appendChild(text);
+  });
+
+  for (let n = 0; n &lt; length; n++) {
+    if ((n % textInterval) !== 0) {
+      continue;
+    }
+
+    const x = n * (innerWidth / length) + translateX;
+
+    const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+    text.textContent = `${n * samplingPeriod} sec`;
+
+    text.setAttribute(&apos;x&apos;, (x + 4).toString(10));
+    text.setAttribute(&apos;y&apos;, ((innerHeight / 2) + translateY + 12).toString(10));
+    text.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+    text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+    text.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+    text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+    g.appendChild(text);
+  }
+
+  svg.appendChild(g);
+
+  const xLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  xLabel.textContent = &apos;Time&apos;;
+
+  xLabel.setAttribute(&apos;x&apos;, innerWidth.toString(10));
+  xLabel.setAttribute(&apos;y&apos;, ((innerHeight / 2) + translateY - 8).toString(10));
+  xLabel.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+  xLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  xLabel.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+  xLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+  const yLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+  yLabel.textContent = &apos;Amplitude&apos;;
+
+  yLabel.setAttribute(&apos;x&apos;, (translateX / 2).toString(10));
+  yLabel.setAttribute(&apos;y&apos;, (translateY / 2).toString(10));
+  yLabel.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+  yLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  yLabel.setAttribute(&apos;fill&apos;, &apos;rgb(99 99 99)&apos;);
+  yLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+  svg.appendChild(xLabel);
+  svg.appendChild(yLabel);
+
+  const currentTimeRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+  currentTimeRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+  currentTimeRect.setAttribute(&apos;y&apos;, translateY.toString(10));
+  currentTimeRect.setAttribute(&apos;width&apos;, &apos;0&apos;);
+  currentTimeRect.setAttribute(&apos;height&apos;, innerHeight.toString(10));
+  currentTimeRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+  currentTimeRect.setAttribute(&apos;fill&apos;, &apos;rgba(255 0 255 / 10%)&apos;);
+
+  svg.appendChild(currentTimeRect);
+
+  currentTimeRects.push(currentTimeRect);
+};
+
+fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then(async (arrayBuffer) =&gt; {
+    const onClick = async () =&gt; {
+      buttonElement.setAttribute(&apos;disabled&apos;, &apos;disabled&apos;);
+
+      if (context.state !== &apos;running&apos;) {
+        await context.resume();
+      }
+
+      if (audioBuffer === null) {
+        buttonElement.textContent = &apos;decoding ...&apos;;
+
+        audioBuffer = await context.decodeAudioData(arrayBuffer);
+      }
+
+      if (source === null) {
+        const sampleRate       = audioBuffer.sampleRate;
+        const length           = audioBuffer.length;
+        const duration         = audioBuffer.duration;
+        const numberOfChannels = audioBuffer.numberOfChannels;
+
+        if (!rendered) {
+          buttonElement.textContent = &apos;rendering ...&apos;;
+
+          for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+            render(document.getElementById(`svg-animation-time-overview-channel-${channelNumber}`), audioBuffer.getChannelData(channelNumber), channelNumber, sampleRate, length);
+          }
+
+          rendered = true;
+        }
+
+        source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
+
+        // AudioBufferSourceNode (Input) -&gt; AudioDestinationNode (Output)
+        source.connect(context.destination);
+
+        startTime = context.currentTime;
+
+        // Start at 0 sec always
+        source.start(0);
+
+        const animate = () =&gt; {
+          const currentTime = context.currentTime - startTime;
+
+          // Ended ?
+          if (currentTime &gt; duration) {
+            for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+              currentTimeRects[channelNumber].setAttribute(&apos;width&apos;, &apos;0&apos;);
+            }
+
+            window.cancelAnimationFrame(animationId);
+            animationId = null;
+
+            buttonElement.textContent = &apos;start&apos;;
+
+            return;
+          }
+
+          const width = (currentTime * sampleRate) * (innerWidth / length);
+
+          for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+            currentTimeRects[channelNumber].setAttribute(&apos;width&apos;, width.toString(10));
+          }
+
+          animationId = window.requestAnimationFrame(animate);
+        };
+
+        animationId = animate();
+
+        buttonElement.textContent = &apos;stop&apos;;
+      } else {
+        source.stop(0);
+
+        source.disconnect();
+
+        source = null;
+
+        window.cancelAnimationFrame(animationId);
+        animationId = null;
+
+        buttonElement.textContent = &apos;start&apos;;
+      }
+
+      buttonElement.removeAttribute(&apos;disabled&apos;);
+    };
+
+    const buttonElement = document.getElementById(&apos;button-svg-animation-time-overview&apos;);
+
+    buttonElement.addEventListener(&apos;click&apos;, onClick);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  })</code></pre>
+          <p>
+            理想的には, 再生・停止時にも現在の再生位置をキープしたまま, 再生とオーバーレイの矩形の描画ができるとよいのですが, メインスレッドのみの実装では,
+            基準となる <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティと現在の
+            <code>currentTime</code> プロパティの減算から再生位置を算出するためのコールバック関数を, <code>requestAnimationFrame</code> メソッドや
+            <code>setInterval</code> メソッドで呼び出すほど, 再生位置が少しずつずれてしまいます. この問題を解決するには, タイマー処理 (更新処理) を
+            <code>Web Workers</code> でバックグラウンドのスレッドで実行するか,
+            <code>AudioWorkletProcessor</code> で再生されたサンプル数などから現在の再生位置をメインスレッドと同期する実装が考えられます
+            (これと本質的に同様のことが,
+            <a href="https://web.dev/articles/audio-scheduling" target="_blank" rel="noopener noreferrer">A tale of two clocks - 二つの時計についての物語 -</a>
+            においても言及されています. ちなみに, 記事の内容は Web Audio API の初期から公開されており, 比較的有名な記事です). あるいは, オーディオデータの再生は
+            <code>MediaElementAudioSourceNode</code> を利用して, <code>AudioBuffer</code> を波形描画のみに利用するのも 1 つの解決方法です.
+            技術的にはどれが正解というのはありません. 実装するアプリケーションによって最適解が変わる判断の問題と言えそうです (例えば, エフェクターのために,
+            AudioWorklet を利用することが必須なら, 前者の実装のほうが API がまとまってよいかもしれません).
+          </p>
+          <figure>
+            <dl>
+              <dt>Left Channel (Channel Number is <code>0</code>)</dt>
+              <dd><svg id="svg-animation-time-overview-channel-0" width="720" height="180"></svg></dd>
+              <dt>Right Channel (Channel Number is <code>1</code>)</dt>
+              <dd><svg id="svg-animation-time-overview-channel-1" width="720" height="180"></svg></dd>
+            </dl>
+            <figcaption>
+              <span>オーディオデータ全体の視覚化 (現在の再生位置をオーバーレイで視覚化)</span>
+              <button type="button" id="button-svg-animation-time-overview">start</button>
+            </figcaption>
+          </figure>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>

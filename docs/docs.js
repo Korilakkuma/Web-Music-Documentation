@@ -18818,6 +18818,259 @@ const animateLogarithmicScaleAmplitudeSpectrumToSVG = (svg) => {
   buttonElement.addEventListener('touchend', onUp);
 };
 
+const animateTimeOverviewAudioData = () => {
+  let source = null;
+  let audioBuffer = null;
+
+  let rendered = false;
+
+  let animationId = null;
+  let startTime = 0;
+
+  const width = 720;
+  const height = 180;
+
+  const innerWidth = width - 48;
+  const innerHeight = height - 48;
+  const translateX = 24;
+  const translateY = 24;
+
+  const currentTimeRects = [];
+
+  const render = (svg, data, channelNumber, sampleRate, length) => {
+    const samplingPeriod = 1 / sampleRate;
+
+    const plotInterval = Math.max(Math.trunc(sampleRate / 10), 1);
+    const textInterval = Math.max(Math.trunc(60 * sampleRate), 1);
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+    let d = '';
+
+    for (let n = 0; n < length; n++) {
+      if (n % plotInterval !== 0) {
+        continue;
+      }
+
+      const x = n * (innerWidth / length) + translateX;
+      const y = (1 - data[n]) * (innerHeight / 2) + translateY;
+
+      if (d === '') {
+        d += `M${x} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    path.setAttribute('stroke', 'rgba(0 0 255 / 30%)');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'miter');
+
+    svg.appendChild(path);
+
+    const xRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+
+    xRect.setAttribute('x', translateX.toString(10));
+    xRect.setAttribute('y', (innerHeight / 2 + translateY - 1).toString(10));
+    xRect.setAttribute('width', innerWidth.toString(10));
+    xRect.setAttribute('height', '2');
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', 'rgb(99 99 99)');
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+
+    yRect.setAttribute('x', translateX.toString(10));
+    yRect.setAttribute('y', translateY.toString(10));
+    yRect.setAttribute('width', '2');
+    yRect.setAttribute('height', innerHeight.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', 'rgb(99 99 99)');
+
+    svg.appendChild(yRect);
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+    [1.0, 0.0, -1.0].forEach((amplitude, index) => {
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+      text.textContent = amplitude.toFixed(1);
+      text.setAttribute('x', (translateX - 4).toString(10));
+      text.setAttribute('y', ((1 - amplitude) * (innerHeight / 2) + translateY).toString(10));
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', 'rgb(99 99 99)');
+      text.setAttribute('font-size', '12px');
+
+      g.appendChild(text);
+    });
+
+    for (let n = 0; n < length; n++) {
+      if (n % textInterval !== 0) {
+        continue;
+      }
+
+      const x = n * (innerWidth / length) + translateX;
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+      text.textContent = `${n * samplingPeriod} sec`;
+
+      text.setAttribute('x', (x + 4).toString(10));
+      text.setAttribute('y', (innerHeight / 2 + translateY + 12).toString(10));
+      text.setAttribute('text-anchor', 'start');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', 'rgb(99 99 99)');
+      text.setAttribute('font-size', '12px');
+
+      g.appendChild(text);
+    }
+
+    svg.appendChild(g);
+
+    const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+    xLabel.textContent = 'Time';
+
+    xLabel.setAttribute('x', innerWidth.toString(10));
+    xLabel.setAttribute('y', (innerHeight / 2 + translateY - 8).toString(10));
+    xLabel.setAttribute('text-anchor', 'end');
+    xLabel.setAttribute('stroke', 'none');
+    xLabel.setAttribute('fill', 'rgb(99 99 99)');
+    xLabel.setAttribute('font-size', '14px');
+
+    const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+    yLabel.textContent = 'Amplitude';
+
+    yLabel.setAttribute('x', (translateX / 2).toString(10));
+    yLabel.setAttribute('y', (translateY / 2).toString(10));
+    yLabel.setAttribute('text-anchor', 'start');
+    yLabel.setAttribute('stroke', 'none');
+    yLabel.setAttribute('fill', 'rgb(99 99 99)');
+    yLabel.setAttribute('font-size', '14px');
+
+    svg.appendChild(xLabel);
+    svg.appendChild(yLabel);
+
+    const currentTimeRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+
+    currentTimeRect.setAttribute('x', translateX.toString(10));
+    currentTimeRect.setAttribute('y', translateY.toString(10));
+    currentTimeRect.setAttribute('width', '0');
+    currentTimeRect.setAttribute('height', innerHeight.toString(10));
+    currentTimeRect.setAttribute('stroke', 'none');
+    currentTimeRect.setAttribute('fill', 'rgba(255 0 255 / 10%)');
+
+    svg.appendChild(currentTimeRect);
+
+    currentTimeRects.push(currentTimeRect);
+  };
+
+  fetch('./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3')
+    .then((response) => {
+      return response.arrayBuffer();
+    })
+    .then(async (arrayBuffer) => {
+      const onClick = async () => {
+        buttonElement.setAttribute('disabled', 'disabled');
+
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
+
+        if (audioBuffer === null) {
+          buttonElement.textContent = 'decoding ...';
+
+          audioBuffer = await audiocontext.decodeAudioData(arrayBuffer);
+        }
+
+        if (source === null) {
+          const sampleRate = audioBuffer.sampleRate;
+          const length = audioBuffer.length;
+          const duration = audioBuffer.duration;
+          const numberOfChannels = audioBuffer.numberOfChannels;
+
+          if (!rendered) {
+            buttonElement.textContent = 'rendering ...';
+
+            for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
+              render(
+                document.getElementById(`svg-animation-time-overview-channel-${channelNumber}`),
+                audioBuffer.getChannelData(channelNumber),
+                channelNumber,
+                sampleRate,
+                length
+              );
+            }
+
+            rendered = true;
+          }
+
+          source = new AudioBufferSourceNode(audiocontext, { buffer: audioBuffer });
+
+          source.connect(audiocontext.destination);
+
+          startTime = audiocontext.currentTime;
+
+          source.start(0);
+
+          const animate = () => {
+            const currentTime = audiocontext.currentTime - startTime;
+
+            if (currentTime > duration) {
+              for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
+                currentTimeRects[channelNumber].setAttribute('width', '0');
+              }
+
+              window.cancelAnimationFrame(animationId);
+              animationId = null;
+
+              buttonElement.textContent = 'start';
+
+              return;
+            }
+
+            const width = currentTime * sampleRate * (innerWidth / length);
+
+            for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
+              currentTimeRects[channelNumber].setAttribute('width', width.toString(10));
+            }
+
+            animationId = window.requestAnimationFrame(animate);
+          };
+
+          animationId = animate();
+
+          buttonElement.textContent = 'stop';
+        } else {
+          source.stop(0);
+
+          source.disconnect();
+
+          source = null;
+
+          window.cancelAnimationFrame(animationId);
+          animationId = null;
+
+          buttonElement.textContent = 'start';
+        }
+
+        buttonElement.removeAttribute('disabled');
+      };
+
+      const buttonElement = document.getElementById('button-svg-animation-time-overview');
+
+      buttonElement.addEventListener('click', onClick);
+    })
+    .catch(console.error);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -19152,3 +19405,5 @@ animatePhaseSpectrumToSVG(
 );
 
 animateLogarithmicScaleAmplitudeSpectrumToSVG(document.getElementById('svg-animation-logarithmic-scale-amplitude-spectrum'));
+
+animateTimeOverviewAudioData();
