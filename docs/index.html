@@ -20088,6 +20088,373 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
             </figcaption>
           </figure>
         </section>
+        <section id="section-sound-visualization-periodic-wave">
+          <h3>PeriodicWave</h3>
+          <p>
+            コンピュータにおける音合成の 1 つとして, <b>波形テーブル合成</b>があります. 波形データ 1 周期分をコンピュータに内臓しておき, それを繰り返す, さらに,
+            複数の波形データを合成するといった手法で, コンピュータで音を生成する手段です.
+            <abbr title="Pulse Code Modulation">PCM</abbr> のようにレコードされた音を保存しないので, 少ないメモリで可能な限り, 様々な音 (波形)
+            を生成する手法です.
+          </p>
+          <p>
+            <b><code>PeriodicWave</code></b> クラスは, 波形テーブルを定義することによって任意の波形の生成を可能にします. ただし,
+            現実世界の波形テーブル合成とは異なり, 1 周期分の波形データではなく, スペクトルのもとになる複素数の実部の値と虚部の値を設定する, すなわち,
+            <b>周波数領域で波形テーブルを定義しておくという Web Audio API 特有の仕様となっています</b> (したがって,
+            スペクトルについて一定以上の理解をしておくのがよいので, <a href="#section-oscillator-node">OscillatorNode</a> のセクションではなく,
+            こちらのセクションに解説を記載しました).
+          </p>
+          <p>
+            <code>PeriodicWave</code> コンストラクタ呼び出しの第 2 引数 (<b><code>PeriodicWaveOptions</code></b> 型の
+            <b><code>real</code></b> プロパティで実部の値を, <b><code>imag</code></b> プロパティで虚部の値を設定します) でこれらを設定します
+            (ファクトリメソッドを利用する場合, 実部の値を第 1 引数に, 虚部の値を第 2 引数に指定します).
+          </p>
+          <p>
+            実部・虚部の値はどちらも <code>Float32Array</code> で設定します. ただし, 任意の <code>Float32Array</code> を設定することはできず, 以下 2
+            つの制約があります.
+          </p>
+          <ul>
+            <li>実部・虚部の <code>Float32Array</code> のサイズは, 同じである必要があります</li>
+            <li>虚部の <code>Float32Array</code> のインデックス <code>0</code> 番目は, (使用禁止の意味で) 必ず <code>0</code> にしておきます</li>
+            <li>
+              実部・虚部の <code>Float32Array</code> のサイズは, <code>8192</code> 要素以下にしておく (ブラウザによっては,
+              それより多いサイズをサポートしているかもしれませんが, 仕様で保証されるのは <code>8192</code> までです
+            </li>
+          </ul>
+          <p>
+            上記の 2 つの制約は, フーリエ級数の制約から設定されています (最後の 1 つは実装上の制約でしかありません).
+            級数の部分から同じサイズである必要があること, また, <span class="math-inline">$\frac{a_{0}}{2}$</span> の項が存在することから, 虚部の
+            <code>0</code> 項目は使用されないので 2 つ目の制約があります (オイラーの公式からも導出できますが, 正弦波の項は虚部に対応します).
+          </p>
+          <div class="math-block">
+            <!-- prettier-ignore -->
+            $
+              \begin{flalign}
+                &f\left(t\right) = \frac{a_{0}}{2} + \sum_{n=1}^{\infty}\left(a_{n}\cos\left(n\frac{2 \pi}{T}t\right) + b_{n}\sin\left(n\frac{2 \pi}{T}t\right)\right) \\
+                &a_{n} = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f\left(t\right)\cos\left(n\frac{2 \pi}{T}t\right)dt \\
+                &b_{n} = \frac{2}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f\left(t\right)\sin\left(n\frac{2 \pi}{T}t\right)dt \\
+              \end{flalign}
+            $
+          </div>
+          <p>
+            実部の <code>Float32Array</code> のインデックス <code>0</code> 番目は, (数学的には) フーリエ級数の
+            <span class="math-inline">$\frac{a_{0}}{2}$</span> の項に対応します (仕様では, DC-offset (DC オフセット) と呼ばれています) が,
+            実装上は使われないので, この要素も <code>0</code> にするのが定石です.
+          </p>
+          <p>以上の制約を考慮して, <code>PeriodicWave</code> インスタンスの生成コードは以下のようになります.</p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const NUMBER_OF_PERIODIC_WAVES = 10;
+
+const reals = new Float32Array(NUMBER_OF_PERIODIC_WAVES);
+const imags = new Float32Array(NUMBER_OF_PERIODIC_WAVES);
+
+reals[0] = 0;
+imags[0] = 0;
+
+const real = 1;
+const imag = 1;
+
+for (let n = 1; n &lt; NUMBER_OF_PERIODIC_WAVES; n++) {
+  reals[n] = real / n;
+  imags[n] = imag / n;
+}
+
+const periodicWave = new PeriodicWave(context, { real: reals, imag: imags });
+
+// If use `createPeriodicWave`
+// periodicWave = context.createPeriodicWave(reals, image);</code></pre>
+          <p>
+            実部・虚部の値は設定の 1 例です. また, Typed Array (ここでは, <code>Float32Array</code>) は, インスタンス生成時に要素はすべて
+            <code>0</code> で初期化されるので, 実部・虚部の <code>Float32Array</code> のインデックス <code>0</code> 番目の設定は不要ですが,
+            制約を強調するためにあえて設定しています.
+          </p>
+          <p>
+            <code>PeriodicWave</code> インスタンスを生成したら, 最後に <code>OscillatorNode</code> インスタンスの
+            <b><code>setPeriodicWave</code></b> の引数に設定します. このとき,
+            <b><code>OscillatorType</code> は, <code>&apos;sine&apos;</code> である必要があります</b>.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const NUMBER_OF_PERIODIC_WAVES = 10;
+
+const reals = new Float32Array(NUMBER_OF_PERIODIC_WAVES);
+const imags = new Float32Array(NUMBER_OF_PERIODIC_WAVES);
+
+reals[0] = 0;
+imags[0] = 0;
+
+const real = 1;
+const imag = 1;
+
+for (let n = 1; n &lt; NUMBER_OF_PERIODIC_WAVES; n++) {
+  reals[n] = real / n;
+  imags[n] = imag / n;
+}
+
+const periodicWave = new PeriodicWave(context, { real: reals, imag: imags });
+
+// If use `createPeriodicWave`
+// periodicWave = context.createPeriodicWave(reals, image);
+
+// `OscillatorType` must be &apos;sine&apos;
+const oscillator = new OscillatorNode(context);
+
+oscillator.setPeriodicWave(periodicWave);</code></pre>
+          <p>
+            <code>OscillatorType</code> 列挙型のとりうる値として, <b><code>&apos;custom&apos;</code></b> がありますが, これは,
+            <code>PeriodicWave</code> インスタンスを <code>OscillatorNode</code> インスタンスの
+            <code>setPeriodicWave</code> メソッドで設定することでオートマティックに <code>OscillatorType</code> が <code>&apos;custom&apos;</code> となります.
+          </p>
+          <p>
+            1 つの実用的な利用例として, 電気オルガンのような音色を生成することができます. 具体的には, (オイラーの公式より) 虚部の項は, 正弦波の項であり,
+            インデックス <code>1</code> 番目が基本周波数となります. インデックス <code>2</code> 番目以降は, それぞれ, 2 倍音, 3 倍音, 4 倍音 ...
+            と設定することになります. 同様に, 実部の項は, 余弦波の項であり, インデックス <code>1</code> 番目から順に, 基本周波数, 2 倍音, 3 倍音, 4 倍音 ...
+            と設定することが可能です. 正弦波と余弦波は位相の違いでしかなく, 音色は (知覚できるようなレベルで) 変わりませんが,
+            倍音が多くなるほど時間領域の波形はかなり違った形になってきます). また, デフォルトでは, これらの値は正規化されるので,
+            倍音成分の比率のみを考慮して設定すればよいです. 基本周波数は, <code>OscillatorNode</code> インスタンスの
+            <code>frequency</code> プロパティで設定できます.
+          </p>
+          <p>以下のコードは, 虚部 (正弦波) の項のみを利用して, 4 倍音を生成して, 電気オルガンのような音色を生成する実装例です.</p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const numberOfOvertones = 4;
+
+const reals = new Float32Array(numberOfOvertones);
+const imags = new Float32Array(numberOfOvertones);
+
+reals[0] = 0;
+imags[0] = 0;
+
+for (let n = 1; n &lt;= numberOfOvertones; n++) {
+  reals[n] = 0;
+  imags[n] = n === 1 ? 1 : 0.5;
+}
+
+const periodicWave = new PeriodicWave(context, { real: reals, imag: imags });
+
+// If use `createPeriodicWave`
+// periodicWave = context.createPeriodicWave(reals, image);
+
+// `OscillatorType` must be &apos;sine&apos;
+const oscillator = new OscillatorNode(context, { frequency: 220 });
+
+oscillator.setPeriodicWave(periodicWave);
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// Start immediately
+oscillator.start(0);
+
+// Stop after 10 sec
+oscillator.stop(context.currentTime + 10);</code></pre>
+          <p>
+            以下のビジュアライザーは, ユーザーインタラクティブに, <code>PeriodicWave</code> の実部 (余弦波) と虚部 (正弦波) の基本周波数と 8
+            倍音までの比率を設定できるようにして, 時間領域の波形と振幅スペクトルを視覚化しています. 倍音成分を同じにしても, 実部 (余弦波) の項のみと, 虚部
+            (正弦波) の項のみでは, 音色は知覚できるほどの差異がなくても, 時間領域の波形がかなり違った波形になることも確認できます.
+          </p>
+          <div class="app-container app-periodic-wave">
+            <div class="app-headline">
+              <button type="button" id="button-periodic-wave">start</button>
+              <label>
+                <span>OscillatorNode frequency (Fundamental frequency)</span>
+                <input type="range" id="range-periodic-wave-oscillator-frequency" value="440" min="220" max="880" step="1" />
+                <span id="print-periodic-wave-oscillator-frequency-value">440 Hz</span>
+              </label>
+            </div>
+            <figure>
+              <svg id="svg-animation-periodic-wave" width="1080" height="240"></svg>
+              <figcaption><code>PeriodicWave</code> の波形と振幅スペクトル</figcaption>
+            </figure>
+            <div class="grid-2x2-layout">
+              <dl>
+                <dt>real (cosine) terms</dt>
+                <dt><label for="range-periodic-wave-real-1">1 (Fundamental Frequency)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-real-1" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-real-1">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-real-2">2 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-real-2" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-real-2">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-real-3">3 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-real-3" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-real-3">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-real-4">4 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-real-4" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-real-4">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-real-5">5 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-real-5" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-real-5">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-real-6">6 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-real-6" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-real-6">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-real-7">7 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-real-7" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-real-7">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-real-8">8 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-real-8" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-real-8">0.00</span>
+                </dd>
+              </dl>
+              <dl>
+                <dt>imag (sine) terms</dt>
+                <dt><label for="range-periodic-wave-imag-1">1 (Fundamental Frequency)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-imag-1" value="1" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-imag-1">1.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-imag-2">2 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-imag-2" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-imag-2">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-imag-3">3 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-imag-3" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-imag-3">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-imag-4">4 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-imag-4" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-imag-4">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-imag-5">5 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-imag-5" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-imag-5">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-imag-6">6 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-imag-6" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-imag-6">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-imag-7">7 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-imag-7" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-imag-7">0.00</span>
+                </dd>
+                <dt><label for="range-periodic-wave-imag-8">8 (Overtone)</label></dt>
+                <dd>
+                  <input type="range" id="range-periodic-wave-imag-8" value="0" min="0" max="1" step="0.05" />
+                  <span id="print-periodic-wave-imag-8">0.00</span>
+                </dd>
+              </dl>
+            </div>
+          </div>
+          <section id="section-sound-visualization-periodic-wave-oscillator-types">
+            <h4>OscillatorType と PeriodicWave</h4>
+            <p>
+              実は, <code>OscillatorNode</code> で生成できる基本波形, すなわち, 正弦波, 矩形波, ノコギリ波, 三角波も
+              <code>PeriodicWave</code> によって生成することが仕様で定義されています.
+            </p>
+            <table class="nowrap-table">
+              <caption>
+                <code>OscillatorType</code>
+                の
+                <code>PeriodicWave</code>
+                の係数定義
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">OscillatorType</th>
+                  <th scope="col">Formula</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>&apos;sine&apos;</code></td>
+                  <td>
+                    <span class="math-inline">$a\left[n\right] = 0 \quad \left(n \ge 0\right)$</span><br /><span class="math-inline">$b\left[1\right] = 1$</span><br /><span class="math-inline">$b\left[n\right] = 0 \quad \left(n \ge 2\right)$</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>&apos;square&apos;</code></td>
+                  <td>
+                    <span class="math-inline">$a\left[n\right] = 0 \quad \left(n \ge 0\right)$</span><br /><span class="math-inline"
+                      >$b\left[n\right] = \frac{2}{n \pi}\left(1 - \left(-1\right)^{n}\right) \quad \left(n \ge 1\right)$</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>&apos;sawtooth&apos;</code></td>
+                  <td>
+                    <span class="math-inline">$a\left[n\right] = 0 \quad \left(n \ge 0\right)$</span><br /><span class="math-inline"
+                      >$b\left[n\right] = \left(-1\right)^{n + 1}\frac{2}{n \pi} \quad \left(n \ge 1\right)$</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>&apos;triangle&apos;</code></td>
+                  <td>
+                    <span class="math-inline">$a\left[n\right] = 0 \quad \left(n \ge 0\right)$</span><br /><span class="math-inline"
+                      >$b\left[n\right] = \frac{8 \sin\left(\frac{n \pi}{2}\right)}{\left(n \pi\right)^{2}} \quad \left(n \ge 1\right)$</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              上記の表の数式は, 仕様から引用した数式を記載していますが, <span class="math-inline">$a\left[n\right]$</span> は, 実部 (余弦波) の項であり,
+              これはすべての <code>OscillatorType</code> で <code>0</code> です. すなわち, 虚部 (正弦波) の項のみを利用して, (ブラウザレンダリングエンジンが)
+              それぞれの <code>OscillatorType</code> を実装することが仕様で決められています. 正弦波は,
+              <span class="math-inline">$b\left[1\right]$</span> 以外の要素はすべて <code>0</code> であり, まさにこれは倍音成分のない,
+              基本周波数のみで生成される<b>純音</b>であることを意味しています.
+            </p>
+            <p>
+              また, <code>OscillatorNode</code> で直接生成される基本波形は振幅が正規化されていますが, <code>PeriodicWaveOptions</code> の
+              <b><code>PeriodicWaveConstraints</code></b> 型の <b><code>disableNormalization</code></b> プロパティを <code>true</code> に設定して
+              (デフォルト値は, <code>false</code>), <code>PeriodicWave</code> インスタンス生成時の, 虚部 (正弦波) の項の
+              <code>Float32Array</code> を上記の定義にしたがってアプリケーション側で設定することで, 正規化しない基本波形を生成することも可能です
+              (ユースケースはわからないですが, 正規化しない基本波形の生成として, 仕様では記載があります).
+            </p>
+          </section>
+          <article id="section-sound-visualization-periodic-sound-synthesis-types">
+            <h4>音合成の種類</h4>
+            <p>音合成, つまり, シンセサイザーにはいくつかの種類があります. 以下に, よくピックアップされる合成を記載します.</p>
+            <dl>
+              <dt>加算合成</dt>
+              <dd>フーリエ級数をまさにそのまま実装した方式で, 周波数や振幅の異なる正弦波を十分に加算する音合成</dd>
+              <dt>減算合成</dt>
+              <dd>倍音の多い原音 (矩形波, ノコギリ波, 三角波をフィルタリングして倍音成分を減算する音合成</dd>
+              <dt>FM (Frequency Modulation) 合成</dt>
+              <dd>
+                <a href="#section-effectors-tremolo-and-ringmodulator">トレモロ・リングモジュレーター</a>のセクションで少し解説していますが, キャリア (搬送波)
+                とモジュレーター (変調波) によって, 金属的な音色を生成する音合成
+              </dd>
+              <dt>グラニュラー (Granular) 合成</dt>
+              <dd>原音をグレイン (音の粒) と呼ばれる, <code>10 msec</code> - <code>50 msec</code> に分解して, グレインを加工して, 再度合成する音合成</dd>
+            </dl>
+            <p>
+              波形テーブル合成は, グラニュラー合成に比較的近い音合成と言えます. 大きく異なるのは, 分解の処理がなく, コンピュータにごく短時間の (厳密には, 1
+              周期分の) 波形データが内蔵されていることです (さらに, この波形の種類もリソースが許容する限り, 十分な種類の波形を内蔵しています).
+            </p>
+            <p>
+              上記の記載はあくまでごく簡潔に説明しただけなので, 詳細は,
+              <a href="https://blog.landr.com/ja/types-of-synthesis-wavetable-fm-synthesis-and-others-explained/" target="_blank" rel="noopener noreferrer"
+                >合成の種類</a>などによくまとめられているので参考にしてください.
+            </p>
+          </article>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>

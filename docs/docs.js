@@ -19071,6 +19071,371 @@ const animateTimeOverviewAudioData = () => {
     .catch(console.error);
 };
 
+const animatePeriodicWave = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 2048, maxDecibels: -9, minDecibels: -60 });
+
+  const frequencies = [125, 250, 500, 1000, 2000, 4000, 8000];
+
+  const minFrequency = frequencies[0];
+  const maxFrequency = frequencies[frequencies.length - 1];
+
+  const ratio = maxFrequency / minFrequency;
+  const log10Ratio = Math.log10(ratio);
+
+  const frequencyResolution = sampleRate / analyser.fftSize;
+
+  const numberOfOvertones = 8;
+
+  const width = innerWidth / 3;
+  const offset = 1.5 * width;
+
+  const timeDomainPath = document.createElementNS(xmlns, 'path');
+  const spectrumPath = document.createElementNS(xmlns, 'path');
+
+  [timeDomainPath, spectrumPath].forEach((path) => {
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    svg.appendChild(path);
+  });
+
+  const renderTimeDomainGraph = (offset, width) => {
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', (offset + padding).toString(10));
+    xRect.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+    xRect.setAttribute('width', width.toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (offset + padding - 1).toString(10));
+    yRect.setAttribute('y', padding.toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', innerHeight.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    [1, 0, -1].forEach((amplitude, index) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = amplitude.toFixed(1);
+
+      text.setAttribute('x', (offset + padding - 4).toString(10));
+      text.setAttribute('y', (index * (innerHeight / 2) + padding).toString(10));
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '12px');
+
+      svg.appendChild(text);
+    });
+
+    const xLabel = document.createElementNS(xmlns, 'text');
+
+    xLabel.textContent = 'Time';
+
+    xLabel.setAttribute('x', (offset + padding + width).toString(10));
+    xLabel.setAttribute('y', (padding + innerHeight / 2 - 8).toString(10));
+    xLabel.setAttribute('text-anchor', 'end');
+    xLabel.setAttribute('stroke', 'none');
+    xLabel.setAttribute('fill', baseColor);
+    xLabel.setAttribute('font-size', '14px');
+
+    svg.appendChild(xLabel);
+
+    const yLabel = document.createElementNS(xmlns, 'text');
+
+    yLabel.textContent = 'Amplitude';
+
+    yLabel.setAttribute('x', padding.toString(10));
+    yLabel.setAttribute('y', (padding / 2).toString(10));
+    yLabel.setAttribute('text-anchor', 'middle');
+    yLabel.setAttribute('stroke', 'none');
+    yLabel.setAttribute('fill', baseColor);
+    yLabel.setAttribute('font-size', '14px');
+
+    svg.appendChild(yLabel);
+  };
+
+  const renderSpectrumGraph = (offset, width) => {
+    const xRect = document.createElementNS(xmlns, 'rect');
+
+    xRect.setAttribute('x', (offset + padding).toString(10));
+    xRect.setAttribute('y', (padding + innerHeight).toString(10));
+    xRect.setAttribute('width', width.toString(10));
+    xRect.setAttribute('height', lineWidth.toString(10));
+    xRect.setAttribute('stroke', 'none');
+    xRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (offset + padding).toString(10));
+    yRect.setAttribute('y', padding.toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', innerHeight.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    const g = document.createElementNS(xmlns, 'g');
+
+    [1, 0.5, 0].forEach((amplitude, index) => {
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = amplitude.toFixed(1);
+
+      text.setAttribute('x', (offset + padding - 4).toString(10));
+      text.setAttribute('y', (index * (innerHeight / 2) + padding).toString(10));
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '12px');
+
+      g.appendChild(text);
+    });
+
+    frequencies.forEach((frequency, index) => {
+      const x = index * (width / frequencies.length) + (offset + padding);
+      const y = padding + innerHeight + 12;
+
+      const text = document.createElementNS(xmlns, 'text');
+
+      if (frequency >= 1000) {
+        text.textContent = `${Math.trunc(frequency / 1000)} kHz`;
+      } else {
+        text.textContent = `${frequency} Hz`;
+      }
+
+      text.setAttribute('x', x.toString(10));
+      text.setAttribute('y', y.toString(10));
+      text.setAttribute('text-anchor', 'start');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '12px');
+
+      g.appendChild(text);
+    });
+
+    svg.appendChild(g);
+
+    const xLabel = document.createElementNS(xmlns, 'text');
+
+    xLabel.textContent = 'Frequency (Hz)';
+
+    xLabel.setAttribute('x', (offset + padding + width).toString(10));
+    xLabel.setAttribute('y', (padding + innerHeight - 8).toString(10));
+    xLabel.setAttribute('text-anchor', 'end');
+    xLabel.setAttribute('stroke', 'none');
+    xLabel.setAttribute('fill', baseColor);
+    xLabel.setAttribute('font-size', '14px');
+
+    const yLabel = document.createElementNS(xmlns, 'text');
+
+    yLabel.textContent = 'Amplitude';
+
+    yLabel.setAttribute('x', (offset + padding).toString(10));
+    yLabel.setAttribute('y', (padding / 2).toString(10));
+    yLabel.setAttribute('text-anchor', 'middle');
+    yLabel.setAttribute('stroke', 'none');
+    yLabel.setAttribute('fill', baseColor);
+    yLabel.setAttribute('font-size', '14px');
+
+    svg.appendChild(xLabel);
+    svg.appendChild(yLabel);
+  };
+
+  let animationId = null;
+
+  const renderTimeDomain = (offset, width) => {
+    const data = new Float32Array(analyser.fftSize);
+
+    analyser.getFloatTimeDomainData(data);
+
+    timeDomainPath.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0; n < analyser.fftSize; n++) {
+      const x = n * (width / analyser.fftSize) + (offset + padding);
+      const y = (1 - data[n]) * (innerHeight / 2) + padding;
+
+      if (d === '') {
+        d += `M${x} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    timeDomainPath.setAttribute('d', d);
+  };
+
+  const renderSpectrum = (offset, width) => {
+    const data = new Uint8Array(analyser.frequencyBinCount);
+
+    analyser.getByteFrequencyData(data);
+
+    spectrumPath.removeAttribute('d');
+
+    let d = '';
+
+    for (let k = 0; k < analyser.frequencyBinCount; k++) {
+      if (k === 0) {
+        continue;
+      }
+
+      const frequency = k * frequencyResolution;
+
+      const ratio = frequency / minFrequency;
+
+      const x = (Math.log10(ratio) / log10Ratio) * width + (offset + padding);
+      const y = (1 - data[k] / 255) * innerHeight + padding;
+
+      if (x < offset + padding || x > offset + padding + width) {
+        continue;
+      }
+
+      if (d === '') {
+        d += `M${offset + padding} ${padding + innerHeight}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    spectrumPath.setAttribute('d', d);
+  };
+
+  const render = () => {
+    renderTimeDomain(0, width);
+    renderSpectrum(offset, width);
+
+    animationId = window.requestAnimationFrame(() => {
+      render();
+    });
+  };
+
+  const buttonElement = document.getElementById('button-periodic-wave');
+  const rangeOscillatorFrequencyElement = document.getElementById('range-periodic-wave-oscillator-frequency');
+  const spanPrintOscillatorFrequencyElement = document.getElementById('print-periodic-wave-oscillator-frequency-value');
+
+  let oscillator = null;
+  let frequency = 440;
+
+  const reals = new Float32Array(numberOfOvertones + 1);
+  const imags = new Float32Array(numberOfOvertones + 1);
+
+  reals[0] = 0;
+  imags[0] = 0;
+
+  reals[1] = 0;
+  imags[1] = 1;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      return;
+    }
+
+    const periodicWave = new PeriodicWave(audiocontext, { real: reals, imag: imags });
+
+    oscillator = new OscillatorNode(audiocontext, { frequency });
+
+    oscillator.setPeriodicWave(periodicWave);
+
+    oscillator.connect(analyser);
+    analyser.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    render();
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    if (animationId) {
+      window.cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeOscillatorFrequencyElement.addEventListener('input', (event) => {
+    frequency = event.currentTarget.valueAsNumber;
+
+    if (oscillator) {
+      oscillator.frequency.value = frequency;
+    }
+
+    spanPrintOscillatorFrequencyElement.textContent = `${frequency} Hz`;
+  });
+
+  [1, 2, 3, 4, 5, 6, 7, 8].forEach((overtone) => {
+    document.getElementById(`range-periodic-wave-real-${overtone}`).addEventListener('input', (event) => {
+      const real = event.currentTarget.valueAsNumber;
+
+      reals[overtone] = real;
+
+      const periodicWave = new PeriodicWave(audiocontext, { real: reals, imag: imags });
+
+      if (oscillator) {
+        oscillator.setPeriodicWave(periodicWave);
+      }
+
+      document.getElementById(`print-periodic-wave-real-${overtone}`).textContent = real.toFixed(2);
+    });
+
+    document.getElementById(`range-periodic-wave-imag-${overtone}`).addEventListener('input', (event) => {
+      const imag = event.currentTarget.valueAsNumber;
+
+      imags[overtone] = imag;
+
+      const periodicWave = new PeriodicWave(audiocontext, { real: reals, imag: imags });
+
+      if (oscillator) {
+        oscillator.setPeriodicWave(periodicWave);
+      }
+
+      document.getElementById(`print-periodic-wave-imag-${overtone}`).textContent = imag.toFixed(2);
+    });
+  });
+
+  renderTimeDomainGraph(0, width);
+  renderSpectrumGraph(offset, width);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -19407,3 +19772,5 @@ animatePhaseSpectrumToSVG(
 animateLogarithmicScaleAmplitudeSpectrumToSVG(document.getElementById('svg-animation-logarithmic-scale-amplitude-spectrum'));
 
 animateTimeOverviewAudioData();
+
+animatePeriodicWave(document.getElementById('svg-animation-periodic-wave'));
