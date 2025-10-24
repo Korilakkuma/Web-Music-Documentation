@@ -487,7 +487,8 @@ select {
 .app-glide,
 .app-noise-suppressor,
 .app-pitch-shifter,
-.app-vocal-canceler {
+.app-vocal-canceler,
+.app-periodic-wave {
   margin: 24px 0;
 }
 
@@ -539,6 +540,12 @@ select {
 
 .form-glide-type > label > input[type="radio"] {
   cursor: pointer;
+}
+
+.grid-2x2-layout {
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+  grid-template-columns: repeat(2, auto);
 }
 
 .grid-3x3-layout {
