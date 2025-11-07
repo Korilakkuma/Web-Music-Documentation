@@ -20456,6 +20456,135 @@ oscillator.stop(context.currentTime + 10);</code></pre>
           </article>
         </section>
       </section>
+      <section id="section-device">
+        <h2>Web Audio API とオーディオデバイス</h2>
+        <section id="section-device-media-stream-audio-destination-node">
+          <h3>MediaStreamAudioDestinationNode</h3>
+          <p>
+            <b><code>MediaStreamAudioDestinationNode</code></b> クラスが実質的に有用なのは, WebRTC と併用する場合になります. もう少し具体的には,
+            <b>オーディオグラフの出力先を <code>MediaStream</code> インスタンスとして利用したい場合です</b>. ちなみに, 音源として対象のデバイスの
+            <code>MediaStream</code> インスタンスを利用する場合は, <code>MediaStreamAudioSourceNode</code> クラスを利用するのはすでに解説しましたが,
+            それと対になるクラスという理解だと, 出力先を対象のデバイスに設定したいユースケースと考えてしまうかもしれませんが, それは, 次のセクションで解説する
+            <code>sinkId</code> と <code>setSinkId</code> メソッドで可能になります.
+          </p>
+          <p>
+            WebRTC で利用する場合, <code>RTCPeerConnetion</code> (<abbr title="Peer to Peer">P2P</abbr> 通信の役割を担うクラス) インスタンスを生成して,
+            <code>addTrack</code> メソッドの第 2 引数に指定します (ちなみに, 第 1 引数のトラックは, <code>MediaStream</code> インスタンスから取得できます).
+            以下は, イメージとしてのコード片です.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const oscillator  = new OscillatorNode(context);
+const destination = new MediaStreamAudioDestinationNode(context);
+
+// If use `createMediaStreamDestination`
+// const destination = context.createMediaStreamDestination();
+
+// Audio Graph (OscillatorNode (Input) -&gt; MediaStreamAudioDestinationNode (Output))
+oscillator.connect(destination);
+
+// ...
+
+const config = { iceServers: [/* ... */] };
+const peerConnection = new RTCPeerConnection(configuration);
+
+destination.stream.getTracks().forEach((track) =&gt; {
+  peerConnection.addTrack(track, destination.stream);
+});
+
+// If specific track
+// const tracks      = destination.stream.getTracks();
+// const transceiver = peerConnection.addTransceiver(tracks[0]);</code></pre>
+          <p>
+            WebRTC を利用しない場合のよくあるユースケースとしては,
+            <a href="https://www.w3.org/TR/mediastream-recording/" target="_blank" rel="noopener noreferrer"
+              ><b><code>MediaRecorder</code></b></a>
+            クラスのコンストラクタの引数に, <code>MediaStream</code> インスタンスである <code>MediaStreamAudioDestinationNode</code> の
+            <b><code>stream</code></b> プロパティを指定することで, <code>MediaStreamAudioDestinationNode</code> に出力される音を録音する機能の実装です.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-media-stream-audio-destination-node-and-media-recorder&quot;&gt;start&lt;/button&gt;
+&lt;a href=&quot;&quot; id=&quot;anchor-media-stream-audio-destination-node-and-media-recorder&quot;&gt;download&lt;/a&gt;
+&lt;div&gt;
+  &lt;audio id=&quot;audio-media-stream-audio-destination-node-and-media-recorder&quot; controls&gt;&lt;/audio&gt;
+&lt;/div&gt;</code></pre>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const destination = new MediaStreamAudioDestinationNode(context);
+
+// If use `createMediaStreamDestination`
+// const destination = context.createMediaStreamDestination();
+
+const recorder = new MediaRecorder(destination.stream);
+
+const chunks = [];
+
+const buttonElement = document.getElementById(&apos;button-media-stream-audio-destination-node-and-media-recorder&apos;);
+const audioElement  = document.getElementById(&apos;audio-media-stream-audio-destination-node-and-media-recorder&apos;);
+const anchorElement = document.getElementById(&apos;anchor-media-stream-audio-destination-node-and-media-recorder&apos;);
+
+let oscillator = null;
+
+buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  if (oscillator === null) {
+    oscillator = new OscillatorNode(context);
+
+    // OscillatorNode (Input) -&gt; MediaStreamAudioDestinationNode (Output / Recorder)
+    oscillator.connect(destination);
+
+    // OscillatorNode (Input) -&gt; AudioDestinationNode (Output / Speaker)
+    oscillator.connect(audiocontext.destination);
+
+    recorder.start();
+    oscillator.start(0);
+
+    buttonElement.textContent = &apos;stop&apos;;
+  } else {
+    recorder.stop();
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    buttonElement.textContent = &apos;start&apos;;
+  }
+});
+
+recorder.ondataavailable = (event) =&gt; {
+  chunks.push(event.data);
+};
+
+recorder.onstop = async () =&gt; {
+  const blob = new Blob(chunks, { type: &apos;audio/ogg; codecs=opus&apos; });
+  const url  = window.URL.createObjectURL(blob);
+
+  audioElement.setAttribute(&apos;src&apos;, url);
+
+  anchorElement.setAttribute(&apos;href&apos;, url);
+  anchorElement.setAttribute(&apos;download&apos;, &apos;sine.ogg&apos;);
+};</code></pre>
+          <div class="app-container app-media-stream-audio-destination-node-and-media-recorder">
+            <div class="flexbox">
+              <button type="button" id="button-media-stream-audio-destination-node-and-media-recorder">start</button>
+              <a href="" id="anchor-media-stream-audio-destination-node-and-media-recorder">download</a>
+            </div>
+            <div>
+              <audio id="audio-media-stream-audio-destination-node-and-media-recorder" controls></audio>
+            </div>
+          </div>
+        </section>
+      </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
         <span><a href="https://github.com/Korilakkuma/Web-Music-Documentation" target="_blank" rel="noopener noreferrer">Korilakkuma</a> (Tomohiro IKEDA)</span>

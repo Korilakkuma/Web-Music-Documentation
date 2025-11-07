@@ -19436,6 +19436,59 @@ const animatePeriodicWave = (svg) => {
   renderSpectrumGraph(offset, width);
 };
 
+const mediaRecorder = () => {
+  const destination = new MediaStreamAudioDestinationNode(audiocontext);
+
+  const recorder = new MediaRecorder(destination.stream);
+
+  const chunks = [];
+
+  const buttonElement = document.getElementById('button-media-stream-audio-destination-node-and-media-recorder');
+  const audioElement = document.getElementById('audio-media-stream-audio-destination-node-and-media-recorder');
+  const anchorElement = document.getElementById('anchor-media-stream-audio-destination-node-and-media-recorder');
+
+  let oscillator = null;
+
+  buttonElement.addEventListener('click', async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator === null) {
+      oscillator = new OscillatorNode(audiocontext);
+
+      oscillator.connect(destination);
+      oscillator.connect(audiocontext.destination);
+
+      recorder.start();
+      oscillator.start(0);
+
+      buttonElement.textContent = 'stop';
+    } else {
+      recorder.stop();
+      oscillator.stop(0);
+
+      oscillator = null;
+
+      buttonElement.textContent = 'start';
+    }
+  });
+
+  recorder.ondataavailable = (event) => {
+    chunks.push(event.data);
+  };
+
+  recorder.onstop = async () => {
+    const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
+    const url = window.URL.createObjectURL(blob);
+
+    audioElement.setAttribute('src', url);
+
+    anchorElement.setAttribute('href', url);
+    anchorElement.setAttribute('download', 'sine.ogg');
+  };
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -19774,3 +19827,5 @@ animateLogarithmicScaleAmplitudeSpectrumToSVG(document.getElementById('svg-anima
 animateTimeOverviewAudioData();
 
 animatePeriodicWave(document.getElementById('svg-animation-periodic-wave'));
+
+mediaRecorder();
