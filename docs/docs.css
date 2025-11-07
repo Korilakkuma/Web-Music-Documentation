@@ -542,6 +542,14 @@ select {
   cursor: pointer;
 }
 
+.app-media-stream-audio-destination-node-and-media-recorder {
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+  grid-template-columns: repeat(1, auto);
+  gap: 8px;
+  margin: 24px 0;
+}
+
 .grid-2x2-layout {
   display: grid;
   grid-template-rows: repeat(2, auto);
