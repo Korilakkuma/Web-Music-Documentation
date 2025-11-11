@@ -20584,6 +20584,143 @@ recorder.onstop = async () =&gt; {
             </div>
           </div>
         </section>
+        <section id="section-device-sink-id">
+          <h3>sinkId と setSinkId メソッド</h3>
+          <p>
+            Web Audio API 1.1 では, <b><code>sinkId</code></b> と <b><code>setSinkId</code></b> メソッドが仕様に追加されて,
+            明示的に出力先のオーディオをデバイスを指定できるようになりました. もっとも, <code>sinkId</code> は, <code>MediaDeviceInfo</code> に定義されている
+            <code>deviceId</code> プロパティです. 実装としては, 対象のデバイスの <code>sinkId</code> を <code>AudioContext</code> インスタンスの
+            <code>setSinkId</code> メソッドの引数に指定するだけです.
+          </p>
+          <p>
+            <code>setSinkId</code> メソッド実行は, <b>非同期処理</b>です (したがって, 返り値は <code>Promise</code> です. 非同期処理なので,
+            イベントインターフェース (<code>sinkId</code> 変更完了時に発火する, <b><code>onsinkchange</code></b> イベントインターフェースと, 失敗時に発火する
+            <b><code>onerror</code></b> イベントインターフェース) も <code>AudioContext</code> に定義されています).
+          </p>
+          <p>
+            <code>sinkId</code> に関するプロパティは, Web Audio API 1.1 で仕様策定されたものなので, 対応するブラウザが多い場合は, ガードしておくのが無難です.
+          </p>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-html line-numbers">&lt;select id=&quot;select-output-device-by-sink-id&quot;&gt;&lt;/select&gt;
+&lt;button type=&quot;button&quot; id=&quot;button-output-device-by-sink-id&quot;&gt;start&lt;/button&gt;</code></pre>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const context = new AudioContext();
+
+const constraints = {
+  audio: true
+};
+
+const buttonPermissionElement = document.getElementById(&apos;button-output-device-by-sink-id-permission&apos;);
+const buttonElement           = document.getElementById(&apos;button-output-device-by-sink-id&apos;);
+
+buttonPermissionElement.addEventListener(&apos;click&apos;, async () =&gt; {
+  buttonPermissionElement.setAttribute(&apos;disabled&apos;, 'disabled&apos;);
+
+  await navigator.mediaDevices.getUserMedia(constraints);
+
+  const deviceInfos = await navigator.mediaDevices.enumerateDevices();
+
+  const outputDeviceInfos = deviceInfos.filter((deviceInfo) =&gt; {
+    return deviceInfo.kind === &apos;audiooutput&apos;;
+  });
+
+  const fragmentOutputDevices = document.createDocumentFragment();
+
+  outputDeviceInfos.forEach((deviceInfo) =&gt; {
+    const optionElement = document.createElement(&apos;option&apos;);
+
+    optionElement.setAttribute(&apos;value&apos;, deviceInfo.deviceId);
+
+    const textNode = document.createTextNode(deviceInfo.label);
+
+    optionElement.appendChild(textNode);
+
+    fragmentOutputDevices.appendChild(optionElement);
+  });
+
+  const selectOutputDevicesElement = document.getElementById(&apos;select-output-device-by-sink-id&apos;);
+
+  selectOutputDevicesElement.appendChild(fragmentOutputDevices);
+
+  selectOutputDevicesElement.addEventListener(&apos;change&apos;, async (event) =&gt; {
+    const deviceId = event.target.value;
+
+    if (typeof context.setSinkId === &apos;function&apos;) {
+      await context.setSinkId(deviceId);
+    }
+
+    if (&apos;onsinkchange&apos; in context) {
+      context.onsinkchange = (event) =&gt; {
+        console.dir(event);
+      };
+    }
+
+    if (&apos;onerror&apos; in context) {
+      context.onerror = (error) =&gt; {
+        console.dir(error);
+      };
+    }
+  });
+});
+
+let oscillator = null;
+
+const onDown = async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  if (oscillator !== null) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context);
+
+  // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(context.destination);
+
+  // Start immediately
+  oscillator.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+};
+
+const onUp = () =&gt; {
+  if (oscillator === null) {
+    return;
+  }
+
+  oscillator.stop(0);
+  oscillator.disconnect(0);
+
+  oscillator = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+};
+
+buttonElement.addEventListener(&apos;mousedown&apos;,  onDown);
+buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
+buttonElement.addEventListener(&apos;mouseup&apos;,    onUp);
+buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
+          <div class="app-container app-output-device-by-sink-id">
+            <dl>
+              <dt><label for="select-output-device-by-sink-id">Output Devices</label></dt>
+              <dd>
+                <select id="select-output-device-by-sink-id">
+                  <option value="">-- Select Output Device --</option>
+                </select>
+              </dd>
+            </dl>
+            <div class="flexbox">
+              <button type="button" id="button-output-device-by-sink-id-permission">permission</button>
+              <button type="button" id="button-output-device-by-sink-id">start</button>
+            </div>
+          </div>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>

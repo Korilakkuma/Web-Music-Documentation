@@ -19489,6 +19489,105 @@ const mediaRecorder = () => {
   };
 };
 
+const selectOutputDeviceBySinkId = () => {
+  const constraints = {
+    audio: true
+  };
+
+  const buttonPermissionElement = document.getElementById('button-output-device-by-sink-id-permission');
+  const buttonElement = document.getElementById('button-output-device-by-sink-id');
+
+  buttonPermissionElement.addEventListener('click', async () => {
+    buttonPermissionElement.setAttribute('disabled', 'disabled');
+
+    await navigator.mediaDevices.getUserMedia(constraints);
+
+    const deviceInfos = await navigator.mediaDevices.enumerateDevices();
+
+    const outputDeviceInfos = deviceInfos.filter((deviceInfo) => {
+      return deviceInfo.kind === 'audiooutput';
+    });
+
+    const fragmentOutputDevices = document.createDocumentFragment();
+
+    outputDeviceInfos.forEach((deviceInfo) => {
+      const optionElement = document.createElement('option');
+
+      optionElement.setAttribute('value', deviceInfo.deviceId);
+
+      const textNode = document.createTextNode(deviceInfo.label);
+
+      optionElement.appendChild(textNode);
+
+      fragmentOutputDevices.appendChild(optionElement);
+    });
+
+    const selectOutputDevicesElement = document.getElementById('select-output-device-by-sink-id');
+
+    selectOutputDevicesElement.appendChild(fragmentOutputDevices);
+
+    selectOutputDevicesElement.addEventListener('change', async (event) => {
+      const deviceId = event.target.value;
+
+      if (typeof audiocontext.setSinkId === 'function') {
+        await audiocontext.setSinkId(deviceId);
+      }
+
+      if ('onsinkchange' in audiocontext) {
+        audiocontext.onsinkchange = (event) => {
+          console.dir(event);
+        };
+      }
+
+      if ('onerror' in audiocontext) {
+        audiocontext.onerror = (error) => {
+          console.dir(error);
+        };
+      }
+    });
+  });
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    // OscillatorNode (Input) -> AudioDestinationNode (Output)
+    oscillator.connect(audiocontext.destination);
+
+    // Start immediately
+    oscillator.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+    oscillator.disconnect(0);
+
+    oscillator = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -19829,3 +19928,5 @@ animateTimeOverviewAudioData();
 animatePeriodicWave(document.getElementById('svg-animation-periodic-wave'));
 
 mediaRecorder();
+
+selectOutputDeviceBySinkId();
