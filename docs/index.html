@@ -20721,6 +20721,17 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
             </div>
           </div>
         </section>
+        <p>
+          <code>MediaStreamAudioSourceNode</code> と <code>sinkId</code>, そして, <code>MediaStream</code> インスタンスとして, WebRTC など, 別のメディア系 API
+          を出力先とするための <code>MediaStreamAudioDestinationNode</code> によって, オーディオインターフェース, つまり,
+          外部デバイスからの入出力が可能となります. 特に, <abbr title="Digital Audio Workstation">DAW</abbr> の場合,
+          デバイスからの入出力は必須機能となることが多いので, 重要な API と言えます.
+        </p>
+        <p>
+          DAW やソフトウェアシンセサイザーでは, もう 1 つ多用されるデバイスがあります. それは,
+          <abbr title="Musical Instrument Digital Interface">MIDI</abbr> デバイスです. これに関しては, Web Audio API がカバーする API ではなく, Web MIDI API
+          によって仕様策定されている API なので, あとのセクションで解説します.
+        </p>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
