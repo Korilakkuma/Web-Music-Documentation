@@ -20744,6 +20744,374 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
           <code>OfflineAudioContext</code> と <code>ConstantSourceNode</code> について解説します (また, Web Audio API 1.1 以降で追加された API
           に関しても随時追加で解説する予定です).
         </p>
+        <section id="section-web-audio-api-misc-offline-audio-context">
+          <h3>OfflineAudioContext</h3>
+          <p>
+            <b><code>OfflineAudioContext</code></b> クラスは, オーディオデバイスにレンダリングしないことで, オーディオデータ (実体は,
+            <code>AudioBuffer</code> インスタンス) の処理のみを高速に実行するためのクラスです. 端的には, デバイスからの音の入出力をいっさいしない代わりに,
+            オーディオデータのデコードや波形描画, 録音などを高速に実行するためのクラスです.
+          </p>
+          <p>
+            音楽アプリケーションの場合, 発音しないというケースは稀なので使用頻度としては高くありませんが, 例えば, 発音を必要とする処理は,
+            <code>AudioContext</code> クラスに任せつつ, <code>OfflineAudioContext</code> クラスで波形描画や録音のみを実行するといったケースなどでは有用です.
+          </p>
+          <p>
+            Web Audio API アーキテクチャの観点では, <code>OfflineAudioContext</code> クラスは,
+            <b><code>BaseAudioContext</code></b> クラスを継承したクラスとなります (<code>BaseAudioContext</code> という命名のとおり,
+            <code>AudioContext</code> クラスも <code>BaseAudioContext</code> クラスを継承したクラスです).
+          </p>
+          <p>
+            <code>BaseAudioContext</code> クラスで, Web Audio API に必要な API, 具体的には, ほとんどの
+            <code>AudioNode</code> インスタンス生成のファクトリメソッドや <code>audioWorklet</code> プロパティ,
+            <code>decodeAudioData</code> メソッドなどが定義されているので, <code>OfflineAudioContext</code> インスタンスでも利用可能です.
+          </p>
+          <p>
+            逆に, 利用できない API としては, <code>AudioContextState</code> を変更するメソッドや, <code>HTMLMediaElement</code> やオーディオデバイスと関連する,
+            一部の <code>AudioNode</code> インスタンス生成のファクトリメソッド (<code>createMediaElementSource</code> メソッド (<code
+              >MediaElementAudioSourceNode</code>
+            インスタンス) や <code>createMediaStreamSource</code> メソッド (<code>MediaStreamAudioSourceNode</code> インスタンス) など) や
+            <code>sinkId</code> プロパティなどです. これは, <code>OfflineAudioContext</code> クラスの役割からすれば当然の仕様と言えます (したがって,
+            <code>HTMLMediaElement</code> やオーディオデバイスにアクセスする場合は, <code>AudioContext</code> クラスを利用する必要があります).
+          </p>
+          <section id="section-web-audio-api-misc-offline-audio-context-constructor">
+            <h4>コンストラクタ</h4>
+            <p>
+              <code>OfflineAudioContext</code> クラスも <code>AudioContext</code> クラスと同様に,
+              コンストラクタを呼び出してインスタンスを生成する必要があります. ただし, コンストラクタには引数が必要です.
+              <b><code>OfflineAudioContextOptions</code></b> 型のオブジェクト, または, チャンネル数, オーディオサイズ, サンプルレートの 3 つの引数を指定します
+              (<code>renderSizeHint</code> も設定したい場合は, <code>OfflineAudioContextOptions</code> 型のオブジェクト一択です).
+            </p>
+            <p>
+              この引数をもとにして, <code>OfflineAudioContext</code> インスタンスで利用する <code>AudioBuffer</code> インスタンスのプロパティが決定されます.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const numberOfChannels = 1;
+const sampleRate       = 48000;
+const length           = sampleRate * 5; // 5 sec
+
+/** @type {OfflineAudioContextOptions} */
+const options = {
+  numberOfChannels,
+  length,
+  sampleRate,
+  renderSizeHint: &apos;default&apos;  // &apos;default&apos; or &apos;hardware&apos;
+};
+
+const context = new OfflineAudioContext(options);
+
+// or,
+//
+// const context = new OfflineAudioContext(numberOfChannels, length, sampleRate);</code></pre>
+            <img src="images/offline-audio-context.png" alt="OfflineAudioContext" width="1232" height="770" loading="lazy" />
+          </section>
+          <section id="section-web-audio-api-misc-offline-audio-context-start-rendering">
+            <h4>startRendering メソッド</h4>
+            <p>
+              <code>OfflineAudioContext</code> でレンダリングの対象となる, <code>AudioBuffer</code> インスタンスを取得するためには,
+              <b>startRendering</b> メソッドを実行します. このメソッドの実行は, 非同期処理なので, 返り値は <code>Promise</code> で,
+              成功時のコールバック関数の引数に, <code>AudioBuffer</code> インスタンスが渡されます. この <code>AudioBuffer</code> インスタンスは,
+              <code>OfflineAudioContext</code> インスタンス生成時に指定した引数にもとづいて, <code>numberOfChannels</code> プロパティ,
+              <code>length</code> プロパティ, <code>sampleRate</code> プロパティ, そして, <code>length</code> プロパティと
+              <code>sampleRate</code> プロパティから算出される <code>duration</code> プロパティが設定されています.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const numberOfChannels = 1;
+const sampleRate       = 48000;
+const length           = sampleRate * 5; // 5 sec
+
+const options = {
+  numberOfChannels,
+  length,
+  sampleRate
+};
+
+const context = new OfflineAudioContext(options);
+
+context.startRendering()
+  .then((audioBuffer) =&gt; {
+    // Rendered instance of `AudioBuffer`
+    console.dir(audioBuffer);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <p>
+              <code>startRendering</code> メソッドは非同期処理なので, イベントインターフェースも定義されています. イベントオブジェクト (<b
+                ><code>OfflineAudioCompletionEvent</code></b>
+              オブジェクト) の <b><code>renderedBuffer</code></b> プロパティに, <code>AudioBuffer</code> インスタンスが格納されています. どちら実装でも,
+              取得できる <code>AudioBuffer</code> インスタンスは同じです.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const numberOfChannels = 1;
+const sampleRate       = 48000;
+const length           = sampleRate * 5; // 5 sec
+
+const options = {
+  numberOfChannels,
+  length,
+  sampleRate
+};
+
+const context = new OfflineAudioContext(options);
+
+context.oncomplete = (event) =&gt; {
+  const audioBuffer = event.renderedBuffer;
+
+  // Rendered instance of `AudioBuffer`
+  console.dir(audioBuffer);
+};</code></pre>
+            <p>
+              この時点では, オーディオデータをいっさい設定 (レンダリング) していないので, <code>getChannelData</code> メソッドで取得できる,
+              オーディオデータの実体である <code>Float32Array</code> の要素はすべて <code>0</code> (つまり, 無音) です.
+            </p>
+            <p>
+              そこで, <code>startRendering</code> メソッドを実行する前に, オーディオデータをレンダリングする必要があります. 以下のコードでは,
+              <code>440 Hz</code> の正弦波を <code>5 sec</code> 分レンダリングします.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const duration = 5;  // sec
+const numberOfChannels = 1;
+const sampleRate       = 48000;
+const length           = sampleRate * duration;
+
+const options = {
+  numberOfChannels,
+  length,
+  sampleRate
+};
+
+const context = new OfflineAudioContext(options);
+
+const oscillator = new OscillatorNode(context);
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+oscillator.start(context.currentTime);
+oscillator.stop(context.currentTime + duration);
+
+context.startRendering()
+  .then((audioBuffer) =&gt; {
+    // Rendered instance of `AudioBuffer`
+
+    for (let channelNumber = 0; audioBuffer.numberOfChannels; channelNumber++) {
+      console.log(audioBuffer.getChannelData(channelNumber));
+    }
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <p>
+              このコードは, オーディオデータをレンダリングしているので, オーディオデータの実体である <code>Float32Array</code> の要素には,
+              少なくとも無音ではないデータが格納されています. 実際に波形描画して確認してみます (波形が確認しやすいように,
+              <code>10 Hz</code> の正弦波に変更します).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const duration         = 5;  // sec
+const numberOfChannels = 1;
+const sampleRate       = 48000;
+const length           = sampleRate * duration;
+
+const options = {
+  numberOfChannels,
+  length,
+  sampleRate
+};
+
+const context = new OfflineAudioContext(options);
+
+const oscillator = new OscillatorNode(context, { frequency: 10 });
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+oscillator.start(context.currentTime);
+oscillator.stop(context.currentTime + duration);
+
+context.startRendering()
+  .then((audioBuffer) =&gt; {
+    // Rendered instance of `AudioBuffer`
+
+    const data = audioBuffer.getChannelData(0);
+
+    const svg = document.getElementById(&apos;svg-figure-sin-wave-by-offline-audio-context&apos;);
+
+    const width  = Number(svg.getAttribute(&apos;width&apos;));
+    const height = Number(svg.getAttribute(&apos;height&apos;));
+
+    const innerWidth  = width - 48;
+    const innerHeight = height - 48;
+    const translateX  = 24;
+    const translateY  = 24;
+
+    const samplingPeriod = 1 / audioBuffer.sampleRate;
+
+    const textInterval = Math.max(Math.trunc(1 * sampleRate), 1);  // Render text every 1 sec
+
+    const xRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+    xRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+    xRect.setAttribute(&apos;y&apos;, ((innerHeight / 2) + translateY - 1).toString(10));
+    xRect.setAttribute(&apos;width&apos;, innerWidth.toString(10));
+    xRect.setAttribute(&apos;height&apos;, &apos;2&apos;);
+    xRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+    xRect.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+
+    svg.appendChild(xRect);
+
+    const yRect = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;rect&apos;);
+
+    yRect.setAttribute(&apos;x&apos;, translateX.toString(10));
+    yRect.setAttribute(&apos;y&apos;, translateY.toString(10));
+    yRect.setAttribute(&apos;width&apos;, &apos;2&apos;);
+    yRect.setAttribute(&apos;height&apos;, innerHeight.toString(10));
+    yRect.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+    yRect.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+
+    svg.appendChild(yRect);
+
+    const g = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;g&apos;);
+
+    [1.0, 0.0, -1.0].forEach((amplitude, index) =&gt; {
+      const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+      text.textContent = amplitude.toFixed(1);
+      text.setAttribute(&apos;x&apos;, (translateX - 4).toString(10));
+      text.setAttribute(&apos;y&apos;, ((1 - amplitude) * (innerHeight / 2) + translateY).toString(10));
+      text.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+      text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+      text.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+      text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+      g.appendChild(text);
+    });
+
+    for (let n = 0; n &lt; length; n++) {
+      if (((n % textInterval) !== 0) &amp;&amp; (n !== (length - 1))) {
+        continue;
+      }
+
+      const x = n * (innerWidth / length) + translateX;
+
+      const text = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+      text.textContent = `${Math.ceil(n * samplingPeriod)} sec`;
+
+      text.setAttribute(&apos;x&apos;, (x + 4).toString(10));
+      text.setAttribute(&apos;y&apos;, ((innerHeight / 2) + translateY + 12).toString(10));
+      text.setAttribute(&apos;text-anchor&apos;, &apos;middle&apos;);
+      text.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+      text.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+      text.setAttribute(&apos;font-size&apos;, &apos;12px&apos;);
+
+      g.appendChild(text);
+    }
+
+    svg.appendChild(g);
+
+    const path = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;path&apos;);
+
+    let d = &apos;&apos;;
+
+    for (let n = 0; n &lt; length; n++) {
+      const x = n * (innerWidth / length) + translateX;
+      const y = (1 - data[n]) * (innerHeight / 2) + translateY;
+
+      if (d === &apos;&apos;) {
+        d += `M${x} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute(&apos;d&apos;, d);
+
+    path.setAttribute(&apos;stroke&apos;, &apos;rgba(0 0 255 / 30%)&apos;);
+    path.setAttribute(&apos;fill&apos;, &apos;none&apos;);
+    path.setAttribute(&apos;stroke-width&apos;, &apos;2&apos;);
+    path.setAttribute(&apos;stroke-linecap&apos;, &apos;round&apos;);
+    path.setAttribute(&apos;stroke-linejoin&apos;, &apos;miter&apos;);
+
+    svg.appendChild(path);
+
+    const xLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+    xLabel.textContent = &apos;Time&apos;;
+
+    xLabel.setAttribute(&apos;x&apos;, innerWidth.toString(10));
+    xLabel.setAttribute(&apos;y&apos;, ((innerHeight / 2) + translateY - 8).toString(10));
+    xLabel.setAttribute(&apos;text-anchor&apos;, &apos;end&apos;);
+    xLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+    xLabel.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+    xLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+    const yLabel = document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;text&apos;);
+
+    yLabel.textContent = &apos;Amplitude&apos;;
+
+    yLabel.setAttribute(&apos;x&apos;, (translateX / 2).toString(10));
+    yLabel.setAttribute(&apos;y&apos;, (translateY / 2).toString(10));
+    yLabel.setAttribute(&apos;text-anchor&apos;, &apos;start&apos;);
+    yLabel.setAttribute(&apos;stroke&apos;, &apos;none&apos;);
+    yLabel.setAttribute(&apos;fill&apos;, &apos;rgb(153 153 153)&apos;);
+    yLabel.setAttribute(&apos;font-size&apos;, &apos;14px&apos;);
+
+    svg.appendChild(xLabel);
+    svg.appendChild(yLabel);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <figure>
+              <svg id="svg-figure-sin-wave-by-offline-audio-context" width="720" height="180" />
+              <figcaption><code>OfflineAudioContext</code> による波形描画</figcaption>
+            </figure>
+            <p>
+              <code>OfflineAudioContext</code> でも, オーディオグラフの生成は <code>AudioContext</code> と同じです. 一方で,
+              <b>発音しない</b> (<b>オーディオデバイスへレンダリングしない</b>),
+              <b>オーディオデータの再生の完了まで待機する必要がない</b>という点が大きく異なります (例えば, 上記のコードでは,
+              <code>5 sec</code> も待機する必要なく, ほぼ即時に <code>AudioBuffer</code> インスタンスを取得して, 波形描画が完了しています). さらに,
+              発音しないので <b>Autoplay Policy の影響を受けない</b>ことも優位的です.
+            </p>
+            <p>
+              これを応用すれば, 再生完了を待機する必要なく, <abbr title="RIFF Waveform Audio Format">WAVE</abbr> ファイルのフォーマットにしたがって,
+              データを格納することでより汎用的な (<code>MediaRecorder</code> を利用しない) 録音機能を実装することも可能になるはずです.
+            </p>
+          </section>
+          <article id="section-web-audio-api-misc-offline-audio-context-current-time">
+            <h4>OfflineAudioContext における currentTime プロパティ</h4>
+            <p>
+              <code>currentTime</code> プロパティは, <code>BaseAudioContext</code> クラスに定義されているので, <code>OfflineAudioContext</code> クラスも
+              <code>currentTime</code> プロパティを継承します. <code>AudioContext</code> クラスの <code>currentTime</code> プロパティは,
+              <code>AudioContext</code> インスタンスを生成してから (厳密には, <code>AudioContextState</code> が
+              <code>&apos;running&apos;</code> 状態になってから) の経過時間を秒単位で計測していましたが, <code>OfflineAudioContext</code> クラスも,
+              <b><code>resume</code></b> メソッドの実行で <code>AudioContextState</code> が <code>&apos;running&apos;</code> 状態となってから計測が開始されます
+              (また, <b><code>suspend</code></b> メソッドの実行で, 引数で指定された時刻に計測が停止する仕様となっています).
+            </p>
+            <p>
+              <code>resume</code> メソッドは, <code>startRendering</code> メソッド開始後に実行する必要があるようです (実装確認レベルですが, Chrome, Firefox,
+              Safari, Edge いずれも, 開始前に実行してしまうとエラーが発生するようです). また, <code>startRendering</code> メソッドの実行が完了すると,
+              <code>AudioContextState</code> が <code>&apos;closed&apos;</code> 状態に遷移して, そのあとは
+              <code>currentTime</code> プロパティの更新も停止します. オーナーも <code>OfflineAudioContext</code> における, これらの仕様・実装は,
+              あまり理解できていませんが, <code>startRendering</code> メソッドでよほど時間を要するオーディオデータのレンダリングをしない限りは,
+              必要になることは少ないと思います (<code>startRendering</code> メソッドの実行で, <code>AudioContextState</code> が
+              <code>&apos;suspended&apos;</code> (初期状態で <code>startRendering</code> メソッドの実行前) から, <code>&apos;running&apos;</code> (<code
+                >startRendering</code>
+              メソッド実行中), <code>&apos;closed&apos;</code> 状態 (<code>startRendering</code> メソッド実行完了時) に遷移するので,
+              <code>startRendering</code> メソッドの実行時間が短いほど <code>currentTime</code> プロパティの更新も短い時間で停止するからです).
+            </p>
+          </article>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
