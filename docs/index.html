@@ -21037,6 +21037,51 @@ context.startRendering()
             </p>
           </article>
         </section>
+        <section id="section-web-audio-api-misc-constant-source-node">
+          <h3>ConstantSourceNode</h3>
+          <p>
+            おそらく, Web Audio API で仕様定義されている <code>AudioNode</code> や <code>AudioParam</code> のなかで, 命名からは何をするのか最も不明な
+            <code>AudioNode</code> だと思います.
+          </p>
+          <p>
+            <b><code>ConstantSourceNode</code></b> クラスの実質的なユースケースは,
+            <b><code>AudioParam</code> のパラメータのオートメーションが競合してしまう場合です</b>. 例えば, <code>OscillatorNode</code> の
+            <code>Frequency</code> プロパティ (<code>AudioParam</code>) に, パラメータのオートメーション機能を利用して, グライド (ポルタメント)
+            をすでに実装している場合に, ピッチベンドを適用する場合で <code>frequency</code> プロパティのパラメータのオートメーション機能を利用したい場合,
+            これは, パラメータのオートメーション機能の競合となるので実装できません.
+            <b><code>AudioParam</code> に対するパラメータのオートメーション機能は 1 対 1 だからです</b>.
+            <code>ConstantSourceNode</code> クラスを利用せずにこのユースケースに対応するには, AudioWorklet で直接
+            <code>AudioParam</code> の値を計算するしかありません.
+          </p>
+          <p>
+            <code>ConstantSourceNode</code> クラスは, <code>AudioParam</code> のパラメータのオートメーションの競合を解決します.
+            <code>ConstantSourceNode</code> クラスには, <code>AudioParam</code> 型である <b><code>offset</code></b> プロパティが定義されており,
+            このプロパティが複数のパラメータのオートメーションを 1 つに集約します.
+          </p>
+          <p>
+            <code>ConstantSourceNode</code> インスタンスと <code>offset</code> プロパティ, オートメーションが 1 つの組み合わせになります. 先ほどの例だと,
+            <code>OscillatorNode</code> インスタンスの <code>frequency</code> プロパティ 1 つに対して, オートメーションが 2 つなので, 2 つの
+            <code>ConstantSourceNode</code> インスタンスが必要です.
+          </p>
+          <section id="section-web-audio-api-misc-constant-source-node-constructor">
+            <h4>コンストラクタ</h4>
+            <p>
+              <code>ConstantSourceNode</code> インスタンスのコンストラクタの第 2 引数には,
+              <b><code>ConstantSourceOptions</code></b> 型のオブジェクトを指定できます. <code>ConstantSourceOptions</code> の <code>offset</code> プロパティで,
+              インスタンス生成時に初期値を設定できます. デフォルト値は <code>1</code> です.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const constantSource = new ConstantSourceNode(context);
+
+// If use `createConstantSource`
+// const constantSource = context.createConstantSource();</code></pre>
+            <img src="images/constant-source-node.png" alt="ConstantSourceNode" width="1232" height="770" loading="lazy" />
+          </section>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
