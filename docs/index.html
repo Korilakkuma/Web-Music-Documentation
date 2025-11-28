@@ -21112,6 +21112,215 @@ context.startRendering()
             </p>
           </article>
         </section>
+        <section id="section-web-audio-api-misc-constant-source-node">
+          <h3>ConstantSourceNode</h3>
+          <p>
+            おそらく, Web Audio API で仕様定義されている <code>AudioNode</code> や <code>AudioParam</code> のなかで, 命名からは何をするのか最も不明な
+            <code>AudioNode</code> だと思います.
+          </p>
+          <p>
+            <b><code>ConstantSourceNode</code></b> クラスの実質的なユースケースは,
+            <b><code>AudioParam</code> のパラメータのオートメーションが競合してしまう場合です</b>. 例えば, <code>OscillatorNode</code> の
+            <code>Frequency</code> プロパティ (<code>AudioParam</code>) に, パラメータのオートメーション機能を利用して, グライド (ポルタメント)
+            をすでに実装している場合に, ピッチベンドを適用する場合で <code>frequency</code> プロパティのパラメータのオートメーション機能を利用したい場合,
+            これは, パラメータのオートメーション機能の競合となるので実装できません.
+            <b><code>AudioParam</code> に対するパラメータのオートメーション機能は 1 対 1 だからです</b>.
+            <code>ConstantSourceNode</code> クラスを利用せずにこのユースケースに対応するには, AudioWorklet で直接
+            <code>AudioParam</code> の値を計算するしかありません.
+          </p>
+          <p>
+            <code>ConstantSourceNode</code> クラスは, <code>AudioParam</code> のパラメータのオートメーションの競合を解決します.
+            <code>ConstantSourceNode</code> クラスには, <code>AudioParam</code> 型である <b><code>offset</code></b> プロパティが定義されており,
+            このプロパティが複数のパラメータのオートメーションを 1 つに集約します.
+          </p>
+          <p>
+            <code>ConstantSourceNode</code> インスタンスと <code>offset</code> プロパティ, オートメーションが 1 つの組み合わせになります. 先ほどの例だと,
+            <code>OscillatorNode</code> インスタンスの <code>frequency</code> プロパティ 1 つに対して, オートメーションが 2 つなので, 2 つの
+            <code>ConstantSourceNode</code> インスタンスが必要です.
+          </p>
+          <section id="section-web-audio-api-misc-constant-source-node-constructor">
+            <h4>コンストラクタ</h4>
+            <p>
+              <code>ConstantSourceNode</code> インスタンスのコンストラクタの第 2 引数には,
+              <b><code>ConstantSourceOptions</code></b> 型のオブジェクトを指定できます. <code>ConstantSourceOptions</code> の <code>offset</code> プロパティで,
+              インスタンス生成時に初期値を設定できます. デフォルト値は <code>1</code> です.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const constantSource = new ConstantSourceNode(context);
+
+// If use `createConstantSource`
+// const constantSource = context.createConstantSource();</code></pre>
+            <img src="images/constant-source-node.png" alt="ConstantSourceNode" width="1232" height="770" loading="lazy" />
+          </section>
+          <section id="section-web-audio-api-misc-constant-source-node-offset">
+            <h4>offset プロパティ</h4>
+            <p>
+              <b><code>offset</code></b> プロパティは, <b>接続先の <code>AudioParam</code> の値に加算される値</b>となります. 値の範囲としては, 32 bit
+              浮動小数点数 (<code>AudioParam</code> の <code>minValue</code> プロパティ以上, <code>maxValue</code> プロパティ以下) であれば,
+              仕様的には問題ありません. 以下のコードは, <code>frequency</code> プロパティの値 <code>440</code> から <code>-220</code> を加算した値になるので, 1
+              オクターブ下の正弦波が発音されます (もちろん, このようなユースケースで, <code>ConstantSourceNode</code> をわざわざ利用する必要はありません).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const constantSource = new ConstantSourceNode(context, { offset: -220 });
+
+// If use `createConstantSource`
+// const constantSource = context.createConstantSource();
+//
+// constantSource.offset.value = -220;
+
+const oscillator = new OscillatorNode(context, { frequency: 440 });
+
+// ConstantSourceNode -&gt; frequency (AudioParam)
+constantSource.connect(oscillator.frequency);
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// Start immediately
+oscillator.start(0);
+constantSource.start(0);
+
+// Stop after 10 sec
+oscillator.stop(context.currentTime + 10);
+constantSource.stop(context.currentTime + 10);</code></pre>
+          </section>
+          <section id="section-web-audio-api-misc-constant-source-node-start-and-stop">
+            <h4>start メソッド / stop メソッド</h4>
+            <p>
+              <code>ConstantSourceNode</code> クラスは, <b><code>AudioScheduledSourceNode</code> クラスを継承しています</b>.
+              <code>start</code> メソッドの実行によって, <code>offset</code> プロパティ (<code>AudioParam</code>) の値を, 接続先の
+              <code>AudioParam</code> の値に加算する処理が開始されて, <code>stop</code> メソッドによって停止します また,
+              <code>AudioBufferSourceNode</code> インスタンスと同様に, <code>ConstantSourceNode</code> インスタンスも使い捨てなので, 一度
+              <code>start</code> メソッドと <code>stop</code> メソッドを実行したら, 再利用することはできません. 再度, インスタンスを生成して,
+              <code>AudioParam</code> に接続する必要がありますが, テクニックな実装として, <code>AudioParam</code> に関係するだけなので,
+              <code>start</code> メソッドで実行後, 停止は <code>stop</code> メソッドではなく, <code>disconnect</code> メソッドで
+              <code>AudioParam</code> との接続を解除すれば, インスタンスを破棄せずに機能させることができます.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const constantSource = new ConstantSourceNode(context, { offset: -220 });
+
+// If use `createConstantSource`
+// const constantSource = context.createConstantSource();
+//
+// constantSource.offset.value = -220;
+
+const oscillator = new OscillatorNode(context, { frequency: 440 });
+
+// ConstantSourceNode -&gt; frequency (AudioParam)
+constantSource.connect(oscillator.frequency);
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// Start immediately
+oscillator.start(0);
+constantSource.start(0);
+
+// Stop after 10 sec
+oscillator.stop(context.currentTime + 10);
+
+oscillator.onended = () =&gt; {
+  constantSource.disconnect(oscillator.frequency);
+};</code></pre>
+          </section>
+          <section id="section-web-audio-api-misc-constant-source-node-multiple-automations">
+            <h4>複数のオートメーション</h4>
+            <p>
+              ここまでのコードでは, <code>ConstantSourceNode</code> クラスの有用な実装ではなかったので, このセクションでは,
+              実際のユースケースを想定した実装例を解説します. 冒頭で解説したような, グライドと, (例えば, ペダルベンドによる (Whammy による)) ピッチベンドの 2
+              つのオートメーションが適用されるユースケースを実装します. つまり, <code>OscillatorNode</code> インスタンスの <code>frequency</code> プロパティ 1
+              つに対して, 2 つのオートメーションを適用します.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const sourceFrequency = 440;
+const targetFrequency = 880;
+
+const glideInput     = new ConstantSourceNode(context, { offset: sourceFrequency });
+const pitchBendInput = new ConstantSourceNode(context, { offset: sourceFrequency });
+
+const oscillator = new OscillatorNode(context, { frequency: sourceFrequency });
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// ConstantSourceNode（Glide) -&gt; frequency (AudioParam);
+glideInput.connect(oscillator.frequency);
+
+// ConstantSourceNode (Pitch Bend) -&gt; frequency (AudioParam);
+pitchBendInput.connect(oscillator.frequency);
+
+const startTime = context.currentTime;
+const endTime   = startTime + 10;
+
+// Start immediately
+oscillator.start(startTime);
+
+// Start Glide Immediately
+glideInput.start(startTime);
+glideInput.offset.setValueAtTime(sourceFrequency, context.currentTime);
+glideInput.offset.linearRampToValueAtTime(880, endTime);
+
+// Start Pitch Bend after 5 sec
+pitchBendInput.start(startTime + 5);
+pitchBendInput.offset.exponentialRampToValueAtTime(targetFrequency, endTime);
+
+// Stop after 10 sec
+oscillator.stop(endTime);
+
+oscillator.onended = () =&gt; {
+  glideInput.disconnect(oscillator.frequency);
+  pitchBendInput.disconnect(oscillator.frequency);
+};</code></pre>
+            <p>
+              グライドを発音と同時にオートメーション開始して, ピッチベンドを発音から <code>5 sec</code> 経過後にオートメーション開始しています. 開始時刻は,
+              <code>OscillatorNode</code> クラスや <code>AudioBufferSourceNode</code> クラスと同様に,
+              <code>AudioScheduledSourceNode</code> クラスから継承している <code>start</code> メソッドの引数で指定可能です (<code>stop</code>
+              メソッドも停止時刻を引数で指定可能です). それぞれの, <code>ConstantSourceNode</code> インスタンスを <code>OscillatorNode</code> インスタンスの
+              <code>frequency</code> プロパティ (<code>AudioParam</code>) に接続します. オートメーション自体は, それぞれの
+              <code>ConstantSourceNode</code> インスタンスの <code>offset</code> プロパティ (<code>AudioParam</code>) に対して適用します.
+            </p>
+            <p>
+              これで, オートメーション中の値は <code>ConstantSourceNode</code> がオートマティックに計算してくれるので,
+              複数のオートメーション中の値を計算する実装は不要になります.
+            </p>
+          </section>
+          <article id="section-web-audio-api-misc-constant-source-node-multiple-automations-without-constant-source-node">
+            <h4>複数のオートメーションのもう 1 つの実装アプローチ</h4>
+            <p>
+              実は, <code>ConstantSourceNode</code> を利用せずに, 複数のオートメーションを実装する方法もあります. 例えば, <code>OscillatorNode</code> には
+              <code>frequency</code> プロパティと <code>detune</code> プロパティの 2 つが定義されています. 同様に, <code>AudioBufferSourceNode</code> には
+              <code>playbackRate</code> プロパティと <code>detune</code> プロパティの 2 つが定義されています. これらの <code>AudioParam</code> は,
+              インスタンスが異なるだけで, 設定している物理量は同じです. Web Audio API の仕様として, 2 つの <code>AudioParam</code> は, 1
+              つの値の算出に利用されています (<span class="math-inline"
+                >$f_{\mathrm{computed}} = \mathrm{frequency} \cdot \mathrm{pow}\left(2, \left(\mathrm{detune} / 1200 \right)\right)$</span>
+              や
+              <span class="math-inline"
+                >$p_{\mathrm{computed}} = \mathrm{playbackRate} \cdot \mathrm{pow}\left(2, \left(\mathrm{detune} / 1200 \right)\right)$</span>
+              を参考). つまり, 2 つの <code>AudioParam</code> それぞれに, パラメータのオートメーションを適用すれば, 実質的に,
+              複数のオートメーションを適用することが可能になります.
+            </p>
+            <p>
+              ただし, ほとんどの <code>AudioNode</code> における <code>AudioParam</code> は, 複数あっても 1 つの値に作用するという仕様ではないので,
+              汎用的な実装としては, <code>ConstantSourceNode</code> を利用するのが正解と言えます.
+            </p>
+          </article>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
