@@ -209,6 +209,10 @@ table > tbody > tr > td {
   border: 1px solid var(--gray-light);
 }
 
+table th.border-bottom {
+  border-bottom: 1px solid var(--gray);
+}
+
 input[type="range"] {
   cursor: ew-resize;
   user-select: none;
