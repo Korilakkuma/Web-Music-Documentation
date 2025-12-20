@@ -8770,6 +8770,132 @@ oscillator.start(0);</code></pre>
               </p>
               <p>また, 音の伝達特性 (周波数特性) は, RIR 以外にも, 声道フィルタや HRTF (頭部伝達関数), スピーカーキャビネットの響きなどがあります.</p>
             </article>
+            <article
+              class="section-effectors-filter-relationship-between-fourier-transform-and-laplace-transform-discrete-time-fourier-transform-and-z-transform"
+            >
+              <h5>フーリエ変換とラプラス変換, 離散 (時間) フーリエ変換と <span class="math-inline">$z$</span> 変換の関係性</h5>
+              <p>
+                <span class="math-inline">$z$</span> 変換に関してそれとなく説明していましたが, このセクションで解説します. もっとも,
+                <span class="math-inline">$z$</span> 変換そのものの解説というよりは, <b>連続時間システムにおける, フーリエ変換とラプラス変換の関係</b>, および,
+                <b>離散時間システムにおける, 離散 (時間) フーリエ変換と <span class="math-inline">$z$</span> 変換の関係</b>における観点で解説をします.
+              </p>
+              <table class="auto-table">
+                <caption>
+                  フーリエ変換とラプラス変換, 離散 (時間) フーリエ変換と
+                  <span class="math-inline">$z$</span>
+                  変換の関係
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">システム</th>
+                    <th scope="col"><span class="math-inline">$s = j\omega$</span> または <span class="math-inline">$\left|z\right| = 1$</span></th>
+                    <th scope="col">複素平面への拡張</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row" class="border-bottom">連続時間系<br />(Continuous-Time system)</th>
+                    <td>
+                      <dl>
+                        <dt>(片側) フーリエ変換 (複素平面における虚軸上のラプラス変換)</dt>
+                        <dd class="math-block">
+                          <!-- prettier-ignore -->
+                          $
+                            \begin{flalign}
+                              &s = j\omega, \omega = -2 \pi f \\
+                              &F\left(f\right) = \int_{0}^{\infty}f\left(t\right)e^{-j2 \pi ft}dt \\
+                            \end{flalign}
+                          $
+                        </dd>
+                      </dl>
+                    </td>
+                    <td>
+                      <dl>
+                        <dt>ラプラス変換</dt>
+                        <dd class="math-block">
+                          <!-- prettier-ignore -->
+                          $
+                            \begin{flalign}
+                              &s = \sigma + j\omega \\
+                              &L\left(s\right) = \int_{0}^{\infty}f\left(t\right)e^{-st}dt \\
+                            \end{flalign}
+                          $
+                        </dd>
+                      </dl>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="border-bottom">離散時間系<br />(Discrete-Time system)</th>
+                    <td>
+                      <dl>
+                        <dt>離散時間フーリエ変換 (<span class="math-inline">$z$</span> 平面における単位円上の <span class="math-inline">$z$</span> 変換)</dt>
+                        <dd class="math-block">
+                          <!-- prettier-ignore -->
+                          $
+                            \begin{flalign}
+                              &\left|z\right| = 1 \\
+                              &X\left(k\right) = \sum_{n = -\infty}^{\infty}x\left(n\right)e^{-j\frac{2 \pi kn}{N}} \\
+                            \end{flalign}
+                          $
+                        </dd>
+                      </dl>
+                    </td>
+                    <td>
+                      <dl>
+                        <dt><span class="math-inline">$z$</span> 変換</dt>
+                        <dd class="math-block">
+                          <!-- prettier-ignore -->
+                          $
+                            \begin{flalign}
+                              &z = e^{st} \\
+                              &X\left(z\right) = \sum_{n = -\infty}^{\infty}x\left(n\right)z^{-n} \\
+                            \end{flalign}
+                          $
+                        </dd>
+                      </dl>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="border-bottom">離散時間系 (有限長)<br />(Discrete-Time system)</th>
+                    <td>
+                      <dl>
+                        <dt>離散フーリエ変換 (コンピュータでは無限長は計算できないので, 有限長に打ち切り)</dt>
+                        <dd class="math-block">
+                          <!-- prettier-ignore -->
+                          $
+                            \begin{flalign}
+                              &\left|z\right| = 1 \\
+                              &X\left(k\right) = \sum_{n = 0}^{N - 1}x\left(n\right)e^{-j\frac{2 \pi kn}{N}} \\
+                            \end{flalign}
+                          $
+                        </dd>
+                      </dl>
+                    </td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+              <p>
+                (<span class="math-inline">$j$</span> は虚数単位. <span class="math-inline">$\sigma$</span>, <span class="math-inline">$\omega$</span> は実数).
+              </p>
+              <p>
+                (数学的な厳密性は欠きますが, イメージとしては) <span class="math-inline">$z$</span> 平面は, 複素平面 (<span class="math-inline">$s$</span> 平面)
+                における離散群の集合と考えることができます. そして, ラプラス変換を離散時間システムに適用したのが, <span class="math-inline">$z$</span> 変換です.
+                ちなみに, 2 つの変換は, <b><span class="math-inlin">$s$</span> - <span class="math-inline">$z$</span> 変換</b> (<b>双一次変換</b>)
+                によって相互に変換することができます.
+              </p>
+              <p>
+                そして, 連続時間システムにおけるラプラス変換を虚軸上のみで適用するのが (片側) フーリエ変換です (フーリエ変換は, 厳密には
+                <span class="math-inline">$-\infty$</span> から <span class="math-inline">$\infty$</span> の積分で定義されますが, ラプラス変換は因果性のシステム
+                (<span class="math-inline">$0 \le t$</span>) に適用するので, <b>片側</b>フーリエ変換となります.
+              </p>
+              <p>
+                同様に, 離散時間システムにおける <span class="math-inline">$z$</span> 変換を単位円上のみで適用するのが 離散時間フーリエ変換です.
+                <b>離散時間</b>フーリエ変換であることに注意してください. あくまで, 和分の範囲は <span class="math-inline">$-\infty$</span> から
+                <span class="math-inline">$\infty$</span> だからです. しかし, コンピュータでは無限長の和分を計算できないので,
+                有限長の和分に打ち切ったアルゴリズムが, 離散フーリエ変換です.
+              </p>
+            </article>
           </section>
         </section>
         <section id="section-effectors-equalizer">
