@@ -3546,6 +3546,72 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
             <h4>cancelAndHoldAtTime(cancelTime)</h4>
             <p><code>cancelTime</code> 以降のスケジューリングを解除する (<code>cancelTime</code> 時点の値を保持する)</p>
           </section>
+          <article id="section-audio-param-scheduling-definition-by-mathematical-formula">
+            <h4>オートメーションメソッドの数式定義</h4>
+            <p>
+              Web Audio API では, <code>AudioParam</code> のパラメータのオートメーションメソッドによって, パラメータの時間的変化は抽象化されています.
+              一般的なオーディオ API では, これらのパラメータの時間変化を算出して実装することになるでしょう. 参考までに,
+              パラメータのオートメーションメソッドが抽象化している数式を記載します.
+            </p>
+            <p>
+              <span class="math-inline">$\mathrm{param}\left(n\right)$</span> はパラメータの関数,
+              <span class="math-inline">$f\left(n\right)$</span> は時間変化のカーブを定義する関数とすると, パラメータの時間変化は以下のように定義されます.
+            </p>
+            <div class="math-block">
+              $\mathrm{param}\left(n\right) = \mathrm{param}\left(t_{i}\right) + \left(\mathrm{param}\left(t_{i + 1}\right) -
+              \mathrm{param}\left(t_{i}\right)\right) \cdot f\left(n\right) \quad \left(t_{i} \leq n \lt t_{i + 1}\right)$
+            </div>
+            <p>
+              線形的な変化の場合 (<code>linearRampToValueAtTime</code> メソッドの場合),
+              <span class="math-inline">$f\left(n\right)$</span> は以下のように定義されます.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &f\left(n\right) = \frac{n - t_{i}}{t_{i + 1} - t_{i}} \quad \left(t_{i} \leq n \lt t_{i + 1}\right) \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              指数関数的な変化の場合 (<code>exponentialRampToValueAtTime</code> メソッドの場合),
+              <span class="math-inline">$f\left(n\right)$</span> は以下のように定義されます.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &f\left(n\right) = \frac{1 - \mathrm{exp}\left(\frac{\alpha\left(n - t_{i}\right)}{t_{i + 1} - t_{i}}\right)}{1 - \mathrm{exp}\left(\alpha\right)} \quad \left(t_{i} \leq n \lt t_{i + 1}\right) \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              <span class="math-inline">$\alpha$</span> は, 変化のスピードを制御するパラメータで (<code>exponentialRampToValueAtTime</code>
+              メソッドの引数に相当する値と考えるとよいでしょう), 正の値を指定すると, 最初に変化が小さく, 徐々に変化が大きくなります. 逆に, 負数を指定すると,
+              最初に変化が大きく, 徐々に変化が小さくなります.
+            </p>
+            <p>次のセクションで解説するエンベロープジェネレーターも, これらのパラメータ数式を利用して定義することが可能です.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &\mathrm{param}\left(n\right) =
+                  \begin{cases}
+                    \frac{1 - \mathrm{exp}\left(\frac{\alpha n}{A}\right)}{1 - \mathrm{exp}\left(\alpha\right)} & \left(0 \leq n \le A\right) \\
+                    1 + \left(S - 1\right) \cdot \left(1 - \mathrm{exp}\left(\frac{\alpha\left(n - A\right)}{D}\right)\right) & \left(A \leq n \le g\right) \\
+                    \mathrm{param}\left(g - 1\right) - \mathrm{param}\left(g - 1\right) \cdot \left(1 - \mathrm{exp}\left(\frac{\alpha\left(n - g\right)}{R}\right)\right) & \left(g \leq n \le R\right) \\
+                  \end{cases}
+                \end{flalign}
+              $
+            </div>
+            <p>
+              <span class="math-inline">$A$</span> はアタックタイム, <span class="math-inline">$D$</span> はディケイタイム,
+              <span class="math-inline">$S$</span> はサステインレベル, <span class="math-inline">$R$</span> はリリースタイムの値です (詳細は,
+              <a href="#section-envelope-generator">エンベロープジェネレーター</a>のセクションで解説しています). また,
+              <span class="math-inline">$g$</span> は<b>ゲートタイム</b>で, (MIDI メッセージの) ノートオンからノートオフするまでの時間です (イメージとしては,
+              鍵盤楽器を打鍵してから離すまでの時間です).
+            </p>
+          </article>
         </section>
         <section id="section-envelope-generator">
           <h3>エンベロープジェネレーター</h3>
