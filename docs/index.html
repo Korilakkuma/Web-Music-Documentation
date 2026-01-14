@@ -21558,6 +21558,35 @@ oscillator.onended = () =&gt; {
           が変更される可能性も十分にあるということです. したがって, Web MIDI API を利用した Web アプリケーションを開発する場合には,
           <b>最新の仕様と対応ブラウザの実装を確認するようにしてください</b>.
         </p>
+        <article id="section-web-midi-api-about-midi-devices">
+          <h3>MIDI デバイスについて</h3>
+          <p>
+            Web MIDI API を実際に試すには, <b>MIDI デバイスが必要です</b>. 仮想 MIDI デバイスを利用する方法もありますが, プラットフォームの制約があります. また,
+            動作の保証もできません. なるべく, 実機の MIDI デバイスを用意することをおすすめします. 特に, 解説の都合上, キーボードの MIDI
+            デバイスであることが望ましいです.
+          </p>
+          <p>以下に, 比較的安価で, Web MIDI API を試すのに十分な MIDI デバイスをいくつか記載します.</p>
+          <dl>
+            <dt><a href="http://akai-pro.jp/mpk-mini-iv/" target="_blank" rel="noopener noreferrer">MPK mini MK3</a></dt>
+            <dd>おすすめする MIDI キーボードのなかでは, 最も鍵盤数が少なく高機能です. 携帯性と高機能を両立する MIDI デバイスです.</dd>
+            <dt><a href="http://m-audio.jp/keystationmini32-iii/" target="_blank" rel="noopener noreferrer">Keystation Mini 32 III</a></dt>
+            <dd>
+              おすすめする MIDI キーボードのなかでは, 最も安価です. 鍵盤数が少なく, 最小機能ですが, Web MIDI API を試すには十分な MIDI デバイスです.
+              上位機種として, 49 鍵・61 鍵・88 鍵とあるので, 用途や予算に応じて比較して選択しやすいです.
+            </dd>
+            <dt>
+              <a
+                href="https://www.native-instruments.com/jp/products/komplete/keyboards/komplete-kontrol-m32/specifications/"
+                target="_blank"
+                rel="noopener noreferrer"
+                >KOMPLETE KONTROL M32</a>
+            </dt>
+            <dd>
+              MIDI キーボード以外にも, シンセサイザーやワンショットオーディオ (<abbr title="Pulse Code Modulation">PCM</abbr> 音源), エフェクターなど, Web MIDI
+              API だけでなく, 音楽制作にも利用したい場合に候補となりそうです.
+            </dd>
+          </dl>
+        </article>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
