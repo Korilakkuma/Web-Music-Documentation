@@ -21607,6 +21607,14 @@ oscillator.onended = () =&gt; {
             Web MIDI API の仕様は (あくまで Working Draft の段階では), もともとの MIDI の意味である, <b>シーケンサの送受信に対する API のみを定義しています</b>.
             MIDI の広義的な解釈である音源やファイルフォーマットに関しては, 仕様として定義していません.
           </p>
+          <section id="section-web-midi-api-midi-message">
+            <h4>MIDI メッセージ</h4>
+            <p>
+              Web MIDI API では MIDI メッセージの送受信の API は定義していますが, 送受信した MIDI メッセージに対する (一般的な) ふるまいは, MIDI
+              メッセージの仕様にしたがって, アプリケーション側で実装する必要があります. そのため, MIDI メッセージの構造と, MIDI メッセージの種類 (また,
+              必要であれば MIDI メッセージの宛先) について理解しておく必要があります.
+            </p>
+          </section>
         </section>
       </section>
       <footer>
