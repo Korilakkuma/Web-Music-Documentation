@@ -21614,6 +21614,91 @@ oscillator.onended = () =&gt; {
               メッセージの仕様にしたがって, アプリケーション側で実装する必要があります. そのため, MIDI メッセージの構造と, MIDI メッセージの種類 (また,
               必要であれば MIDI メッセージの宛先) について理解しておく必要があります.
             </p>
+            <section id="section-web-midi-api-midi-message-structure">
+              <h5>MIDI メッセージの構造</h5>
+              <p>
+                MIDI メッセージは, <b>ステータスバイト</b>と<b>データバイト</b>で構成されるバイト (ビット) 列です.
+                <b>それぞれの最上位ビットは, ステータスバイトの場合は <code>1</code>, データバイトの場合は <code>0</code> になっているので</b>,
+                <code>1 byte</code> の最上位ビットを判定することで, ステータスバイトとデータバイトの区別が可能になっています. そして,
+                ステータスバイトもデータバイトもその区別に <code>1 bit</code> を割り当てているので, MIDI メッセージとしての実質的な情報は
+                <code>7 bit</code> で表現されます.
+              </p>
+              <section id="section-web-midi-api-midi-message-structure-types">
+                <h6>MIDI メッセージの種類</h6>
+                <p>
+                  ステータスバイトの先頭 <code>4 bit</code> (実質的に <code>3 bit</code>) は, MIDI メッセージの種類である<b>タイプ</b>を表します.
+                  <code>4 byte</code>で, 最上位のビットが常に <code>1</code> なので, とりうる値は <code>8</code> - <code>15</code> で, 8
+                  種類のタイプが定義されています.
+                </p>
+                <p>
+                  MIDI メッセージのタイプによって, 後続のデータバイトの個数は変わります. 例えば, ノートオフやノートオンは, 後続のデータバイトは 2 つ
+                  (ステータスバイトと合わせて, <code>3 byte</code> のメッセージ) となります. 特に, <b>システムエクスクルーシブメッセージ</b> (<b
+                    >System Exclusive Message</b>) は, <b>ベンダー固有の MIDI メッセージ</b>なので, ベンダーの仕様にしたがってパースする必要があります.
+                </p>
+                <table>
+                  <caption>
+                    ステータスバイトとタイプ
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Type</th>
+                      <th scope="col">Status Byte</th>
+                      <th scope="col">Message</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>8</code></td>
+                      <td><code>1</code><code>000....</code></td>
+                      <td>ノートオフ</td>
+                    </tr>
+                    <tr>
+                      <td><code>9</code></td>
+                      <td><code>1</code><code>001....</code></td>
+                      <td>ノートオン</td>
+                    </tr>
+                    <tr>
+                      <td><code>10</code></td>
+                      <td><code>1</code><code>010....</code></td>
+                      <td>ポリフォニックキープレッシャー</td>
+                    </tr>
+                    <tr>
+                      <td><code>11</code></td>
+                      <td><code>1</code><code>011....</code></td>
+                      <td>コントロールチェンジ</td>
+                    </tr>
+                    <tr>
+                      <td><code>12</code></td>
+                      <td><code>1</code><code>100....</code></td>
+                      <td>プログラムチェンジ</td>
+                    </tr>
+                    <tr>
+                      <td><code>13</code></td>
+                      <td><code>1</code><code>101....</code></td>
+                      <td>チャンネルプレッシャー</td>
+                    </tr>
+                    <tr>
+                      <td><code>14</code></td>
+                      <td><code>1</code><code>110....</code></td>
+                      <td>ピッチベンド</td>
+                    </tr>
+                    <tr>
+                      <td><code>15</code></td>
+                      <td><code>1</code><code>111....</code></td>
+                      <td>システムエクスクルーシブメッセージ</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <section id="section-web-midi-api-midi-message-structure-channels">
+                <h6>MIDI メッセージの宛先</h6>
+                <p>
+                  ステータスバイトの末尾 4 バイトは, MIDI メッセージの宛先である<b>チャンネル</b>を表します. 4 バイトで表現するので, MIDI
+                  メッセージのチャンネルは, 最大 16 個までとなります. また, 慣例として, チャンネル名 (宛先の名前) は <code>0</code> - <code>15</code> ではなく,
+                  <code>1</code> - <code>16</code> を使います.
+                </p>
+              </section>
+            </section>
           </section>
         </section>
       </section>
