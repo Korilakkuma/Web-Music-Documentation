@@ -213,6 +213,13 @@ table th.border-bottom {
   border-bottom: 1px solid var(--gray);
 }
 
+table .table-text {
+  display: inline-block;
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
+}
+
 input[type="range"] {
   cursor: ew-resize;
   user-select: none;
