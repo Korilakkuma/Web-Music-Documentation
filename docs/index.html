@@ -21712,6 +21712,100 @@ oscillator.onended = () =&gt; {
                 </p>
               </section>
             </section>
+            <section id="section-web-midi-api-midi-message-note-on-and-note-off">
+              <h5>ノートオンとノートオフ</h5>
+              <p>
+                MIDI メッセージのなかで, 最も頻繁に利用されるタイプが, <b>ノートオン</b> (ステータスバイト <code>1001....</code>) と<b>ノートオフ</b>
+                (ステータスバイト <code>1000....</code>) です. ノートオンは鍵盤を打鍵したときに送信される MIDI メッセージ,
+                ノートオンは鍵盤を離したときに送信される MIDI メッセージです. ノートオンを送信してから (打鍵してから), ノートオフを送信するまで (鍵盤を離すまで)
+                の時間を, <b>ゲートタイム</b> (<b>gate time</b>) と呼びます. また, ゲートタイムにリリースタイムを追加した時間が,
+                <b>デュレーション</b> (<b>duration</b>) です. MIDI では, ゲートタイムを指定するのではなく, あくまで,
+                ノートオンの送受信からノートオフの送受信までの時間で決定されます.
+              </p>
+              <img src="images/midi-message-between-note-on-and-note-off.svg" alt="" width="800" height="300" loading="lazy" />
+              <p>
+                MIDI メッセージのタイプがノートオンかノートオフの場合, ステータスバイトのあとのデータバイトは <code>2</code> バイト (ステータスバイトと合計して
+                <code>3</code> バイト) です. 最初のデータバイトがノートナンバーを表し, 音高を決定するのに利用します. 次のデータバイトがベロシティを表し,
+                鍵盤の打鍵の強弱に合わせて音量を決定するのに利用します.
+              </p>
+              <img src="images/midi-message-note-on.svg" alt="" width="720" height="180" loading="lazy" />
+              <img src="images/midi-message-note-off.svg" alt="" width="720" height="180" loading="lazy" />
+              <section id="section-web-midi-api-midi-message-note-on-and-note-off-note-number">
+                <h6>ノートナンバー</h6>
+                <p>
+                  <b>ノートナンバー</b>は, <b>音高</b> (音楽的な意味での音の高さ) を <code>0</code> - <code>127</code> の <code>128</code> 段階 (<code
+                    >7 bit</code>) で指定可能です. この音域は, ピアノ 88 鍵の音域をはるかに超える音域をカバーします. 具体的には, <code>8.18 Hz</code> (C-1) から
+                  <code>12543.85 Hz</code> (G9) で 11 オクターブもカバーしています.
+                </p>
+                <p>
+                  ノートナンバーから, 周波数を算出するには, A4 のノートナンバーである <code>69</code> を基準に以下の式で算出すると,
+                  音楽的観点で算出しやすくなります.
+                </p>
+                <div class="math-block">$f_{\mathrm{A4}} = 440 \cdot 2^{\frac{\mathrm{note\_number} - 69}{12}}$</div>
+                <p>音域を実際に算出してみます.</p>
+                <div class="math-block">
+                  <!-- prettier-ignore -->
+                  $
+                    \begin{flalign}
+                      &f_{\mathrm{C-1}} = 440 \cdot 2^{\frac{0 - 69}{12}} = 8.175798 \cdots \\
+                      &f_{\mathrm{G9}}  = 440 \cdot 2^{\frac{127 - 69}{12}} = 12543.853951 \cdots \\
+                    \end{flalign}
+                  $
+                </div>
+                <p>12 平均音律にもとづいているので, 隣り合う鍵盤の音程は <code>&plusmn; 100 cent</code> です.</p>
+              </section>
+              <section id="section-web-midi-api-midi-message-note-on-and-note-off-velocity">
+                <h6>ベロシティ</h6>
+                <p>
+                  <b>ベロシティ</b>は, <b>鍵盤を打鍵したときの強さ</b>を表し, それに応じて, 音楽的な意味での音の大きさを <code>0</code> - <code>127</code> の
+                  <code>128</code> 段階 (<code>7 bit</code>) で指定可能です.
+                </p>
+                <p>音楽記号の音の強弱とベロシティはおおよそ以下のような関係になります (厳密に対応するわけではありません).</p>
+                <table>
+                  <caption>
+                    強弱記号とベロシティ
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">0</th>
+                      <th scope="col">16</th>
+                      <th scope="col">32</th>
+                      <th scope="col">48</th>
+                      <th scope="col">64</th>
+                      <th scope="col">80</th>
+                      <th scope="col">96</th>
+                      <th scope="col">112</th>
+                      <th scope="col">128</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="table-text">消音</span></td>
+                      <td><span class="math-inline">$ppp$</span><br /><span class="table-text">(ピアノピアニッシモ)</span></td>
+                      <td><span class="math-inline">$pp$</span><br /><span class="table-text">(ピアニッシモ)</span></td>
+                      <td><span class="math-inline">$p$</span><br /><span class="table-text">(ピアノ)</span></td>
+                      <td><span class="math-inline">$mp$</span><br /><span class="table-text">(メゾピアノ)</span></td>
+                      <td><span class="math-inline">$mf$</span><br /><span class="table-text">(メゾフォルテ)</span></td>
+                      <td><span class="math-inline">$f$</span><br /><span class="table-text">(フォルテ)</span></td>
+                      <td><span class="math-inline">$ff$</span><br /><span class="table-text">(フォルテッシモ)</span></td>
+                      <td><span class="math-inline">$fff$</span><br /><span class="table-text">(フォルテフォルテッシモ)</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <article id="section-web-midi-api-midi-message-note-on-and-note-off-running-status">
+                <h6>ランニングステータス</h6>
+                <p>
+                  ステータスバイトが連続して同じ場合, 後続の MIDI メッセージのステータスバイトを省略して, データバイトのみを送受信する機能が,
+                  <b>ランニングステータス</b>です. これを活用することで, 転送する MIDI メッセージのサイズを減らして,
+                  少しでもレイテンシーを小さくすることができます.
+                </p>
+                <p>
+                  よく知られたテクニックとして, ノートオフは利用せずに, ベロシティが <code>0</code> のノートオンをノートオフの代わりに利用することで,
+                  このランニングステータスを活用して転送する MIDI メッセージのサイズを減らすことができます.
+                </p>
+              </article>
+            </section>
           </section>
         </section>
       </section>
