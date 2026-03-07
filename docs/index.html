@@ -21842,6 +21842,703 @@ oscillator.onended = () =&gt; {
                 </p>
               </article>
             </section>
+            <section id="section-web-midi-api-midi-message-program-change">
+              <h5>プログラムチェンジ</h5>
+              <p>
+                <b>プログラムチェンジ</b>は, 楽器 (音色) を制御するために利用されます. プログラムチェンジは, ステータスバイト <code>1</code> バイト
+                (<code>1100....</code>) とデータバイト <code>1</code> バイトの合計 <code>2</code> バイトで構成される MIDI メッセージです. データバイト
+                <code>0</code> - <code>127</code> (<code>7 bit</code>) で, <code>128</code> 種類の楽器の種類を指定することができます.
+                <code>128</code> 種類の番号は, <b>プログラムナンバー</b>と呼ばれ, 慣例として, <code>1</code> - <code>128</code> の値に対する楽器 (音色)
+                が定義されています.
+              </p>
+              <img src="images/midi-message-program-change.svg" alt="" width="720" height="180" loading="lazy" />
+              <section id="section-web-midi-api-midi-message-program-change-program-number">
+                <h6>プログラムナンバー</h6>
+                <p>
+                  <b>プログラムナンバー</b>は,
+                  <a href="https://midi.org/general-midi" target="_blank" rel="noopener noreferrer"><b>GM</b> (<b>General MIDI</b>)</a>
+                  と呼ばれる規格の一部として定義されています (もともと, プログラムナンバーの定義はメーカーによって異なっていたので,
+                  楽器の種類を特定できないという互換性の問題がありました).
+                </p>
+                <p>以下で定義されるように, 楽器だけでなく, 銃声と言った効果音のような音色まで定義されています.</p>
+                <div class="flexbox">
+                  <table>
+                    <caption>
+                      <abbr title="General MIDI">GM</abbr>
+                      のプログラムナンバー (<code>1</code>
+                      -
+                      <code>64</code>)
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Data Byte</th>
+                        <th scope="col">Program Number</th>
+                        <th scope="col">Timbre</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>00000000</code></td>
+                        <td>1</td>
+                        <td>Acoustic Grand Piano</td>
+                      </tr>
+                      <tr>
+                        <td><code>00000001</code></td>
+                        <td>2</td>
+                        <td>Bright Acoustic Piano</td>
+                      </tr>
+                      <tr>
+                        <td><code>00000010</code></td>
+                        <td>3</td>
+                        <td>Electric Grand Piano</td>
+                      </tr>
+                      <tr>
+                        <td><code>00000011</code></td>
+                        <td>4</td>
+                        <td>Honky-tonk Piano</td>
+                      </tr>
+                      <tr>
+                        <td><code>00000100</code></td>
+                        <td>5</td>
+                        <td>Electric Piano 1</td>
+                      </tr>
+                      <tr>
+                        <td><code>00000101</code></td>
+                        <td>6</td>
+                        <td>Electric Piano 2</td>
+                      </tr>
+                      <tr>
+                        <td><code>00000110</code></td>
+                        <td>7</td>
+                        <td>Harpsichord</td>
+                      </tr>
+                      <tr>
+                        <td><code>00000111</code></td>
+                        <td>8</td>
+                        <td>Clavi</td>
+                      </tr>
+                      <tr>
+                        <td><code>00001000</code></td>
+                        <td>9</td>
+                        <td>Celesta</td>
+                      </tr>
+                      <tr>
+                        <td><code>00001001</code></td>
+                        <td>10</td>
+                        <td>Glockenspiel</td>
+                      </tr>
+                      <tr>
+                        <td><code>00001010</code></td>
+                        <td>11</td>
+                        <td>Music Box</td>
+                      </tr>
+                      <tr>
+                        <td><code>00001011</code></td>
+                        <td>12</td>
+                        <td>Vibraphone</td>
+                      </tr>
+                      <tr>
+                        <td><code>00001100</code></td>
+                        <td>13</td>
+                        <td>Marimba</td>
+                      </tr>
+                      <tr>
+                        <td><code>00001101</code></td>
+                        <td>14</td>
+                        <td>Xylophone</td>
+                      </tr>
+                      <tr>
+                        <td><code>00001110</code></td>
+                        <td>15</td>
+                        <td>Tubular Bells</td>
+                      </tr>
+                      <tr>
+                        <td><code>00001111</code></td>
+                        <td>16</td>
+                        <td>Dulcimer</td>
+                      </tr>
+                      <tr>
+                        <td><code>00010000</code></td>
+                        <td>17</td>
+                        <td>Drawbar Organ</td>
+                      </tr>
+                      <tr>
+                        <td><code>00010001</code></td>
+                        <td>18</td>
+                        <td>Percussive Organ</td>
+                      </tr>
+                      <tr>
+                        <td><code>00010010</code></td>
+                        <td>19</td>
+                        <td>Rock Organ</td>
+                      </tr>
+                      <tr>
+                        <td><code>00010011</code></td>
+                        <td>20</td>
+                        <td>Church Organ</td>
+                      </tr>
+                      <tr>
+                        <td><code>00010100</code></td>
+                        <td>21</td>
+                        <td>Reed Organ</td>
+                      </tr>
+                      <tr>
+                        <td><code>00010101</code></td>
+                        <td>22</td>
+                        <td>Accordion</td>
+                      </tr>
+                      <tr>
+                        <td><code>00010110</code></td>
+                        <td>23</td>
+                        <td>Harmonica</td>
+                      </tr>
+                      <tr>
+                        <td><code>00010111</code></td>
+                        <td>24</td>
+                        <td>Tango Accordion</td>
+                      </tr>
+                      <tr>
+                        <td><code>00011000</code></td>
+                        <td>25</td>
+                        <td>Acoustic Guitar (nylon)</td>
+                      </tr>
+                      <tr>
+                        <td><code>00011001</code></td>
+                        <td>26</td>
+                        <td>Acoustic Guitar (steel)</td>
+                      </tr>
+                      <tr>
+                        <td><code>00011010</code></td>
+                        <td>27</td>
+                        <td>Electric Guitar (jazz)</td>
+                      </tr>
+                      <tr>
+                        <td><code>00011011</code></td>
+                        <td>28</td>
+                        <td>Electric Guitar (clean)</td>
+                      </tr>
+                      <tr>
+                        <td><code>00011100</code></td>
+                        <td>29</td>
+                        <td>Electric Guitar (muted)</td>
+                      </tr>
+                      <tr>
+                        <td><code>00011101</code></td>
+                        <td>30</td>
+                        <td>Overdriven Guitar</td>
+                      </tr>
+                      <tr>
+                        <td><code>00011110</code></td>
+                        <td>31</td>
+                        <td>Distortion Guitar</td>
+                      </tr>
+                      <tr>
+                        <td><code>00011111</code></td>
+                        <td>32</td>
+                        <td>Guitar harmonics</td>
+                      </tr>
+                      <tr>
+                        <td><code>00100000</code></td>
+                        <td>33</td>
+                        <td>Acoustic Bass</td>
+                      </tr>
+                      <tr>
+                        <td><code>00100001</code></td>
+                        <td>34</td>
+                        <td>Electric Bass (finger)</td>
+                      </tr>
+                      <tr>
+                        <td><code>00100010</code></td>
+                        <td>35</td>
+                        <td>Electric Bass (pick)</td>
+                      </tr>
+                      <tr>
+                        <td><code>00100011</code></td>
+                        <td>36</td>
+                        <td>Fretless Bass</td>
+                      </tr>
+                      <tr>
+                        <td><code>00100100</code></td>
+                        <td>37</td>
+                        <td>Slap Bass 1</td>
+                      </tr>
+                      <tr>
+                        <td><code>00100101</code></td>
+                        <td>38</td>
+                        <td>Slap Bass 2</td>
+                      </tr>
+                      <tr>
+                        <td><code>00100110</code></td>
+                        <td>39</td>
+                        <td>Synth Bass 1</td>
+                      </tr>
+                      <tr>
+                        <td><code>00100111</code></td>
+                        <td>40</td>
+                        <td>Synth Bass 2</td>
+                      </tr>
+                      <tr>
+                        <td><code>00101000</code></td>
+                        <td>41</td>
+                        <td>Violin</td>
+                      </tr>
+                      <tr>
+                        <td><code>00101001</code></td>
+                        <td>42</td>
+                        <td>Viola</td>
+                      </tr>
+                      <tr>
+                        <td><code>00101010</code></td>
+                        <td>43</td>
+                        <td>Cello</td>
+                      </tr>
+                      <tr>
+                        <td><code>00101011</code></td>
+                        <td>44</td>
+                        <td>Contrabass</td>
+                      </tr>
+                      <tr>
+                        <td><code>00101100</code></td>
+                        <td>45</td>
+                        <td>Tremolo Strings</td>
+                      </tr>
+                      <tr>
+                        <td><code>00101101</code></td>
+                        <td>46</td>
+                        <td>Pizzicato Strings</td>
+                      </tr>
+                      <tr>
+                        <td><code>00101110</code></td>
+                        <td>47</td>
+                        <td>Orchestral Harp</td>
+                      </tr>
+                      <tr>
+                        <td><code>00101111</code></td>
+                        <td>48</td>
+                        <td>Timpani</td>
+                      </tr>
+                      <tr>
+                        <td><code>00110000</code></td>
+                        <td>49</td>
+                        <td>String Ensemble 1</td>
+                      </tr>
+                      <tr>
+                        <td><code>00110001</code></td>
+                        <td>50</td>
+                        <td>String Ensemble 2</td>
+                      </tr>
+                      <tr>
+                        <td><code>00110010</code></td>
+                        <td>51</td>
+                        <td>SynthStrings 1</td>
+                      </tr>
+                      <tr>
+                        <td><code>00110011</code></td>
+                        <td>52</td>
+                        <td>SynthStrings 2</td>
+                      </tr>
+                      <tr>
+                        <td><code>00110100</code></td>
+                        <td>53</td>
+                        <td>Choir Aahs</td>
+                      </tr>
+                      <tr>
+                        <td><code>00110101</code></td>
+                        <td>54</td>
+                        <td>Voice Oohs</td>
+                      </tr>
+                      <tr>
+                        <td><code>00110110</code></td>
+                        <td>55</td>
+                        <td>Synth Voice</td>
+                      </tr>
+                      <tr>
+                        <td><code>00110111</code></td>
+                        <td>56</td>
+                        <td>Orchestra Hit</td>
+                      </tr>
+                      <tr>
+                        <td><code>00111000</code></td>
+                        <td>57</td>
+                        <td>Trumpet</td>
+                      </tr>
+                      <tr>
+                        <td><code>00111001</code></td>
+                        <td>58</td>
+                        <td>Trombone</td>
+                      </tr>
+                      <tr>
+                        <td><code>00111010</code></td>
+                        <td>59</td>
+                        <td>Tuba</td>
+                      </tr>
+                      <tr>
+                        <td><code>00111011</code></td>
+                        <td>60</td>
+                        <td>Muted Trumpet</td>
+                      </tr>
+                      <tr>
+                        <td><code>00111100</code></td>
+                        <td>61</td>
+                        <td>French Horn</td>
+                      </tr>
+                      <tr>
+                        <td><code>00111101</code></td>
+                        <td>62</td>
+                        <td>Brass Section</td>
+                      </tr>
+                      <tr>
+                        <td><code>00111110</code></td>
+                        <td>63</td>
+                        <td>SynthBrass 1</td>
+                      </tr>
+                      <tr>
+                        <td><code>00111111</code></td>
+                        <td>64</td>
+                        <td>SynthBrass 2</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <table>
+                    <caption>
+                      <abbr title="General MIDI">GM</abbr>
+                      のプログラムナンバー (<code>65</code>
+                      -
+                      <code>128</code>)
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Data Byte</th>
+                        <th scope="col">Program Number</th>
+                        <th scope="col">Timbre</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>01000000</code></td>
+                        <td>65</td>
+                        <td>Soprano Sax</td>
+                      </tr>
+                      <tr>
+                        <td><code>01000001</code></td>
+                        <td>66</td>
+                        <td>Alto Sax</td>
+                      </tr>
+                      <tr>
+                        <td><code>01000010</code></td>
+                        <td>67</td>
+                        <td>Tenor Sax</td>
+                      </tr>
+                      <tr>
+                        <td><code>01000011</code></td>
+                        <td>68</td>
+                        <td>Baritone Sax</td>
+                      </tr>
+                      <tr>
+                        <td><code>01000100</code></td>
+                        <td>69</td>
+                        <td>Oboe</td>
+                      </tr>
+                      <tr>
+                        <td><code>01000101</code></td>
+                        <td>70</td>
+                        <td>English Horn</td>
+                      </tr>
+                      <tr>
+                        <td><code>01000110</code></td>
+                        <td>71</td>
+                        <td>Bassoon</td>
+                      </tr>
+                      <tr>
+                        <td><code>01000111</code></td>
+                        <td>72</td>
+                        <td>Clarinet</td>
+                      </tr>
+                      <tr>
+                        <td><code>01001000</code></td>
+                        <td>73</td>
+                        <td>Piccolo</td>
+                      </tr>
+                      <tr>
+                        <td><code>01001001</code></td>
+                        <td>74</td>
+                        <td>Flute</td>
+                      </tr>
+                      <tr>
+                        <td><code>01001010</code></td>
+                        <td>75</td>
+                        <td>Recorder</td>
+                      </tr>
+                      <tr>
+                        <td><code>01001011</code></td>
+                        <td>76</td>
+                        <td>Pan Flute</td>
+                      </tr>
+                      <tr>
+                        <td><code>01001100</code></td>
+                        <td>77</td>
+                        <td>Blown Bottle</td>
+                      </tr>
+                      <tr>
+                        <td><code>01001101</code></td>
+                        <td>78</td>
+                        <td>Shakuhachi</td>
+                      </tr>
+                      <tr>
+                        <td><code>01001110</code></td>
+                        <td>79</td>
+                        <td>Whistle</td>
+                      </tr>
+                      <tr>
+                        <td><code>01001111</code></td>
+                        <td>80</td>
+                        <td>Ocarina</td>
+                      </tr>
+                      <tr>
+                        <td><code>01010000</code></td>
+                        <td>81</td>
+                        <td>Lead 1 (square)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01010001</code></td>
+                        <td>82</td>
+                        <td>Lead 2 (sawtooth)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01010010</code></td>
+                        <td>83</td>
+                        <td>Lead 3 (calliope)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01010011</code></td>
+                        <td>84</td>
+                        <td>Lead 4 (chiff)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01010100</code></td>
+                        <td>85</td>
+                        <td>Lead 5 (charang)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01010101</code></td>
+                        <td>86</td>
+                        <td>Lead 6 (voice)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01010110</code></td>
+                        <td>87</td>
+                        <td>Lead 7 (fifths)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01010111</code></td>
+                        <td>88</td>
+                        <td>Lead 8 (bass + lead)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01011000</code></td>
+                        <td>89</td>
+                        <td>Pad 1 (new age)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01011001</code></td>
+                        <td>90</td>
+                        <td>Pad 2 (warm)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01011010</code></td>
+                        <td>91</td>
+                        <td>Pad 3 (polysynth)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01011011</code></td>
+                        <td>92</td>
+                        <td>Pad 4 (choir)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01011100</code></td>
+                        <td>93</td>
+                        <td>Pad 5 (bowed)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01011101</code></td>
+                        <td>94</td>
+                        <td>Pad 6 (metallic)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01011110</code></td>
+                        <td>95</td>
+                        <td>Pad 7 (halo)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01011111</code></td>
+                        <td>96</td>
+                        <td>Pad 8 (sweep)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01100000</code></td>
+                        <td>97</td>
+                        <td>FX 1 (rain)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01100001</code></td>
+                        <td>98</td>
+                        <td>FX 2 (soundtrack)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01100010</code></td>
+                        <td>99</td>
+                        <td>FX 3 (crystal)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01100011</code></td>
+                        <td>100</td>
+                        <td>FX 4 (atmosphere)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01100100</code></td>
+                        <td>101</td>
+                        <td>FX 5 (brightness)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01100101</code></td>
+                        <td>102</td>
+                        <td>FX 6 (goblins)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01100110</code></td>
+                        <td>103</td>
+                        <td>FX 7 (echoes)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01100111</code></td>
+                        <td>104</td>
+                        <td>FX 8 (sci-fi)</td>
+                      </tr>
+                      <tr>
+                        <td><code>01101000</code></td>
+                        <td>105</td>
+                        <td>Sitar</td>
+                      </tr>
+                      <tr>
+                        <td><code>01101001</code></td>
+                        <td>106</td>
+                        <td>Banjo</td>
+                      </tr>
+                      <tr>
+                        <td><code>01101010</code></td>
+                        <td>107</td>
+                        <td>Shamisen</td>
+                      </tr>
+                      <tr>
+                        <td><code>01101011</code></td>
+                        <td>108</td>
+                        <td>Koto</td>
+                      </tr>
+                      <tr>
+                        <td><code>01101100</code></td>
+                        <td>109</td>
+                        <td>Kalimba</td>
+                      </tr>
+                      <tr>
+                        <td><code>01101101</code></td>
+                        <td>110</td>
+                        <td>Bag pipe</td>
+                      </tr>
+                      <tr>
+                        <td><code>01101110</code></td>
+                        <td>111</td>
+                        <td>Fiddle</td>
+                      </tr>
+                      <tr>
+                        <td><code>01101111</code></td>
+                        <td>112</td>
+                        <td>Shanai</td>
+                      </tr>
+                      <tr>
+                        <td><code>01110000</code></td>
+                        <td>113</td>
+                        <td>Tinkle Bell</td>
+                      </tr>
+                      <tr>
+                        <td><code>01110001</code></td>
+                        <td>114</td>
+                        <td>Agogo</td>
+                      </tr>
+                      <tr>
+                        <td><code>01110010</code></td>
+                        <td>115</td>
+                        <td>Steel Drums</td>
+                      </tr>
+                      <tr>
+                        <td><code>01110011</code></td>
+                        <td>116</td>
+                        <td>Woodblock</td>
+                      </tr>
+                      <tr>
+                        <td><code>01110100</code></td>
+                        <td>117</td>
+                        <td>Taiko Drum</td>
+                      </tr>
+                      <tr>
+                        <td><code>01110101</code></td>
+                        <td>118</td>
+                        <td>Melodic Tom</td>
+                      </tr>
+                      <tr>
+                        <td><code>01110110</code></td>
+                        <td>119</td>
+                        <td>Synth Drum</td>
+                      </tr>
+                      <tr>
+                        <td><code>01110111</code></td>
+                        <td>120</td>
+                        <td>Reverse Cymbal</td>
+                      </tr>
+                      <tr>
+                        <td><code>01111000</code></td>
+                        <td>121</td>
+                        <td>Guitar Fret Noise</td>
+                      </tr>
+                      <tr>
+                        <td><code>01111001</code></td>
+                        <td>122</td>
+                        <td>Breath Noise</td>
+                      </tr>
+                      <tr>
+                        <td><code>01111010</code></td>
+                        <td>123</td>
+                        <td>Seashore</td>
+                      </tr>
+                      <tr>
+                        <td><code>01111011</code></td>
+                        <td>124</td>
+                        <td>Bird Tweet</td>
+                      </tr>
+                      <tr>
+                        <td><code>01111100</code></td>
+                        <td>125</td>
+                        <td>Telephone Ring</td>
+                      </tr>
+                      <tr>
+                        <td><code>01111101</code></td>
+                        <td>126</td>
+                        <td>Helicopter</td>
+                      </tr>
+                      <tr>
+                        <td><code>01111110</code></td>
+                        <td>127</td>
+                        <td>Applause</td>
+                      </tr>
+                      <tr>
+                        <td><code>01111111</code></td>
+                        <td>128</td>
+                        <td>Gunshot</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </section>
           </section>
         </section>
       </section>
