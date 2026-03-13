@@ -22539,6 +22539,242 @@ oscillator.onended = () =&gt; {
                 </div>
               </section>
             </section>
+            <section id="section-web-midi-api-midi-message-percussion-maps">
+              <h5>パーカッションマップ</h5>
+              <p>
+                MIDI では, ドラムなどの音高 (音楽的な意味での音の高さ) がない打楽器は, <b>MIDI メッセージのチャンネルを <code>10</code></b> (チャンネルも
+                <code>1</code> から割り当てられるので, ステータスバイトは <code>....1001</code>) を利用して発音します. ノートナンバーを利用するので,
+                ステータスバイトの上位 4 ビットはノートオンかノートオフを指定します (ノートナンバーのあとに, ベロシティを指定します).
+              </p>
+              <img src="images/midi-message-percussion-map.svg" alt="" width="800" height="240" loading="lazy" />
+              <p>それぞれの打楽器とノートナンバーを対応づけているのが, <b>パーカッションマップ</b>です (これは, ドラム譜の表現と考え方は同じです).</p>
+              <figure>
+                <img src="images/drums-score.svg" alt="" width="700" height="220" loading="lazy" />
+                <figcaption>ドラム譜</figcaption>
+              </figure>
+              <div class="flexbox flexbox-align-items-flex-start">
+                <table>
+                  <caption>
+                    <abbr title="General MIDI">GM</abbr>
+                    のパーカッションマップ (<code>35</code>
+                    -
+                    <code>58</code>)
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Note Number</th>
+                      <th scope="col">Instrument Name</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>35</td>
+                      <td>Acoustic Bass Drum</td>
+                    </tr>
+                    <tr>
+                      <td>36</td>
+                      <td>Bass Drum 1</td>
+                    </tr>
+                    <tr>
+                      <td>37</td>
+                      <td>Side Stick</td>
+                    </tr>
+                    <tr>
+                      <td>38</td>
+                      <td>Acoustic Snare</td>
+                    </tr>
+                    <tr>
+                      <td>39</td>
+                      <td>Hand Clap</td>
+                    </tr>
+                    <tr>
+                      <td>40</td>
+                      <td>Electric Snare</td>
+                    </tr>
+                    <tr>
+                      <td>41</td>
+                      <td>Low Floor Tom</td>
+                    </tr>
+                    <tr>
+                      <td>42</td>
+                      <td>Closed Hi Hat</td>
+                    </tr>
+                    <tr>
+                      <td>43</td>
+                      <td>High Floor Tom</td>
+                    </tr>
+                    <tr>
+                      <td>44</td>
+                      <td>Pedal Hi-Hat</td>
+                    </tr>
+                    <tr>
+                      <td>45</td>
+                      <td>Low Tom</td>
+                    </tr>
+                    <tr>
+                      <td>46</td>
+                      <td>Open Hi-Hat</td>
+                    </tr>
+                    <tr>
+                      <td>47</td>
+                      <td>Low-Mid Tom</td>
+                    </tr>
+                    <tr>
+                      <td>48</td>
+                      <td>Hi-Mid Tom</td>
+                    </tr>
+                    <tr>
+                      <td>49</td>
+                      <td>Crash Cymbal 1</td>
+                    </tr>
+                    <tr>
+                      <td>50</td>
+                      <td>High Tom</td>
+                    </tr>
+                    <tr>
+                      <td>51</td>
+                      <td>Ride Cymbal 1</td>
+                    </tr>
+                    <tr>
+                      <td>52</td>
+                      <td>Chinese Cymbal</td>
+                    </tr>
+                    <tr>
+                      <td>53</td>
+                      <td>Ride Bell</td>
+                    </tr>
+                    <tr>
+                      <td>54</td>
+                      <td>Tambourine</td>
+                    </tr>
+                    <tr>
+                      <td>55</td>
+                      <td>Splash Cymbal</td>
+                    </tr>
+                    <tr>
+                      <td>56</td>
+                      <td>Cowbell</td>
+                    </tr>
+                    <tr>
+                      <td>57</td>
+                      <td>Crash Cymbal 2</td>
+                    </tr>
+                    <tr>
+                      <td>58</td>
+                      <td>Vibraslap</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <table>
+                  <caption>
+                    <abbr title="General MIDI">GM</abbr>
+                    のパーカッションマップ (<code>59</code>
+                    -
+                    <code>81</code>)
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Note Number</th>
+                      <th scope="col">Instrument Name</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>59</td>
+                      <td>Ride Cymbal 2</td>
+                    </tr>
+                    <tr>
+                      <td>60</td>
+                      <td>Hi Bongo</td>
+                    </tr>
+                    <tr>
+                      <td>61</td>
+                      <td>Low Bongo</td>
+                    </tr>
+                    <tr>
+                      <td>62</td>
+                      <td>Mute Hi Conga</td>
+                    </tr>
+                    <tr>
+                      <td>63</td>
+                      <td>Open Hi Conga</td>
+                    </tr>
+                    <tr>
+                      <td>64</td>
+                      <td>Low Conga</td>
+                    </tr>
+                    <tr>
+                      <td>65</td>
+                      <td>High Timbale</td>
+                    </tr>
+                    <tr>
+                      <td>66</td>
+                      <td>Low Timbale</td>
+                    </tr>
+                    <tr>
+                      <td>67</td>
+                      <td>High Agogo</td>
+                    </tr>
+                    <tr>
+                      <td>68</td>
+                      <td>Low Agogo</td>
+                    </tr>
+                    <tr>
+                      <td>69</td>
+                      <td>Cabasa</td>
+                    </tr>
+                    <tr>
+                      <td>70</td>
+                      <td>Maracas</td>
+                    </tr>
+                    <tr>
+                      <td>71</td>
+                      <td>Short Whistle</td>
+                    </tr>
+                    <tr>
+                      <td>72</td>
+                      <td>Long Whistle</td>
+                    </tr>
+                    <tr>
+                      <td>73</td>
+                      <td>Short Guiro</td>
+                    </tr>
+                    <tr>
+                      <td>74</td>
+                      <td>Long Guiro</td>
+                    </tr>
+                    <tr>
+                      <td>75</td>
+                      <td>Claves</td>
+                    </tr>
+                    <tr>
+                      <td>76</td>
+                      <td>Hi Wood Block</td>
+                    </tr>
+                    <tr>
+                      <td>77</td>
+                      <td>Low Wood Block</td>
+                    </tr>
+                    <tr>
+                      <td>78</td>
+                      <td>Mute Cuica</td>
+                    </tr>
+                    <tr>
+                      <td>79</td>
+                      <td>Open Cuica</td>
+                    </tr>
+                    <tr>
+                      <td>80</td>
+                      <td>Mute Triangle</td>
+                    </tr>
+                    <tr>
+                      <td>81</td>
+                      <td>Open Triangle</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </section>
         </section>
       </section>

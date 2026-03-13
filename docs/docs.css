@@ -265,6 +265,10 @@ input[type="file"] {
   gap: 8px;
 }
 
+.flexbox-align-items-flex-start {
+  align-items: flex-start;
+}
+
 .app-container {
   overflow-x: auto;
 }
