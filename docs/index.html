@@ -22775,6 +22775,19 @@ oscillator.onended = () =&gt; {
                 </table>
               </div>
             </section>
+            <section id="section-web-midi-api-midi-message-system-exclusive-message">
+              <h5>システムエクスクルーシブメッセージ</h5>
+              <p>
+                <b>システムエクスクルーシブメッセージ</b> (<b>System Exclusive Message</b>) は, <b>ベンダー固有の MIDI メッセージ</b>です.
+                <b
+                  >先頭の 1 バイトが <code>11110000</code> (<code>0xF0</code>) で末尾の 1 バイトが <code>11110111</code> (<code>0xF7</code>)
+                  で送受信する必要があります</b>. また, 先頭の <code>11110000</code> に続いて, <b>ID Number</b> (<b>Manufacturer ID</b>), (MIDI の仕様上, このあとは任意のデータバイトですが,
+                多くの場合) 続いて, <b>Device ID</b> を指定するデータバイトが続きます. そして, そのあとのデータバイトから末尾の
+                <code>11110111</code> までのデータバイトは, ベンダーの仕様によって異なります (ただし, データバイトではあるので, 最上位ビットは
+                <code>0</code> で定義されています). したがって, <b>可変長の MIDI メッセージとなります</b>.
+              </p>
+              <img src="images/midi-message-system-exclusive.svg" alt="" width="800" height="260" loading="lazy" />
+            </section>
           </section>
         </section>
       </section>
