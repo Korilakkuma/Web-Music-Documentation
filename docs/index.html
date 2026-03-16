@@ -22798,6 +22798,89 @@ oscillator.onended = () =&gt; {
               メッセージを理解していれば問題ありません.
             </p>
           </section>
+          <section id="section-web-midi-api-standard-midi-file">
+            <h4>Standard MIDI File (SMF)</h4>
+            <p>
+              <b>Standard MIDI File</b> (<b>SMF</b>) は, MIDI メッセージを保存しておく標準のファイルフォーマットです (拡張子は, <b><code>.mid</code></b> です).
+              つまり, 音楽情報のシーケンスを記録したファイルと言えます. 実体は, バイナリファイルなので, クライアントサイド JavaScript においては,
+              <code>Fetch API</code> や <code>FileReader API</code>, <code>File API</code> で読み書きすることが可能です (現状の Web MIDI API の仕様では, SMF
+              にアクセスする API は定義されていません. つまり, SMF の読み書き処理はアプリケーション側で実装する必要があります).
+            </p>
+            <p>
+              SMF は, <b>チャンク</b>というバイト列のまとまり (ブロック) で構成されており, <b>MThd チャンク</b> (<b>ヘッダチャンク</b>) と
+              <b>MTrk チャンク</b> (<b>トラックチャンク</b>) という 2 種類のチャンクから構成されています.
+            </p>
+            <div class="flexbox flexbox-align-items-flex-start">
+              <table>
+                <caption>
+                  MThd チャンク (ヘッダチャンク)
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Parameter</th>
+                    <th scope="col">Byte</th>
+                    <th scope="col">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>MThd_ID</td>
+                    <td>4</td>
+                    <td>&apos;M&apos; &apos;T&apos; &apos;h&apos; &apos;d&apos;</td>
+                  </tr>
+                  <tr>
+                    <td>MThd_size</td>
+                    <td>4</td>
+                    <td>6</td>
+                  </tr>
+                  <tr>
+                    <td>format_type</td>
+                    <td>2</td>
+                    <td>フォーマット</td>
+                  </tr>
+                  <tr>
+                    <td>number_of_track</td>
+                    <td>2</td>
+                    <td>トラック数</td>
+                  </tr>
+                  <tr>
+                    <td>division</td>
+                    <td>2</td>
+                    <td>時間分解能</td>
+                  </tr>
+                </tbody>
+              </table>
+              <table>
+                <caption>
+                  MTrk チャンク (トラックチャンク)
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Parameter</th>
+                    <th scope="col">Byte</th>
+                    <th scope="col">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>MTrk_ID</td>
+                    <td>4</td>
+                    <td>&apos;M&apos; &apos;T&apos; &apos;r&apos; &apos;k&apos;</td>
+                  </tr>
+                  <tr>
+                    <td>MTrk_size</td>
+                    <td>4</td>
+                    <td>MTrk チャンクのサイズ</td>
+                  </tr>
+                  <tr>
+                    <td>data</td>
+                    <td>MTrk_size</td>
+                    <td>音楽 (シーケンス) データ</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
         </section>
       </section>
     </main>
