@@ -22844,6 +22844,73 @@ oscillator.onended = () =&gt; {
                 </tbody>
               </table>
             </div>
+            <section id="section-web-midi-api-standard-midi-file-header-chunk">
+              <h5>MThd チャンク (ヘッダチャンク)</h5>
+              <p>
+                MThd チャンクで, 特に重要となるのが MIDI ファイルの種類を表す<b>フォーマット</b>です. 現状, MIDI ファイルは 3 種類のフォーマットがありますが,
+                広く利用されているのは, <b>フォーマット 0</b> と<b>フォーマット 1</b> の 2 つです.
+              </p>
+              <section id="section-web-midi-api-standard-midi-file-header-chunk-format-0">
+                <h6>フォーマット 0</h6>
+                <p>
+                  フォーマット 0 は, 1 つのトラックにすべての音楽データが含まれています. ノートオン・ノートオフなどの MIDI メッセージだけでなく,
+                  テンポなどの属性情報も合わせて 1 つのトラックに含まれます. したがって, 後述するフォーマット 1 よりシンプルなファイル構造となります.
+                </p>
+                <img src="images/standard-midi-file-format-0.svg" alt="" width="700" height="240" loading="lazy" />
+              </section>
+              <section id="section-web-midi-api-standard-midi-file-header-chunk-format1">
+                <h6>フォーマット 1</h6>
+                <p>
+                  フォーマット 1 は, 複数のトラックに分割された音楽データが含まれています. 現代的な音楽制作の現場では,
+                  トラック単位ごとに並行して制作を進めることが一般的です. したがって, フォーマット 1 は, より (現代的な)
+                  音楽制作のプロセスに合っているフォーマットと言えます 1 は, 音楽制作のプロセスに合っているフォーマットと言えます. また, フォーマット 1 では,
+                  先頭のトラックにテンポなどの属性情報が含まれており, <b>コンダクタートラック</b>と呼ばれています.
+                </p>
+                <img src="images/standard-midi-file-format-1.svg" alt="" width="700" height="380" loading="lazy" />
+              </section>
+              <p>
+                MIDI ファイルにおける時間の単位は, <b>マイクロ秒</b> (μsec) です. 4 分音符 1 拍の時間 (音長) を
+                <span class="math-inline">$\mathrm{duration}$</span> (μsec) とすると, テンポを表す <span class="math-inline">$\mathrm{tempo}$</span> (BPM. Beat
+                Per Minutes の意味で, 1 分間に 4 分音符が何拍あるかによってテンポを表します. これは, MIDI ファイルに限らず,
+                音楽における一般的なテンポの表現です) は, 以下の式で算出できます.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &\mathrm{tempo} = \frac{60 \cdot 1000000}{\mathrm{duration}}
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                したがって, <code>MThd</code> チャンクの時間分解能 (<code>division</code>) は 4 分音符の相対的な音長を表しています. また, 1 拍を 3 つや 6
+                つに分割する連符 (3 連符や 6 連符) も対応することになるので, 音長は可能な限り整数になるように時間分解能を設定します(例えば,
+                <code>480</code> (μsec) など).
+              </p>
+            </section>
+            <section id="section-web-midi-api-standard-midi-file-track-chunk">
+              <h5>MTrk チャンク (トラックチャンク)</h5>
+              <p>
+                MTrk チャンクの MIDI メッセージは, <b>デルタタイム</b>と呼ばれるデータが先頭に付加されています. デルタタイムは, MIDI
+                メッセージを実行する時刻を表しており, その時刻の基準は, 1 つ前に実行した MIDI メッセージです (つまり, 1 つ前に実行した MIDI
+                メッセージからの経過時間).
+              </p>
+              <p>
+                デルタタイムの数値は, MThd チャンクの時間分解能 (<code>division</code>) をもとに, 算出できます. デルタタイムを
+                <span class="math-inline">$\mathrm{delta\_time}$</span>, 時間分解能を <span class="math-inline">$\mathrm{division}$</span>, テンポを
+                <span class="math-inline">$\mathrm{tempo}$</span> とすると, 実際の経過時間 <span class="math-inline">$\delta$</span> は以下の式で算出できます.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &\delta = \frac{\mathrm{delta\_time}}{\mathrm{division}} \cdot \frac{\mathrm{tempo}}{60} \\
+                  \end{flalign}
+                $
+              </div>
+              <p>例えば, ノートオンとノートオフのデルタタイムを読み込むと, 音長を算出することができます.</p>
+              <img src="images/midi-message-delta-time.svg" alt="" width="800" height="260" loading="lazy" />
+            </section>
           </section>
         </section>
       </section>
