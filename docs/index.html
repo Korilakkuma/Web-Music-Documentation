@@ -22949,6 +22949,19 @@ oscillator.onended = () =&gt; {
             </section>
           </section>
         </section>
+        <section id="section-web-midi-api-request-midi-access">
+          <h3>MIDIAccess</h3>
+          <p>
+            Web MIDI API で定義されているプロパティやメソッドにアクセスするためには, <b><code>MIDIAccess</code></b> インスタンスを取得する必要があります.
+            <code>MIDIAccess</code> クラスは, Web Audio API の <code>AudioContext</code> クラスに相当する API です. ただし,
+            コンストラクタ呼び出しでインスタンスを生成するのではなく, <code>Navigator</code> インターフェース (<code>window.navigator</code> プロパティ)
+            に定義されている, <b><code>requestMIDIAccess</code></b> メソッドを呼び出して取得します.
+          </p>
+          <p>
+            <code>MIDIAccess</code> インスタンスを取得することにで, MIDI I/O デバイスを抽象化するプロパティにアクセスできるようになり, MIDI
+            メッセージの送受信が可能になります.
+          </p>
+        </section>
       </section>
     </main>
     <footer>
