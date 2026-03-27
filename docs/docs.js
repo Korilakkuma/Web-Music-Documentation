@@ -19745,6 +19745,34 @@ const createWaveByOfflineAudioContext = () => {
     .catch(console.error);
 };
 
+const requestMIDIAccess = () => {
+  const buttonElement = document.getElementById('button-request-midi-access');
+  const checkboxElementForSysex = document.getElementById('checkbox-request-midi-access-sysex');
+  const checkboxElementForSoftware = document.getElementById('checkbox-request-midi-access-software');
+
+  if (typeof navigator.requestMIDIAccess !== 'function') {
+    buttonElement.textContent = 'Not Supported Web MIDI API';
+
+    buttonElement.setAttribute('disabled', 'disabled');
+
+    return;
+  }
+
+  buttonElement.addEventListener('click', () => {
+    const midiOptions = {
+      sysex: checkboxElementForSysex.checked,
+      software: checkboxElementForSoftware.checked
+    };
+
+    navigator
+      .requestMIDIAccess(midiOptions)
+      .then((midiAccess) => {
+        console.dir(midiAccess);
+      })
+      .catch(console.error);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -20089,3 +20117,5 @@ mediaRecorder();
 selectOutputDeviceBySinkId();
 
 createWaveByOfflineAudioContext();
+
+requestMIDIAccess();
