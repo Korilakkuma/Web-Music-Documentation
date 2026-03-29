@@ -23007,6 +23007,22 @@ oscillator.onended = () =&gt; {
             <img src="images/midi-access-in-case-of-no-device.png" alt="MIDIAccess (If there is no MIDI device)" width="1232" height="770" loading="lazy" />
             <p>MIDI デバイスが 1 つ以上認識されている場合.</p>
             <img src="images/midi-access.png" alt="MIDIAccess" width="1232" height="770" loading="lazy" />
+            <section id="section-web-midi-api-midi-access-request-midi-access-midi-options">
+              <h5>MIDIOptions</h5>
+              <p>
+                <b><code>MIDIOptions</code></b> 型の実体は, プレインオブジェクトで, <b><code>sysex</code></b> プロパティ (<code>boolean</code> 型) と
+                <b><code>software</code></b> プロパティ (<code>boolean</code> 型) が定義されています.
+              </p>
+              <dl>
+                <dt><code>sysex</code> プロパティ</dt>
+                <dd>システムエクスクルーシブメッセージを有効にするかどうか. <code>true</code> で有効になります.</dd>
+                <dt><code>software</code> プロパティ</dt>
+                <dd>
+                  Web MIDI API の初期の仕様にはなかったプロパティで, ソフトウェアシンセサイザーを有効にするかどうか. <code>true</code> で有効になります
+                  (このサイトのオーナーも <code>software</code> プロパティの挙動を実際に確認できていません).
+                </dd>
+              </dl>
+            </section>
             <div class="app-container flexbox flexbox-align-items-center">
               <ul class="flexbox">
                 <li class="checkbox-container">
