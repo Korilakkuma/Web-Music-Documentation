@@ -23001,6 +23001,102 @@ oscillator.onended = () =&gt; {
               </div>
             </div>
           </section>
+          <section id="section-web-midi-api-midi-access-midi-input-map-and-midi-output-map">
+            <h4>MIDIInputMap / MIDIOutputMap</h4>
+            <p>
+              <code>MIDIAccess</code> インスタンスの <b><code>input</code></b> プロパティに <b><code>MIDIInputMap</code></b> インスタンスが,
+              <b><code>output</code></b> プロパティに <b><code>MIDIOutputMap</code></b> インスタンスが格納されています. どちらも, 入力 MIDI デバイスを抽象化する
+              <b><code>MIDIInput</code></b> クラス, 出力 MIDI デバイスを抽象化する <b><code>MIDIOutput</code></b> クラスを,
+              <code>requestMIDIAccess</code> メソッドで認識された MIDI デバイスのインスタンスとして, <code>Map</code> で格納しています.
+            </p>
+            <p>
+              また, <code>MIDIInput</code> クラス, <code>MIDIOutput</code> クラスは, <b><code>MIDIPort</code></b> クラスを継承しており,
+              <code>MIDIPort</code> クラスには, デバイスの ID や, manufacturer の名前, デバイス名などが定義されています (<code>MIDIPort</code> クラスの詳細は,
+              次のセクションで解説します).
+            </p>
+            <img src="images/midi-devices.png" alt="MIDIInputMap / MIDIOutputMap" width="1232" height="770" loading="lazy" />
+            <p>
+              以下のコードでは, <code>forEach</code> メソッドで入出力の MIDI デバイスを走査しています (必要に応じて, <code>Iterator</code> で取得する,
+              <code>entries</code> メソッドなどを利用してください).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;select id=&quot;select-input-midi-devices&quot;&gt;&lt;/select&gt;
+&lt;select id=&quot;select-output-midi-devices&quot;&gt;&lt;/select&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const midiOptions = {
+  sysex   : false,
+  software: false
+};
+
+navigator.requestMIDIAccess(midiOptions)
+  .then((midiAccess) =&gt; {
+    // `midiAccess` is instance of `MIDIAccess`
+
+    const inputMIDIDevices  = midiAccess.inputs;
+    const outputMIDIDevices = midiAccess.outputs;
+
+    const fragmentInputMIDIDevices  = document.createDocumentFragment();
+    const fragmentOutputMIDIDevices = document.createDocumentFragment();
+
+    inputMIDIDevices.forEach((device) =&gt; {
+      const optionElement = document.createElement(&apos;option&apos;);
+
+      optionElement.setAttribute(&apos;value&apos;, device.id);
+
+      const textNode = document.createTextNode(`${device.name}${device.manufacturer ? `(${device.manufacturer})` : '' }`);
+
+      optionElement.appendChild(textNode);
+
+      fragmentInputMIDIDevices.appendChild(optionElement);
+    });
+
+    outputMIDIDevices.forEach((device) =&gt; {
+      const optionElement = document.createElement(&apos;option&apos;);
+
+      optionElement.setAttribute(&apos;value&apos;, device.id);
+
+      const textNode = document.createTextNode(`${device.name}${device.manufacturer ? `(${device.manufacturer})` : '' }`);
+
+      optionElement.appendChild(textNode);
+
+      fragmentOutputMIDIDevices.appendChild(optionElement);
+    });
+
+    const selectInputMIDIDevicesElement  = document.getElementById(&apos;select-input-midi-devices&apos;);
+    const selectOutputMIDIDevicesElement = document.getElementById(&apos;select-output-midi-devices&apos;);
+
+    selectInputMIDIDevicesElement.appendChild(fragmentInputMIDIDevices);
+    selectOutputMIDIDevicesElement.appendChild(fragmentOutputMIDIDevices);
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <div class="app-container flexbox flexbox-align-items-center">
+              <ul class="flexbox">
+                <li>
+                  <label>
+                    <select id="select-input-midi-devices" aria-label="入力 MIDI デバイスを選択">
+                      <option value="">--- SELECT Input MIDI Device ---</option>
+                    </select>
+                  </label>
+                </li>
+                <li>
+                  <label>
+                    <select id="select-output-midi-devices" aria-label="出力 MIDI デバイスを選択">
+                      <option value="">--- SELECT Output MIDI Device ---</option>
+                    </select>
+                  </label>
+                </li>
+              </ul>
+              <div>
+                <button type="button" id="button-midi-devices">requestMIDIAccess</button>
+              </div>
+            </div>
+          </section>
         </section>
       </section>
       <footer>

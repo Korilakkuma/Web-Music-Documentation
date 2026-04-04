@@ -19773,6 +19773,66 @@ const requestMIDIAccess = () => {
   });
 };
 
+const midiDevices = () => {
+  const buttonElement = document.getElementById('button-midi-devices');
+
+  if (typeof navigator.requestMIDIAccess !== 'function') {
+    buttonElement.textContent = 'Not Supported Web MIDI API';
+
+    buttonElement.setAttribute('disabled', 'disabled');
+
+    return;
+  }
+
+  buttonElement.addEventListener('click', () => {
+    const midiOptions = {
+      sysex: false,
+      software: false
+    };
+
+    navigator
+      .requestMIDIAccess(midiOptions)
+      .then((midiAccess) => {
+        const inputMIDIDevices = midiAccess.inputs;
+        const outputMIDIDevices = midiAccess.outputs;
+
+        const fragmentInputMIDIDevices = document.createDocumentFragment();
+        const fragmentOutputMIDIDevices = document.createDocumentFragment();
+
+        inputMIDIDevices.forEach((device) => {
+          const optionElement = document.createElement('option');
+
+          optionElement.setAttribute('value', device.id);
+
+          const textNode = document.createTextNode(`${device.name}${device.manufacturer ? `(${device.manufacturer})` : ''}`);
+
+          optionElement.appendChild(textNode);
+
+          fragmentInputMIDIDevices.appendChild(optionElement);
+        });
+
+        outputMIDIDevices.forEach((device) => {
+          const optionElement = document.createElement('option');
+
+          optionElement.setAttribute('value', device.id);
+
+          const textNode = document.createTextNode(`${device.name}${device.manufacturer ? `(${device.manufacturer})` : ''}`);
+
+          optionElement.appendChild(textNode);
+
+          fragmentOutputMIDIDevices.appendChild(optionElement);
+        });
+
+        const selectInputMIDIDevicesElement = document.getElementById('select-input-midi-devices');
+        const selectOutputMIDIDevicesElement = document.getElementById('select-output-midi-devices');
+
+        selectInputMIDIDevicesElement.appendChild(fragmentInputMIDIDevices);
+        selectOutputMIDIDevicesElement.appendChild(fragmentOutputMIDIDevices);
+      })
+      .catch(console.error);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -20119,3 +20179,4 @@ selectOutputDeviceBySinkId();
 createWaveByOfflineAudioContext();
 
 requestMIDIAccess();
+midiDevices();
