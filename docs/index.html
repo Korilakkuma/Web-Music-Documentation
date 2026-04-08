@@ -23144,6 +23144,100 @@ navigator.requestMIDIAccess(midiOptions)
             例えば, 1 つの MIDI デバイスが入出力に対応している場合などがあるので, その場合, 入力 MIDI デバイスのポートと, 出力 MIDI
             デバイスのポートは別々のポートとして認識され, <code>id</code> プロパティや <code>type</code> プロパティなどはそれぞれ別に割り当てられます.
           </p>
+          <section id="section-web-midi-api-midi-port-id">
+            <h4>id プロパティ</h4>
+            <p>
+              <b><code>id</code></b> プロパティは, MIDI ポートの識別子で MIDI ポート 1 つに対して一意の文字列となります (したがって, 必須のプロパティです. 同じ
+              MIDI ポートであれば <code>id</code> プロパティは同じ文字列となるので, 例えば, アプリケーション側で保存しておき, 同じ MIDI
+              ポートであればデータを復元するといった用途に利用できます.
+            </p>
+          </section>
+          <section id="section-web-midi-api-midi-port-manufacturer">
+            <h4>manufacturer プロパティ</h4>
+            <p>
+              <b><code>manufacturer</code></b> プロパティは, MIDI ポートのベンダー名の文字列です. オプショナルのプロパティです.
+            </p>
+          </section>
+          <section id="section-web-midi-api-midi-port-name">
+            <h4>name プロパティ</h4>
+            <p>
+              <b><code>name</code></b> プロパティは, MIDI ポートの名前の文字列です. オプショナルのプロパティです.
+            </p>
+          </section>
+          <section id="section-web-midi-api-midi-port-type">
+            <h4>type プロパティ</h4>
+            <p>
+              <b><code>type</code></b> プロパティは, <b><code>MIDIPortType</code></b> 列挙値で, <b><code>&apos;input&apos;</code></b> か
+              <b><code>&apos;output&apos;</code></b> の文字列です. 必須のプロパティで, <code>MIDIInput</code> インスタンスであれば
+              <code>&apos;input&apos;</code> で, <code>MIDIOutput</code> インスタンスであれば <code>&apos;output&apos;</code> となります.
+            </p>
+          </section>
+          <section id="section-web-midi-api-midi-port-version">
+            <h4>version プロパティ</h4>
+            <p>
+              <b><code>version</code></b> プロパティは, MIDI ポートのバージョンの文字列です. オプショナルのプロパティです.
+            </p>
+          </section>
+          <section id="section-web-midi-api-midi-port-state">
+            <h4>state プロパティ</h4>
+            <p>
+              <b><code>state</code></b> プロパティは, <b><code>MIDIPortDeviceState</code></b> 列挙値で, <b><code>&apos;disconnected&apos;</code></b> か
+              <b><code>&apos;connected&apos;</code></b> の文字列です. 物理的に接続されていても, 認識されていない (<code>MIDIInputMap</code>,
+              <code>MIDIOutputMap</code> いずれにも格納されていない) 状態であれば, <code>&apos;disconnected&apos;</code> となります. そうでなければ (少なくとも,
+              <code>MIDIInputMap</code>, <code>MIDIOutputMap</code> のどちらかに格納されて認識されている状態であれば),
+              <code>&apos;connected&apos;</code> となります (したがって, 必須のプロパティです).
+            </p>
+          </section>
+          <section id="section-web-midi-api-midi-port-connection">
+            <h4>connection プロパティ</h4>
+            <p>
+              <b><code>connection</code></b> プロパティは, <b><code>MIDIPortConnectionState</code></b> 列挙値で, <b><code>&apos;open&apos;</code></b> か
+              <b><code>&apos;closed&apos;</code></b> か <b><code>&apos;pending&apos;</code></b> のいずれかの文字列です.
+              <code>connection</code> プロパティの状態は, メソッドの呼び出しやイベントハンドラの設定によって遷移します (いずれかの状態になるので,
+              必須のプロパティです).
+            </p>
+            <dl>
+              <dt><code>&apos;open&apos;</code></dt>
+              <dd>
+                <code>MIDIPort</code> の <code>open</code> メソッド呼び出し完了後か, <code>MIDIInput</code> の
+                <code>midimessage</code> イベントハンドラ設定後か, <code>MIDIOutput</code> の <code>send</code> メソッド呼び出し完了後に遷移します. あるいは,
+                <code>&apos;pending&apos;</code> の状態から, 物理的に MIDI デバイスを接続・認識成功時に遷移します.
+                <b><code>&apos;open&apos;</code> 状態の場合のみ, MIDI ポートは使用可能状態となります</b>. 現実的には,
+                <code>midimessage</code> イベントハンドラや <code>send</code> メソッドを必須で使うことになるので, あまり意識することはないでしょう.
+              </dd>
+              <dt><code>&apos;closed&apos;</code></dt>
+              <dd>
+                初期状態. <code>&apos;open&apos;</code> 状態の場合, <code>MIDIPort</code> の <code>close</code> メソッド呼び出し完了後に遷移して,
+                <code>&apos;pending&apos;</code> の状態の場合, 物理的に MIDI デバイスを接続・認識失敗時に遷移します.
+              </dd>
+              <dt><code>&apos;pending&apos;</code></dt>
+              <dd>物理的に, MIDI デバイスの接続を切断した場合に遷移します.</dd>
+            </dl>
+            <img src="images/midi-port-connection-state.svg" alt="MIDIPortConnectionState の状態遷移" width="800" height="280" loading="lazy" />
+          </section>
+          <section id="section-web-midi-api-midi-port-statechange">
+            <h4>onstatechange イベント</h4>
+            <p>
+              <b><code>statechange</code></b> は, <code>MIDIPortConnectionState</code> が状態遷移するタイミングで発火するイベントハンドラです.
+              一般的なイベントハンドラとの注意点としては, 物理的に MIDI デバイスを切断しても, <code>MIDIPort</code> インスタンスが存在しているので,
+              イベントハンドラも残り続けることになります. この状態のままだと, <code>MIDIPort</code> インスタンスがガベージコレクションの対象とならないので,
+              メモリリークを引き起こす要因になってしまいます. したがって, イベントハンドラが不要になったら, イベントハンドラの削除をしておくほうが安全です.
+            </p>
+          </section>
+          <section id="section-web-midi-api-midi-port-open">
+            <h4>open メソッド</h4>
+            <p>
+              <b><code>open</code></b> メソッドは, <code>MIDIPortConnectionState</code> を<b>明示的に</b>
+              <code>&apos;open&apos;</code> 状態にするためのメソッドです. 戻り値は, <code>Promise&lt;MIDIPort&gt;</code> です (したがって, 非同期処理です).
+            </p>
+          </section>
+          <section id="section-web-midi-api-midi-port-close">
+            <h4>close メソッド</h4>
+            <p>
+              <b><code>close</code></b> メソッドは, <code>MIDIPortConnectionState</code> を<b>明示的に</b>
+              <code>&apos;closed&apos;</code> 状態にするためのメソッドです. 戻り値は, <code>Promise&lt;MIDIPort&gt;</code> です (したがって, 非同期処理です).
+            </p>
+          </section>
         </section>
       </section>
     </main>
