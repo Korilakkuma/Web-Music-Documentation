@@ -19833,6 +19833,155 @@ const midiDevices = () => {
   });
 };
 
+const midimessage = () => {
+  const oscillators = {};
+
+  const gain = new GainNode(audiocontext);
+  const compressor = new DynamicsCompressorNode(audiocontext);
+
+  function noteOn(noteNumber, velocity) {
+    if (oscillators[noteNumber]) {
+      return;
+    }
+
+    const frequency = noteNumberToFrequency(noteNumber);
+
+    const oscillator = new OscillatorNode(audiocontext, { frequency });
+    const gain = new Gain(audiocontext, { gain: velocity / 127 });
+
+    oscillator.connect(gain);
+    gain.connect(compressor);
+    compressor.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    oscillators[noteNumber] = oscillator;
+  }
+
+  function noteOff(noteNumber) {
+    if (oscillators[noteNumber] === null) {
+      return;
+    }
+
+    const oscillator = oscillators[noteNumber];
+
+    oscillator.stop(0);
+
+    oscillators[noteNumber] = null;
+  }
+
+  function noteNumberToFrequency(noteNumber) {
+    return 440 * 2 ** ((noteNumber - 69) / 12);
+  }
+
+  const buttonElement = document.getElementById('button-midi-input-midimessage');
+  const selectElement = document.getElementById('select-midi-input-midimessage');
+
+  if (typeof navigator.requestMIDIAccess !== 'function') {
+    buttonElement.textContent = 'Not Supported Web MIDI API';
+
+    buttonElement.setAttribute('disabled', 'disabled');
+
+    return;
+  }
+
+  buttonElement.addEventListener('click', () => {
+    const midiOptions = {
+      sysex: false,
+      software: false
+    };
+
+    navigator
+      .requestMIDIAccess(midiOptions)
+      .then((midiAccess) => {
+        const inputs = midiAccess.inputs;
+
+        const fragment = document.createDocumentFragment();
+
+        inputs.forEach((input) => {
+          const optionElement = document.createElement('option');
+
+          optionElement.setAttribute('value', input.id);
+
+          const textNode = document.createTextNode(`${input.name}${input.manufacturer ? `(${input.manufacturer})` : ''}`);
+
+          optionElement.appendChild(textNode);
+
+          fragment.appendChild(optionElement);
+        });
+
+        selectElement.appendChild(fragment);
+
+        selectElement.addEventListener('change', (event) => {
+          const id = event.currentTarget.value;
+
+          const input = inputs.get(id);
+
+          if (input) {
+            input.onmidimessage = (event) => {
+              // Status Byte
+              switch (event.data[0] & 0xf0) {
+                case 0x90: {
+                  if (event.data[2] === 0) {
+                    if ((event.data[0] & 0x0f) === 0x09) {
+                      // Note Off (Percussion Map)
+                      console.log('Note Off: Percussion Map');
+                      break;
+                    }
+
+                    // Data Byte ([Note Number, Velocity])
+                    noteOff(event.data[1], 0);
+                  } else {
+                    if ((event.data[0] & 0x0f) === 0x09) {
+                      // Note On (Percussion Map)
+                      console.log('Note On: Percussion Map');
+                      break;
+                    }
+
+                    // Data Byte ([Note Number, Velocity])
+                    noteOn(event.data[1], event.data[2]);
+                  }
+
+                  break;
+                }
+
+                case 0x80: {
+                  if ((event.data[0] & 0x0f) === 0x09) {
+                    // Note Off (Percussion Map)
+                    console.log('Note Off: Percussion Map');
+                    break;
+                  }
+
+                  // Data Byte ([Note Number, Velocity])
+                  noteOff(event.data[1]);
+
+                  break;
+                }
+
+                case 0xc0: {
+                  // Program Change
+                  console.log('Program Change');
+                  break;
+                }
+
+                case 0xa0: {
+                  // Polyphonic Key Pressure
+                  console.log('Polyphonic Key Pressure');
+                  break;
+                }
+              }
+            };
+          }
+        });
+
+        if (inputs.size > 0) {
+          buttonElement.setAttribute('disabled', 'disabled');
+        }
+      })
+      .catch(console.error);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -20180,3 +20329,4 @@ createWaveByOfflineAudioContext();
 
 requestMIDIAccess();
 midiDevices();
+midimessage();
