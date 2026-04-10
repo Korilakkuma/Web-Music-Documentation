@@ -23203,6 +23203,218 @@ navigator.requestMIDIAccess(midiOptions)
             </p>
           </section>
         </section>
+        <section id="section-web-midi-api-midi-input">
+          <h3>MIDIInput</h3>
+          <p>
+            <b><code>MIDIInput</code></b> クラスは, 入力 MIDI デバイス (入力 MIDI ポート) を抽象化するクラスで, <code>MIDIPort</code> クラスを拡張しています.
+            <code>MIDIInput</code> クラスで重要になるのは, 入力 MIDI メッセージを受信するための <b><code>midimessage</code></b> イベントハンドラです (<code
+              >MIDIInput</code>
+            サブクラスのみで定義されているインターフェースが <code>midimessage</code> イベントハンドラのみです).
+          </p>
+          <section id="section-web-midi-api-midi-input-midi-message">
+            <h4>onmidimessage イベント</h4>
+            <p>
+              <b><code>midimessage</code></b> イベントは, MIDI メッセージを受信するたびに発火します (即時に受信できないので, 入力 MIDI デバイスからの MIDI
+              メッセージ送信時点で発火はしません). <code>midimessage</code> イベントハンドラのイベントオブジェクト (<b><code>MIDIMessageEvent</code></b> 型)
+              が重要で, <b><code>data</code></b> プロパティに,
+              <b><code>Uint8Array</code> として, 入力 MIDI メッセージ (受信した MIDI メッセージ) が格納されています</b>. したがって,
+              <b>配列の先頭要素の <code>8 bit</code> はステータスバイトです</b>. これを判定することで, MIDI
+              メッセージのタイプごとに処理を分岐できるようになります. 多くの場合, 以下のようなほとんどテンプレート化されているようなコード (分岐処理) になります
+              (<code>MIDIInput</code> インスタンスはとりあえず, 認識されているなかで, 最初に取得できた MIDI デバイス (MIDI ポート) を利用します).
+              以下のコードでは利用 (分岐) していませんが, 例えば, システムエクスクルーシブメッセージを利用する場合,
+              <code>case 0xF7:</code> のラベルを追加して分岐処理を増やすことになるでしょう).
+            </p>
+            <p>
+              <code>MIDIInput</code> に <code>midimessage</code> イベントハンドラを設定後, <code>state</code> プロパティ (<code>MIDIPortConnectionState</code>
+              型) は <code>&apos;open&apos;</code> に遷移します.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">navigator.requestMIDIAccess({ sysex: false, software: false })
+  .then((midiAccess) =&gt; {
+    // `midiAccess` is instance of `MIDIAccess`
+
+    const inputs = midiAccess.inputs.values();
+    const input  = inputs.next().value;
+
+    if (input) {
+      input.onmidimessage = (event) =&gt; {
+        // Status Byte
+        switch (event.data[0]) {
+          case 0x90: {
+            if (event.data[0] &amp; 0x0F === 0x0A) {
+              // Note On (Percussion Map)
+              console.log('Note On: Percussion Map');
+              return;
+            }
+
+            // TODO: Note On
+
+            break;
+          }
+
+          case 0x80: {
+            if (event.data[0] &amp; 0x0F === 0x0A) {
+              // Note Off (Percussion Map)
+              console.log('Note Off: Percussion Map');
+              return;
+            }
+
+            // TODO: Note Off
+
+            break;
+          }
+
+          case 0xC0: {
+            // Program Change
+            console.log('Program Change');
+            break;
+          }
+
+          case 0xA0: {
+            // Polyphonic Key Pressure
+            console.log('Polyphonic Key Pressure');
+            break;
+          }
+        }
+      };
+    }
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <p>
+              すべての MIDI メッセージのタイプごとの処理を実装するのは現実的ではないので, ここでは, 解説例として, ノートオンとノートオフの場合の処理を実装します
+              (ちなみに, 鍵盤を打鍵し続けている間は, ポリフォニックキープレッシャーを受信し続けます). MIDI メッセージのタイプの分岐まで実装できていれば, あとは,
+              ノートオンとノートオフの MIDI メッセージの構造の理解と Web Audio API の実装だけです. 音源は
+              <code>OscillatorNode</code> を発音・停止するだけですが, ノートオンとノートオフは Web Audio API で完結しています. そして,
+              ノートオン・ノートオフの場合, データバイトがノートナンバー, ベロシティの順であることを理解していれば, <code>OscillatorNode</code> の
+              <code>frequency</code> プロパティや <code>GainNode</code> の <code>gain</code> プロパティの値を算出できます (ベロシティの適用は,
+              いくつか実装が考えられますが, ここでは, 最大値の <code>127</code> で除算して正規化して, <code>GainNode</code> の
+              <code>gain</code> プロパティの値としました).
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+let oscillator = null;
+
+const gain = new GainNode(context);
+
+function noteOn(noteNumber, velocity) {
+  if (oscillator) {
+    return;
+  }
+
+  const frequency = noteNumberToFrequency(noteNumber);
+
+  oscillator = new OscillatorNode(context, { frequency });
+
+  setGain(velocity);
+
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+
+  oscillator.start(0);
+}
+
+function noteOff() {
+  if (oscillator === null) {
+    return;
+  }
+
+  oscillator.stop(0);
+
+  oscillator = null;
+}
+
+function noteNumberToFrequency(noteNumber) {
+  return 440 * (2 ** ((noteNumber - 69) / 12))
+}
+
+function setGain(velocity) {
+  gain.gain.value = velocity / 127;
+}
+
+navigator.requestMIDIAccess({ sysex: false, software: false })
+  .then((midiAccess) =&gt; {
+    // `midiAccess` is instance of `MIDIAccess`
+
+    const inputs = midiAccess.inputs.values();
+    const input  = inputs.next().value;
+
+    if (input) {
+      input.onmidimessage = (event) =&gt; {
+        // Status Byte
+        switch (event.data[0] &amp; 0xF0) {
+          case 0x90: {
+            if (event.data[0] &amp; 0x0F === 0x0A) {
+              // Note On (Percussion Map)
+              console.log('Note On: Percussion Map');
+              return;
+            }
+
+            // Data Byte ([Note Number, Velocity])
+            noteOn(event.data[1], event.data[2]);
+
+            break;
+          }
+
+          case 0x80: {
+            if (event.data[0] &amp; 0x0F === 0x0A) {
+              // Note Off (Percussion Map)
+              console.log('Note Off: Percussion Map');
+              return;
+            }
+
+            noteOff();
+
+            break;
+          }
+
+          case 0xC0: {
+            // Program Change
+            console.log('Program Change');
+            break;
+          }
+
+          case 0xA0: {
+            // Polyphonic Key Pressure
+            console.log('Polyphonic Key Pressure');
+            break;
+          }
+        }
+      };
+    }
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <p>
+              MIDI メッセージの入力 (受信) 処理は, ほとんどテンプレートのようなものなので, 実質的に, MIDI メッセージの理解のほうが重要となるでしょう. MIDI
+              メッセージの入力の場合, MIDI メッセージに対して何をするかはアプリケーション側で自由に実装できます. 極端ですが, ノートオフの MIDI
+              メッセージで発音することも可能です. もちろん, MIDI の仕様に反する動作は混乱を招くだけなので, 特別なユースケースでない限り (1 つの例として, MIDI
+              キーボードをコントローラーにしたゲームなど), 仕様に沿った動作になるように実装しましょう.
+            </p>
+            <p>
+              ちなみに, 上記のコードだと, 和音に対応できていません (複数の鍵盤をノートオンすることができません). これに関しては,
+              <code>OscillatorNode</code> インスタンスを連想配列などの構造化されたデータで複数格納しておくか, ワンショットオーディオ, すなわち,
+              <code>AudioBufferSourceNode</code> を音源とすれば簡単に実装できるはずです.
+            </p>
+            <div class="app-container flexbox flexbox-align-items-center">
+              <label>
+                <select id="select-midi-input-midimessage" aria-label="入力 MIDI デバイスを選択">
+                  <option value="">--- SELECT Input MIDI Device ---</option>
+                </select>
+              </label>
+              <div>
+                <button type="button" id="button-midi-input-midimessage">requestMIDIAccess</button>
+              </div>
+            </div>
+          </section>
+        </section>
       </section>
       <footer>
         <span>Copyright (c) 2013 - 2014, 2023 - <span id="copyright-end-year"></span></span>
