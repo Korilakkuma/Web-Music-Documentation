@@ -23585,6 +23585,336 @@ navigator.requestMIDIAccess({ sysex: false, software: false })
             </div>
           </section>
         </section>
+        <section id="section-web-midi-api-midi-output">
+          <h3>MIDIOutput</h3>
+          <p>
+            <b><code>MIDIOutput</code></b> クラスは, 出力 MIDI デバイス (出力 MIDI ポート) を抽象化するクラスで, <code>MIDIPort</code> クラスを拡張しています.
+            <code>MIDIOutput</code> クラスで特に重要になるのは, MIDI メッセージを送信するための <b><code>send</code></b> メソッドです.
+          </p>
+          <section id="section-web-midi-api-midi-output-send">
+            <h4>send メソッド</h4>
+            <p>
+              <b><code>send</code></b> メソッドは, 第 1 引数に MIDI メッセージを指定します. 型はシーケンシャルな (順序性がある) データ型であればよいですが,
+              (入力 MIDI メッセージの型と合わせて) <code>Uint8Array</code> を利用するパフォーマンス的にもベストです (MIDI メッセージを表現するのに十分な型です.
+              通常の配列 (<code>Array</code> インスタンス) でも問題ありませんが, こちらは, <code>number</code> 型の配列なので, 1 要素に
+              <code>64</code> ビット浮動小数点数と無駄にメモリが割り当てられてしまいます. さらに, CPU の演算コストも整数型より,
+              浮動小数点数のほうが高くなってしまいます. もっとも, 仕様では, <code>Uint8Array</code> に変換されるようですが, コードリーディングの観点で明示的に
+              <code>Uint8Array</code> としておくのがよさそうです).
+            </p>
+            <table>
+              <caption>
+                send メソッド第 1 引数の例
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">MIDI Message Type</th>
+                  <th scope="col">Status Byte</th>
+                  <th scope="col">Data Byte</th>
+                  <th scope="col">Data Byte</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>ノートオフ</td>
+                  <td><code>0x80</code> (<code>b10000000</code>)</td>
+                  <td><code>0</code> - <code>127</code> (ノートナンバー)</td>
+                  <td><code>0</code> - <code>127</code> (ベロシティ)</td>
+                </tr>
+                <tr>
+                  <td>ノートオン</td>
+                  <td><code>0x90</code> (<code>b10010000</code>)</td>
+                  <td><code>0</code> - <code>127</code> (ノートナンバー)</td>
+                  <td><code>0</code> - <code>127</code> (ベロシティ)</td>
+                </tr>
+                <tr>
+                  <td>プログラムチェンジ</td>
+                  <td><code>0xC0</code> (<code>b11000000</code>)</td>
+                  <td><code>0</code> - <code>127</code> (プログラムナンバー)</td>
+                  <td><span>指定なし</span></td>
+                </tr>
+                <tr>
+                  <td>パーカッションマップ (ノートオフ)</td>
+                  <td><code>0x89</code> (<code>b10001001</code>)</td>
+                  <td><code>0</code> - <code>127</code> (ノートナンバー)</td>
+                  <td><code>0</code> - <code>127</code> (ベロシティ)</td>
+                </tr>
+                <tr>
+                  <td>パーカッションマップ (ノートオン)</td>
+                  <td><code>0x99</code> (<code>b10011001</code>)</td>
+                  <td><code>0</code> - <code>127</code> (ノートナンバー)</td>
+                  <td><code>0</code> - <code>127</code> (ベロシティ)</td>
+                </tr>
+                <tr>
+                  <td>システムエクスクルーシブメッセージ</td>
+                  <td><code>0xF0</code> (<code>b11110000</code>)</td>
+                  <td colspan="2">ベンダーの仕様に従う (末尾は, <code>0xF7</code> (<code>0b11110111</code>))</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              第 1 引数に, MIDI メッセージとして解釈できない値を渡すと <code>TypeError</code> が発生します. また,
+              <code>MIDIOptions</code> でシステムエクスクルーシブメッセージを無効にしている場合に, システムエクスクルーシブメッセージとなる引数を渡すと
+              <code>InvalidAccessError</code> が発生します.
+            </p>
+            <p>
+              第 2 引数はオプショナルで, <code>DOMHighResTimeStamp</code> を指定します (実体は <code>number</code> 型). 受信側の MIDI
+              ポートのイベントオブジェクトでのタイムスタンプ値 (<code>timestamp</code> プロパティ) として利用されます. デフォルト値は <code>0</code> です.
+            </p>
+            <p><code>send</code> メソッドで送信した MIDI メッセージは即時にキューに格納されるので, 実行は同期処理です.</p>
+            <p>
+              <code>send</code> メソッドを実行すると, <code>MIDIOutput</code> インスタンスの <code>state</code> プロパティ (<code>MIDIPortConnectionState</code>
+              型) は <code>&apos;open&apos;</code> に遷移します.
+            </p>
+          </section>
+          <section id="section-web-midi-api-midi-output-clear">
+            <h4>clear メソッド</h4>
+            <p>
+              送信した MIDI メッセージは, <b>メッセージキュー</b>に格納されます. したがって, 送信先のトラブルなどで, キューに送信した MIDI
+              メッセージがエンキュー (enqueue) され続けてしまうことも考えられます. そのような状態からの復帰も考慮して, <b><code>clear</code></b> メソッドは,
+              まだキューに格納されていない MIDI メッセージを破棄します.
+            </p>
+            <p>
+              しかしながら, <code>clear</code> メソッドは, 執筆時点の Chrome の最新バージョン (Chrome 147) でも実装されていないようなので, 現状は利用しないか,
+              以下のコードのように実装されているかどうかの判定を追加しておくほうがよいでしょう.
+            </p>
+          </section>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-midi-output-note-on&quot;&gt;Note On&lt;/button&gt;
+&lt;button type=&quot;button&quot; id=&quot;button-midi-output-note-off&quot;&gt;Note Off&lt;/button&gt;
+&lt;button type=&quot;button&quot; id=&quot;button-midi-output-clear&quot;&gt;clear&lt;/button&gt;
+&lt;select id=&quot;select-midi-output-program-number&quot;&gt;
+  &lt;option value=&quot;0&quot;&gt;Acoustic Grand Piano&lt;/option&gt;
+  &lt;!-- Program Number --&gt;
+&lt;/select&gt;</code></pre>
+          <pre
+            data-prismjs-copy="クリップボードにコピー"
+            data-prismjs-copy-success="コピーしました"
+          ><code class="language-js line-numbers">const noteNumber = 69;
+const velocity   = 127;
+
+const buttonElementNoteOn        = document.getElementById(&apos;button-midi-output-note-on&apos;);
+const buttonElementNoteOff       = document.getElementById(&apos;button-midi-output-note-off&apos;);
+const buttonElementClear         = document.getElementById(&apos;button-midi-output-clear&apos;);
+const selectElementProgramNumber = document.getElementById(&apos;select-midi-output-program-number&apos;);
+
+navigator.requestMIDIAccess({ sysex: false, software: false })
+  .then((midiAccess) =&gt; {
+    // `midiAccess` is instance of `MIDIAccess`
+
+    const outputs = midiAccess.outputs.values();
+    const output  = outputs.next().value;
+
+    if (output) {
+      buttonElementNoteOn.addEventListener(&apos;click&apos;, () =&gt; {
+        const messssage = new Uint8Array(3);
+
+        message[0] = 0x90;        // Status Byte
+        message[1] = noteNumber;  // Data Byte (Note Number)
+        message[2] = velocity;    // Data Byte (Velocity);
+
+        output.send(message);
+      });
+
+      buttonElementNoteOff.addEventListener(&apos;click&apos;, () =&gt; {
+        const message = new Uint8Array(3);
+
+        message[0] = 0x80;        // Status Byte
+        message[1] = noteNumber;  // Data Byte (Note Number)
+        message[2] = velocity;    // Data Byte (Velocity)
+
+        output.send(message);
+      });
+
+      if (typeof output.clear === &apos;function&apos;) {
+        buttonElementClear.addEventListener(&apos;click&apos;, () =&gt; {
+          output.clear();
+        });
+      } else {
+        buttonElementClear.setAttribute(&apos;disabled&apos;, &apos;disabled&apos;);
+      }
+
+      selectElementProgramNumber.addEventListener(&apos;change&apos;, () =&gt; {
+        const programNumber = Number(selectElementProgramNumber.value);
+
+        const message = new Uint8Array(2);
+
+        message[0] = 0xC0;           // Status Byte
+        message[1] = programNumber;  // Data Byte (Program Number)
+
+        output.send(message);
+      });
+    }
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+          <div class="app-container">
+            <ul class="flexbox flexbox-align-items-center">
+              <li>
+                <label>
+                  <select id="select-midi-output-send-and-clear" aria-label="出力 MIDI デバイスを選択">
+                    <option value="">--- SELECT Output MIDI Device ---</option>
+                  </select>
+                </label>
+              </li>
+              <li>
+                <label>
+                  <select id="select-midi-output-program-number" aria-label="プログラムナンバーを選択">
+                    <option value="0">Acoustic Grand Piano</option>
+                    <option value="1">Bright Acoustic Piano</option>
+                    <option value="2">Electric Grand Piano</option>
+                    <option value="3">Honky-tonk Piano</option>
+                    <option value="4">Electric Piano 1</option>
+                    <option value="5">Electric Piano 2</option>
+                    <option value="6">Harpsichord</option>
+                    <option value="7">Clavi</option>
+
+                    <option value="8">Celesta</option>
+                    <option value="9">Glockenspiel</option>
+                    <option value="10">Music Box</option>
+                    <option value="11">Vibraphone</option>
+                    <option value="12">Marimba</option>
+                    <option value="13">Xylophone</option>
+                    <option value="14">Tubular Bells</option>
+                    <option value="15">Dulcimer</option>
+
+                    <option value="16">Drawbar Organ</option>
+                    <option value="17">Percussive Organ</option>
+                    <option value="18">Rock Organ</option>
+                    <option value="19">Church Organ</option>
+                    <option value="20">Reed Organ</option>
+                    <option value="21">Accordion</option>
+                    <option value="22">Harmonica</option>
+                    <option value="23">Tango Accordion</option>
+
+                    <option value="24">Acoustic Guitar (nylon)</option>
+                    <option value="25">Acoustic Guitar (steel)</option>
+                    <option value="26">Electric Guitar (jazz)</option>
+                    <option value="27">Electric Guitar (clean)</option>
+                    <option value="28">Electric Guitar (muted)</option>
+                    <option value="29">Overdriven Guitar</option>
+                    <option value="30">Distortion Guitar</option>
+                    <option value="31">Guitar harmonics</option>
+
+                    <option value="32">Acoustic Bass</option>
+                    <option value="33">Electric Bass (finger)</option>
+                    <option value="34">Electric Bass (pick)</option>
+                    <option value="35">Fretless Bass</option>
+                    <option value="36">Slap Bass 1</option>
+                    <option value="37">Slap Bass 2</option>
+                    <option value="38">Synth Bass 1</option>
+                    <option value="39">Synth Bass 2</option>
+
+                    <option value="40">Violin</option>
+                    <option value="41">Viola</option>
+                    <option value="42">Cello</option>
+                    <option value="43">Contrabass</option>
+                    <option value="44">Tremolo Strings</option>
+                    <option value="45">Pizzicato Strings</option>
+                    <option value="46">Orchestral Harp</option>
+                    <option value="47">Timpani</option>
+
+                    <option value="48">String Ensemble 1</option>
+                    <option value="49">String Ensemble 2</option>
+                    <option value="50">SynthStrings 1</option>
+                    <option value="51">SynthStrings 2</option>
+                    <option value="52">Choir Aahs</option>
+                    <option value="53">Voice Oohs</option>
+                    <option value="54">Synth Voice</option>
+                    <option value="55">Orchestra Hit</option>
+
+                    <option value="56">Trumpet</option>
+                    <option value="57">Trombone</option>
+                    <option value="58">Tuba</option>
+                    <option value="59">Muted Trumpet</option>
+                    <option value="60">French Horn</option>
+                    <option value="61">Brass Section</option>
+                    <option value="62">SynthBrass 1</option>
+                    <option value="63">SynthBrass 2</option>
+
+                    <option value="64">Soprano Sax</option>
+                    <option value="65">Alto Sax</option>
+                    <option value="66">Tenor Sax</option>
+                    <option value="67">Baritone Sax</option>
+                    <option value="68">Oboe</option>
+                    <option value="69">English Horn</option>
+                    <option value="70">Bassoon</option>
+                    <option value="71">Clarinet</option>
+
+                    <option value="72">Piccolo</option>
+                    <option value="73">Flute</option>
+                    <option value="74">Recorder</option>
+                    <option value="75">Pan Flute</option>
+                    <option value="76">Blown Bottle</option>
+                    <option value="77">Shakuhachi</option>
+                    <option value="78">Whistle</option>
+                    <option value="79">Ocarina</option>
+
+                    <option value="80">Lead 1 (square)</option>
+                    <option value="81">Lead 2 (sawtooth)</option>
+                    <option value="82">Lead 3 (calliope)</option>
+                    <option value="83">Lead 4 (chiff)</option>
+                    <option value="84">Lead 5 (charang)</option>
+                    <option value="85">Lead 6 (voice)</option>
+                    <option value="86">Lead 7 (fifths)</option>
+                    <option value="87">Lead 8 (bass + lead)</option>
+
+                    <option value="88">Pad 1 (new age)</option>
+                    <option value="89">Pad 2 (warm)</option>
+                    <option value="90">Pad 3 (polysynth)</option>
+                    <option value="91">Pad 4 (choir)</option>
+                    <option value="92">Pad 5 (bowed)</option>
+                    <option value="93">Pad 6 (metallic)</option>
+                    <option value="94">Pad 7 (halo)</option>
+                    <option value="95">Pad 8 (sweep)</option>
+
+                    <option value="96">FX 1 (rain)</option>
+                    <option value="97">FX 2 (soundtrack)</option>
+                    <option value="98">FX 3 (crystal)</option>
+                    <option value="99">FX 4 (atmosphere)</option>
+                    <option value="100">FX 5 (brightness)</option>
+                    <option value="101">FX 6 (goblins)</option>
+                    <option value="102">FX 7 (echoes)</option>
+                    <option value="103">FX 8 (sci-fi)</option>
+
+                    <option value="104">Sitar</option>
+                    <option value="105">Banjo</option>
+                    <option value="106">Shamisen</option>
+                    <option value="107">Koto</option>
+                    <option value="108">Kalimba</option>
+                    <option value="109">Bag pipe</option>
+                    <option value="110">Fiddle</option>
+                    <option value="111">Shanai</option>
+
+                    <option value="112">Tinkle Bell</option>
+                    <option value="113">Agogo</option>
+                    <option value="114">Steel Drums</option>
+                    <option value="115">Woodblock</option>
+                    <option value="116">Taiko Drum</option>
+                    <option value="117">Melodic Tom</option>
+                    <option value="118">Synth Drum</option>
+                    <option value="119">Reverse Cymbal</option>
+
+                    <option value="120">Guitar Fret Noise</option>
+                    <option value="121">Breath Noise</option>
+                    <option value="122">Seashore</option>
+                    <option value="123">Bird Tweet</option>
+                    <option value="124">Telephone Ring</option>
+                    <option value="125">Helicopter</option>
+                    <option value="126">Applause</option>
+                    <option value="127">Gunshot</option>
+                  </select>
+                </label>
+              </li>
+              <li><button type="button" id="button-midi-output-send-and-clear">requestMIDIAccess</button></li>
+              <li><button type="button" id="button-midi-output-note-on">Note On</button></li>
+              <li><button type="button" id="button-midi-output-note-off">Note Off</button></li>
+              <li><button type="button" id="button-midi-output-clear">clear</button></li>
+            </ul>
+          </div>
+        </section>
       </section>
     </main>
     <footer>

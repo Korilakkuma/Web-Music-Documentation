@@ -19982,6 +19982,127 @@ const midimessage = () => {
   });
 };
 
+const sendAndClear = () => {
+  const noteNumber = 69;
+  const velocity = 127;
+
+  const buttonElement = document.getElementById('button-midi-output-send-and-clear');
+  const buttonElementNoteOn = document.getElementById('button-midi-output-note-on');
+  const buttonElementNoteOff = document.getElementById('button-midi-output-note-off');
+  const buttonElementClear = document.getElementById('button-midi-output-clear');
+  const selectElementOutputMIDIDevices = document.getElementById('select-midi-output-send-and-clear');
+  const selectElementProgramNumber = document.getElementById('select-midi-output-program-number');
+
+  if (typeof navigator.requestMIDIAccess !== 'function') {
+    buttonElement.textContent = 'Not Supported Web MIDI API';
+
+    buttonElement.setAttribute('disabled', 'disabled');
+
+    return;
+  }
+
+  buttonElement.addEventListener('click', () => {
+    const midiOptions = {
+      sysex: false,
+      software: false
+    };
+
+    navigator
+      .requestMIDIAccess(midiOptions)
+      .then((midiAccess) => {
+        const outputs = midiAccess.outputs;
+
+        const fragment = document.createDocumentFragment();
+
+        outputs.forEach((output) => {
+          const optionElement = document.createElement('option');
+
+          optionElement.setAttribute('value', output.id);
+
+          const textNode = document.createTextNode(`${output.name}${output.manufacturer ? `(${output.manufacturer})` : ''}`);
+
+          optionElement.appendChild(textNode);
+
+          fragment.appendChild(optionElement);
+        });
+
+        selectElementOutputMIDIDevices.appendChild(fragment);
+
+        buttonElementNoteOn.addEventListener('click', () => {
+          const id = selectElementOutputMIDIDevices.value;
+          const output = outputs.get(id);
+
+          if (!output) {
+            return;
+          }
+
+          const message = new Uint8Array(3);
+
+          message[0] = 0x90;
+          message[1] = noteNumber;
+          message[2] = velocity;
+
+          output.send(data);
+        });
+
+        buttonElementNoteOff.addEventListener('click', () => {
+          const id = selectElementOutputMIDIDevices.value;
+          const output = outputs.get(id);
+
+          if (!output) {
+            return;
+          }
+
+          const message = new Uint8Array(3);
+
+          message[0] = 0x80;
+          message[1] = noteNumber;
+          message[2] = velocity;
+
+          output.send(message);
+        });
+
+        if (typeof MIDIOutput.prototype.clear === 'function') {
+          buttonElementClear.addEventListener('click', () => {
+            const id = selectElementOutputMIDIDevices.value;
+            const output = outputs.get(id);
+
+            if (!output) {
+              return;
+            }
+
+            output.clear();
+          });
+        } else {
+          buttonElementClear.setAttribute('disabled', 'disabled');
+        }
+
+        selectElementProgramNumber.addEventListener('change', () => {
+          const id = selectElementOutputMIDIDevices.value;
+          const output = outputs.get(id);
+
+          if (!output) {
+            return;
+          }
+
+          const programNumber = Number(selectElementProgramNumber.value);
+
+          const message = new Uint8Array(2);
+
+          message[0] = 0xc0;
+          message[1] = programNumber;
+
+          output.send(message);
+        });
+
+        if (outputs.size > 0) {
+          buttonElement.setAttribute('disabled', 'disabled');
+        }
+      })
+      .catch(console.error);
+  });
+};
+
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
 
@@ -20330,3 +20451,4 @@ createWaveByOfflineAudioContext();
 requestMIDIAccess();
 midiDevices();
 midimessage();
+sendAndClear();
