@@ -25,9 +25,28 @@ body {
   background-color: var(--gray-lightest);
 }
 
+header {
+  display: flex;
+  justify-content: center;
+  padding: var(--base-margin) 0;
+  margin-bottom: var(--base-margin);
+  border-bottom: 1px solid var(--gray-lighter);
+}
+
 main {
   margin: 0 24px;
   overflow-x: hidden; /* HACK: prevent from layout shifting if mobile size as fallback style */
+}
+
+footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  padding: 32px 0;
+  margin-top: 32px;
+  font-size: var(--smaller-font-size);
+  border-top: 1px solid var(--gray-lighter);
 }
 
 h1,
