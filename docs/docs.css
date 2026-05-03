@@ -610,6 +610,7 @@ label[for="checkbox-speaker-simulator"] {
   font-weight: bold;
 }
 
+output,
 span[id*="print-"] {
   display: inline-block;
   min-width: 88px;

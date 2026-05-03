@@ -20,6 +20,56 @@ const alphaWaveColor = 'rgba(0 0 255 / 30%)';
 const alphaLightWaveColor = 'rgba(255 0 255 / 30%)';
 const white = 'rgb(255 255 255)';
 
+const gettingStarted = (buttonElement, rangeElement, outputGainElement) => {
+  const gain = new GainNode(audiocontext);
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    oscillator.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  if (rangeElement && outputGainElement) {
+    rangeElement.addEventListener('input', () => {
+      gain.gain.value = rangeElement.valueAsNumber;
+
+      outputGainElement.textContent = gain.gain.value.toFixed(2);
+    });
+  }
+};
+
 const createCoordinateRect = (svg, textPosition, textFontSize) => {
   const sampleRate = audiocontext.sampleRate;
 
@@ -20187,6 +20237,13 @@ const sendAndClear = () => {
       .catch(console.error);
   });
 };
+
+gettingStarted(document.getElementById('button-getting-started-1'));
+gettingStarted(
+  document.getElementById('button-getting-started-2'),
+  document.getElementById('range-getting-started-2'),
+  document.getElementById('output-getting-started-2')
+);
 
 createCoordinateRect(document.getElementById('svg-figure-sin-function'));
 createSinFunctionPath(document.getElementById('svg-figure-sin-function'));
