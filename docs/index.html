@@ -234,9 +234,8 @@
         <section id="section-audio-context">
           <h3>AudioContext</h3>
           <p>
-            Web Audio API を使うためには, <code>AudioContext</code> クラスのコンストラクタを呼び出して,
-            <code>AudioContext</code> インスタンスを生成する必要があります. <code>AudioContext</code> インスタンスが Web Audio API
-            で可能なオーディオ処理の起点になるからです. <code>AudioContext</code> インスタンスを生成することで, Web Audio API
+            Web Audio API を使うためには, <code>AudioContext</code> クラスのコンストラクタを呼び出す必要があります. <code>AudioContext</code> インスタンスが Web
+            Audio API で可能なオーディオ処理の起点になるからです. <code>AudioContext</code> インスタンスを生成することで, Web Audio API
             が定義するプロパティやメソッドにアクセス可能になるわけです.
           </p>
           <pre
@@ -274,17 +273,20 @@ console.dir(context);</code></pre>
           <section id="section-audio-context-autoplay-policy">
             <h4>Autoplay Policy 対策</h4>
             <p>
-              Web Audio API に限ったことではないですが, ページが開いたときに, ユーザーが意図しない音を聞かせるのはよくないという観点から (つまり, UX
-              上好ましくないという観点から), ブラウザでオーディオを再生する場合,
+              Web Audio API に限ったことではないですが, ページにアクセスしたときに, ユーザーに意図しない音を聞かせるのはよくないという観点から (すなわち, UX
+              としてよくないという理由から), ブラウザでオーディオを再生する場合,
               <a href="https://developer.chrome.com/blog/autoplay#web_audio" target="_blank" rel="noopener noreferrer" aria-label="Autoplay policy in Chrome"
                 >Autoplay Policy</a>
-              という制限がかかります. これを解除するためには, <b>ユーザーインタラクティブなイベント</b> 発火後に
+              という制限がかかります. これを解除するためには, <b>ユーザーインタラクティブなイベント発火後</b>に
               <code>AudioContext</code> インスタンスを生成するか, もしくは, <code>AudioContext</code> インスタンスの <code>resume</code> メソッドを実行して
-              <code>AudioContextState</code> を <code>&apos;running&apos;</code> に変更する必要があります. これをしないと, オーディオを鳴らすことができません.
-              また, <code>decodeAudioData</code> など一部のメソッドが Autoplay Policy 解除まで実行されなくなります. ユーザーインタラクティブなイベントとは,
-              <code>click</code>, <code>mousedown</code> や <code>touchstart</code> などユーザーが明示的に操作することによって発火するイベントのことです.
-              したがって, <code>load</code> イベントや <code>mousemove</code> など, 多くのケースにおいてユーザが明示的に操作するわけではないようなイベントでは
-              Autoplay Policy の制限を解除することはできません.
+              <code>AudioContextState</code> を <code>&apos;running&apos;</code> に変更する必要があります. これをしないと, 発音することができません. また,
+              <code>decodeAudioData</code> など一部のメソッドが Autoplay Policy 解除まで実行されなくなります.
+            </p>
+            <p>
+              ユーザーインタラクティブなイベントとは, <code>click</code>, <code>mousedown</code> や
+              <code>touchstart</code> などユーザーが明示的に操作することによって発火するイベントのことです. したがって, <code>load</code> イベントや
+              <code>mousemove</code> など, 多くのケースにおいてユーザが明示的に操作するわけではないようなイベントでは Autoplay Policy
+              の制限を解除することはできません.
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
@@ -345,9 +347,9 @@ document.addEventListener(&apos;click&apos;, async () =&gt; {
           <p>
             Web Audio API におけるオーディオ処理の基本は, <code>AudioNode</code> クラスのインスタンス生成と <code>AudioNode</code> がもつ
             <code>connect</code> メソッドで <code>AudioNode</code> インスタンスを接続していくことです. <code>AudioNode</code> クラスは,
-            それ自身のインスタンスを生成することはできず, <code>AudioNode</code> を拡張 (継承) したサブクラスのインスタンスを生成して, オーディオ処理に使います.
-            <code>AudioNode</code> はその役割を大きく 3 つに分類することができます.
+            それ自身のインスタンスを生成することはできず, <code>AudioNode</code> クラスを拡張 (継承) したサブクラスのインスタンスを生成します.
           </p>
+          <p><code>AudioNode</code> (サブクラス) はその役割を大きく 3 つに分類することができます.</p>
           <ul>
             <li>サウンドの入力点となる <code>AudioNode</code> のサブクラス (<code>OscillatorNode</code>, <code>AudioBufferSourceNode</code> など)</li>
             <li>サウンドの出力点となる <code>AudioNode</code> のサブクラス (<code>AudioDestinationNode</code>)</li>
@@ -356,15 +358,15 @@ document.addEventListener(&apos;click&apos;, async () =&gt; {
             </li>
           </ul>
           <p>
-            現実世界のオーディオ機器に例えると, サウンドの入力点に相当する <code>AudioNode</code> のサブクラスが, マイクロフォンや楽器, 楽曲データなどに相当,
+            現実世界のオーディオ機器に例えると, サウンドの入力点に相当する <code>AudioNode</code> のサブクラスが, マイクロフォンや楽器, 楽曲データなどで,
             サウンドの出力点に相当する <code>AudioNode</code> のサブクラスが. スピーカーやイヤホンなどに相当, そして, 音響特徴量を変化させる
             <code>AudioNode</code> のサブクラスがエフェクターやボイスチェンジャーなどが相当します.
           </p>
           <p>
             これらの, <code>AudioNode</code> のサブクラスを使うためには, <b>コンストラクタ呼び出し</b>, または,
-            <b><code>AudioContext</code> インスタンスに実装されているファクトリメソッド</b> 呼び出す必要があります (ただし, サウンドの出力点となる
-            <code>AudioDestinationNode</code> は <code>AudioContext</code> インスタンスの <code>destination</code> プロパティでインスタンスとして使えるので,
-            コンストラクタ呼び出しやファクトリメソッドは定義されていません).
+            <b><code>AudioContext</code> インスタンスに実装されているファクトリメソッド</b>を呼び出す必要があります (ただし, サウンドの出力点となる
+            <code>AudioDestinationNode</code> クラスは <code>AudioContext</code> インスタンスの
+            <code>destination</code> プロパティでインスタンスとして使えるので, コンストラクタ呼び出しやファクトリメソッドは定義されていません).
           </p>
           <p>例えば, 入力として, オシレーター (<code>OscillatorNode</code>) を使う場合, コンストラクタ呼び出しの実装だと以下のようになります.</p>
           <pre
@@ -392,11 +394,13 @@ const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, fre
 const oscillator = context.createOscillator();</code></pre>
           <p>
             コンストラクタ呼び出しによる, <code>AudioNode</code> のサブクラスのインスタンス生成は, Web Audio API の初期には仕様策定されておらず,
-            <code>AudioContext</code> インスタンスに実装されているファクトリメソッド呼び出す実装のみでした. インスタンス生成時に,
-            パラメータを変更可能なことから, どちらかと言えば, コンストラクタ呼び出しによるインスタンス生成が推奨されているぐらいですが,
-            ファクトリメソッドが将来非推奨になることはなく, また, 初期の仕様には仕様策定されていなかったことから,
+            <code>AudioContext</code> インスタンスに実装されているファクトリメソッドを呼び出す実装のみでした. 現在では, インスタンス生成時に,
+            パラメータを変更可能なことから, どちらかと言えば, コンストラクタ呼び出しによるインスタンス生成が推奨されています.
+          </p>
+          <p>
+            もっとも, ファクトリメソッドが将来非推奨になることはなく, また, 初期の仕様には仕様策定されていなかったことから,
             <b>レガシーブラウザの場合, コンストラクタ呼び出しが実装されていない場合もあります</b>. したがって, サポートするブラウザが多い場合は,
-            ファクトリメソッドを, サポートするブラウザが限定的であれば, コンストラクタ呼び出しを使うのが現実解と言えるでしょう.
+            ファクトリメソッドを, サポートするブラウザがデスクトップブラウザのみなど限定的であれば, コンストラクタ呼び出しを使うのが現実解と言えるでしょう.
           </p>
           <section id="section-connect-audio-node">
             <h4>connect メソッド (AudioNode の接続)</h4>
@@ -446,22 +450,29 @@ const oscillator = new OscillatorNode(context);
 // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
 oscillator.connect(context.destination);
 
-// Start immediately
+// Start oscillator immediately
 oscillator.start(0);
 
-// Stop after 2.5 sec
+// Stop oscillator after 2.5 sec
 oscillator.stop(context.currentTime + 2.5);</code></pre>
             <p>
               <code>start</code> メソッドの引数に <code>0</code> を指定していますが, これはメソッドが呼ばれたら, 即時にサウンドを開始します.
               <code>stop</code> メソッドの引数には, <code>AudioContext</code> インスタンスの <b><code>currentTime</code></b> プロパティに
               <code>2.5</code> を加算した値を指定していますが, これは, <code>stop</code> メソッドを実行してから, 2.5
-              秒後に停止することをスケジューリングしています (詳細は, のちほどのセクションで Web Audio API におけるスケジューリングとして解説しますが,
-              <code>AudioContext</code> インスタンスの <code>currentTime</code> は,
-              <b><code>AudioContext</code> インスタンスが生成されてからの経過時間を秒単位で計測した値</b>が格納されています. より厳密には,
-              <b><code>AudioContextState</code> が <code>&apos;running&apos;</code> である状態での経過秒数</b>となります). <code>stop</code> メソッドの引数も
-              <code>0</code> を指定すれば即時にサウンドを停止します. ちなみに, <code>start</code> メソッド, <code>stop</code> メソッドもデフォルト値は
-              <code>0</code> なので, 引数を省略して呼び出した場合, 即時にサウンドを開始, 停止します.
+              秒後に停止することをスケジューリングしています.
             </p>
+            <p>
+              のちほどのセクションで Web Audio API におけるスケジューリングとして解説しますが, <code>AudioContext</code> インスタンスの
+              <code>currentTime</code> は, <b><code>AudioContext</code> インスタンスが生成されてからの経過時間を秒単位で計測した値</b>が格納されています
+              (より厳密には, <b><code>AudioContextState</code> が <code>&apos;running&apos;</code> である状態での経過秒数</b>となります).
+            </p>
+            <p>
+              <code>stop</code> メソッドの引数も <code>0</code> を指定すれば即時にサウンドを停止します. <code>start</code> メソッド,
+              <code>stop</code> メソッドもデフォルト値は <code>0</code> なので, 引数を省略して呼び出した場合, 即時にサウンドを開始, 停止します.
+            </p>
+            <div class="app-container">
+              <button type="button" id="button-getting-started-1">start</button>
+            </div>
             <p>これで, とりあえず, ブラウザ (Web) で音を鳴らすことができました !</p>
           </section>
         </section>
@@ -469,18 +480,19 @@ oscillator.stop(context.currentTime + 2.5);</code></pre>
           <h3>AudioParam</h3>
           <p>
             サウンドの入力点と出力点を生成して, それらを接続するだけでは, 元の入力音をそのまま出力するだけなので高度なオーディオ処理はできません. むしろ, Web
-            Audio API において重要なのは, この入力と出力の間に, 音響変化をさせる <code>AudioNode</code> を接続することです. 音響変化をさせるためには,
-            音響変化のためのパラメータを取得・設定したり, 周期的に変化させたり (LFO) できる必要があります. Web Audio API において, その役割を担うのが
-            <b><code>AudioParam</code></b> クラスです. <code>AudioNode</code> が現実世界の音響機器と例えをしましたが, それに従うと,
+            Audio API において重要なのは, この入力と出力の間に, 音響特徴量を変化させる <code>AudioNode</code> を接続することです.
+            音響特徴量を変化させるためには, 音響特徴量となるパラメータを取得・設定したり, 周期的に変化させたりする必要があります. Web Audio API において,
+            その役割を担うのが <b><code>AudioParam</code></b> クラスです. <code>AudioNode</code> が現実世界の音響機器と例えをしましたが, それに従うと,
             <code>AudioParam</code> クラスはノブやスライダーなど音響機器のパラメータを設定するコントローラーのようなものです.
           </p>
           <p>
-            <code>AudioParam</code> クラスは直接インスタンス化することはありません. <code>AudioNode</code> のプロパティとして,
+            <code>AudioParam</code> クラスは直接インスタンス化 (コンストラクタ呼び出し) することはありません. <code>AudioNode</code> のプロパティとして,
             <code>AudioNode</code> のサブクラスのインスタンスを生成した時点でインスタンス化されているのでプロパティアクセスで参照することが可能です.
           </p>
           <p>
-            <code>AudioParam</code> では, 単純なパラメータの取得や設定だけでなく, そのパラメータを周期的に変化させたり (LFO), スケジューリングによって変化させる
-            (エンベロープジェネレーターなど) ことが可能です (ここはオーナーの経験からですが, Web Audio API で高度なオーディオ処理を実装するためには,
+            <code>AudioParam</code> では, 単純なパラメータの取得や設定だけでなく, LFO (Low Frequency Oscillator) によってパラメータを周期的に変化させたり,
+            オートメーションメソッドによってスケジューリングしたり (エンベロープジェネレーターなど) することが可能です (オーナーの経験からですが, Web Audio API
+            で高度なオーディオ処理を実装するためには, 各
             <code>AudioParam</code> を理解して音響パラメータを制御できるようになるかが非常に重要になっていると思います).
           </p>
         </section>
@@ -532,10 +544,10 @@ const gain       = new GainNode(context, { gain: 0.5 });
 oscillator.connect(gain);
 gain.connect(context.destination);
 
-// Start immediately
+// Start oscillator immediately
 oscillator.start(0);
 
-// Stop after 2.5 sec
+// Stop oscillator after 2.5 sec
 oscillator.stop(context.currentTime + 2.5);</code></pre>
           <p>これで実際にサウンドを発生させると, 音の大きさが小さく聴こえるはずです.</p>
           <p>
@@ -550,7 +562,7 @@ oscillator.stop(context.currentTime + 2.5);</code></pre>
             data-prismjs-copy-success="コピーしました"
           ><code class="language-html line-numbers">&lt;label for=&quot;range-gain&quot;&gt;gain&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-gain&quot; value=&quot;1&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
-&lt;span id=&quot;print-gain-value&quot;&gt;1&lt;/span&gt;</code></pre>
+&lt;output id=&quot;output-gain-value&quot; for=&quot;range-gain&quot;&gt;1.00&lt;/output&gt;</code></pre>
           <p>
             この <code>input[type=&quot;range&QUOT;]</code> のイベントリスナーで, <code>input[type=&quot;range&QUOT;]</code> で入力された値 (JavaScript の
             <code>number</code> 型) を <code>gain</code> (<code>AudioParam</code> インスタンス) の <code>value</code> プロパティに設定し, また,
@@ -568,15 +580,16 @@ const gain       = new GainNode(context);
 oscillator.connect(gain);
 gain.connect(context.destination);
 
-// Start immediately
+// Start oscillator immediately
 oscillator.start(0);
 
-const spanElement = document.getElementById(&apos;print-gain-value&apos;);
+const rangeElement  = document.getElementById(&apos;range-gain&apos;);
+const outputElement = document.getElementById(&apos;output-gain-value&apos;);
 
-document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apos;, (event) =&gt; {
-  gain.value = event.currentTarget.valueAsNumber;
+rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
+  gain.gain.value = event.currentTarget.valueAsNumber;
 
-  spanElement.textContent = gain.value;
+  outputElement.textContent = gain.gain.value.toFixed(2);
 });</code></pre>
           <p>
             <code>AudioParam</code> のパラメータの取得や設定は, このように, JavaScript のオブジェクトに対するプロパティの getter や setter と同じなので,
@@ -584,10 +597,21 @@ document.getElementById(&apos;range-gain&apos;).addEventListener(&apos;input&apo
             あとのセクションで解説するパラメータのオートメーションメソッドを利用する方法もあります).
           </p>
         </section>
-        <p>
-          <code>AudioNode</code> や <code>AudioParam</code> の接続によって構成されるオーディオデータのルーティングを, Web Audio API の仕様では,
-          <b>オーディオグラフ</b> (<b>Audio Graph</b>) と用語定義しています.
-        </p>
+        <div class="app-container">
+          <div class="flexbox flexbox-align-items-center">
+            <button type="button" id="button-getting-started-2">start</button>
+            <label for="range-getting-started-2">gain</label>
+            <input type="range" id="range-getting-started-2" value="1" min="0" max="1" step="0.05" />
+            <output id="output-getting-started-2" for="range-getting-started-2">1.00</output>
+          </div>
+        </div>
+        <section id="section-audio-graph">
+          <h3>オーディオグラフ</h3>
+          <p>
+            <code>AudioNode</code> や <code>AudioParam</code> の接続によって構成されるオーディオデータのルーティングを, Web Audio API の仕様では,
+            <b>オーディオグラフ</b> (<b>Audio Graph</b>) と用語定義しています.
+          </p>
+        </section>
         <p>
           このセクションでは, Web Audio API の設計の基本となる (Web Audio API のアーキテクチャを決定づけている), <code>AudioContext</code>,
           <code>AudioNode</code>, <code>AudioParam</code> の関係性とそのパラメータの取得・設定の実装を解説しました. 以降のセクションでは, ユースケースに応じて,
