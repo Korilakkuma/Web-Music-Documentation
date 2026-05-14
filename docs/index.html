@@ -634,9 +634,9 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
         <section id="section-what-is-sound">
           <h3>音の実体</h3>
           <p>
-            そもそも, 「音」って何なのでしょうか？ 結論としては, 音とは媒体の振動が聴覚に伝わったものと定義することができます.
+            そもそも, 「音」って何なのでしょうか？ 結論としては, <b>音とは媒体の振動が聴覚に伝わったもの</b>と定義することができます.
             「媒体」というものが抽象的でよくわからないかもしれませんが, 具体的には, 空気や水です. 日常の多くの音は空気を媒体として,
-            空気の振動が聴覚に伝わることで音として知覚するわけですが, 同じことは水中でも起きます. また,
+            空気の振動が聴覚に伝わることで音として知覚するわけですが, 同じことは水中でも発生します. また,
             普段聴いている自分の声は骨を媒体にして伝わっている音です.
           </p>
         </section>
@@ -647,8 +647,8 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             音の実体は媒体の振動というのを説明しましたが, この振動を表現するのに適した数学的な関数が, <b>sin 関数</b>です (cos 関数は sin
             関数の位相の違いでしかないので本質的に同じと考えてもよいでしょう. また, tan 関数は含まれません. その理由は,
             <span class="math-inline">$\frac{\pi}{2}$</span> や <span class="math-inline">$-\frac{\pi}{2}$</span> で
-            <span class="math-inline">$\infty$</span> や
-            <span class="math-inline">$-\infty$</span> になるので振動を表現するには都合が悪いからと考えてよいでしょう).
+            <span class="math-inline">$\infty$</span> や <span class="math-inline">$-\infty$</span> になる (発散する)
+            ので振動を表現するには都合が悪いからと考えてよいでしょう).
           </p>
           <p>
             Web Audio APIでも, <code>OscillatorNode</code> の <code>type</code> プロパティがとりうる値 (<code>OscillatorType</code>) の 1 つとして
@@ -656,7 +656,7 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
           </p>
           <p>
             音を扱う学問や工学では, この sin 関数が, 音の波 (<b>音波</b>) をモデリングしていることから, <b>正弦波</b> (<b>sin 波</b>) と呼ぶことが多いです.
-            とちらであっても, 実体は同じなのですが, このドキュメントではこれ以降, 慣習にしたがって, 正弦波 (sin 波) と記述することにします.
+            とちらの表現であっても, 実体は同じですが, このドキュメントではこれ以降, 慣習にしたがって, 正弦波 (sin 波) と記述することにします.
           </p>
           <section id="section-sine-wave">
             <h3>正弦波 (sin 波)</h3>
@@ -684,26 +684,28 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
                 まず, 縦軸に着目してみます. 縦軸のパラメータは, <b>振幅</b>と呼ばれ, 単位はありません. ちなみに, 振幅 <code>1</code> の正弦波と表現した場合,
                 上記のように振幅の最大値が <code>1</code>, 最小値が <code>-1</code>の 正弦波のことを意味しています. 次に, 横軸に着目してみます.
                 横軸のパラメータは, <b>時間</b>を表しています. 縦軸との関係で表現すると, ある時刻における正弦波の振幅値を表した図 (グラフ) と言えます. ここで,
-                パラメータつきの正弦波を見てみます. すると, 山 1 つと谷 1 つを最小の構成として, それが繰り返されている, すなわち,
-                <b>周期性</b>をもつことがわかります. 数学的には, すべての時間
-                <span class="math-inline">$t \left(0 \leqq {t} &lt; \infty \right)$</span> に対して,
+                パラメータつきの正弦波を見てみます. すると, 山 1 つと谷 1 つを最小の構成として, それが繰り返されている, つまり,
+                <b>周期性</b>をもつことがわかります.
+              </p>
+              <p>
+                数学的には, すべての時間 <span class="math-inline">$t \left(0 \leqq {t} &lt; \infty \right)$</span> に対して,
                 <span class="math-inline">$f\left(t + L\right) = f\left(t\right)$</span> となる定数が存在するとき,
                 <span class="math-inline">$f\left(t\right)$</span> は周期 <span class="math-inline">$L$</span> の<b>周期関数</b>と定義されます. そして, sin
                 関数は, 周期 <span class="math-inline">$L$</span> としたとき
                 <span class="math-inline">$\sin\left(t + L\right) = \sin\left(t\right)$</span> が成立するので, <b>正弦波 (sin 関数) は周期関数</b>です.
               </p>
               <p>
-                この波の最小の構成が発生するために要する時間を<b>周期</b>と呼びます. 例として, 上記の正弦波で考えると, 最小の構成の発生までに
+                この波の最小の構成が発生するために要する時間を<b>周期</b>と呼びます. 例として, 上記の正弦波で考えると, 最小の構成の発生 (1 回の振動) までに
                 <code>1 sec</code> の時間を要しているので, 周期は <code>1 sec</code> となります. この真逆の概念を表す用語が<b>周波数</b>です. すなわち,
                 <code>1 sec</code> の間に, 波の最小の構成が何回発生するか ? ということを表し, 単位は <b>Hz</b> (ヘルツ) です. Hz (ヘルツ) という名前ですが,
-                日本語に翻訳すれば, 何回の「回」に相当するでしょう. 上記の正弦波で考えると. この正弦波は, <code>1 sec</code> の間に最小の構成が
+                日本語に翻訳すれば, 何回の「回」に相当するでしょう. 上記の正弦波に適用すると, この正弦波は, <code>1 sec</code> の間に最小の構成が
                 <code>1</code> 回発生しているので, 周波数は, <code>1 Hz</code> ということになります.
               </p>
               <p>
-                周期と周波数は互いに真逆の概念ですが, これは数学的には, 互いに<b>逆数</b>の関係にあります. すなわち,
+                周期と周波数は互いに真逆の概念ですが, 数学的には, 互いに<b>逆数</b>の関係にあります. つまり,
                 <b>周期の逆数は周波数を表し, 周波数の逆数は周期を表します</b>. 互いに関係のある値なので, 周期の話をすれば周波数の話も同時にしていることであり,
-                周波数の話をすれば周期の話も同時にしていることになります. ただ, 周波数という用語のほうがよく使われる傾向にあると思うので, このドキュメントでは,
-                周波数の用語を優先的に利用することにします.
+                周波数の話をすれば周期の話も同時にしていることになります. ただ, 周波数という用語のほうがよく使用される傾向にあると思うので,
+                このドキュメントでは, 周波数の用語を優先的に使用することにします.
               </p>
               <p>少し慣れるために, パラメータ (振幅や周波数) を変えた正弦波 (sin 波) を見てましょう.</p>
               <figure>
@@ -791,8 +793,8 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               <figcaption>振幅 <code>0.5</code>, 周波数 <code>4 Hz</code> (周期 <code>0.25 sec</code>) の三角波 (<code>&apos;triangle&apos;</code>)</figcaption>
             </figure>
             <p>
-              矩形波・ノコギリ波・三角波のいずれも正弦波と同じように, 周期性をもつ波 (関数) であるということです. 周期性をもつので,
-              周波数の概念を適用することができます. そして, 最も重要な点ですが, 周期性をもつ波は周波数の異なる正弦波を合成してできるということです.
+              矩形波・ノコギリ波・三角波いずれも正弦波と同じように, 周期性をもつ波 (関数) であるということです. 周期性をもつので,
+              周波数という物理量を適用することができます. そして, 最も重要な点ですが, 周期性をもつ波は周波数の異なる正弦波を合成してできるということです.
               矩形波・ノコギリ波・三角波はいずれも周期性をもちます. 周期性をもつので,
               矩形波・ノコギリ波・三角波はいずれも周波数の異なる正弦波を合成して生成することができます. シンセサイザーでも,
               正弦波・矩形波・ノコギリ波・三角波は基本波形として, サウンド生成のベースとなる波形です. そして, Web Audio API においても, 基本波形はサウンド生成
@@ -833,7 +835,7 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             <dd>音信号に含まれる最も低い周波数成分で, 特に, 音楽においては, 音高を決める重要な音響特徴量となります</dd>
             <dt>セントロイド</dt>
             <dd>
-              他の工学分野でも利用される用語で「重心」という意味ですが, オーディオ信号処理においては, スペクトルの重心 (偏り) を表す音響特徴量で,
+              他の工学分野でも使用される用語で「重心」という意味ですが, オーディオ信号処理においては, スペクトルの重心 (偏り) を表す音響特徴量で,
               音楽制作ではミキシング・マスタリングのプロセスで, セントロイドを調整をすることがあります
             </dd>
             <dt>ケプストラム</dt>
@@ -862,11 +864,16 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             </p>
             <img src="images/oscillator-frequency.png" alt="OscillatorNode frequency" width="1232" height="770" loading="lazy" />
             <p>
-              仕様では, <code>frequency</code> プロパティのとりうる値の範囲は, 負のナイキスト周波数からナイキスト周波数までですが (ナイキスト周波数は,
+              仕様では, <code>frequency</code> プロパティのとりうる値の範囲は, 負のナイキスト周波数からナイキスト周波数までです (ナイキスト周波数は,
               <a href="#section-analog-to-digital-conversion-sampling">サンプリング</a>のセクションで解説しています. ナイキスト周波数について理解がなければ,
-              おおよそ, <code>-20 kHz</code> ~ <code>20 kHz</code> と大雑把に把握していただいて問題ないです),
-              音楽アプリケーションなどで出力する音としてはそこまで設定できてもあまり意味はないでしょう. その理由は,
-              <b>人間が聴きとることが可能な音の周波数の範囲は <code>20 Hz</code> ~ <code>20000 Hz</code> (<code>20 kHz</code>) 程度だからです</b>.
+              おおよそ, <code>-20 kHz</code> ~ <code>20 kHz</code> と大雑把に把握していただいて問題ないです).
+            </p>
+            <p>
+              もっとも, 音楽アプリケーションなどで出力する音としてはそこまで設定できてもあまり意味はないでしょう. その理由は,
+              <b>人間が聴きとることが可能な音の周波数の範囲は <code>20 Hz</code> ~ <code>20000 Hz</code> (<code>20 kHz</code>) 程度だからです</b> (<code
+                >20 Hz</code>
+              未満の周波数は, 音楽用途ではパラメータを周期的に変化させるために利用されます. <code>20000 Hz</code> (<code>20 kHz</code>) より高い周波数は,
+              現実的なユースケースがあるかわかりませんが, ブラウザで超音波を発生させたい場合でしょうか).
             </p>
             <p>
               さらに, <b>音程</b> (音の高さの差) として知覚可能な周波数の上限, 言い換えると, 音楽として有効な音の周波数はもっと低くなります (ピアノ 88
@@ -899,8 +906,8 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             </p>
             <p>
               オクターブを物理的な視点でみると, <b>周波数比が 1 : 2 の関係にある音程</b>を意味しています. 具体的に説明すると, いわゆる普通のラ (A) (ギターの第 5
-              弦の開放弦) の周波数は <code>440 Hz</code> です (キャリブレーションチューニングなどしている場合は別ですが ...). この音を基準に考えると, 1
-              オクターブ高いラの周波数は <code>880 Hz</code> です. 周波数比が, 440 : 880 = 1 : 2 になります.
+              弦の開放弦) の周波数は <code>440 Hz</code> です (キャリブレーションチューニングなどしている場合は <code>442 Hz</code> の場合もあります). この音高
+              (音楽的な意味での音の高さ) を基準にすると, 1 オクターブ高いラの周波数は <code>880 Hz</code> です. 周波数比が, 440 : 880 = 1 : 2 になります.
             </p>
             <p>
               話を cent に戻すと, この 1 : 2 の音程を 1200 で割った値が <code>1 cent</code> というわけです. なぜ, 1200 ?
@@ -912,8 +919,8 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               <figcaption>1 オクターブの鍵盤数</figcaption>
             </figure>
             <p>
-              数えてみると, <b>12</b> 個の鍵盤があります. 1 オクターブ間の音程を 1200 で割った (1200 分割した) 値が <code>1 cent</code> でしたので, 1
-              オクターブ間の音程を 12 分割すると, <code>100 cent</code> ということになります. つまり, <code>100 cent</code> 値が高くなると,
+              数えると, <b>12</b> 個の鍵盤があります. 1 オクターブ間の音程を 1200 で割った (1200 分割した) 値が <code>1 cent</code> なので, 1
+              オクターブ間の音程を 12 分割すると, <code>100 cent</code> ということになります. つまり, <code>100 cent</code> 値が高くなると, (黒鍵を含む)
               右隣の鍵盤の音の高さに変わるということです.
             </p>
             <p>
@@ -930,14 +937,14 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
           <section id="section-type-relation-to-sound">
             <h4>OscillatorNode の type プロパティと音色</h4>
             <p>
-              <code>OscillatorNode</code> の <code>type</code> プロパティ (<code>OscillatorType</code>) の値を利用することで, 正弦波だけでなく,
-              矩形波やノコギリ波, 三角波を生成することができます. それによって, 音色を変化させることが可能です. ちなみに,
-              波形の概形は<b>エンベロープ</b>と呼ばれます. <code>OscillatorNode</code> のみで制御可能な範囲では, この
+              <code>OscillatorNode</code> の <code>type</code> プロパティ (<code>OscillatorType</code> 列挙型) の値を設定することで, 正弦波だけでなく,
+              矩形波やノコギリ波, 三角波を生成することができます. 波形によって, 音色を変化させることが可能です. ちなみに,
+              波形の概形は<b>エンベロープ</b>と呼ばれます. <code>OscillatorNode</code> のみで制御可能な限りでは,
               <code>type</code> プロパティに応じたエンベロープが音色に大きく影響しています.
             </p>
           </section>
           <p>
-            このセクションのまとめとして, 基本波形, 振幅, 周波数を変化させたときの波形を視覚化するデモとなります. 波形の変化とともに, 知覚する音 (音の 3 要素)
+            このセクションのまとめとして, 基本波形, 振幅, 周波数を変化させたときの波形を視覚化するデモです. 波形の変化とともに, 知覚する音 (音の 3 要素)
             の変化を体感してみてください.
           </p>
           <div class="app-container">
@@ -951,9 +958,27 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
                 <label><span>triangle</span><input type="radio" name="radio-oscillator-type" value="triangle" /></label>
               </form>
               <div class="ranges-oscillator">
-                <label><span>gain</span><input type="range" id="range-gain" value="1" min="0" max="1" step="0.05" /></label>
-                <label><span>frequency</span><input type="range" id="range-frequency" value="440" min="27.5" max="8000" step="0.5" /></label>
-                <label><span>detune</span><input type="range" id="range-detune" value="0" min="-600" max="600" step="1" /></label>
+                <div class="flexbox">
+                  <label class="flexbox">
+                    <span>gain</span>
+                    <input type="range" id="range-gain" value="1" min="0" max="1" step="0.05" />
+                  </label>
+                  <output id="output-gain-value" for="range-gain">1.00</output>
+                </div>
+                <div class="flexbox">
+                  <label class="flexbox">
+                    <span>frequency</span>
+                    <input type="range" id="range-frequency" value="440" min="27.5" max="8000" step="0.5" />
+                  </label>
+                  <output id="output-frequency-value" for="range-frequency">440.0</output>
+                </div>
+                <div class="flexbox">
+                  <label class="flexbox">
+                    <span>detune</span>
+                    <input type="range" id="range-detune" value="0" min="-600" max="600" step="1" />
+                  </label>
+                  <output id="output-detune-value" for="range-detune">0</output>
+                </div>
               </div>
             </div>
           </div>
