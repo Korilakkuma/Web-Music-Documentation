@@ -19,6 +19,7 @@ const alphaBaseColor = 'rgba(153 153 153 / 30%)';
 const alphaWaveColor = 'rgba(0 0 255 / 30%)';
 const alphaLightWaveColor = 'rgba(255 0 255 / 30%)';
 const white = 'rgb(255 255 255)';
+const black = 'rgb(0 0 0)';
 
 const gettingStarted = (buttonElement, rangeElement, outputGainElement) => {
   const gain = new GainNode(audiocontext);
@@ -131,7 +132,7 @@ const createCoordinateRect = (svg, textPosition, textFontSize) => {
       const rect = document.createElementNS(xmlns, 'rect');
 
       rect.setAttribute('x', (padding / 2).toString(10));
-      rect.setAttribute('y', (padding + (innerHeight / 2) * (1 - amplitude)).toString(10));
+      rect.setAttribute('y', (padding + (innerHeight / 2) * index).toString(10));
       rect.setAttribute('width', (innerWidth + padding).toString(10));
       rect.setAttribute('height', lineWidth.toString(10));
       rect.setAttribute('stroke', 'none');
@@ -149,7 +150,7 @@ const createCoordinateRect = (svg, textPosition, textFontSize) => {
         text.setAttribute('x', (padding - 4).toString(10));
       }
 
-      text.setAttribute('y', (padding / 2 + (innerHeight / 2) * (1 - amplitude) + 24).toString(10));
+      text.setAttribute('y', (padding + (innerHeight / 2) * index - 4).toString(10));
 
       text.setAttribute('text-anchor', 'end');
       text.setAttribute('stroke', 'none');
@@ -407,6 +408,54 @@ const createTriangleFunctionPath = (svg) => {
 const createKeyboards = (svg, offsetY = 0) => {
   const highlights = (svg.getAttribute('data-highlights') ?? '').split(',').map((index) => Number(index));
 
+  let buffer = null;
+
+  const onDownSVG = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (buffer === null) {
+      const response = await fetch('./assets/one-shots/piano-C.mp3');
+      const arrayBuffer = await response.arrayBuffer();
+
+      buffer = await audiocontext.decodeAudioData(arrayBuffer);
+    }
+  };
+
+  const onDown = async (event) => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (buffer === null) {
+      const response = await fetch('./assets/one-shots/piano-C.mp3');
+      const arrayBuffer = await response.arrayBuffer();
+
+      buffer = await audiocontext.decodeAudioData(arrayBuffer);
+    }
+
+    const source = new AudioBufferSourceNode(audiocontext, { buffer });
+
+    if (!event.currentTarget) {
+      return;
+    }
+
+    const index = Number(event.currentTarget.getAttribute('data-index') ?? '0');
+
+    source.playbackRate.value = 2 ** ((index - 39) / 12);
+
+    source.connect(audiocontext.destination);
+
+    source.start(0);
+
+    event.currentTarget.setAttribute('opacity', '0.6');
+  };
+
+  const onUp = (event) => {
+    event.currentTarget.removeAttribute('opacity');
+  };
+
   [
     0, 2, 3, 5, 7, 8, 10, 12, 14, 15, 17, 19, 20, 22, 24, 26, 27, 29, 31, 32, 34, 36, 38, 39, 41, 43, 44, 46, 48, 50, 51, 53, 55, 56, 58, 60, 62, 63, 65, 67,
     68, 70, 72, 74, 75, 77, 79, 80, 82, 84, 86, 87
@@ -419,11 +468,18 @@ const createKeyboards = (svg, offsetY = 0) => {
     rect.setAttribute('height', '150');
     rect.setAttribute('stroke-width', '2px');
     rect.setAttribute('stroke', '#ccc');
-    rect.setAttribute('fill', '#fff');
+    rect.setAttribute('fill', white);
 
     if (highlights.includes(keyboardIndex)) {
       rect.setAttribute('fill', '#eee');
     }
+
+    rect.setAttribute('data-index', keyboardIndex.toString(10));
+
+    rect.addEventListener('mousedown', onDown);
+    rect.addEventListener('touchstart', onDown);
+    rect.addEventListener('mouseup', onUp);
+    rect.addEventListener('touchend', onUp);
 
     svg.appendChild(rect);
   });
@@ -438,15 +494,25 @@ const createKeyboards = (svg, offsetY = 0) => {
       rect.setAttribute('height', '95');
       rect.setAttribute('stroke-width', '2px');
       rect.setAttribute('stroke', '#666');
-      rect.setAttribute('fill', '#000');
+      rect.setAttribute('fill', black);
 
       if (highlights.includes(keyboardIndex)) {
         rect.setAttribute('fill', '#333');
       }
 
+      rect.setAttribute('data-index', keyboardIndex.toString(10));
+
+      rect.addEventListener('mousedown', onDown);
+      rect.addEventListener('touchstart', onDown);
+      rect.addEventListener('mouseup', onUp);
+      rect.addEventListener('touchend', onUp);
+
       svg.appendChild(rect);
     }
   );
+
+  svg.addEventListener('mousedown', onDownSVG);
+  svg.addEventListener('touchstart', onDownSVG);
 };
 
 const createFrequencyandPianoFrequency = (svg) => {
@@ -541,6 +607,13 @@ const visualOscillator = (svg) => {
   const analyser = new AnalyserNode(audiocontext, { fftSize: 512 });
 
   const buttonElement = document.getElementById('button-oscillator');
+  const formTypeElement = document.getElementById('form-oscillator-type');
+  const rangeGainElement = document.getElementById('range-gain');
+  const rangeFrequencyElement = document.getElementById('range-frequency');
+  const rangeDetuneElement = document.getElementById('range-detune');
+  const outputGainElement = document.getElementById('output-gain-value');
+  const outputFrequencyElement = document.getElementById('output-frequency-value');
+  const outputDetuneElement = document.getElementById('output-detune-value');
 
   const width = Number(svg.getAttribute('width'));
   const height = Number(svg.getAttribute('height'));
@@ -586,30 +659,39 @@ const visualOscillator = (svg) => {
 
   svg.appendChild(rectBottom);
 
-  [' 1.0', ' 0.0', '-1.0'].forEach((text) => {
+  const xText = document.createElementNS(xmlns, 'text');
+
+  xText.textContent = 'Time';
+
+  xText.setAttribute('x', (innerWidth + padding).toString(10));
+  xText.setAttribute('y', (padding + innerHeight / 2 - 8).toString(10));
+  xText.setAttribute('text-anchor', 'middle');
+  xText.setAttribute('stroke', 'none');
+  xText.setAttribute('fill', baseColor);
+  xText.setAttribute('font-size', '18px');
+
+  svg.appendChild(xText);
+
+  const yText = document.createElementNS(xmlns, 'text');
+
+  yText.textContent = 'Amplitude';
+
+  yText.setAttribute('x', padding.toString(10));
+  yText.setAttribute('y', (padding / 2 - 4).toString(10));
+  yText.setAttribute('text-anchor', 'start');
+  yText.setAttribute('stroke', 'none');
+  yText.setAttribute('fill', baseColor);
+  yText.setAttribute('font-size', '18px');
+
+  svg.appendChild(yText);
+
+  [1, 0, -1].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case ' 1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case ' 0.0': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '-1.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -656,8 +738,8 @@ const visualOscillator = (svg) => {
   };
 
   let type = 'sine';
-  let frequency = document.getElementById('range-frequency').valueAsNumber;
-  let detune = document.getElementById('range-detune').valueAsNumber;
+  let frequency = rangeFrequencyElement.valueAsNumber;
+  let detune = rangeDetuneElement.valueAsNumber;
 
   let oscillator = null;
 
@@ -673,13 +755,8 @@ const visualOscillator = (svg) => {
       oscillator = null;
     }
 
-    oscillator = new OscillatorNode(audiocontext);
+    oscillator = new OscillatorNode(audiocontext, { type, frequency, detune });
 
-    oscillator.type = type;
-    oscillator.frequency.value = frequency;
-    oscillator.detune.value = detune;
-
-    // OscillatorNode (Input) -> GainNode -> AnalyserNode -> AudioDestinationNode (Output)
     oscillator.connect(gain);
     gain.connect(analyser);
     analyser.connect(audiocontext.destination);
@@ -712,8 +789,8 @@ const visualOscillator = (svg) => {
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  document.getElementById('form-oscillator-type').addEventListener('change', (event) => {
-    const radios = event.currentTarget.elements['radio-oscillator-type'];
+  formTypeElement.addEventListener('change', () => {
+    const radios = formTypeElement.elements['radio-oscillator-type'];
 
     for (const radio of radios) {
       if (radio.checked) {
@@ -728,24 +805,30 @@ const visualOscillator = (svg) => {
     }
   });
 
-  document.getElementById('range-gain').addEventListener('input', (event) => {
-    gain.gain.value = event.currentTarget.valueAsNumber;
+  rangeGainElement.addEventListener('input', () => {
+    gain.gain.value = rangeGainElement.valueAsNumber;
+
+    outputGainElement.textContent = gain.gain.value.toFixed(2);
   });
 
-  document.getElementById('range-frequency').addEventListener('input', (event) => {
-    frequency = event.currentTarget.valueAsNumber;
+  rangeFrequencyElement.addEventListener('input', () => {
+    frequency = rangeFrequencyElement.valueAsNumber;
 
     if (oscillator) {
       oscillator.frequency.value = frequency;
     }
+
+    outputFrequencyElement.textContent = `${frequency.toFixed(1)} Hz`;
   });
 
-  document.getElementById('range-detune').addEventListener('input', (event) => {
-    detune = event.currentTarget.valueAsNumber;
+  rangeDetuneElement.addEventListener('input', () => {
+    detune = rangeDetuneElement.valueAsNumber;
 
     if (oscillator) {
       oscillator.detune.value = detune;
     }
+
+    outputDetuneElement.textContent = `${detune.toFixed(0)} cent`;
   });
 };
 
@@ -20272,13 +20355,14 @@ createTriangleFunctionPath(document.getElementById('svg-figure-triangle-function
 createFrequencyandPianoFrequency(document.getElementById('svg-figure-frequency-and-piano-frequency'));
 createKeyboards(document.getElementById('svg-figure-12-equal-temperament'));
 
+visualOscillator(document.getElementById('svg-oscillator'));
+
 createCoordinateRect(document.getElementById('svg-figure-career'));
 createCareer(document.getElementById('svg-figure-career'));
 
 createCoordinateRect(document.getElementById('svg-figure-envelope'));
 createEnvelope(document.getElementById('svg-figure-envelope'));
 
-visualOscillator(document.getElementById('svg-oscillator'));
 visualADSR(document.getElementById('svg-envelopegenerator'));
 
 createSampling(document.getElementById('svg-figure-sampling'), 8, true);
