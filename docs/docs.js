@@ -832,6 +832,275 @@ const visualOscillator = (svg) => {
   });
 };
 
+const oscillatorNode = () => {
+  let oscillatorC = null;
+  let oscillatorE = null;
+  let oscillatorG = null;
+
+  const buttonElement = document.getElementById('button-oscillator-node');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillatorC !== null || oscillatorE !== null || oscillatorG !== null) {
+      return;
+    }
+
+    oscillatorC = new OscillatorNode(audiocontext, { frequency: 261.6255653005991 });
+    oscillatorE = new OscillatorNode(audiocontext, { frequency: 329.6275569128705 });
+    oscillatorG = new OscillatorNode(audiocontext, { frequency: 391.99543598175 });
+
+    const gain = new GainNode(audiocontext, { gain: 0.25 });
+
+    oscillatorC.connect(gain);
+    oscillatorE.connect(gain);
+    oscillatorG.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    oscillatorC.start(0);
+    oscillatorE.start(0);
+    oscillatorG.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillatorC === null || oscillatorE === null || oscillatorG === null) {
+      return;
+    }
+
+    oscillatorC.stop(0);
+    oscillatorE.stop(0);
+    oscillatorG.stop(0);
+
+    oscillatorC = null;
+    oscillatorE = null;
+    oscillatorG = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+};
+
+const oscillatorNodeChord = () => {
+  let oscillator1 = null;
+  let oscillator3 = null;
+  let oscillator5 = null;
+  let oscillator7 = null;
+
+  let type = 'sine';
+
+  let root = 'c';
+
+  const buttonElementMajor = document.getElementById('button-oscillator-node-major');
+  const buttonElementMinor = document.getElementById('button-oscillator-node-minor');
+  const buttonElement7th = document.getElementById('button-oscillator-node-7th');
+  const selectElementType = document.getElementById('select-oscillator-node-type');
+  const selectElementRoot = document.getElementById('select-oscillator-node-root');
+
+  const getIndex = (root) => {
+    const map = {
+      c: 39,
+      d: 41,
+      e: 43,
+      f: 44,
+      g: 46,
+      a: 48,
+      b: 50
+    };
+
+    return map[root];
+  };
+
+  const computeFrequencyFromIndex = (index) => {
+    return 27.5 * (2 ** (1 / 12)) ** index;
+  };
+
+  const onDownMajor = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator1 !== null || oscillator3 !== null || oscillator5 !== null) {
+      return;
+    }
+
+    oscillator1 = new OscillatorNode(audiocontext, { type, frequency: computeFrequencyFromIndex(getIndex(root) + 0) });
+    oscillator3 = new OscillatorNode(audiocontext, { type, frequency: computeFrequencyFromIndex(getIndex(root) + 4) });
+    oscillator5 = new OscillatorNode(audiocontext, { type, frequency: computeFrequencyFromIndex(getIndex(root) + 7) });
+
+    const gain = new GainNode(audiocontext, { gain: 0.2 });
+
+    oscillator1.connect(gain);
+    oscillator3.connect(gain);
+    oscillator5.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    oscillator1.start(0);
+    oscillator3.start(0);
+    oscillator5.start(0);
+
+    buttonElementMajor.textContent = 'stop';
+
+    buttonElementMinor.setAttribute('disabled', 'disabled');
+    buttonElement7th.setAttribute('disabled', 'disabled');
+  };
+
+  const onUpMajor = () => {
+    if (oscillator1 === null || oscillator3 === null || oscillator5 === null) {
+      return;
+    }
+
+    oscillator1.stop(0);
+    oscillator3.stop(0);
+    oscillator5.stop(0);
+
+    oscillator1 = null;
+    oscillator3 = null;
+    oscillator5 = null;
+
+    buttonElementMajor.textContent = 'Major';
+
+    buttonElementMajor.removeAttribute('disabled');
+    buttonElementMinor.removeAttribute('disabled');
+    buttonElement7th.removeAttribute('disabled');
+  };
+
+  const onDownMinor = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator1 !== null || oscillator3 !== null || oscillator5 !== null) {
+      return;
+    }
+
+    oscillator1 = new OscillatorNode(audiocontext, { type, frequency: computeFrequencyFromIndex(getIndex(root) + 0) });
+    oscillator3 = new OscillatorNode(audiocontext, { type, frequency: computeFrequencyFromIndex(getIndex(root) + 3) });
+    oscillator5 = new OscillatorNode(audiocontext, { type, frequency: computeFrequencyFromIndex(getIndex(root) + 7) });
+
+    const gain = new GainNode(audiocontext, { gain: 0.2 });
+
+    oscillator1.connect(gain);
+    oscillator3.connect(gain);
+    oscillator5.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    oscillator1.start(0);
+    oscillator3.start(0);
+    oscillator5.start(0);
+
+    buttonElementMinor.textContent = 'stop';
+
+    buttonElementMajor.setAttribute('disabled', 'disabled');
+    buttonElement7th.setAttribute('disabled', 'disabled');
+  };
+
+  const onUpMinor = () => {
+    if (oscillator1 === null || oscillator3 === null || oscillator5 === null) {
+      return;
+    }
+
+    oscillator1.stop(0);
+    oscillator3.stop(0);
+    oscillator5.stop(0);
+
+    oscillator1 = null;
+    oscillator3 = null;
+    oscillator5 = null;
+
+    buttonElementMinor.textContent = 'Minor';
+
+    buttonElementMajor.removeAttribute('disabled');
+    buttonElementMinor.removeAttribute('disabled');
+    buttonElement7th.removeAttribute('disabled');
+  };
+
+  const onDown7th = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator1 !== null || oscillator3 !== null || oscillator5 !== null || oscillator7 !== null) {
+      return;
+    }
+
+    oscillator1 = new OscillatorNode(audiocontext, { type, frequency: computeFrequencyFromIndex(getIndex(root) + 0) });
+    oscillator3 = new OscillatorNode(audiocontext, { type, frequency: computeFrequencyFromIndex(getIndex(root) + 4) });
+    oscillator5 = new OscillatorNode(audiocontext, { type, frequency: computeFrequencyFromIndex(getIndex(root) + 7) });
+    oscillator7 = new OscillatorNode(audiocontext, { type, frequency: computeFrequencyFromIndex(getIndex(root) + 11) });
+
+    const gain = new GainNode(audiocontext, { gain: 0.15 });
+
+    oscillator1.connect(gain);
+    oscillator3.connect(gain);
+    oscillator5.connect(gain);
+    oscillator7.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    oscillator1.start(0);
+    oscillator3.start(0);
+    oscillator5.start(0);
+    oscillator7.start(0);
+
+    buttonElement7th.textContent = 'stop';
+
+    buttonElementMajor.setAttribute('disabled', 'disabled');
+    buttonElementMinor.setAttribute('disabled', 'disabled');
+  };
+
+  const onUp7th = () => {
+    if (oscillator1 === null || oscillator3 === null || oscillator5 === null || oscillator7 === null) {
+      return;
+    }
+
+    oscillator1.stop(0);
+    oscillator3.stop(0);
+    oscillator5.stop(0);
+    oscillator7.stop(0);
+
+    oscillator1 = null;
+    oscillator3 = null;
+    oscillator5 = null;
+    oscillator7 = null;
+
+    buttonElement7th.textContent = '7th';
+
+    buttonElementMajor.removeAttribute('disabled');
+    buttonElementMinor.removeAttribute('disabled');
+    buttonElement7th.removeAttribute('disabled');
+  };
+
+  buttonElementMajor.addEventListener('mousedown', onDownMajor);
+  buttonElementMajor.addEventListener('touchstart', onDownMajor);
+  buttonElementMajor.addEventListener('mouseup', onUpMajor);
+  buttonElementMajor.addEventListener('touchend', onUpMajor);
+
+  buttonElementMinor.addEventListener('mousedown', onDownMinor);
+  buttonElementMinor.addEventListener('touchstart', onDownMinor);
+  buttonElementMinor.addEventListener('mouseup', onUpMinor);
+  buttonElementMinor.addEventListener('touchend', onUpMinor);
+
+  buttonElement7th.addEventListener('mousedown', onDown7th);
+  buttonElement7th.addEventListener('touchstart', onDown7th);
+  buttonElement7th.addEventListener('mouseup', onUp7th);
+  buttonElement7th.addEventListener('touchend', onUp7th);
+
+  selectElementType.addEventListener('change', () => {
+    type = selectElementType.value;
+  });
+
+  selectElementRoot.addEventListener('change', () => {
+    root = selectElementRoot.value;
+  });
+};
+
 const createCareer = (svg) => {
   const sampleRate = audiocontext.sampleRate;
 
@@ -20356,6 +20625,9 @@ createFrequencyandPianoFrequency(document.getElementById('svg-figure-frequency-a
 createKeyboards(document.getElementById('svg-figure-12-equal-temperament'));
 
 visualOscillator(document.getElementById('svg-oscillator'));
+
+oscillatorNode();
+oscillatorNodeChord();
 
 createCoordinateRect(document.getElementById('svg-figure-career'));
 createCareer(document.getElementById('svg-figure-career'));
