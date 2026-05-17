@@ -1092,6 +1092,395 @@ const oscillatorNodeChord = () => {
   });
 };
 
+const audioBufferSourceNode = () => {
+  let sourceC = null;
+  let sourceE = null;
+  let sourceG = null;
+
+  let buffer = null;
+
+  const buttonElement = document.getElementById('button-audio-buffer-source-node');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (buffer === null) {
+      return;
+    }
+
+    sourceC = new AudioBufferSourceNode(audiocontext, { buffer });
+    sourceE = new AudioBufferSourceNode(audiocontext, { buffer });
+    sourceG = new AudioBufferSourceNode(audiocontext, { buffer });
+
+    sourceC.detune.value = 0;
+    sourceE.detune.value = 400;
+    sourceG.detune.value = 700;
+
+    const gain = new GainNode(audiocontext, { gain: 0.25 });
+
+    sourceC.connect(gain);
+    sourceE.connect(gain);
+    sourceG.connect(gain);
+
+    gain.connect(audiocontext.destination);
+
+    sourceC.start(0);
+    sourceE.start(0);
+    sourceG.start(0);
+
+    buttonElement.textContent = 'stop';
+
+    sourceC.onended = () => {
+      sourceC = null;
+      sourceE = null;
+      sourceG = null;
+
+      buttonElement.textContent = 'start';
+    };
+
+    sourceE.onended = () => {
+      sourceC = null;
+      sourceE = null;
+      sourceG = null;
+
+      buttonElement.textContent = 'start';
+    };
+
+    sourceG.onended = () => {
+      sourceC = null;
+      sourceE = null;
+      sourceG = null;
+
+      buttonElement.textContent = 'start';
+    };
+  };
+
+  const onUp = () => {
+    if (buffer === null) {
+      return;
+    }
+
+    if (sourceC === null || sourceE === null || sourceG === null) {
+      return;
+    }
+
+    sourceC.stop(0);
+    sourceE.stop(0);
+    sourceG.stop(0);
+
+    sourceC = null;
+    sourceE = null;
+    sourceG = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  fetch('./assets/one-shots/piano-C.mp3')
+    .then((response) => {
+      return response.arrayBuffer();
+    })
+    .then((arrayBuffer) => {
+      const successCallback = (audioBuffer) => {
+        buffer = audioBuffer;
+      };
+
+      const errorCallback = (error) => {
+        console.error(error);
+      };
+
+      audiocontext.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+    })
+    .catch(console.error);
+};
+
+const audioBufferSourceNodeChord = () => {
+  let source1 = null;
+  let source3 = null;
+  let source5 = null;
+  let source7 = null;
+
+  let buffer = null;
+
+  let root = 'c';
+
+  const buttonElementMajor = document.getElementById('button-audio-buffer-source-node-major');
+  const buttonElementMinor = document.getElementById('button-audio-buffer-source-node-minor');
+  const buttonElement7th = document.getElementById('button-audio-buffer-source-node-7th');
+  const selectElementRoot = document.getElementById('select-audio-buffer-source-node-root');
+
+  const getRootIndex = (root) => {
+    const map = {
+      c: 0,
+      d: 2,
+      e: 4,
+      f: 5,
+      g: 7,
+      a: 9,
+      b: 11
+    };
+
+    return map[root];
+  };
+
+  const onDownMajor = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (buffer === null) {
+      return;
+    }
+
+    if (source1 !== null || source3 !== null || source5 !== null) {
+      return;
+    }
+
+    source1 = new AudioBufferSourceNode(audiocontext, { buffer, detune: (getRootIndex(root) + 0) * 100 });
+    source3 = new AudioBufferSourceNode(audiocontext, { buffer, detune: (getRootIndex(root) + 4) * 100 });
+    source5 = new AudioBufferSourceNode(audiocontext, { buffer, detune: (getRootIndex(root) + 7) * 100 });
+
+    const gain = new GainNode(audiocontext, { gain: 0.2 });
+
+    source1.connect(gain);
+    source3.connect(gain);
+    source5.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    source1.start(0);
+    source3.start(0);
+    source5.start(0);
+
+    buttonElementMajor.textContent = 'stop';
+
+    buttonElementMinor.setAttribute('disabled', 'disabled');
+    buttonElement7th.setAttribute('disabled', 'disabled');
+
+    source1.onended = () => {
+      source1 = null;
+      source3 = null;
+      source5 = null;
+
+      buttonElementMajor.textContent = 'Major';
+
+      buttonElementMajor.removeAttribute('disabled');
+      buttonElementMinor.removeAttribute('disabled');
+      buttonElement7th.removeAttribute('disabled');
+    };
+
+    source3.onended = () => {
+      source1 = null;
+      source3 = null;
+      source5 = null;
+
+      buttonElementMajor.textContent = 'Major';
+
+      buttonElementMajor.removeAttribute('disabled');
+      buttonElementMinor.removeAttribute('disabled');
+      buttonElement7th.removeAttribute('disabled');
+    };
+
+    source5.onended = () => {
+      source1 = null;
+      source3 = null;
+      source5 = null;
+
+      buttonElementMajor.textContent = 'Major';
+
+      buttonElementMajor.removeAttribute('disabled');
+      buttonElementMinor.removeAttribute('disabled');
+      buttonElement7th.removeAttribute('disabled');
+    };
+  };
+
+  const onDownMinor = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (source1 !== null || source3 !== null || source5 !== null) {
+      return;
+    }
+
+    const gain = new GainNode(audiocontext, { gain: 0.2 });
+
+    source1 = new AudioBufferSourceNode(audiocontext, { buffer, detune: (getRootIndex(root) + 0) * 100 });
+    source3 = new AudioBufferSourceNode(audiocontext, { buffer, detune: (getRootIndex(root) + 3) * 100 });
+    source5 = new AudioBufferSourceNode(audiocontext, { buffer, detune: (getRootIndex(root) + 7) * 100 });
+
+    source1.connect(gain);
+    source3.connect(gain);
+    source5.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    source1.start(0);
+    source3.start(0);
+    source5.start(0);
+
+    buttonElementMinor.textContent = 'stop';
+
+    buttonElementMajor.setAttribute('disabled', 'disabled');
+    buttonElement7th.setAttribute('disabled', 'disabled');
+
+    source1.onended = () => {
+      source1 = null;
+      source3 = null;
+      source5 = null;
+
+      buttonElementMinor.textContent = 'Minor';
+
+      buttonElementMajor.removeAttribute('disabled');
+      buttonElementMinor.removeAttribute('disabled');
+      buttonElement7th.removeAttribute('disabled');
+    };
+
+    source3.onended = () => {
+      source1 = null;
+      source3 = null;
+      source5 = null;
+
+      buttonElementMinor.textContent = 'Minor';
+
+      buttonElementMajor.removeAttribute('disabled');
+      buttonElementMinor.removeAttribute('disabled');
+      buttonElement7th.removeAttribute('disabled');
+    };
+
+    source5.onended = () => {
+      source1 = null;
+      source3 = null;
+      source5 = null;
+
+      buttonElementMinor.textContent = 'Minor';
+
+      buttonElementMajor.removeAttribute('disabled');
+      buttonElementMinor.removeAttribute('disabled');
+      buttonElement7th.removeAttribute('disabled');
+    };
+  };
+
+  const onDown7th = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (source1 !== null || source3 !== null || source5 !== null || source7 !== null) {
+      return;
+    }
+
+    source1 = new AudioBufferSourceNode(audiocontext, { buffer, detune: (getRootIndex(root) + 0) * 100 });
+    source3 = new AudioBufferSourceNode(audiocontext, { buffer, detune: (getRootIndex(root) + 4) * 100 });
+    source5 = new AudioBufferSourceNode(audiocontext, { buffer, detune: (getRootIndex(root) + 7) * 100 });
+    source7 = new AudioBufferSourceNode(audiocontext, { buffer, detune: (getRootIndex(root) + 11) * 100 });
+
+    const gain = new GainNode(audiocontext, { gain: 0.15 });
+
+    source1.connect(gain);
+    source3.connect(gain);
+    source5.connect(gain);
+    source7.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    source1.start(0);
+    source3.start(0);
+    source5.start(0);
+    source7.start(0);
+
+    buttonElement7th.textContent = 'stop';
+
+    buttonElementMajor.setAttribute('disabled', 'disabled');
+    buttonElementMinor.setAttribute('disabled', 'disabled');
+
+    source1.onended = () => {
+      source1 = null;
+      source3 = null;
+      source5 = null;
+      source7 = null;
+
+      buttonElement7th.textContent = '7th';
+
+      buttonElementMajor.removeAttribute('disabled');
+      buttonElementMinor.removeAttribute('disabled');
+      buttonElement7th.removeAttribute('disabled');
+    };
+
+    source3.onended = () => {
+      source1 = null;
+      source3 = null;
+      source5 = null;
+      source7 = null;
+
+      buttonElement7th.textContent = '7th';
+
+      buttonElementMajor.removeAttribute('disabled');
+      buttonElementMinor.removeAttribute('disabled');
+      buttonElement7th.removeAttribute('disabled');
+    };
+
+    source5.onended = () => {
+      source1 = null;
+      source3 = null;
+      source5 = null;
+      source7 = null;
+
+      buttonElement7th.textContent = '7th';
+
+      buttonElementMajor.removeAttribute('disabled');
+      buttonElementMinor.removeAttribute('disabled');
+      buttonElement7th.removeAttribute('disabled');
+    };
+
+    source7.onended = () => {
+      source1 = null;
+      source3 = null;
+      source5 = null;
+      source7 = null;
+
+      buttonElement7th.textContent = '7th';
+
+      buttonElementMajor.removeAttribute('disabled');
+      buttonElementMinor.removeAttribute('disabled');
+      buttonElement7th.removeAttribute('disabled');
+    };
+  };
+
+  buttonElementMajor.addEventListener('mousedown', onDownMajor);
+  buttonElementMajor.addEventListener('touchstart', onDownMajor);
+
+  buttonElementMinor.addEventListener('mousedown', onDownMinor);
+  buttonElementMinor.addEventListener('touchstart', onDownMinor);
+
+  buttonElement7th.addEventListener('mousedown', onDown7th);
+  buttonElement7th.addEventListener('touchstart', onDown7th);
+
+  selectElementRoot.addEventListener('change', () => {
+    root = selectElementRoot.value;
+  });
+
+  fetch('./assets/one-shots/piano-C.mp3')
+    .then((response) => {
+      return response.arrayBuffer();
+    })
+    .then((arrayBuffer) => {
+      const successCallback = (audioBuffer) => {
+        buffer = audioBuffer;
+      };
+
+      const errorCallback = (error) => {
+        console.error(error);
+      };
+
+      audiocontext.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+    })
+    .catch(console.error);
+};
+
 const createCareer = (svg) => {
   const sampleRate = audiocontext.sampleRate;
 
@@ -20617,6 +21006,9 @@ createKeyboards(document.getElementById('svg-figure-12-equal-temperament'));
 
 oscillatorNode();
 oscillatorNodeChord();
+
+audioBufferSourceNode();
+audioBufferSourceNodeChord();
 
 createCoordinateRect(document.getElementById('svg-figure-career'));
 createCareer(document.getElementById('svg-figure-career'));

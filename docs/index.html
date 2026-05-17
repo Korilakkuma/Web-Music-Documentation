@@ -1212,7 +1212,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
         <p>
           <b><code>AudioBufferSourceNode</code></b> は, <b>ワンショットオーディオの再生</b>を目的に利用します. ワンショットオーディオとは,
           ピアノやギターなど実際の楽器の音源を収録した WAVE ファイルや MP3 ファイルのことです. Web Audio API の仕様では, ユースケースとして,
-          楽曲データに関しては, <b><code>MediaElementAudioSourceNode</code></b> を利用することを想定しているので, この点は注意が必要です. ただし,
+          楽曲データの再生に関しては <b><code>MediaElementAudioSourceNode</code></b> を利用することを想定しているので, この点は注意が必要です. ただし,
           <code>AudioBufferSourceNode</code> を楽曲データの再生に使うこともできます. 現実解としてユースケースに反した利用をすることも多いです (これは,
           <code>AudioBufferSourceNode</code> がオーディオデータの実体である <code>AudioBuffer</code> インスタンスをもつので,
           オーディオ信号処理が適用しやすいことが理由として考えられます).
@@ -1220,8 +1220,10 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
         <p>このセクションでは, 仕様上のユースケースであるワンショットオーディオの再生を目的に, <code>AudioBufferSourceNode</code> を解説します.</p>
         <p>
           ところで, ワンショットオーディオの再生であれば, 同じことは <code>HTMLAudioElement</code> (<code>audio</code> タグ) でも可能な場合もあります. 事実, Web
-          Audio API が仕様策定される以前は, そのようなユースケースも想定して, <code>Audio</code> コンストラクタが定義されています. しかしながら,
-          <code>HTMLAudioElement</code> (<code>Audio</code> コンストラクタ) によるワンショットオーディオの再生は以下のような問題があります.
+          Audio API が仕様策定される以前は, そのようなユースケースも想定して,
+          <a href="https://developer.mozilla.org/ja/docs/Web/API/HTMLAudioElement/Audio" target="_blank" rel="noopener noreferrer"
+            ><code>Audio</code> コンストラクタ</a>が定義されています. しかし, <code>HTMLAudioElement</code> (<code>Audio</code> コンストラクタ)
+          によるワンショットオーディオの再生は以下のような問題があります.
         </p>
         <ul>
           <li>JavaScript のタイマー (<code>setInterval</code> や <code>setTimeout</code>) では, 正確なスケジュールングが難しい</li>
@@ -1230,7 +1232,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
           <li>ワンショットオーディオに対して, さらにオーディオ処理を付加したいユースケース</li>
         </ul>
         <p>
-          これらの問題を, ある程度容易に解決してくれるのが <code>AudioBufferSourceNode</code> です (もっとも, <code>AudioBufferSourceNode</code> を利用しても,
+          これらの問題をある程度容易に解決するのが <code>AudioBufferSourceNode</code> です (もっとも, <code>AudioBufferSourceNode</code> を利用しても,
           コンピュータのリソースは有限なので, 計算量が多い場合や他のプロセスがリソースを多く消費している場合などは,
           少なからずスケジューリングも正確でなくなります).
         </p>
@@ -1238,15 +1240,16 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
         <section id="section-audio-buffer-source-node-buffer">
           <h3>buffer プロパティ</h3>
           <p>
-            <code>AudioBufferSourceNode</code> において, 最も重要と言えるのが, <b><code>buffer</code></b> プロパティであり, これは,
+            <code>AudioBufferSourceNode</code> において, 最重要なのは <b><code>buffer</code></b> プロパティであり, これは,
             <b><code>AudioBuffer</code></b> インスタンスを参照します. <code>AudioBuffer</code> とは, オーディオデータの実体 (を抽象化するクラス) です.
           </p>
           <img src="images/audio-buffer.png" alt="AudioBuffer" width="1232" height="770" loading="lazy" />
           <section id="section-audio-buffer">
             <h4>AudioBuffer</h4>
             <p>
-              <code>AudioBuffer</code> クラスは, オーディオデータの実体ですが, 直接的にアクセスすることはできません. そのためのメソッドや,
-              デジタル化されたオーディオデータに必要なパラメータ (サンプリングレートやチャンネル数, オーディオデータ全体のサイズなど) を定義しています.
+              <code>AudioBuffer</code> クラスはオーディオデータを抽象化して, そのインスタンスは, オーディオデータの実体ですが,
+              オーディオデータそのものではありません. オーディオデータにアクセスするメソッドや, サンプリングされたオーディオデータのパラメータ
+              (サンプリングレートやチャンネル数, オーディオデータのサイズなど) を定義しています.
             </p>
             <section id="section-audio-buffer-sample-rate">
               <h5>sampleRate プロパティ</h5>
@@ -1261,7 +1264,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
             <section id="section-audio-buffer-length">
               <h5>length プロパティ</h5>
               <p>
-                1 チャネルにおける, オーディオデータのサイズです. つまり, <code>sampleRate</code> プロパティの逆数である<code>サンプリング周期</code>と
+                1 チャネルにおける, オーディオデータのサイズです. <code>sampleRate</code> プロパティの逆数である, サンプリング周期と
                 <code>length</code> プロパティを乗算した値が, オーディオデータの再生時間となります (次に解説する,
                 <code>duration</code> プロパティの値と同じになります).
               </p>
@@ -1293,8 +1296,8 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
             <section id="section-audio-buffer-copy">
               <h5>copyFromChannel メソッド / copyToChannel メソッド</h5>
               <p>
-                他に, <code>AudioBuffer</code> をコピーするためのメソッドがあります. ワンショットオーディオの再生においてはおそらく使うことはないので,
-                必要であれば, 仕様や MDN などを参考にしてください.
+                他に, <code>AudioBuffer</code> をコピーするためのメソッドがあります. ワンショットオーディオの再生においてはおそらく使うことはないのですが,
+                楽曲データから選択した範囲のオーディオデータをコピーする (オーディオスプライト処理) などがユースケースとしてあります.
               </p>
             </section>
           </section>
@@ -1307,9 +1310,8 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
               <code>AudioBuffer</code> インスタンスを生成可能です.
             </p>
             <p>
-              もっとも, ワンショットオーディオ再生目的であれば, <code>createBuffer</code> メソッドを利用することはおそらくなく,
-              <code>ArrayBuffer</code> インスタンスから <code>AudioBuffer</code> インスタンスを生成する
-              <code>decodeAudioData</code> メソッドを利用することになると思います. したがって, まずは,
+              ワンショットオーディオ再生目的であれば, <code>createBuffer</code> メソッドを利用することはおそらくなく, <code>ArrayBuffer</code> インスタンスから
+              <code>AudioBuffer</code> インスタンスを生成する <code>decodeAudioData</code> メソッドを利用することになると思います. したがって, まずは,
               <code>ArrayBuffer</code> インスタンスの取得に関して解説します (これは Web Audio API の解説というよりは, JavaScript で
               <code>ArrayBuffer</code> インスタンスを取得する方法なので, すでにご存知の場合はスキップして問題ないです).
             </p>
@@ -1326,7 +1328,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
               </p>
               <p>
                 <code>Fetch API</code> は, <code>fetch</code> 関数, <code>Headers</code> オブジェクト, <code>Request</code> オブジェクト,
-                <code>Response</code> オブジェクトの総称ですが, ほとんどのケースで明示的に利用するのは, <code>fetch</code> 関数の呼び出しです.
+                <code>Response</code> オブジェクトの総称ですが, 多くののケースで明示的に利用するのは, <code>fetch</code> 関数の呼び出しです.
               </p>
               <pre
                 data-prismjs-copy="クリップボードにコピー"
@@ -1344,13 +1346,12 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
               <p>
                 <code>fetch</code> 関数のデフォルトの HTTP メソッドは GET なので, ワンショットオーディオの取得であれば, そのリソースの URL
                 を指定すればよいでしょう. あとは, 取得した <code>Response</code> オブジェクトの <code>arrayBuffer</code> メソッドを呼び出して,
-                <code>ArrayBuffer</code> インスタンスを取得するだけです. いずれの関数・メソッドも, <code>Promise</code> を返します. 可読性重視などであれば,
-                <code>async</code>/<code>await</code> で実装してもよいでしょう.
+                <code>ArrayBuffer</code> インスタンスを取得するだけです. いずれの関数・メソッドも, <code>Promise</code> を返します.
               </p>
               <p>
-                <code>ArrayBuffer</code> インスタンスが取得できたら, <code>AudioContext</code> インスタンスの <b><code>decodeAudioData</code></b> メソッドの第 1
-                引数に, <code>ArrayBuffer</code> インスタンスを指定して, 第 2 引数に, 成功時のコールバック関数を指定します. このコールバック関数の引数に,
-                <code>AudioBuffer</code> インスタンスが渡されます. 失敗した場合, 第 3 引数のコールバック関数が実行されます. このコールバック関数の引数には,
+                <code>ArrayBuffer</code> インスタンスが取得できたら, <b><code>decodeAudioData</code></b> メソッドの第 1 引数に,
+                <code>ArrayBuffer</code> インスタンスを指定して, 第 2 引数に, 成功時のコールバック関数を指定します. このコールバック関数の引数に,
+                <code>AudioBuffer</code> インスタンスが渡されます. 失敗した場合は, 第 3 引数のコールバック関数が実行されます. このコールバック関数の引数には,
                 <code>DOMException</code> インスタンスが渡されます.
               </p>
               <pre
@@ -1377,28 +1378,27 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
     // error handling
   });</code></pre>
               <p>
-                初期の頃は上記のような仕様でしたが, 最新の仕様では, 成功時は <code>Promise&lt;AudioBuffer&gt;</code> を返すので, 戻り値から
+                最新の仕様では, 最新の仕様では, 成功時は <code>Promise&lt;AudioBuffer&gt;</code> を返すので, 戻り値から
                 <code>AudioBuffer</code> インスタンスを取得することも可能です.
               </p>
               <p>
-                <code>decodeAudioData</code> メソッドの実行で 1 つ注意しなければならないのは, <code>decodeAudioData</code> メソッドも
-                <b><a href="#section-audio-context-autoplay-policy">Autoplay Policy</a></b> の影響を受けるということです. したがって,
+                <code>decodeAudioData</code> メソッドの実行で特に注意しなければならないのは, <code>decodeAudioData</code> メソッドも
+                <b><a href="#section-audio-context-autoplay-policy">Autoplay Policy</a></b> の影響を受けるので,
                 ユーザーインタラクティブなイベント発生後に実行する必要があります.
               </p>
             </section>
             <section id="section-create-buffer">
               <h5>createBuffer メソッド</h5>
               <p>
-                <code>AudioBuffer</code> インスタンスを生成するには, <code>AudioContext</code> インスタンスの
-                <b><code>createBuffer</code></b> メソッドを利用することでも可能です. 引数は, 第 1 引数にチャンネル数, 第 2 引数に 1
-                チャンネルのオーディオデータのサイズ, 第 3 引数にサンプリング周波数を指定します. しかしながら, インスタンスは生成できるものの,
+                <code>AudioBuffer</code> インスタンスを生成するには, <b><code>createBuffer</code></b> メソッドでも可能です. 第 1 引数にチャンネル数, 第 2 引数に
+                1 チャンネルのオーディオデータのサイズ, 第 3 引数にサンプリング周波数を指定します. しかしながら, インスタンスは生成できるものの,
                 オーディオデータをもっているわけではないので, ワンショットオーディオの再生において利用することはないでしょう. ユースケースとしては,
-                オーディオデータから生成した <code>AudioBuffer</code> インスタンスからコピー (<code>copyFromChannel</code> メソッドや
-                <code>copyToChannel</code> メソッドが必要なケース) が考えられます.
+                オーディオスプライト処理など, オーディオデータから生成した <code>AudioBuffer</code> インスタンスからコピー (<code>copyFromChannel</code>
+                メソッドや <code>copyToChannel</code> メソッドが必要なケース) が考えられます.
               </p>
             </section>
             <p>
-              これで, ワンショットオーディオを再生する最低限の処理ができているので, あとは <code>AudioBufferSourceNode</code> のインスタンスを生成します
+              これで, ワンショットオーディオを再生する最小限の処理ができているので, 次に <code>AudioBufferSourceNode</code> のインスタンスを生成します
               (ファクトリメソッドで生成する場合, <code>createBufferSource</code> メソッドを利用します).
             </p>
             <pre
@@ -1435,10 +1435,14 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
           <h3>playbackRate プロパティ / detune プロパティ</h3>
           <p>
             音楽用途でワンショットオーディオを使う場合, 対応するピッチの数だけ, ワンショットオーディオデータを作成するのは大変です. また, HTTP
-            リクエストの送受信や <code>decodeAudioData</code> メソッドの実行も多くなってしまうのでパフォーマンス的にもよくありません. それを解決するのが,
-            <code>playbackRate</code> プロパティと <code>detune</code> プロパティです. これらは, 音の物理的な性質, つまり,
-            <b>再生速度を変化させるとピッチも変化する</b>という性質を利用して, ピッチ (と再生時間) を変更します. 例えば, <code>playbackRate</code> を
-            <code>2</code> に設定すれば, ピッチも 2 倍, つまり, 1 オクターブ高いピッチのオーディオデータの再生を同一の
+            リクエストの送受信や <code>decodeAudioData</code> メソッドの実行も多くなってしまうのでパフォーマンス的にもよくありません.
+          </p>
+          <p>
+            それを解決するのが, <code>playbackRate</code> プロパティと <code>detune</code> プロパティです. これらは, 音の物理的な性質, つまり,
+            <b>再生速度を変化させるとピッチも変化する</b>という性質を利用して, ピッチ (と再生時間) を変更します.
+          </p>
+          <p>
+            <code>playbackRate</code> を <code>2</code> に設定すれば, ピッチも 2 倍, つまり, 1 オクターブ高いピッチのオーディオデータの再生を同一の
             <code>AudioBuffer</code> インスタンスから可能です. <code>detune</code> は, cent 単位でピッチを変更します. ピッチを変更すると,
             再生時間も変わりますが, ワンショットオーディオは再生時間が短時間なので, この点が問題になることはほとんどないでしょう. いずれも,
             <code>AudioParam</code> インスタンスなので, 値を取得したり, 設定する場合は, <code>value</code> プロパティにアクセスします.
@@ -1460,18 +1464,17 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
         <section id="section-audio-buffer-source-node-start-and-stop">
           <h3>start メソッド / stop メソッド</h3>
           <p>
-            <code>AudioBufferSourceNode</code> インスタンスは, 言わば使い捨てなので, 一度発音・停止した <code>AudioBufferSourceNode</code> インスタンスは再度,
-            発音 (停止) することはできません. 例えば, ユーザーインタラクティブな操作で発音・停止を繰り返すような場合,
-            <code>AudioBufferSourceNode</code> インスタンスを再生成して, 再度 <code>AudioDestinationNode</code> に接続して, <code>start</code> メソッド (<code
-              >stop</code>
-            メソッド) を実行する必要があります. この仕様は, <code>OscillatorNode</code> とまったく同じです (ただし,
-            <code>AudioBuffer</code> インスタンスは使い回すことが可能です).
+            <code>AudioBufferSourceNode</code> インスタンスも, <code>OscillatorNode</code> インスタンスと同様に, 使い捨てなので, 一度発音・停止した
+            <code>AudioBufferSourceNode</code> インスタンスは再度, 発音 (停止) することはできません. 例えば,
+            ユーザーインタラクティブな操作で発音・停止を繰り返すような場合, <code>AudioBufferSourceNode</code> インスタンスを再生成して, 再度
+            <code>AudioDestinationNode</code> に接続して, <code>start</code> メソッド (<code>stop</code> メソッド) を実行する必要があります. この仕様は,
+            <code>OscillatorNode</code> とまったく同じです (ただし, <code>AudioBuffer</code> インスタンスは使い回すことが可能です).
           </p>
           <p>例えば, 以下のコードはボタンをクリックするたびに, 再生・停止することを期待していますが, 2 回目のクリック以降は, 再生されずエラーが発生します.</p>
           <pre
             data-prismjs-copy="クリップボードにコピー"
             data-prismjs-copy-success="コピーしました"
-          ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;</code></pre>
+          ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-audio-buffer-source-node&quot;&gt;start&lt;/button&gt;</code></pre>
           <pre
             data-prismjs-copy="クリップボードにコピー"
             data-prismjs-copy-success="コピーしました"
@@ -1482,7 +1485,7 @@ const source = new AudioBufferSourceNode(context);
 // AudioBufferSourceNode (Input) -&gt; AudioDestinationNode (Output)
 source.connect(context.destination);
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-audio-buffer-source-node&apos;);
 
 buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
   if (source.buffer === null) {
@@ -1537,7 +1540,7 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
 let source = null;
 let buffer = null;
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-audio-buffer-source-node&apos;);
 
 buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
   if (buffer === null) {
@@ -1586,7 +1589,8 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
   });</code></pre>
           <p>
             ワンショットオーディオも, 複数の <code>AudioBufferSourceNode</code> インスタンスを <code>AudioDestinationNode</code> に接続することで合成が可能です
-            (そのまま合成 (接続) してしまうと, 振幅が大きくなりすぎて, 音割れが発生してしまうので, <code>GainNode</code> を接続して振幅を調整しています).
+            (<code>OscillatorNode</code> の場合と同様に, そのまま合成 (接続) してしまうと, 振幅が大きくなりすぎて, 音割れが発生してしまうので,
+            <code>GainNode</code> を接続して振幅を調整しています).
           </p>
           <p>
             また, 3 つの <code>AudioBufferSourceNode</code> インスタンスで, それぞれ <code>detune</code> プロパティの値を調整して, C
@@ -1604,7 +1608,7 @@ let sourceG = null;
 
 let buffer = null;
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-audio-buffer-source-node&apos;);
 
 buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
   if (buffer === null) {
@@ -1634,10 +1638,38 @@ buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
   sourceG.start(0);
 
   buttonElement.textContent = &apos;stop&apos;;
+
+  sourceC.onended = () =&gt; {
+    sourceC = null;
+    sourceE = null;
+    sourceG = null;
+
+    buttonElement.textContent = &apos;start&apos;;
+  };
+
+  sourceE.onended = () =&gt; {
+    sourceC = null;
+    sourceE = null;
+    sourceG = null;
+
+    buttonElement.textContent = &apos;start&apos;;
+  };
+
+  sourceG.onended = () =&gt; {
+    sourceC = null;
+    sourceE = null;
+    sourceG = null;
+
+    buttonElement.textContent = &apos;start&apos;;
+  };
 });
 
 buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
-  if ((buffer === null) || (sourceC === null) || (sourceE === null) || (sourceG === null)) {
+  if (buffer === null) {
+    return;
+  }
+
+  if ((sourceC === null) || (sourceE === null) || (sourceG === null)) {
     return;
   }
 
@@ -1645,6 +1677,10 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
   sourceC.stop(0);
   sourceE.stop(0);
   sourceG.stop(0);
+
+  sourceC = null;
+  sourceE = null;
+  sourceG = null;
 
   buttonElement.textContent = &apos;start&apos;;
 });
@@ -1672,6 +1708,29 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
             さまざまなプラットフォームのオーディオ API のなかでも Web Audio API 独自の仕様で, ハマりやすい仕様なので注意してください (そもそも, Web
             ではないプラットフォームのオーディオ API はここまで抽象化されている API すら少ないと思います).
           </p>
+          <div class="app-container">
+            <button type="button" id="button-audio-buffer-source-node">start</button>
+          </div>
+          <p><code>OscillatorNode</code> と同様に, 応用すれば, 和音 (コード) 生成アプリケーションなどもできるはずです.</p>
+          <div class="app-container flexbox flexbox-align-items-center">
+            <label aria-label="ルート音を選択してください">
+              <select id="select-audio-buffer-source-node-root">
+                <option value="c" selected>--- SELECT ROOT ---</option>
+                <option value="c">C</option>
+                <option value="d">D</option>
+                <option value="e">E</option>
+                <option value="f">F</option>
+                <option value="g">G</option>
+                <option value="a">A</option>
+                <option value="b">B</option>
+              </select>
+            </label>
+            <div class="flexbox">
+              <button type="button" id="button-audio-buffer-source-node-major">Major</button>
+              <button type="button" id="button-audio-buffer-source-node-minor">Minor</button>
+              <button type="button" id="button-audio-buffer-source-node-7th">7th</button>
+            </div>
+          </div>
         </section>
       </section>
       <section id="section-media-element-audio-source-node">
