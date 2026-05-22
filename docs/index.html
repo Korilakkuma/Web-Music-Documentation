@@ -2126,16 +2126,21 @@ buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
         <img src="images/media-stream-audio-source-node.png" alt="MediaStreamAudioSourceNode" width="1232" height="770" loading="lazy" />
         <p>
           WebRTC の仕様は Web Audio API と同等かそれ以上に膨大ですが, Web Audio API との関係で言えば, <code>MediaDevices</code> の
-          <code>getUserMedia</code> メソッドを理解すれば問題ないでしょう.
+          <code>getUserMedia</code> メソッドを理解すれば十分です.
         </p>
         <p>
           <code>getUserMedia</code> メソッドの引数には
           <a href="https://www.w3.org/TR/mediacapture-streams/#dom-mediastreamconstraints" target="_blank" rel="noopener noreferrer">MediaStreamConstraints</a>
           を指定します (少なくとも, Web Audio API で利用することを想定するので, <code>audio</code> は <code>true</code> にしておきます). 初回実行時は,
-          マイクロフォン (もしくは, 選択したオーディオインターフェース) に対するアクセス許可を求めるダイアログが表示されます. アクセスを許可して問題なければ,
+          マイクロフォン (もしくは, 選択したオーディオインターフェース) に対するアクセス許可を求めるダイアログが表示されます. アクセスを許可して成功すれば,
           戻り値の <code>Promise</code> が <code>fulfilled</code> 状態になります. 成功時の <code>Promise</code> のコールバック関数の引数に
           <code>MediaStream</code> インスタンスが渡されるので, そのインスタンスを <code>MediaElementAudioSourceNode</code> コンストラクタ
-          (もしくはファクトリメソッドの <code>createMediaStreamSource</code> の引数) に指定します
+          (もしくはファクトリメソッドの <code>createMediaStreamSource</code> の引数) に指定します.
+        </p>
+        <p>
+          アクセスを許可しなかったなど失敗した場合は, エラー時のコールバック関数が実行されて, 引数にエラーの原因に応じた <code>DOMException</code> や
+          <code>Error</code> クラスのサブクラスのインスタンスが渡されます (詳細にエラーハンドリングしたい場合などは,
+          エラーコードやサブクラスの型に応じて分岐するとよいでしょう).
         </p>
         <p>
           あとは, <code>MediaStreamAudioSourceNode</code> インスタンスを <code>AudioDestinationNode</code> に接続すれば, WebRTC
@@ -2151,7 +2156,11 @@ const constraints = {
 };
 
 navigator.mediaDevices.getUserMedia(constraints)
-  .then((stream) =&gt; {
+  .then(async (stream) =&gt; {
+    if (context.state !== &apos;running&apos;) {
+      await context.resume();
+    }
+
     const source = new MediaStreamAudioSourceNode(context, { mediaStream: stream });
 
     // If use `createMediaStreamSource`
@@ -2159,16 +2168,58 @@ navigator.mediaDevices.getUserMedia(constraints)
 
     // MediaStreamAudioSourceNode (Input) -&gt; AudioDestinationNode (Output)
     source.connect(context.destination);
-
   })
   .catch((error) =&gt; {
     // error handling
+
+    switch (error.code) {
+      case DOMException.ABORT_ERR: {
+        console.error(&apos;AbortError&apos;);
+        console.dir(error);
+        break;
+      }
+
+      case DOMException.INVALID_STATE_ERR: {
+        console.error(&apos;InvalidStateError&apos;);
+        console.dir(error);
+        break;
+      }
+
+      case DOMException.NOT_FOUND_ERR: {
+        console.error(&apos;NotFoundError&apos;);
+        console.dir(error);
+        break;
+      }
+
+      case DOMException.SECURITY_ERR: {
+        console.log(&apos;SecurityError&apos;);
+        console.dir(error);
+        break;
+      }
+
+      default: {
+        if (error instanceof OverconstrainedError) {
+          console.log(&apos;OverconstrainedError&apos;);
+          console.dir(error);
+          return;
+        }
+
+        if (error instanceof TypeError) {
+          console.log(&apos;TypeError&apos;);
+          console.dir(error);
+          return;
+        }
+
+        // Otherwise (NotAllowedError or NotReadableError)
+        console.dir(error);
+      }
+    }
   });</code></pre>
         <p>
-          もちろん, オーディオ信号処理を適用しないのであれば, WebRTC だけを利用するほうが合理的なので, 簡易例として,
-          オーディオ信号処理を適用していることがわかるように, <code>BiquadFilterNode</code> を利用して Low-Pass Filter (低域通過フィルタ)
-          を使ったサンプルコードです. カットオフ周波数を変更すると, 音の輪郭が変わることを確認してみてください (<code>BiquadFilterNode</code> に関しては,
-          別のセクションで詳細を解説します).
+          オーディオ信号処理を適用しないのであれば, WebRTC だけを利用するほうが合理的なので, 簡易例として, オーディオ信号処理を適用していることがわかるように,
+          <code>BiquadFilterNode</code> を利用して Low-Pass Filter (低域通過フィルタ) を適用したサンプルコードです. カットオフ周波数を変更すると, 音の輪郭
+          (Tone) が変わることを確認してみてください (<code>BiquadFilterNode</code> に関しては,
+          <a href="#section-effectors-filter-biquad-filter-node">あとのセクション</a>で詳細を解説します).
         </p>
         <pre
           data-prismjs-copy="クリップボードにコピー"
@@ -2180,7 +2231,11 @@ const constraints = {
 };
 
 navigator.mediaDevices.getUserMedia(constraints)
-  .then((stream) =&gt; {
+  .then(async (stream) =&gt; {
+    if (context.state !== &apos;running&apos;) {
+      await context.resume();
+    }
+
     const source = new MediaStreamAudioSourceNode(context, { mediaStream: stream });
 
     // If use `createMediaStreamSource`
@@ -2221,8 +2276,10 @@ navigator.mediaDevices.getUserMedia(constraints)
           <pre
             data-prismjs-copy="クリップボードにコピー"
             data-prismjs-copy-success="コピーしました"
-          ><code class="language-html line-numbers">&lt;select id=&quot;select-input-devices&quot;&gt;&lt;/select&gt;
-&lt;select id=&quot;select-output-devices&quot;&gt;&lt;/select&gt;</code></pre>
+          ><code class="language-html line-numbers">&lt;label for=&quot;select-input-device&quot;&gt;Input Device&lt;/label&gt;
+&lt;select id=&quot;select-input-device&quot;&gt;&lt;/select&gt;
+&lt;label for=&quot;select-output-device&quot;&gt;Output Device&lt;/label&gt;
+&lt;select id=&quot;select-output-device&quot;&gt;&lt;/select&gt;</code></pre>
           <pre
             data-prismjs-copy="クリップボードにコピー"
             data-prismjs-copy-success="コピーしました"
@@ -2275,8 +2332,8 @@ navigator.mediaDevices.getUserMedia(constraints)
           fragmentOutputDevices.appendChild(optionElement);
         });
 
-        const selectInputDevicesElement  = document.getElementById(&apos;select-input-devices&apos;);
-        const selectOutputDevicesElement = document.getElementById(&apos;select-output-devices&apos;);
+        const selectInputDevicesElement  = document.getElementById(&apos;select-input-device&apos;);
+        const selectOutputDevicesElement = document.getElementById(&apos;select-output-device&apos;);
 
         selectInputDevicesElement.appendChild(fragmentInputDevices);
         selectOutputDevicesElement.appendChild(fragmentOutputDevices);
@@ -2305,7 +2362,8 @@ navigator.mediaDevices.getUserMedia(constraints)
           <pre
             data-prismjs-copy="クリップボードにコピー"
             data-prismjs-copy-success="コピーしました"
-          ><code class="language-html line-numbers">&lt;select id=&quot;select-input-devices&quot;&gt;&lt;/select&gt;</code></pre>
+          ><code class="language-html line-numbers">&lt;label for=&quot;select-input-device&quot;&gt;Input Device&lt;/label&gt;
+&lt;select id=&quot;select-input-device&quot;&gt;&lt;/select&gt;</code></pre>
           <pre
             data-prismjs-copy="クリップボードにコピー"
             data-prismjs-copy-success="コピーしました"
@@ -2318,7 +2376,11 @@ const constraints = {
 let mediaStream = null;
 
 navigator.mediaDevices.getUserMedia(constraints)
-  .then((stream) =&gt; {
+  .then(async (stream) =&gt; {
+    if (context.state !== &apos;running&apos;) {
+      await context.resume();
+    }
+
     mediaStream = stream;
 
     const source = new MediaStreamAudioSourceNode(context, { mediaStream });
@@ -2352,7 +2414,7 @@ navigator.mediaDevices.getUserMedia(constraints)
           fragmentInputDevices.appendChild(optionElement);
         });
 
-        const selectInputDevicesElement = document.getElementById(&apos;select-input-devices&apos;);
+        const selectInputDevicesElement = document.getElementById(&apos;select-input-device&apos;);
 
         selectInputDevicesElement.appendChild(fragmentInputDevices);
 
@@ -2403,7 +2465,11 @@ const constraints = {
 };
 
 navigator.mediaDevices.getUserMedia(constraints)
-  .then((stream) =&gt; {
+  .then(async (stream) =&gt; {
+    if (context.state !== &apos;running&apos;) {
+      await context.resume();
+    }
+
     const source = new MediaStreamAudioSourceNode(context, { mediaStream: stream });
 
     // If use `createMediaStreamSource`
@@ -2427,6 +2493,27 @@ navigator.mediaDevices.getUserMedia(constraints)
     // error handling
   });</code></pre>
         </section>
+        <p>
+          <code>MediaStream</code> インスタンスの取得, <code>MediaStreamAudioSourceNode</code> インスタンス生成, オーディオ信号処理の適用, デバイス情報の列挙,
+          入力オーディオデバイスの指定, デバイスの破棄をまとめたデモです.
+        </p>
+        <div class="app-container flexbox-column">
+          <div class="flexbox">
+            <button type="button" id="button-media-stream-audio-source-node-get-user-media">getUserMedia</button>
+            <button type="button" id="button-media-stream-audio-source-node-stop-track" disabled>stop track</button>
+          </div>
+          <div class="flexbox flexbox-align-items-center">
+            <label for="select-media-stream-audio-source-node-input-device">Input Device</label>
+            <select id="select-media-stream-audio-source-node-input-device"></select>
+          </div>
+          <div class="flexbox">
+            <label class="flexbox">
+              <span>Tone</span>
+              <input type="range" id="range-media-stream-audio-source-node-cutoff" value="4000" min="350" max="8000" step="1" />
+            </label>
+            <output id="output-media-stream-audio-source-node-value" for="range-media-stream-audio-source-node-cutoff">4000 Hz</output>
+          </div>
+        </div>
       </section>
       <section id="section-audio-worklet">
         <h2>AudioWorklet</h2>

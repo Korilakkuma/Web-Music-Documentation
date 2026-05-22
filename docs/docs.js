@@ -1712,6 +1712,102 @@ const mediaElementAudioSourceNodeDynamic = () => {
   });
 };
 
+const mediaStreamAudioSourceNode = () => {
+  const constraints = {
+    audio: true
+  };
+
+  let mediaStream = null;
+
+  const lowpass = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: 4000 });
+
+  const buttonGetUserMediaElement = document.getElementById('button-media-stream-audio-source-node-get-user-media');
+  const buttonStopTrackElement = document.getElementById('button-media-stream-audio-source-node-stop-track');
+  const rangeCutoffElement = document.getElementById('range-media-stream-audio-source-node-cutoff');
+  const outputCutoffElement = document.getElementById('output-media-stream-audio-source-node-value');
+
+  buttonGetUserMediaElement.addEventListener('click', async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    navigator.mediaDevices
+      .getUserMedia(constraints)
+      .then((stream) => {
+        mediaStream = stream;
+
+        const source = new MediaStreamAudioSourceNode(audiocontext, { mediaStream });
+
+        source.connect(lowpass);
+        lowpass.connect(audiocontext.destination);
+
+        buttonGetUserMediaElement.setAttribute('disabled', 'disabled');
+        buttonStopTrackElement.removeAttribute('disabled');
+
+        navigator.mediaDevices
+          .enumerateDevices()
+          .then((deviceInfos) => {
+            const inputDeviceInfos = deviceInfos.filter((deviceInfo) => {
+              return deviceInfo.kind === 'audioinput';
+            });
+
+            const fragmentInputDevices = document.createDocumentFragment();
+
+            inputDeviceInfos.forEach((deviceInfo) => {
+              const optionElement = document.createElement('option');
+
+              optionElement.setAttribute('value', deviceInfo.deviceId);
+
+              const textNode = document.createTextNode(deviceInfo.label);
+
+              optionElement.appendChild(textNode);
+
+              fragmentInputDevices.appendChild(optionElement);
+            });
+
+            const selectInputDevicesElement = document.getElementById('select-media-stream-audio-source-node-input-device');
+
+            selectInputDevicesElement.appendChild(fragmentInputDevices);
+
+            selectInputDevicesElement.addEventListener('change', async () => {
+              const audioTracks = mediaStream.getAudioTracks();
+
+              for (const audioTrack of audioTracks) {
+                audioTrack.stop();
+              }
+
+              const deviceId = selectInputDevicesElement.value;
+
+              mediaStream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId } });
+
+              const source = new MediaStreamAudioSourceNode(audiocontext, { mediaStream });
+
+              source.connect(lowpass);
+              lowpass.connect(audiocontext.destination);
+            });
+          })
+          .catch(console.error);
+      })
+      .catch(console.error);
+  });
+
+  buttonStopTrackElement.addEventListener('click', () => {
+    if (mediaStream) {
+      const audioTracks = mediaStream.getAudioTracks();
+
+      for (const audioTrack of audioTracks) {
+        audioTrack.stop();
+      }
+    }
+  });
+
+  rangeCutoffElement.addEventListener('input', () => {
+    lowpass.frequency.value = rangeCutoffElement.valueAsNumber;
+
+    outputCutoffElement.textContent = `${lowpass.frequency.value} Hz`;
+  });
+};
+
 const createCareer = (svg) => {
   const sampleRate = audiocontext.sampleRate;
 
@@ -21245,6 +21341,8 @@ audioBufferSourceNodeChord();
 
 mediaElementAudioSourceNode();
 mediaElementAudioSourceNodeDynamic();
+
+mediaStreamAudioSourceNode();
 
 createCoordinateRect(document.getElementById('svg-figure-career'));
 createCareer(document.getElementById('svg-figure-career'));
