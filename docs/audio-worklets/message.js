@@ -7,7 +7,9 @@ class MessageProcessor extends AudioWorkletProcessor {
     const input = inputs[0];
     const output = outputs[0];
 
-    for (let channelNumber = 0, numberOfChannels = input.length; channelNumber < numberOfChannels; channelNumber++) {
+    const numberOfChannels = input.length;
+
+    for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
       output[channelNumber].set(input[channelNumber]);
     }
 

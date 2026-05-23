@@ -1808,6 +1808,457 @@ const mediaStreamAudioSourceNode = () => {
   });
 };
 
+const audioWorkletNoiseGenerator = () => {
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 512 });
+
+  const svg = document.getElementById('svg-audio-worklet-noise-generator');
+
+  const sampleRate = audiocontext.sampleRate;
+
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', '0');
+  xRect.setAttribute('y', (height / 2 - 1).toString(10));
+  xRect.setAttribute('width', width.toString(10));
+  xRect.setAttribute('height', '2');
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', '24');
+  yRect.setAttribute('y', '24');
+  yRect.setAttribute('width', '2');
+  yRect.setAttribute('height', (height - 48).toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(yRect);
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  [1.0, 0.0, -1.0].forEach((amplitude, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = amplitude.toFixed(1);
+
+    text.setAttribute('x', '24');
+    text.setAttribute('y', ((1 - amplitude) * ((height - 48) / 2) + 24).toString(10));
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  });
+
+  for (let n = 0; n < analyser.fftSize; n++) {
+    if (n % 64 !== 0) {
+      continue;
+    }
+
+    const x = n * (width / analyser.fftSize) + 24 + 4;
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${(n * (1 / sampleRate) * 1000).toFixed(2)} msec`;
+
+    text.setAttribute('x', x);
+    text.setAttribute('y', (height / 2 + 12).toString(10));
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  }
+
+  svg.appendChild(g);
+
+  const xLabel = document.createElementNS(xmlns, 'text');
+
+  xLabel.textContent = 'Time';
+
+  xLabel.setAttribute('x', width.toString(10));
+  xLabel.setAttribute('y', (height / 2 - 8).toString(10));
+  xLabel.setAttribute('text-anchor', 'end');
+  xLabel.setAttribute('stroke', 'none');
+  xLabel.setAttribute('fill', baseColor);
+  xLabel.setAttribute('font-size', '14px');
+
+  const yLabel = document.createElementNS(xmlns, 'text');
+
+  yLabel.textContent = 'Amplitude';
+
+  yLabel.setAttribute('x', '28');
+  yLabel.setAttribute('y', '12');
+  yLabel.setAttribute('text-anchor', 'start');
+  yLabel.setAttribute('stroke', 'none');
+  yLabel.setAttribute('fill', baseColor);
+  yLabel.setAttribute('font-size', '14px');
+
+  svg.appendChild(xLabel);
+  svg.appendChild(yLabel);
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', alphaWaveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  let animationId = null;
+
+  const render = () => {
+    const data = new Float32Array(analyser.fftSize);
+
+    analyser.getFloatTimeDomainData(data);
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0; n < analyser.fftSize; n++) {
+      const x = n * (innerWidth / analyser.fftSize) + 24;
+      const y = (1 - data[n]) * ((height - 48) / 2) + 24;
+
+      if (d === '') {
+        d += `M${x} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    animationId = window.requestAnimationFrame(() => {
+      render();
+    });
+  };
+
+  audiocontext.audioWorklet
+    .addModule('./audio-worklets/noise-generator.js')
+    .then(() => {
+      const processor = new AudioWorkletNode(audiocontext, 'NoiseGeneratorProcessor');
+
+      processor.connect(analyser);
+      analyser.connect(audiocontext.destination);
+
+      const buttonElement = document.getElementById('button-audio-worklet-noise-generator');
+      const selectElement = document.getElementById('select-audio-worklet-noise-type');
+
+      const onDown = async () => {
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
+
+        processor.port.postMessage({ processing: true });
+
+        buttonElement.textContent = 'stop';
+
+        render();
+      };
+
+      const onUp = () => {
+        processor.port.postMessage({ processing: false });
+
+        buttonElement.textContent = 'start';
+
+        window.cancelAnimationFrame(animationId);
+
+        animationId = null;
+      };
+
+      buttonElement.addEventListener('mousedown', onDown);
+      buttonElement.addEventListener('touchstart', onDown);
+      buttonElement.addEventListener('mouseup', onUp);
+      buttonElement.addEventListener('touchend', onUp);
+
+      selectElement.addEventListener('change', (event) => {
+        processor.port.postMessage({ type: event.currentTarget.value });
+      });
+    })
+    .catch(console.error);
+};
+
+const audioWorkletOscillator = () => {
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 512 });
+
+  const svg = document.getElementById('svg-audio-worklet-oscillator');
+
+  const sampleRate = audiocontext.sampleRate;
+
+  const width = Number(svg.getAttribute('width'));
+  const height = Number(svg.getAttribute('height'));
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', '0');
+  xRect.setAttribute('y', (height / 2 - 1).toString(10));
+  xRect.setAttribute('width', width.toString(10));
+  xRect.setAttribute('height', '2');
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', '24');
+  yRect.setAttribute('y', '24');
+  yRect.setAttribute('width', '2');
+  yRect.setAttribute('height', (height - 48).toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(yRect);
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  [1.0, 0.0, -1.0].forEach((amplitude, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = amplitude.toFixed(1);
+
+    text.setAttribute('x', '24');
+    text.setAttribute('y', ((1 - amplitude) * ((height - 48) / 2) + 24).toString(10));
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  });
+
+  for (let n = 0; n < analyser.fftSize; n++) {
+    if (n % 64 !== 0) {
+      continue;
+    }
+
+    const x = n * (width / analyser.fftSize) + 24 + 4;
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${(n * (1 / sampleRate) * 1000).toFixed(2)} msec`;
+
+    text.setAttribute('x', x);
+    text.setAttribute('y', (height / 2 + 12).toString(10));
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  }
+
+  svg.appendChild(g);
+
+  const xLabel = document.createElementNS(xmlns, 'text');
+
+  xLabel.textContent = 'Time';
+
+  xLabel.setAttribute('x', width.toString(10));
+  xLabel.setAttribute('y', (height / 2 - 8).toString(10));
+  xLabel.setAttribute('text-anchor', 'end');
+  xLabel.setAttribute('stroke', 'none');
+  xLabel.setAttribute('fill', baseColor);
+  xLabel.setAttribute('font-size', '14px');
+
+  const yLabel = document.createElementNS(xmlns, 'text');
+
+  yLabel.textContent = 'Amplitude';
+
+  yLabel.setAttribute('x', '28');
+  yLabel.setAttribute('y', '12');
+  yLabel.setAttribute('text-anchor', 'start');
+  yLabel.setAttribute('stroke', 'none');
+  yLabel.setAttribute('fill', baseColor);
+  yLabel.setAttribute('font-size', '14px');
+
+  svg.appendChild(xLabel);
+  svg.appendChild(yLabel);
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', alphaWaveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  let animationId = null;
+
+  const render = () => {
+    const data = new Float32Array(analyser.fftSize);
+
+    analyser.getFloatTimeDomainData(data);
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let n = 0; n < analyser.fftSize; n++) {
+      const x = n * (innerWidth / analyser.fftSize) + 24;
+      const y = (1 - data[n]) * ((height - 48) / 2) + 24;
+
+      if (d === '') {
+        d += `M${x} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+
+    animationId = window.requestAnimationFrame(() => {
+      render();
+    });
+  };
+
+  audiocontext.audioWorklet
+    .addModule('./audio-worklets/oscillator.js')
+    .then(() => {
+      const processor = new AudioWorkletNode(audiocontext, 'OscillatorProcessor');
+
+      processor.connect(analyser);
+      analyser.connect(audiocontext.destination);
+
+      const buttonElement = document.getElementById('button-audio-worklet-oscillator');
+      const selectElement = document.getElementById('select-audio-worklet-oscillator-type');
+      const rangeElement = document.getElementById('range-audio-worklet-oscillator-frequency');
+      const outputElement = document.getElementById('output-audio-worklet-oscillator-frequency-value');
+
+      const onDown = async () => {
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
+
+        processor.port.postMessage({ processing: true });
+
+        render();
+
+        buttonElement.textContent = 'stop';
+      };
+
+      const onUp = () => {
+        processor.port.postMessage({ processing: false });
+
+        window.cancelAnimationFrame(animationId);
+
+        animationId = null;
+
+        buttonElement.textContent = 'start';
+      };
+
+      buttonElement.addEventListener('mousedown', onDown);
+      buttonElement.addEventListener('mouseup', onUp);
+
+      selectElement.addEventListener('change', () => {
+        processor.port.postMessage({ type: selectElement.value });
+      });
+
+      rangeElement.addEventListener('input', () => {
+        processor.port.postMessage({ frequency: rangeElement.valueAsNumber });
+
+        outputElement.textContent = `${rangeElement.value} Hz`;
+      });
+    })
+    .catch(console.error);
+};
+
+const audioWorkletChannelReverser = () => {
+  audiocontext.audioWorklet
+    .addModule('./audio-worklets/channel-reverser.js')
+    .then(() => {
+      const reverser = new AudioWorkletNode(audiocontext, 'ChannelReverserProcessor');
+
+      const inputElement = document.getElementById('file-audio-worklet-channel-reverse');
+      const checkboxElement = document.getElementById('checkbox-audio-worklet-channel-reverse');
+      const audioElement = document.getElementById('audio-audio-worklet-channel-reverse');
+
+      let source = null;
+
+      inputElement.addEventListener('change', () => {
+        const file = inputElement.files[0];
+
+        audioElement.src = window.URL.createObjectURL(file);
+      });
+
+      checkboxElement.addEventListener('click', () => {
+        reverser.port.postMessage({ reversing: checkboxElement.checked });
+      });
+
+      audioElement.addEventListener('loadstart', () => {
+        if (source === null) {
+          source = new MediaElementAudioSourceNode(audiocontext, { mediaElement: audioElement });
+        }
+
+        source.connect(reverser);
+        reverser.connect(audiocontext.destination);
+      });
+
+      audioElement.addEventListener('play', async () => {
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
+      });
+    })
+    .catch(console.error);
+};
+
+const audioWorkletVocalCanceler = () => {
+  audiocontext.audioWorklet
+    .addModule('./audio-worklets/vocal-canceler.js')
+    .then(() => {
+      const canceler = new AudioWorkletNode(audiocontext, 'VocalCancelerProcessor');
+
+      const inputElement = document.getElementById('file-audio-worklet-vocal-canceler');
+      const rangeElement = document.getElementById('range-audio-worklet-vocal-canceler-depth');
+      const outputElement = document.getElementById('output-audio-worklet-vocal-canceler-depth-value');
+      const audioElement = document.getElementById('audio-audio-worklet-vocal-canceler');
+
+      let source = null;
+
+      inputElement.addEventListener('change', () => {
+        const file = inputElement.files[0];
+
+        audioElement.src = window.URL.createObjectURL(file);
+      });
+
+      rangeElement.addEventListener('input', (event) => {
+        canceler.port.postMessage({ depth: rangeElement.valueAsNumber });
+
+        outputElement.textContent = rangeElement.valueAsNumber.toFixed(2);
+      });
+
+      audioElement.addEventListener('loadstart', () => {
+        if (source === null) {
+          source = new MediaElementAudioSourceNode(audiocontext, { mediaElement: audioElement });
+        }
+
+        source.connect(canceler);
+        canceler.connect(audiocontext.destination);
+      });
+
+      audioElement.addEventListener('play', async () => {
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
+      });
+    })
+    .catch(console.error);
+};
+
 const createCareer = (svg) => {
   const sampleRate = audiocontext.sampleRate;
 
@@ -21343,6 +21794,11 @@ mediaElementAudioSourceNode();
 mediaElementAudioSourceNodeDynamic();
 
 mediaStreamAudioSourceNode();
+
+audioWorkletNoiseGenerator();
+audioWorkletOscillator();
+audioWorkletChannelReverser();
+audioWorkletVocalCanceler();
 
 createCoordinateRect(document.getElementById('svg-figure-career'));
 createCareer(document.getElementById('svg-figure-career'));

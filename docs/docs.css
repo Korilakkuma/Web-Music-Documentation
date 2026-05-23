@@ -586,6 +586,7 @@ select {
   cursor: pointer;
 }
 
+.label-checkbox,
 .label-radio {
   display: flex;
   gap: 4px;
