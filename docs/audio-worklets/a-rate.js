@@ -18,9 +18,11 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
   process(inputs, outputs, parameters) {
     const output = outputs[0];
 
+    const numberOfChannels = output.length;
+
     const gain = parameters.noiseGain;
 
-    for (let channelNumber = 0, numberOfChannels = output.length; channelNumber < numberOfChannels; channelNumber++) {
+    for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
       const bufferSize = output[channelNumber].length;
 
       for (let n = 0; n < bufferSize; n++) {

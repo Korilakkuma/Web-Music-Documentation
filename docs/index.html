@@ -2518,7 +2518,7 @@ navigator.mediaDevices.getUserMedia(constraints)
       <section id="section-audio-worklet">
         <h2>AudioWorklet</h2>
         <p>
-          Web Audio API には, 基本波形のサウンド生成やエフェクター, サウンドの視覚化など高度なサウンド処理をより簡単に実装するために, 様々な
+          Web Audio API には, 基本波形のサウンド生成やエフェクター, サウンドの視覚化など高度なサウンド処理を抽象化する, 様々な
           <code>AudioNode</code> が定義されています. これらの <code>AudioNode</code> があるおかげで, 内部で実行されているオーディオ信号処理の詳細を知らなくても,
           高度なサウンド機能の実装が簡単にできるわけです. 例えば, 正弦波の数式を知らなくても,
           <code>OscillatorNode</code> によって正弦波を生成することができました.
@@ -2526,16 +2526,26 @@ navigator.mediaDevices.getUserMedia(constraints)
         <p>
           Web Audio API が定義する多くの <code>AudioNode</code> は, サウンドデータの実体にアクセスする機能をもちません. なぜなら, <code>AudioNode</code> (と,
           <code>AudioNode</code> がもつ <code>AudioParam</code>) は, サウンド処理を抽象化する, つまり, 抽象度の高い API として定義されているからです.
-          しかしながら, その代償として, <code>AudioNode</code> の接続と <code>AudioParam</code> の制御では不可能なオーディオ処理も存在してしまいます. 具体的に,
-          現状の仕様では, ノイズ生成, ノイズサプレッサー, ボーカルキャンセラ, ピッチシフターなどは <code>AudioNode</code> の接続と
+          しかしながら, その代償として, <code>AudioNode</code> の接続と <code>AudioParam</code> の制御では不可能なオーディオ処理も存在してしまいます.
+          具体的には, 現状の仕様では, ノイズ生成, ノイズサプレッサー, ボーカルキャンセラ, ピッチシフターなどは <code>AudioNode</code> の接続と
           <code>AudioParam</code> の制御のみでは実装できないので, 直接サウンドデータにアクセスできる必要があります.
         </p>
         <p>
           直接サウンドデータにアクセスすることを可能にするのが, (広義の) <b><code>AudioWorklet</code></b> です (狭義には
           <code>AudioWorklet</code> クラスを意味するので). <code>AudioWorklet</code> は複数の API で構成されており, メインスレッドで
-          <code>AudioNode</code> を継承する <b><code>AudioWorkletNode</code></b>, オーディオスレッド (<b><code>AudioWorkletGlobalScope</code></b>) で直接サウンドデータにアクセスすることを可能にする <b><code>AudioWorkletProcessor</code></b>, メインスレッドからオーディオスレッドのファイルをロードする <code>AudioContext</code> インスタンスがもつ
+          <code>AudioNode</code> を継承する <b><code>AudioWorkletNode</code></b>, オーディオスレッド (<b><code>AudioWorkletGlobalScope</code></b>) で直接サウンドデータにアクセスすることを可能にする <b><code>audioworkletprocessor</code></b>, メインスレッドからオーディオスレッドのファイルをロードする <code>AudioContext</code> インスタンスがもつ
           <b><code>AudioWorklet</code></b> インスタンスです.
         </p>
+        <dl>
+          <dt><code>AudioWorkletNode</code></dt>
+          <dd>メインスレッドで <code>AudioNode</code> を継承する.</dd>
+          <dt><code>AudioWorkletGlobalScope</code></dt>
+          <dd>メインスレッドとは異なる, オーディオ処理専用のスレッド.</dd>
+          <dt><code>AudioWorkletProcessor</code></dt>
+          <dd><code>AudioWorkletGlobalScope</code> で定義されている, オーディオデータに直接アクセスできるクラス.</dd>
+          <dt><code>AudioWorklet</code></dt>
+          <dd>メインスレッドからオーディオスレッドのファイルをロードする.</dd>
+        </dl>
         <section id="section-audio-worklet-node">
           <h3>AudioWorkletNode</h3>
           <p>
@@ -2575,17 +2585,20 @@ context.audioWorklet.addModule(&apos;./audio-worklets/processor.js&apos;)
             AudioWorklet はその API の仕様設計上, メインスレッドとは別のオーディオスレッドを専用に生成することになります.
             このオーディオスレッドのグローバルスコープが <b><code>AudioWorkletGlobalScope</code></b> です. つまり, メインスレッドにおける
             <code>Window</code> に相当します. メインスレッドとは別の世界なので, 直接 DOM にはアクセスできなかったり,
-            メインスレッドで使えるようなクライアントサイド JavaScript API が利用できなかったりします. <code>AudioWorkletGlobalScope</code> には,
-            <code>sampleRate</code> プロパティや <code>currentTime</code> プロパティが定義されていますが, これはメインスレッドの
-            <code>AudioContext</code> インスタンスと同値です.
+            メインスレッドで使えるようなクライアントサイド JavaScript API (ブラウザ API) が利用できなかったりします.
+          </p>
+          <p>
+            <code>AudioWorkletGlobalScope</code> には, <code>sampleRate</code> プロパティや <code>currentTime</code> プロパティが定義されていますが,
+            これはメインスレッドの <code>AudioContext</code> インスタンスと同値です.
           </p>
           <section id="section-audio-worklet-global-scope-register-processor">
             <h4>registerProcessor メソッド</h4>
             <p>
               <code>AudioWorkletGlobalScope</code> で定義されている, 最も重要なメソッドが <b>registerProcessor</b> メソッドです. メインスレッドの
-              <code>AudioWorkletNode</code> と, オーディオスレッドの <code>AudioWorkletProcessor</code> を継承したクラスを関連づける役割をもっているからです. 第
-              1 引数に, <code>AudioWorkletNode</code> のコンストラクタに関連づける文字列を, 第 2 引数に,
-              <code>AudioWorkletProcessor</code> を継承したクラスを指定します (インスタンスではないので注意してください).
+              <code>AudioWorkletNode</code> と, オーディオスレッドの
+              <code>AudioWorkletProcessor</code> を継承したサブクラスを関連づける役割をもっているからです. 第 1 引数に,
+              <code>AudioWorkletNode</code> のコンストラクタに関連づける文字列を, 第 2 引数に,
+              <code>AudioWorkletProcessor</code> を継承したサブクラスを指定します (インスタンスではないので注意してください).
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
@@ -2597,6 +2610,7 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
     super();
   }
 
+  /** @override */
   process(inputs, outputs, parameters) {
     // TODO: Audio Signal Processing
 
@@ -2620,9 +2634,9 @@ registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);
             <p>
               また, 実用的なことを考慮すると, <b><code>MessagePort</code></b> インスタンスである<b><code>port</code></b> プロパティも事実上, 必須と言えます.
               <code>AudioWorkletGlobalScope</code> に定義されている <code>AudioWorkletProcessor</code> (を継承したサブクラス) は, メインスレッドで設定された値
-              (例えば, <code>input[type=&quot;range&quot;]</code> で設定された値) を直接的に取得することができません. そこで,
-              <code>MessagePort</code> インススタンスの <b><code>messssage</code></b> イベントハンドラや <b><code>postMessage</code></b> メソッドを利用して,
-              いわゆる <b>メッセージパッシング</b> (<b>Message Passing</b>) でメインスレッドとデータを送受信する必要があります.
+              (例えば, <code>input[type=&quot;range&quot;]</code> で設定された値) を直接的には取得できません. そこで, <code>MessagePort</code> インスタンスの
+              <b><code>messssage</code></b> イベントハンドラや <b><code>postMessage</code></b> メソッドを利用して, <b>メッセージパッシング</b> (<b
+                >Message Passing</b>) でメインスレッドとデータを送受信する必要があります.
             </p>
             <section id="section-audio-worklet-processor-process">
               <h5>process メソッド (AudioWorkletProcessCallback)</h5>
@@ -2657,12 +2671,15 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
     super();
   }
 
+  /** @override */
   process(inputs, outputs, parameters) {
     // channel number is 0, 1, 2 ...
     // `output` is `[Float32Array, Float32Array, Float32Array ...]`
     const output = outputs[0];
 
-    for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+    const numberOfChannels = output.length;
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
       const bufferSize = output[channelNumber].length;
 
       for (let n = 0; n &lt; bufferSize; n++) {
@@ -2708,18 +2725,32 @@ registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);
               <p>このあたりは, 制作するプロダクトの仕様に応じた<b>判断の問題</b>と言えそうです.</p>
             </article>
             <section id="section-audio-worklet-processor-message-port">
-              <h5>port プロパティ (MessagePort インスタンス)</h5>
+              <h5>port プロパティ (MessagePort)</h5>
               <p>
-                <code>MessagePort</code> の仕様は Web Audio API の仕様とは別にある (Web Audio API に依存している API ではない) のですが,
-                実用上必須となるので簡単に解説しておきます (理解されている場合はスキップしてください).
+                <code>MessagePort</code> の仕様は Web Audio API の仕様とは別に定義されている (Web Audio API に依存している API ではない) API です (<a
+                  href="https://html.spec.whatwg.org/multipage/web-messaging.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >MessagePort の仕様 (WHATWG) </a>).
               </p>
               <p>
-                メインスレッドから <code>postMessage</code> されたデータを受信するには <code>messssage</code> イベントハンドラの
-                <code>MessageEvent</code> イベントオブジェクトにアクセスする必要がありますが, <code>AudioWorkletProcessor</code> (を継承したサブクラス)
-                で呼び出されるのは, コンストラクタと <code>process</code> メソッドのみです. イベントハンドラは, 一度設定してしまえばいいので,
-                コンストラクタで設定するという実装が定石となります.
+                メインスレッドから対応する <code>AudioWorkletProcessor</code> のサブクラスにデータを送信するには, <code>AudioWorkletNode</code> の
+                <code>port</code> プロパティ (<code>MessagePort</code>) の <b><code>postMessage</code></b> メソッドを呼び出します.
+                <code>postMessage</code> メソッドの第 1 引数に送信するデータを指定します. 送信するデータの型は, TypeScript の定義上 <code>any</code> です
+                (厳密にすべての型を送信できるわけではありませんが, 通常使用するには困ることはないでしょう. 詳細は,
+                <code>postMessage</code> の仕様を確認してください).
               </p>
-              <pre data-prismjs-copy="クリップボードにコピー" data-prismjs-copy-success="コピーしました"><code class="language-html line-numbers">&lt;select&gt;
+              <p>
+                対応するメインスレッドから <code>postMessage</code> されたデータを受信するには, <code>AudioWorkletProcessor</code> のサブクラスで
+                <b><code>messssage</code> イベントハンドラ</b>の <code>MessageEvent</code> イベントオブジェクトにアクセスします. イベントハンドラは,
+                一度設定してしまえばいいので, コンストラクタで設定するという実装が定石となります.
+              </p>
+              <p>以上を実装すれば, メインスレッドからオーディオスレッドにデータを送信することが可能になります.</p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-html line-numbers">&lt;label for=&quot;select-audio-worklet-processor-noise-type&quot;&gt;Noise Type&lt;/label&gt;
+&lt;select id=&quot;select-audio-worklet-processor-noise-type&quot;&gt;
   &lt;option value=&quot;whitenoise&quot; selected&gt;White Noise&lt;/option&gt;
   &lt;option value=&quot;pinknoise&quot;&gt;Pink Noise&lt;/option&gt;
   &lt;option value=&quot;browniannoise&quot;&gt;Brownian Noise&lt;/option&gt;
@@ -2738,8 +2769,10 @@ context.audioWorklet.addModule(&apos;./audio-worklets/processor.js&apos;)
     // AudioWorkletNode (Input) -&gt; AudioDestinationNode (Output)
     processor.connect(context.destination);
 
-    document.querySelector(&apos;select&apos;).addEventListener(&apos;change&apos;, (event) =&gt; {
-      processor.port.postMessage({ type: event.currentTarget.value });
+    const selectElement = document.getElementById(&apos;select-audio-worklet-processor-noise-type&apos;);
+
+    selectElement.addEventListener(&apos;change&apos;, () =&gt; {
+      processor.port.postMessage({ type: selectElement.value });
     });
   })
   .catch((error) =&gt; {
@@ -2773,14 +2806,17 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
     };
   }
 
+  /** @override */
   process(inputs, outputs, parameters) {
     // channel number is 0, 1, 2 ...
     // `output` is `[Float32Array, Float32Array, Float32Array ...]`
     const output = outputs[0];
 
+    const numberOfChannels = output.length;
+
     switch (this.type) {
       case &apos;whitenoise&apos;: {
-        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+        for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
           const bufferSize = output[channelNumber].length;
 
           for (let n = 0; n &lt; bufferSize; n++) {
@@ -2792,7 +2828,7 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
       }
 
       case &apos;pinknoise&apos;: {
-        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+        for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
           const bufferSize = output[channelNumber].length;
 
           for (let n = 0; n &lt; bufferSize; n++) {
@@ -2816,7 +2852,7 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
       }
 
       case &apos;browniannoise&apos;: {
-        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+        for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
           const bufferSize = output[channelNumber].length;
 
           for (let n = 0; n &lt; bufferSize; n++) {
@@ -2840,10 +2876,11 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
 
 registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);</code></pre>
               <p>
-                また, <code>MessagePort</code> は相互に送受信することができるので, オーディオスレッド (<code>AudioWorkletGlobalScope</code>)
-                からメインスレッドにデータを送信することも可能です. その場合, <code>AudioWorkletNode</code> の <code>port</code> プロパティが
-                <code>MessagePort</code> インスタンスとなるので, 同様に <code>messssage</code> イベントハンドラをメインスレッドで実装すれば,
-                <code>MessageEvent</code> イベントオブジェクトから, <code>postMessage</code> されたデータを受信することが可能になります.
+                また, <code>MessagePort</code> は相互に送受信することができます. <code>messssage</code> イベントハンドラをメインスレッド (<code
+                  >AudioWorkletNode</code>
+                の <code>MessagePort</code>) で実装して, <code>AudioWorkletProcessor</code> のサブクラスの <code>MessagePort</code> で送信するデータを第 1
+                引数に指定して <code>postMessage</code> メソッドを呼び出すことによって,
+                オーディオスレッドからメインスレッドにデータを送信することが可能になります.
               </p>
               <pre
                 data-prismjs-copy="クリップボードにコピー"
@@ -2881,11 +2918,14 @@ class MessageProcessor extends AudioWorkletProcessor {
     super();
   }
 
+  /** @override */
   process(inputs, outputs) {
     const input  = inputs[0];
     const output = outputs[0];
 
-    for (let channelNumber = 0, numberOfChannels = input.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+    const numberOfChannels = input.length;
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
       output[channelNumber].set(input[channelNumber]);
     }
 
@@ -2909,10 +2949,10 @@ registerProcessor(&apos;MessageProcessor&apos;, MessageProcessor);</code></pre>
                 <code>AudioParamDescriptor</code> で定義できるプロパティは, <code>name</code>, <code>defaultValue</code>, <code>minValue</code>,
                 <code>maxValue</code>, <code>automationRate</code> の 5 つで, このなかで, <b><code>name</code> プロパティのみは必須で定義する必要があります</b>.
                 これは, メインスレッドで <b><code>AudioParamMap</code></b> インスタンスである <code>AudioWorkletNode</code> の
-                <b><code>parameters</code></b> プロパティから, キーとして対象の <code>AudioParam</code> (<code>AudioParamDescriptor</code>)
-                を取得するのに必要となるからです. それ以外のプロパティについてはデフォルト値が設定されています (<code>defaultValue</code> は <code>0</code>,
+                <b><code>parameters</code></b> プロパティから, 対象の <code>AudioParam</code> (<code>AudioParamDescriptor</code>) を取得するためにキー (key)
+                として必要となるからです. それ以外のプロパティについてはデフォルト値が設定されています (<code>defaultValue</code> は <code>0</code>,
                 <code>minValue</code> と <code>maxValue</code> がそれぞれ, <code>-3.4028235e38</code> と <code>3.4028235e38</code>,
-                <code>automationRate</code> は <code>&apos;a-rate&apos;</code> です.
+                <code>automationRate</code> は <code>&apos;a-rate&apos;</code> です).
               </p>
               <pre
                 data-prismjs-copy="クリップボードにコピー"
@@ -2934,10 +2974,13 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
     super();
   }
 
+  /** @override */
   process(inputs, outputs, parameters) {
     const output = outputs[0];
 
-    for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+    const numberOfChannels = output.length;
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
       const bufferSize = output[channelNumber].length;
 
       for (let n = 0; n &lt; bufferSize; n++) {
@@ -2977,12 +3020,15 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
     super();
   }
 
+  /** @override */
   process(inputs, outputs, parameters) {
     const output = outputs[0];
 
+    const numberOfChannels = output.length;
+
     const gain = parameters.noiseGain;
 
-    for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
       const bufferSize = output[channelNumber].length;
 
       for (let n = 0; n &lt; bufferSize; n++) {
@@ -2995,7 +3041,7 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
 }
 
 registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);</code></pre>
-              <p><code>automationRate</code> が &apos;k-rate&apos; の場合,</p>
+              <p><code>automationRate</code> が <code>&apos;k-rate&apos;</code> の場合,</p>
               <pre
                 data-prismjs-copy="クリップボードにコピー"
                 data-prismjs-copy-success="コピーしました"
@@ -3016,12 +3062,15 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
     super();
   }
 
+  /** @override */
   process(inputs, outputs, parameters) {
     const output = outputs[0];
 
+    const numberOfChannels = output.length;
+
     const gain = parameters.noiseGain;
 
-    for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
       const bufferSize = output[channelNumber].length;
 
       for (let n = 0; n &lt; bufferSize; n++) {
@@ -3107,15 +3156,19 @@ context.audioWorklet.addModule(&apos;./audio-worklets/a-rate.js&apos;)
             <p>
               実際に, Web アプリケーションとして実装する場合, ユーザーインタラクティブな操作によって, 発音・停止をさせるケースが多くなるでしょう. そのために,
               <code>AudioWorkletProcessor</code> を継承したサブクラスで, 発音・停止のフラグを実装しておき, メインスレッドからの
-              <code>postMessage</code> で切り替えるようにします. すでに解説しましたが, <code>process</code> メソッドで, <code>false</code> を返してしまうと,
-              その <code>AudioWorkletProcessor</code> は破棄されるような仕様になっているので, 常に <code>true</code> を返し, 停止中の場合, 出力となる
+              <code>postMessage</code> で切り替えるようにします.
+            </p>
+            <p>
+              すでに解説しましたが, <code>process</code> メソッドで, <code>false</code> を返してしまうと, その
+              <code>AudioWorkletProcessor</code> インスタンスは破棄されるような仕様になっているので, 常に <code>true</code> を返し, 停止中の場合, 出力となる
               <code>Float32Array</code> にデータを格納しないという実装で停止を実装しています.
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
-&lt;select&gt;
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-audio-worklet-noise-generator&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;select-audio-worklet-noise-type&quot;&gt;Noise Type&lt;/label&gt;
+&lt;select id=&quot;select-audio-worklet-noise-type&quot;&gt;
   &lt;option value=&quot;whitenoise&quot; selected&gt;White Noise&lt;/option&gt;
   &lt;option value=&quot;pinknoise&quot;&gt;Pink Noise&lt;/option&gt;
   &lt;option value=&quot;browniannoise&quot;&gt;Brownian Noise&lt;/option&gt;
@@ -3134,19 +3187,26 @@ context.audioWorklet.addModule(&apos;./audio-worklets/noise-generator.js&apos;)
     // AudioWorkletNode (Input) -&gt; AudioDestinationNode (Output)
     processor.connect(context.destination);
 
-    document.querySelector(&apos;button[type=&quot;button&quot;]&apos;).addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+    const buttonElement = document.getElementById(&apos;button-audio-worklet-noise-generator&apos;);
+    const selectElement = document.getElementById(&apos;select-audio-worklet-noise-type&apos;);
+
+    buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+      if (context.state !== &apos;running&apos;) {
+        await context.resume();
+      }
+
       processor.port.postMessage({ processing: true });
 
-      event.currentTarget.textContent = &apos;stop&apos;;
+      buttonElement.textContent = &apos;stop&apos;;
     });
 
-    document.querySelector(&apos;button[type=&quot;button&quot;]&apos;).addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+    buttonElementaddEventListener(&apos;mouseup&apos;, () =&gt; {
       processor.port.postMessage({ processing: false });
 
-      event.currentTarget.textContent = &apos;start&apos;;
+      buttonElement.textContent = &apos;start&apos;;
     });
 
-    document.querySelector(&apos;select&apos;).addEventListener(&apos;change&apos;, (event) =&gt; {
+    selectElement.addEventListener(&apos;change&apos;, (event) =&gt; {
       processor.port.postMessage({ type: event.currentTarget.value });
     });
   })
@@ -3187,6 +3247,7 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
     };
   }
 
+  /** @override */
   process(inputs, outputs, parameters) {
     if (!this.processing) {
       return true;
@@ -3196,9 +3257,11 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
     // `output` is `[Float32Array, Float32Array, Float32Array ...]`
     const output = outputs[0];
 
+    const numberOfChannels = output.length;
+
     switch (this.type) {
       case &apos;whitenoise&apos;: {
-        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+        for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
           const bufferSize = output[channelNumber].length;
 
           for (let n = 0; n &lt; bufferSize; n++) {
@@ -3210,7 +3273,7 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
       }
 
       case &apos;pinknoise&apos;: {
-        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+        for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
           const bufferSize = output[channelNumber].length;
 
           for (let n = 0; n &lt; bufferSize; n++) {
@@ -3234,7 +3297,7 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
       }
 
       case &apos;browniannoise&apos;: {
-        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+        for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
           const bufferSize = output[channelNumber].length;
 
           for (let n = 0; n &lt; bufferSize; n++) {
@@ -3257,28 +3320,45 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
 }
 
 registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);</code></pre>
+            <div class="app-container flexbox-column">
+              <div class="flexbox flexbox-align-items-center">
+                <label for="select-audio-worklet-noise-type">Noise Type</label>
+                <select id="select-audio-worklet-noise-type">
+                  <option value="whitenoise" selected>White Noise</option>
+                  <option value="pinknoise">Pink Noise</option>
+                  <option value="browniannoise">Brownian Noise</option>
+                </select>
+                <div>
+                  <button type="button" id="button-audio-worklet-noise-generator">start</button>
+                </div>
+              </div>
+              <div>
+                <svg id="svg-audio-worklet-noise-generator" width="720" height="240"></svg>
+              </div>
+            </div>
           </section>
           <section id="section-audio-worklet-examples-oscillator">
             <h4>基本波形生成</h4>
             <p>
               基本波形の生成は, <code>OscillatorNode</code> を利用すれば可能ですが, <code>OscillatorNode</code> による波形生成は, いわゆる,
-              <b>フーリエ級数展開</b>にもとづいた波形生成, つまり, 周波数の異なる sin 波の合成によって, 矩形波やノコギリ波, 三角波が生成されています
+              <b>フーリエ級数展開</b>にもとづいた波形生成, つまり, 周波数の異なる正弦波の合成によって, 矩形波やノコギリ波, 三角波が生成されています
               (その証拠として, <a href="#svg-oscillator">波形</a>を確認すると <b>Gibbs の現象</b>が発生していることが確認できます).
             </p>
             <p>実は, 基本波形は, 直線を組み合わせることによって (近似した波形を) 生成することも可能です (その場合, Gibbs の現象は発生しなくなります).</p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
-&lt;select&gt;
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-audio-worklet-oscillator&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;select-audio-worklet-oscillator-type&quot;&gt;Oscillator Type&lt;/label&gt;
+&lt;select id=&quot;select-audio-worklet-oscillator-type&quot;&gt;
   &lt;option value=&quot;sine&quot; selected&gt;Sine&lt;/option&gt;
   &lt;option value=&quot;square&quot;&gt;Square&lt;/option&gt;
   &lt;option value=&quot;sawtooth&quot;&gt;Sawtooth&lt;/option&gt;
   &lt;option value=&quot;triangle&quot;&gt;Triangle&lt;/option&gt;
 &lt;/select&gt;
-&lt;label for=&quot;range-frequency&quot;&gt;frequency&lt;/label&gt;
-&lt;input type=&quot;range&quot; id=&quot;range-frequency&quot; value=&quot;440&quot; min=&quot;20&quot; max=&quot;8000&quot; step=&quot;1&quot; /&gt;
-&lt;span id=&quot;print-frequency-value&quot;&gt;440 Hz&lt;/span&gt;</code></pre>
+&lt;label for=&quot;range-audio-worklet-oscillator-frequency&quot;&gt;frequency&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-audio-worklet-oscillator-frequency&quot; value=&quot;440&quot; min=&quot;20&quot; max=&quot;8000&quot; step=&quot;1&quot; /&gt;
+&lt;output id=&quot;output-audio-worklet-oscillator-frequency-value&quot; for=&quot;range-audio-worklet-oscillator-frequency&quot;&gt;440 Hz&lt;/output&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -3292,26 +3372,35 @@ context.audioWorklet.addModule(&apos;./audio-worklets/oscillator.js&apos;)
     // AudioWorkletNode (Input) -&gt; AudioDestinationNode (Output)
     processor.connect(context.destination);
 
-    document.querySelector(&apos;button[type=&quot;button&quot;]&apos;).addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+    const buttonElement = document.getElementById(&apos;button-audio-worklet-oscillator&apos;);
+    const selectElement = document.getElementById(&apos;select-audio-worklet-oscillator-type&apos;);
+    const rangeElement  = document.getElementById(&apos;range-audio-worklet-oscillator-frequency&apos;);
+    const outputElement = document.getElementById(&apos;output-audio-worklet-oscillator-frequency-value&apos;);
+
+    buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+      if (context.state !== &apos;running&apos;) {
+        await context.resume();
+      }
+
       processor.port.postMessage({ processing: true });
 
-      event.currentTarget.textContent = &apos;stop&apos;;
+      buttonElement.textContent = &apos;stop&apos;;
     });
 
-    document.querySelector(&apos;button[type=&quot;button&quot;]&apos;).addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+    buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
       processor.port.postMessage({ processing: false });
 
-      event.currentTarget.textContent = &apos;start&apos;;
+      buttonElement.textContent = &apos;start&apos;;
     });
 
-    document.querySelector(&apos;select&apos;).addEventListener(&apos;change&apos;, (event) =&gt; {
-      processor.port.postMessage({ type: event.currentTarget.value });
+    selectElement.addEventListener(&apos;change&apos;, () =&gt; {
+      processor.port.postMessage({ type: selectElement.value });
     });
 
-    document.querySelector(&apos;input[type=&quot;range&quot;]&apos;).addEventListener(&apos;input&apos;, (event) =&gt; {
-      processor.port.postMessage({ frequency: event.currentTarget.valueAsNumber });
+    rangeElement.addEventListener(&apos;input&apos;, () =&gt; {
+      processor.port.postMessage({ frequency: rangeElement.valueAsNumber });
 
-      document.getElementById(&apos;print-frequency-value&apos;).textContent = `${event.currentTarget.value} Hz`;
+      outputElement.textContent = `${rangeElement.value} Hz`;
     });
   })
   .catch((error) =&gt; {
@@ -3348,6 +3437,7 @@ class OscillatorProcessor extends AudioWorkletProcessor {
     };
   }
 
+  /** @override */
   process(inputs, outputs, parameters) {
     if (!this.processing) {
       return true;
@@ -3357,9 +3447,11 @@ class OscillatorProcessor extends AudioWorkletProcessor {
     // `output` is `[Float32Array, Float32Array, Float32Array ...]`
     const output = outputs[0];
 
+    const numberOfChannels = output.length;
+
     const numberOfSamplesPer1Hz = sampleRate / this.frequency;
 
-    for (let channelNumber = 0, numberOfChannels = output.length; channelNumber &lt; numberOfChannels; channelNumber++) {
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
       const bufferSize = output[channelNumber].length;
 
       for (let n = 0; n &lt; bufferSize; n++) {
@@ -3400,6 +3492,28 @@ class OscillatorProcessor extends AudioWorkletProcessor {
 }
 
 registerProcessor(&apos;OscillatorProcessor&apos;, OscillatorProcessor);</code></pre>
+            <div class="app-container flexbox-column">
+              <div class="flexbox flexbox-align-items-center">
+                <label for="select-audio-worklet-oscillator-type">Oscillator Type</label>
+                <select id="select-audio-worklet-oscillator-type">
+                  <option value="sine" selected>Sine</option>
+                  <option value="square">Square</option>
+                  <option value="sawtooth">Sawtooth</option>
+                  <option value="triangle">Triangle</option>
+                </select>
+                <div>
+                  <button type="button" id="button-audio-worklet-oscillator">start</button>
+                </div>
+              </div>
+              <div class="flexbox flexbox-align-items-center">
+                <label for="range-audio-worklet-oscillator-frequency">frequency</label>
+                <input type="range" id="range-audio-worklet-oscillator-frequency" value="440" min="20" max="8000" step="1" />
+                <output id="output-audio-worklet-oscillator-frequency-value" for="range-audio-worklet-oscillator-frequency">440 Hz</output>
+              </div>
+              <div>
+                <svg id="svg-audio-worklet-oscillator" width="720" height="240"></svg>
+              </div>
+            </div>
           </section>
           <section id="section-audio-worklet-examples-reverse-channel">
             <h4>リバースチャンネル</h4>
@@ -3410,10 +3524,11 @@ registerProcessor(&apos;OscillatorProcessor&apos;, OscillatorProcessor);</code><
               <code>AudioWorkletNode</code> に接続しておきます.
             </p>
             <pre data-prismjs-copy="クリップボードにコピー" data-prismjs-copy-success="コピーしました"><code class="language-html line-numbers">&lt;div&gt;
-  &lt;input type=&quot;file&quot; /&gt;
-  &lt;label&gt;Reverse &lt;input type=&quot;checkbox&quot; /&gt;&lt;/label&gt;
+  &lt;label for=&quot;file-audio-worklet-channel-reverse&quot;&gt;Select Audio File&lt;/label&gt;
+  &lt;input type=&quot;file&quot; id=&quot;file-audio-worklet-channel-reverse&quot; /&gt;
+  &lt;label&gt;&lt;span&gt;Reverse&lt;/span&gt;&lt;input type=&quot;checkbox&quot; id=&apos;checkbox-audio-worklet-channel-reverse&apos; /&gt;&lt;/label&gt;
 &lt;/div&gt;
-&lt;audio controls /&gt;</code></pre>
+&lt;audio id=&apos;audio-audio-worklet-channel-reverse&apos; controls /&gt;&lt;/audio&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -3424,20 +3539,20 @@ context.audioWorklet.addModule(&apos;./audio-worklets/channel-reverser.js&apos;)
   .then(() =&gt; {
     const reverser = new AudioWorkletNode(context, &apos;ChannelReverserProcessor&apos;);
 
-    const inputElement    = document.querySelector(&apos;input[type=&quot;file&quot;]&apos;);
-    const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
-    const audioElement    = document.querySelector(&apos;audio&apos;);
+    const inputElement    = document.getElementById(&apos;file-audio-worklet-channel-reverse&apos;)
+    const checkboxElement = document.getElementById(&apos;checkbox-audio-worklet-channel-reverse&apos;)
+    const audioElement    = document.getElementById(&apos;audio-audio-worklet-channel-reverse&apos;)
 
     let source = null;
 
-    inputElement.addEventListener(&apos;change&apos;, (event) =&gt; {
-      const file = event.currentTarget.files[0];
+    inputElement.addEventListener(&apos;change&apos;, () =&gt; {
+      const file = inputElement.files[0];
 
       audioElement.src = window.URL.createObjectURL(file);
     });
 
-    checkboxElement.addEventListener(&apos;click&apos;, (event) =&gt; {
-      reverser.port.postMessage({ reversing: event.currentTarget.checked });
+    checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
+      reverser.port.postMessage({ reversing: checkboxElement.checked });
     });
 
     audioElement.addEventListener(&apos;loadstart&apos;, () =&gt; {
@@ -3448,6 +3563,12 @@ context.audioWorklet.addModule(&apos;./audio-worklets/channel-reverser.js&apos;)
       // MediaElementAudioSourceNode (Input) -&gt; AudioWorkletNode (Channel Reverser) -&gt; AudioDestinationNode (Output)
       source.connect(reverser);
       reverser.connect(context.destination);
+    });
+
+    audioElement.addEventListener(&apos;play&apos;, async () =&gt; {
+      if (context.state !== &apos;running&apos;) {
+        await context.resume();
+      }
     });
   })
   .catch((error) =&gt; {
@@ -3471,6 +3592,7 @@ class ChannelReverserProcessor extends AudioWorkletProcessor {
     };
   }
 
+  /** @override */
   process(inputs, outputs) {
     const input  = inputs[0];
     const output = outputs[0];
@@ -3497,21 +3619,37 @@ class ChannelReverserProcessor extends AudioWorkletProcessor {
 }
 
 registerProcessor(&apos;ChannelReverserProcessor&apos;, ChannelReverserProcessor);</code></pre>
+            <div class="app-container flexbox-column">
+              <div class="flexbox flexbox-align-items-center">
+                <label for="file-audio-worklet-channel-reverse">Select Audio File</label>
+                <input type="file" id="file-audio-worklet-channel-reverse" />
+                <label class="label-checkbox">
+                  <span>Reverse</span>
+                  <input type="checkbox" id="checkbox-audio-worklet-channel-reverse" />
+                </label>
+              </div>
+              <audio id="audio-audio-worklet-channel-reverse" controls></audio>
+            </div>
           </section>
           <section id="section-audio-worklet-examples-vocal-canceler">
             <h4>ボーカルキャンセラ</h4>
             <p>
               一般的に, 音楽のオーディオデータはステレオで, 臨場感あるサウンドになるように, 左チャンネルと右チャンネルの音の大きさを調整しています.
               ボーカルの聴こえる位置は中央になるように左右のチャンネルを同じ音の大きさで録音し, ギターなどのボーカル以外の楽器音は,
-              左右どちらかの音の大きさを大きくして, 聴こえる位置が左右のどちらかになるように録音されています. このように録音されたオーディオデータであれば,
-              左右のチャンネルのサウンドデータの差分をとることにより, 左右均等に録音されているボーカルの音を取り除くことが可能になります. これが,
+              左右どちらかの音の大きさを大きくして, 聴こえる位置が左右に振られるように録音されています. このように録音されたオーディオデータであれば,
+              左右のチャンネルのサウンドデータの差分をとることによって, 左右均等に録音されているボーカルの音を取り除くことが可能になります. これが,
               ボーカルキャンセラです (ただし, その原理から, ドラムなど中央に位置する楽器音も取り除かれてしまいます).
             </p>
             <pre data-prismjs-copy="クリップボードにコピー" data-prismjs-copy-success="コピーしました"><code class="language-html line-numbers">&lt;div&gt;
-  &lt;input type=&quot;file&quot; /&gt;
-  &lt;label&gt;Depth &lt;input type=&quot;range&quot; id=&quot;range-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;&lt;label&gt;
+  &lt;label for=&quot;file-audio-worklet-vocal-canceler&quot;&gt;Select Audio File&lt;/label&gt;
+  &lt;input type=&quot;file&quot; id=&quot;file-audio-worklet-vocal-canceler&quot; /&gt;
 &lt;/div&gt;
-&lt;audio controls /&gt;</code></pre>
+&lt;div&gt;
+  &lt;label for=&quot;range-audio-worklet-vocal-canceler-depth&quot;&gt;Depth&lt;/label&gt;
+  &lt;input type=&quot;range&quot; id=&quot;range-audio-worklet-vocal-canceler-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+  &lt;output id=&quot;output-audio-worklet-vocal-canceler-depth-value&quot; for=&quot;range-audio-worklet-vocal-canceler-depth&quot;&gt;0.00&lt;/output&gt;
+&lt;/div&gt;
+&lt;audio id=&quot;audio-audio-worklet-vocal-canceler&quot; controls /&gt;&lt;/audio&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -3522,20 +3660,23 @@ context.audioWorklet.addModule(&apos;./audio-worklets/vocal-canceler.js&apos;)
   .then(() =&gt; {
     const canceler = new AudioWorkletNode(context, &apos;VocalCancelerProcessor&apos;);
 
-    const inputElement = document.querySelector(&apos;input[type=&quot;file&quot;]&apos;);
-    const rangeElement = document.querySelector(&apos;input[type=&quot;range&quot;]&apos;);
-    const audioElement = document.querySelector(&apos;audio&apos;);
+    const inputElement  = document.getElementById(&apos;file-audio-worklet-vocal-canceler&apos;);
+    const rangeElement  = document.getElementById(&apos;range-audio-worklet-vocal-canceler-depth&apos;);
+    const outputElement = document.getElementById(&apos;output-audio-worklet-vocal-canceler-depth-value&apos;);
+    const audioElement  = document.getElementById(&apos;audio-audio-worklet-vocal-canceler&apos;);
 
     let source = null;
 
-    inputElement.addEventListener(&apos;change&apos;, (event) =&gt; {
-      const file = event.currentTarget.files[0];
+    inputElement.addEventListener(&apos;change&apos;, () =&gt; {
+      const file = inputElement.files[0];
 
       audioElement.src = window.URL.createObjectURL(file);
     });
 
     rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-      canceler.port.postMessage({ depth: event.currentTarget.valueAsNumber });
+      canceler.port.postMessage({ depth: rangeElement.valueAsNumber });
+
+      outputElement.textContent = rangeElement.valueAsNumber.toFixed(2);
     });
 
     audioElement.addEventListener(&apos;loadstart&apos;, () =&gt; {
@@ -3546,6 +3687,12 @@ context.audioWorklet.addModule(&apos;./audio-worklets/vocal-canceler.js&apos;)
       // MediaElementAudioSourceNode (Input) -&gt; AudioWorkletNode (Vocal Canceler) -&gt; AudioDestinationNode (Output)
       source.connect(canceler);
       canceler.connect(context.destination);
+    });
+
+    audioElement.addEventListener(&apos;play&apos;, async () =&gt; {
+      if (context.state !== &apos;running&apos;) {
+        await context.resume();
+      }
     });
   })
   .catch((error) =&gt; {
@@ -3569,6 +3716,7 @@ class VocalCancelerProcessor extends AudioWorkletProcessor {
     };
   }
 
+  /** @override */
   process(inputs, outputs) {
     const input  = inputs[0];
     const output = outputs[0];
@@ -3595,14 +3743,29 @@ class VocalCancelerProcessor extends AudioWorkletProcessor {
 }
 
 registerProcessor(&apos;VocalCancelerProcessor&apos;, VocalCancelerProcessor);</code></pre>
+            <div class="app-container flexbox-column">
+              <div class="flexbox flexbox-align-items-center">
+                <label for="file-audio-worklet-vocal-canceler">Select Audio File</label>
+                <input type="file" id="file-audio-worklet-vocal-canceler" />
+              </div>
+              <div class="flexbox">
+                <label for="range-audio-worklet-vocal-canceler-depth">Depth</label>
+                <input type="range" id="range-audio-worklet-vocal-canceler-depth" value="0" min="0" max="1" step="0.05" />
+                <output id="output-audio-worklet-vocal-canceler-depth-value" for="range-audio-worklet-vocal-canceler-depth">0.00</output>
+              </div>
+              <audio id="audio-audio-worklet-vocal-canceler" controls></audio>
+            </div>
           </section>
         </section>
         <article id="section-script-processor-node">
           <h3>ScriptProcessorNode</h3>
           <p>
             <code>AudioWorklet</code> は初期の Web Audio API の仕様定義にはなく, <code>ScriptProcessorNode</code> が仕様定義されていました.
-            <b>メインスレッド</b>で実行される<b>イベントハンドラ</b>によって, サウンド入出力する以外は <code>AudioWorklet</code> と考え方は同じです. しかし,
-            メインスレッドで実行されるので, 不自然な音切れ (いわゆる, プチプチ音) が発生する<b>グリッチ</b> (<b>glitch</b>) や UI
+            <b>メインスレッド</b>で実行される<b>イベントハンドラ</b>によって, 任意のオーディオ信号処理を実装できました (サウンド入出力する以外は
+            <code>AudioWorklet</code> と考え方は同じです).
+          </p>
+          <p>
+            しかし, メインスレッドで実行されるので, 不自然な音切れ (いわゆる, プチプチ音) が発生する<b>グリッチ</b> (<b>glitch</b>) や UI
             がスムーズに動作しなくなる現象である<b>ジャンク</b> (<b>jank</b>), イベントハンドラで実行されることによる<b>遅延</b> (<b>latency</b>) など API
             自体の根本的な問題がありました.
           </p>

@@ -31,9 +31,11 @@ class OscillatorProcessor extends AudioWorkletProcessor {
 
     const output = outputs[0];
 
+    const numberOfChannels = output.length;
+
     const numberOfSamplesPer1Hz = sampleRate / this.frequency;
 
-    for (let channelNumber = 0, numberOfChannels = output.length; channelNumber < numberOfChannels; channelNumber++) {
+    for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
       const bufferSize = output[channelNumber].length;
 
       for (let n = 0; n < bufferSize; n++) {

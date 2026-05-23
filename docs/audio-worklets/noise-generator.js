@@ -34,9 +34,11 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
 
     const output = outputs[0];
 
+    const numberOfChannels = output.length;
+
     switch (this.type) {
       case 'whitenoise': {
-        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber < numberOfChannels; channelNumber++) {
+        for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
           const bufferSize = output[channelNumber].length;
 
           for (let n = 0; n < bufferSize; n++) {
@@ -48,7 +50,7 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
       }
 
       case 'pinknoise': {
-        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber < numberOfChannels; channelNumber++) {
+        for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
           const bufferSize = output[channelNumber].length;
 
           for (let n = 0; n < bufferSize; n++) {
@@ -72,7 +74,7 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
       }
 
       case 'browniannoise': {
-        for (let channelNumber = 0, numberOfChannels = output.length; channelNumber < numberOfChannels; channelNumber++) {
+        for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
           const bufferSize = output[channelNumber].length;
 
           for (let n = 0; n < bufferSize; n++) {
