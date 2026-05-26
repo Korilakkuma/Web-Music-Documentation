@@ -2259,6 +2259,140 @@ const audioWorkletVocalCanceler = () => {
     .catch(console.error);
 };
 
+const scheduleOscillatorNode = () => {
+  let oscillatorC = null;
+  let oscillatorE = null;
+  let oscillatorG = null;
+
+  const buttonElement = document.getElementById('button-scheduling-oscillator-node');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillatorC !== null || oscillatorE !== null || oscillatorG !== null) {
+      return;
+    }
+
+    oscillatorC = new OscillatorNode(audiocontext, { frequency: 261.6255653005991 });
+    oscillatorE = new OscillatorNode(audiocontext, { frequency: 329.6275569128705 });
+    oscillatorG = new OscillatorNode(audiocontext, { frequency: 391.99543598175 });
+
+    const gain = new GainNode(audiocontext, { gain: 0.25 });
+
+    oscillatorC.connect(gain);
+    oscillatorE.connect(gain);
+    oscillatorG.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    // Schedule oscillator start
+    oscillatorC.start(audiocontext.currentTime + 0.0);
+    oscillatorE.start(audiocontext.currentTime + 0.1);
+    oscillatorG.start(audiocontext.currentTime + 0.2);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillatorC === null || oscillatorE === null || oscillatorG === null) {
+      return;
+    }
+
+    oscillatorC.stop(audiocontext.currentTime + 0.0);
+    oscillatorE.stop(audiocontext.currentTime + 0.1);
+    oscillatorG.stop(audiocontext.currentTime + 0.2);
+
+    oscillatorC = null;
+    oscillatorE = null;
+    oscillatorG = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+};
+
+const scheduleAudioBufferSourceNode = () => {
+  let sourceC = null;
+  let sourceE = null;
+  let sourceG = null;
+
+  let buffer = null;
+
+  const buttonElement = document.getElementById('button-scheduling-audio-buffer-source-node');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (buffer === null) {
+      return;
+    }
+
+    sourceC = new AudioBufferSourceNode(audiocontext, { buffer });
+    sourceE = new AudioBufferSourceNode(audiocontext, { buffer });
+    sourceG = new AudioBufferSourceNode(audiocontext, { buffer });
+
+    sourceC.detune.value = 0;
+    sourceE.detune.value = 400;
+    sourceG.detune.value = 700;
+
+    const gain = new GainNode(audiocontext, { gain: 0.25 });
+
+    sourceC.connect(gain);
+    sourceE.connect(gain);
+    sourceG.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    sourceC.start(audiocontext.currentTime + 0.0, 0, sourceC.buffer.duration);
+    sourceE.start(audiocontext.currentTime + 0.1, 0, sourceE.buffer.duration);
+    sourceG.start(audiocontext.currentTime + 0.2, 0, sourceG.buffer.duration);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (buffer === null) {
+      return;
+    }
+
+    if (sourceC === null || sourceE === null || sourceG === null) {
+      return;
+    }
+
+    sourceC.stop(audiocontext.currentTime + 0.0);
+    sourceE.stop(audiocontext.currentTime + 0.1);
+    sourceG.stop(audiocontext.currentTime + 0.2);
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  fetch('./assets/one-shots/piano-C.mp3')
+    .then((response) => {
+      return response.arrayBuffer();
+    })
+    .then((arrayBuffer) => {
+      const successCallback = (audioBuffer) => {
+        buffer = audioBuffer;
+      };
+
+      const errorCallback = (error) => {};
+
+      audiocontext.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+    })
+    .catch(console.error);
+};
+
 const createCareer = (svg) => {
   const sampleRate = audiocontext.sampleRate;
 
@@ -2395,8 +2529,260 @@ const createEnvelope = (svg) => {
   svg.appendChild(invertedEnvelopePath);
 };
 
+const createADSR = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const renderTime = () => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', padding.toString(10));
+    rect.setAttribute('y', (padding + innerHeight).toString(10));
+    rect.setAttribute('width', (innerWidth - 12).toString(10));
+    rect.setAttribute('height', lineWidth.toString(10));
+    rect.setAttribute('fill', baseColor);
+    rect.setAttribute('stroke', 'none');
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding + innerWidth - 12} ${padding + innerHeight + 1} L${padding + innerWidth - 12} ${padding + innerHeight + 1 - 4} L${padding + innerWidth} ${padding + innerHeight + 1} L${padding + innerWidth - 12} ${padding + innerHeight + 1 + 4}`
+    );
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', 'none');
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Time';
+
+    text.setAttribute('x', (padding + innerWidth - 12).toString(10));
+    text.setAttribute('y', (padding + innerHeight - 12).toString(10));
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(rect);
+    g.appendChild(arrow);
+    g.appendChild(text);
+  };
+
+  const renderAmplitude = () => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', padding.toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', '1');
+    rect.setAttribute('height', innerHeight.toString(10));
+    rect.setAttribute('fill', baseColor);
+    rect.setAttribute('stroke', 'none');
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute('d', `M${padding} ${padding} L${padding - 4} ${padding + 12} L${padding + 4} ${padding + 12} L${padding} ${padding}`);
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', 'none');
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Amplitude';
+
+    text.setAttribute('x', padding.toString(10));
+    text.setAttribute('y', (padding - 8).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight} L${padding + 48} ${padding + innerHeight} L${padding + 120} ${padding} L${padding + 200} ${padding + innerHeight / 2} L${padding + innerWidth - 240} ${padding + innerHeight / 2} L${padding + innerWidth - 120} ${padding + innerHeight} L${padding + innerWidth - 12} ${padding + innerHeight}`
+    );
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(rect);
+    g.appendChild(arrow);
+    g.appendChild(text);
+    g.appendChild(path);
+  };
+
+  const renderAttack = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding + 120} ${padding} L${padding + 120} ${padding + innerHeight}`);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', alphaBaseColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+    path.setAttribute('stroke-dasharray', '5,5');
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding + 48} ${padding + innerHeight} L${padding + 48 + 12} ${padding + innerHeight - 4} L${padding + 48 + 12} ${padding + innerHeight + 4} L${padding + 48} ${padding + innerHeight} L${padding + 120} ${padding + innerHeight} L${padding + 120 - 12} ${padding + innerHeight - 4} L${padding + 120 - 12} ${padding + innerHeight + 4} L${padding + 120} ${padding + innerHeight}`
+    );
+    arrow.setAttribute('fill', lightWaveColor);
+    arrow.setAttribute('stroke', lightWaveColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Attack';
+
+    text.setAttribute('x', (padding + 80).toString(10));
+    text.setAttribute('y', (padding + innerHeight + 24).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '18px');
+
+    g.appendChild(path);
+    g.appendChild(arrow);
+    g.appendChild(text);
+  };
+
+  const renderDecay = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding + 200} ${padding} L${padding + 200} ${padding + innerHeight}`);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', alphaBaseColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+    path.setAttribute('stroke-dasharray', '5,5');
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding + 120} ${padding + innerHeight} L${padding + 120 + 12} ${padding + innerHeight - 4} L${padding + 120 + 12} ${padding + innerHeight + 4} L${padding + 120} ${padding + innerHeight} L${padding + 200} ${padding + innerHeight} L${padding + 200 - 12} ${padding + innerHeight - 4} L${padding + 200 - 12} ${padding + innerHeight + 4} L${padding + 200} ${padding + innerHeight}`
+    );
+    arrow.setAttribute('fill', lightWaveColor);
+    arrow.setAttribute('stroke', lightWaveColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Decay';
+
+    text.setAttribute('x', (padding + 160).toString(10));
+    text.setAttribute('y', (padding + innerHeight + 24).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '18px');
+
+    g.appendChild(path);
+    g.appendChild(arrow);
+    g.appendChild(text);
+  };
+
+  const renderSustain = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding} ${padding + innerHeight / 2} L${padding + innerWidth} ${padding + innerHeight / 2}`);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', alphaBaseColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+    path.setAttribute('stroke-dasharray', '5,5');
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding + innerWidth / 2 - 24} ${padding + innerHeight / 2} L${padding + innerWidth / 2 - 24 - 4} ${padding + innerHeight / 2 + 12} L${padding + innerWidth / 2 - 24 + 4} ${padding + innerHeight / 2 + 12} L${padding + innerWidth / 2 - 24} ${padding + innerHeight / 2} L${padding + innerWidth / 2 - 24} ${padding + innerHeight} L${padding + innerWidth / 2 - 24 - 4} ${padding + innerHeight - 12} L${padding + innerWidth / 2 - 24 + 4} ${padding + innerHeight - 12} L${padding + innerWidth / 2 - 24} ${padding + innerHeight}`
+    );
+    arrow.setAttribute('fill', lightWaveColor);
+    arrow.setAttribute('stroke', lightWaveColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Sustain';
+
+    text.setAttribute('x', (padding + innerWidth / 2 - 12).toString(10));
+    text.setAttribute('y', (padding + (innerHeight / 4) * 3 + 8).toString(10));
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '18px');
+
+    g.appendChild(path);
+    g.appendChild(arrow);
+    g.appendChild(text);
+  };
+
+  const renderRelease = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding + innerWidth - 240} ${padding} L${padding + innerWidth - 240} ${padding + innerHeight}`);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', alphaBaseColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+    path.setAttribute('stroke-dasharray', '5,5');
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding + innerWidth - 240} ${padding + innerHeight} L${padding + innerWidth - 240 + 12} ${padding + innerHeight - 4} L${padding + innerWidth - 240 + 12} ${padding + innerHeight + 4} L${padding + innerWidth - 240} ${padding + innerHeight} L${padding + innerWidth - 120} ${padding + innerHeight} L${padding + innerWidth - 120 - 12} ${padding + innerHeight - 4} L${padding + innerWidth - 120 - 12} ${padding + innerHeight + 4} L${padding + innerWidth - 120} ${padding + innerHeight}`
+    );
+    arrow.setAttribute('fill', lightWaveColor);
+    arrow.setAttribute('stroke', lightWaveColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Release';
+
+    text.setAttribute('x', (padding + innerWidth - 180).toString(10));
+    text.setAttribute('y', (padding + innerHeight + 24).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '18px');
+
+    g.appendChild(path);
+    g.appendChild(arrow);
+    g.appendChild(text);
+  };
+
+  renderTime();
+  renderAmplitude();
+  renderAttack();
+  renderDecay();
+  renderSustain();
+  renderRelease();
+
+  svg.appendChild(g);
+};
+
 const visualADSR = (svg) => {
-  const buttonElement = document.getElementById('button-envelopegenerator');
+  const buttonElement = document.getElementById('button-envelope-generator');
 
   const envelopegenerator = new GainNode(audiocontext);
 
@@ -2418,7 +2804,7 @@ const visualADSR = (svg) => {
   rectTop.setAttribute('width', innerWidth.toString(10));
   rectTop.setAttribute('height', lineWidth.toString(10));
   rectTop.setAttribute('stroke', 'none');
-  rectTop.setAttribute('fill', baseColor);
+  rectTop.setAttribute('fill', alphaBaseColor);
 
   svg.appendChild(rectTop);
 
@@ -2429,7 +2815,7 @@ const visualADSR = (svg) => {
   rectMiddle.setAttribute('width', innerWidth.toString(10));
   rectMiddle.setAttribute('height', lineWidth.toString(10));
   rectMiddle.setAttribute('stroke', 'none');
-  rectMiddle.setAttribute('fill', baseColor);
+  rectMiddle.setAttribute('fill', alphaBaseColor);
 
   svg.appendChild(rectMiddle);
 
@@ -2440,34 +2826,17 @@ const visualADSR = (svg) => {
   rectBottom.setAttribute('width', innerWidth.toString(10));
   rectBottom.setAttribute('height', lineWidth.toString(10));
   rectBottom.setAttribute('stroke', 'none');
-  rectBottom.setAttribute('fill', baseColor);
+  rectBottom.setAttribute('fill', alphaBaseColor);
 
   svg.appendChild(rectBottom);
 
-  ['1.0', '0.5', '0.0'].forEach((text) => {
+  [1, 0.5, 0].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case '1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case '0.5': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '0.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -2486,10 +2855,20 @@ const visualADSR = (svg) => {
 
   svg.appendChild(path);
 
-  let attack = document.getElementById('range-attack').valueAsNumber;
-  let decay = document.getElementById('range-decay').valueAsNumber;
-  let sustain = document.getElementById('range-sustain').valueAsNumber;
-  let release = document.getElementById('range-release').valueAsNumber;
+  const rangeAttackElement = document.getElementById('range-attack');
+  const rangeDecayElement = document.getElementById('range-decay');
+  const rangeSustainElement = document.getElementById('range-sustain');
+  const rangeReleaseElement = document.getElementById('range-release');
+
+  const outputAttackElement = document.getElementById('output-attack-value');
+  const outputDecayElement = document.getElementById('output-decay-value');
+  const outputSustainElement = document.getElementById('output-sustain-value');
+  const outputReleaseElement = document.getElementById('output-release-value');
+
+  let attack = rangeAttackElement.valueAsNumber;
+  let decay = rangeDecayElement.valueAsNumber;
+  let sustain = rangeSustainElement.valueAsNumber;
+  let release = rangeReleaseElement.valueAsNumber;
 
   let oscillator = null;
   let intervalid = null;
@@ -2547,7 +2926,6 @@ const visualADSR = (svg) => {
 
     oscillator = new OscillatorNode(audiocontext);
 
-    // OscillatorNode (Input) -> GainNode (Envelope Generator) -> AudioDestinationNode (Output)
     oscillator.connect(envelopegenerator);
     envelopegenerator.connect(audiocontext.destination);
 
@@ -2600,20 +2978,28 @@ const visualADSR = (svg) => {
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  document.getElementById('range-attack').addEventListener('input', (event) => {
-    attack = event.currentTarget.valueAsNumber;
+  rangeAttackElement.addEventListener('input', () => {
+    attack = rangeAttackElement.valueAsNumber;
+
+    outputAttackElement.textContent = rangeAttackElement.valueAsNumber.toFixed(2);
   });
 
-  document.getElementById('range-decay').addEventListener('input', (event) => {
-    decay = event.currentTarget.valueAsNumber;
+  rangeDecayElement.addEventListener('input', () => {
+    decay = rangeDecayElement.valueAsNumber;
+
+    outputDecayElement.textContent = rangeDecayElement.valueAsNumber.toFixed(2);
   });
 
-  document.getElementById('range-sustain').addEventListener('input', (event) => {
-    sustain = event.currentTarget.valueAsNumber;
+  rangeSustainElement.addEventListener('input', () => {
+    sustain = rangeSustainElement.valueAsNumber;
+
+    outputSustainElement.textContent = rangeSustainElement.valueAsNumber.toFixed(2);
   });
 
-  document.getElementById('range-release').addEventListener('input', (event) => {
-    release = event.currentTarget.valueAsNumber;
+  rangeReleaseElement.addEventListener('input', () => {
+    release = rangeReleaseElement.valueAsNumber;
+
+    outputReleaseElement.textContent = rangeReleaseElement.valueAsNumber.toFixed(2);
   });
 };
 
@@ -21800,13 +22186,18 @@ audioWorkletOscillator();
 audioWorkletChannelReverser();
 audioWorkletVocalCanceler();
 
+scheduleOscillatorNode();
+scheduleAudioBufferSourceNode();
+
 createCoordinateRect(document.getElementById('svg-figure-career'));
 createCareer(document.getElementById('svg-figure-career'));
 
 createCoordinateRect(document.getElementById('svg-figure-envelope'));
 createEnvelope(document.getElementById('svg-figure-envelope'));
 
-visualADSR(document.getElementById('svg-envelopegenerator'));
+createADSR(document.getElementById('svg-figure-envelope-generator'));
+
+visualADSR(document.getElementById('svg-envelope-generator'));
 
 createSampling(document.getElementById('svg-figure-sampling'), 8, true);
 createSampling(document.getElementById('svg-figure-sampling-theorem-with-aliasing'), 2, true);
