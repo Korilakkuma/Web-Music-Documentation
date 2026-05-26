@@ -3824,7 +3824,8 @@ processor.onaudioprocess = (event) =&gt; {
           </p>
           <p>
             仕様上の詳細を解説をすると, <code>OscillatorNode</code> や <code>AudioBufferSourceNode</code> は <code>AudioNode</code> クラスを継承した
-            <code>AudioScheduledSourceNode</code> クラスを継承しており, <code>start</code> / <code>stop</code> メソッドはこのクラスに定義されているメソッドです
+            <b><code>AudioScheduledSourceNode</code></b> クラスを継承しており, <code>start</code> /
+            <code>stop</code> メソッドはこのクラスに定義されているメソッドです.
           </p>
           <article id="section-audio-context-current-time-definition">
             <h4>currentTime プロパティの時間の定義</h4>
@@ -3841,8 +3842,8 @@ processor.onaudioprocess = (event) =&gt; {
             <dl>
               <dt><code>Date.now</code></dt>
               <dd>
-                UNIX 時間 (タイムスタンプとも呼ばれます). 1970 年 1 月 1 日 00 : 00 からの経過時間をミリ秒単位で表します. 音楽のような,
-                時間管理の精度が高く要求されるようなユースケースでは不向きと言えます.
+                Unix 時間 (タイムスタンプとも呼ばれます). 1970 年 1 月 1 日 00 : 00 からの経過時間をミリ秒単位で表します. 音楽のような,
+                時間管理の精度がシビアに要求されるようなユースケースでは不向きと言えます.
               </dd>
               <dt><code>performance.now</code></dt>
               <dd>
@@ -3857,9 +3858,10 @@ processor.onaudioprocess = (event) =&gt; {
         </section>
         <section id="section-oscillator-node-scheduling">
           <h3>OscillatorNode のスケジューリング</h3>
+          <p><code>OscillatorNode</code> のスケジューリングを設定することで, 和音をアルペジオ (分散和音) のように発音・停止するサンプルコードにしてみました.</p>
           <p>
-            <code>OscillatorNode</code> のスケジューリングを設定することで, 和音をアルペジオ (分散和音) のように発音・停止するサンプルコードにしてみました.
-            <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティの値を基準に, スケジュールしたい時間を加算した値を引数に渡すことで,
+            <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティの値を基準に,
+            スケジュールしたい時間を加算した値を引数に渡すことによって,
             <code>AudioContext</code> インスタンスが生成されてからの経過時間が指定した時間に達すると, 発音・停止します.
           </p>
           <pre
@@ -3872,9 +3874,13 @@ let oscillatorC = null;
 let oscillatorE = null;
 let oscillatorG = null;
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-scheduling-oscillator-node&apos;);
 
-buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if ((oscillatorC !== null) || (oscillatorE !== null) || (oscillatorG !== null)) {
     return;
   }
@@ -3899,7 +3905,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
   buttonElement.textContent = &apos;stop&apos;;
 });
 
-buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
   if ((oscillatorC === null) || (oscillatorE === null) || (oscillatorG === null)) {
     return;
   }
@@ -3916,16 +3922,25 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
 
   buttonElement.textContent = &apos;start&apos;;
 });</code></pre>
+          <div class="app-container">
+            <button type="button" id="button-scheduling-oscillator-node">start</button>
+          </div>
         </section>
         <section id="section-audio-buffer-source-node-scheduling">
           <h3>AudioBufferSourceNode のスケジューリング</h3>
           <p>
             <code>OscillatorNode</code> の場合と同様に, スケジューリングを設定することで, 和音をアルペジオのように発音・停止するサンプルコードにしてみました.
-            <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティの値を基準に, スケジュールしたい時間を加算した値を引数に渡すことで,
-            <code>AudioContext</code> インスタンスが生成されてからの経過時間が指定した時間に達すると, 発音・停止します. 1 点異なるのは,
-            <b><code>AudioBufferSourceNode</code> の <code>start</code> メソッドはオーバライドされています</b>. もし,
-            オーディオデータの再生開始位置を指定したい場合は, 第 2 引数に再生開始位置を秒単位で指定, 再生時間を指定する場合は, 第 3 引数に秒単位で指定します (<b
-              ><a href="#section-audio-buffer-source-node-playback-rate-and-detune">再生速度</a>を変更している場合でも影響は受けない</b>ので, 第 2 引数, 第 3 引数は再生速度を <code>1</code> とした場合の値を指定します). どちらも, 任意の引数なので不要であれば省略可能です.
+          </p>
+          <p>
+            <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティの値を基準に,
+            スケジュールしたい時間を加算した値を引数に渡すことによって,
+            <code>AudioContext</code> インスタンスが生成されてからの経過時間が指定した時間に達すると, 発音・停止します.
+          </p>
+          <p>
+            1 点異なるのは, <b><code>AudioBufferSourceNode</code> の <code>start</code> メソッドはオーバライドされています</b>. もし,
+            オーディオデータの再生開始位置を指定したい場合は, 第 2 引数に再生開始位置を秒単位で指定, 再生時間を指定する場合は, 第 3 引数に秒単位で指定します.
+            <b
+              ><a href="#section-audio-buffer-source-node-playback-rate-and-detune">再生速度</a>を変更している場合でも再生時刻・再生時間の指定は影響を受けない</b>ので, 第 2 引数, 第 3 引数は再生速度を <code>1</code> とした場合の値を指定します. どちらも, 任意の引数なので不要であれば省略可能です.
           </p>
           <pre
             data-prismjs-copy="クリップボードにコピー"
@@ -3939,9 +3954,13 @@ let sourceG = null;
 
 let buffer = null;
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-scheduling-audio-buffer-source-node&apos;);
 
-buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (buffer === null) {
     return;
   }
@@ -3960,7 +3979,6 @@ buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
   sourceC.connect(gain);
   sourceE.connect(gain);
   sourceG.connect(gain);
-
   gain.connect(context.destination);
 
   // Schedule one-shot audio start
@@ -3971,8 +3989,12 @@ buttonElement.addEventListener(&apos;mousedown&apos;, (event) =&gt; {
   buttonElement.textContent = &apos;stop&apos;;
 });
 
-buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
-  if ((buffer === null) || (sourceC === null) || (sourceE === null) || (sourceG === null)) {
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (buffer === null) {
+    return;
+  }
+
+  if ((sourceC === null) || (sourceE === null) || (sourceG === null)) {
     return;
   }
 
@@ -4002,6 +4024,9 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
   .catch((error) =&gt; {
     // error handling
   });</code></pre>
+          <div class="app-container">
+            <button type="button" id="button-scheduling-audio-buffer-source-node">start</button>
+          </div>
         </section>
         <section id="section-audio-param-scheduling">
           <h3>AudioParam のスケジューリング (パラメータのオートメーション)</h3>
@@ -4134,11 +4159,11 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
             <p>
               エンベロープジェネレーターの実装において, パラメータのスケジュールの対象になるの <code>GainNode</code> インスタンスの
               <code>gain</code> プロパティです. <code>gain</code> プロパティは, <code>AudioParam</code> インスタンスであり,
-              <code>AudioParam</code> で仕様定義されているパラメータのオートメーションメソッドを利用することで, パラメータをスケジュールすることが可能です
-              (同様に, <code>OscillatorNode</code> インスタンスの <code>frequency</code> プロパティや, <code>DelayNode</code> インスタンスの
-              <code>delayTime</code> プロパティ, <code>BiquadFilterNode</code> の <code>frequency</code> プロパティ ... など,
-              <code>AudioParam</code> インスタンスであれば利用可能です. したがって, パラメータのオートメーションメソッドを理解することで,
-              さまざまなエフェクトが試行錯誤可能になります).
+              <code>AudioParam</code> で仕様定義されているパラメータのオートメーションメソッドを利用することで, パラメータをスケジューリングできます. (同様に,
+              <code>OscillatorNode</code> インスタンスの <code>frequency</code> プロパティや, <code>DelayNode</code> インスタンスの
+              <code>delayTime</code> プロパティ, <code>BiquadFilterNode</code> インスタンスの <code>frequency</code> プロパティなど,
+              <code>AudioParam</code> インスタンスであればパラメータをスケジューリングすることが可能です. したがって,
+              パラメータのオートメーションメソッドを理解することで, Web Audio API におけるより高度なオーディオ信号処理の実装が可能になります).
             </p>
           </section>
           <section id="section-envelope-generator-initialization">
@@ -4151,15 +4176,23 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-envelope-generator&quot;&gt;start&lt;/button&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
             ><code class="language-js line-numbers">const context = new AudioContext();
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-envelope-generator&apos;);
 
 const envelopegenerator = new GainNode(context);
 
 let oscillator = null;
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (oscillator !== null) {
     return;
   }
@@ -4184,18 +4217,20 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
             <p>
               <b>attack</b> (アタック) は, ゲインが最大値, すなわち, <code>1</code> になるまでに要する時間です. そこで, attack の実装には,
               <a href="#section-audio-param-linear-ramp-to-value-at-time"><code>linearRampToValueAtTime</code></a> メソッドを利用します (一般的には,
-              線形的に変化させますが, 指数関数的に変化させたい場合,
+              線形的に変化させますが, 指数関数的に変化させたい場合は,
               <a href="#section-audio-param-exponential-ramp-to-value-at-time"><code>exponentialRampToValueAtTime</code></a>
               メソッドを使ってみてもよいでしょう). 注意が必要なのは, 第 2 引数です. attack time の値をそのまま指定してしまうとうまくいきません. なぜなら,
-              <b>時間ではなく時刻</b>を指定する必要があるからです. したがって, サウンド開始時刻 (変数 <code>t0</code>) に attack を加算した値 (変数
-              <code>t1</code>) を第 2 引数に指定します.
+              <b>時間ではなく時刻</b>を指定する必要があるからです. したがって, サウンド開始時刻 (変数 <var>t0</var>) に attack を加算した値 (変数 <var>t1</var>)
+              を第 2 引数に指定します.
             </p>
             <p>
-              attack は, もう少しくだいて表現すれば, 音の立ち上がりの速さを決定するパラメータと言えます. 楽器で具体例をあげると,
-              ピアノやギターは比較的音の立ち上がりが速い楽器で, バイオリンやフルートなどは比較的音の立ち上がりが遅い楽器です. すなわち,
+              attack は, 音楽的な表現をすれば, <b>音の立ち上がり</b>の速さを決定するパラメータと言えます. 楽器で具体例をあげると,
+              ピアノやギターは比較的音の立ち上がりが速い楽器で, バイオリンやフルートなどは比較的音の立ち上がりが遅い楽器です. したがって,
               アタックを短くするとピアノやギターのように音の立ち上がりが速くなり, アタックを長くするとバイオリンやフルートのように音の立ち上がりが遅くなります.
+            </p>
+            <p>
               ちなみに, 音の立ち上がりが比較的速い (アタックが短い) エレキギターでは, バイオリン奏法と呼ばれる奏法があります. これは, ピッキング時に,
-              ギターのボリュームを0にすることによって, ピッキングした瞬間の音 (アタック音) を消し, そのあとに, ボリュームを増加させるという奏法です.
+              ギターのボリュームをゼロにすることによって, ピッキングした瞬間の音, つまり, アタック音を消し, そのあとに, ボリュームを増加させるという奏法です.
               エレキギターであるのに, まるでバイオリンのような音色を奏でることができます.
             </p>
             <pre
@@ -4203,7 +4238,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
               data-prismjs-copy-success="コピーしました"
             ><code class="language-js line-numbers">const context = new AudioContext();
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-envelope-generator&apos;);
 
 const envelopegenerator = new GainNode(context);
 
@@ -4211,7 +4246,11 @@ const attack = 0.01;
 
 let oscillator = null;
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (oscillator !== null) {
     return;
   }
@@ -4239,8 +4278,8 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
               <b>decay</b> (ディケイ) は, ゲインが最大値 <code>1</code> から <b>sustain</b> (サステイン) にまで減衰する時間です.
               <a href="#section-audio-param-set-target-at-time"><code>setTargetAtTime</code></a> メソッドを利用することで実装できます. 注意が必要なのは, 第 2
               引数と第 3 引数です. 第 2 引数にはパラメータが変化を開始する時刻を指定し, 第 3 引数にはパラメータが, 現在の値と第 1 引数で指定した値の差分 (の約
-              <code>63.2%</code>) まで変化するのに要する時間を指定します. したがって, 第 2 引数は <code>gain</code> プロパティが <code>1</code> となる時刻
-              (減衰開始時刻) である変数 <code>t1</code> を指定し, 第 3 引数は decay time (減衰時間) である変数 <code>t2</code>を指定します. そして, 第 1 引数は
+              <code>63.2%</code>) まで変化するのに要する時間を指定します. したがって, 第 2 引数は <code>gain</code> プロパティの値が現在値となる時刻
+              (減衰開始時刻) である変数 <var>t1</var> を指定し, 第 3 引数は decay time (減衰時間) である変数 <var>t2</var>を指定します. そして, 第 1 引数は
               <code>gain</code> プロパティが収束する値である sustain level (持続レベル) を指定します.
             </p>
             <p>attack, decay, release は物理量が<b>時間</b>なのに対して, sustain のみ<code>ゲイン</code>なので注意してください.</p>
@@ -4249,7 +4288,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
               data-prismjs-copy-success="コピーしました"
             ><code class="language-js line-numbers">const context = new AudioContext();
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-envelope-generator&apos;);
 
 const envelopegenerator = new GainNode(context);
 
@@ -4259,7 +4298,11 @@ const sustain = 0.5;
 
 let oscillator = null;
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (oscillator !== null) {
     return;
   }
@@ -4290,20 +4333,20 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
             <p>
               <b>release</b> (リリース) は, ゲインが sustain から最小値 <code>0</code> に変化するまでの時間です. decay / sustain と同じく,
               <a href="#section-audio-param-set-target-at-time"><code>setTargetAtTime</code></a> メソッドを利用することで実装できます.
-              <code>gain</code> プロパティを <code>0</code> に近づけていくので, 第 1 引数には <code>0</code> を指定します. 第 2
+              <code>gain</code> プロパティの値を <code>0</code> に近づけていくので, 第 1 引数には <code>0</code> を指定します. 第 2
               引数に指定するリリースの開始時刻は, <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティ値です. また, 第 3
               引数には変化に要する時間, すなわち, release time (リリースタイム) を指定します.
             </p>
             <p>
-              ドラムのような音の余韻が短い楽器をシミュレートしたり, スタッカート (音を短く切って演奏する楽譜の記号) を実現したりする場合は release を短く, 逆に,
-              ダンパーペダルを踏んだピアノの音や, フェルマータ (音を長く伸ばして演奏する楽譜の記号) を実現したりする場合は release を長くします.
+              ドラムのような音の余韻が短い楽器をシミュレートしたり, スタッカート (音を短く切って演奏する楽譜の記号) を実現したりする場合には release を短く,
+              ダンパーペダルを踏んだピアノの音や, フェルマータ (音を長く伸ばして演奏する楽譜の記号) を実現したりする場合には release を長くします.
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
             ><code class="language-js line-numbers">const context = new AudioContext();
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-envelope-generator&apos;);
 
 const envelopegenerator = new GainNode(context);
 
@@ -4314,7 +4357,11 @@ const release = 1.0;
 
 let oscillator = null;
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (oscillator !== null) {
     return;
   }
@@ -4353,14 +4400,14 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
   buttonElement.textContent = &apos;start&apos;;
 });</code></pre>
             <p>
-              リリースを実装する場合は, <code>OscillatorNode</code> インスタンスの <code>stop</code> メソッドの即時実行は不要です. その理由は,
+              リリースを実装する場合, <code>OscillatorNode</code> インスタンスの <code>stop</code> メソッドの即時実行は不要です. その理由は,
               <code>stop</code> メソッドを即時実行すると, その時点で音が停止してしまうので, 音に余韻が生まれません. といっても, このままでは,
               <code>start</code> メソッドの多重呼び出しになります. すなわち, <code>start</code> メソッドと
               <code>stop</code> メソッドは一対ということが順守できていません.
             </p>
             <p>
-              そこで, タイマー処理で <code>gain</code> プロパティをチェックして, <b>停止とみなせる値</b>になれば, <code>stop</code> メソッドを実行します.
-              ここで, 最小値である <code>0</code> と表現しなかったのは理由があります. 確かに, 理論上は, 停止とみなせる値は <code>0</code> ですが, 実装上では,
+              そこで, タイマー処理で <code>gain</code> プロパティの値をチェックして, <b>停止とみなせる値</b>になれば, <code>stop</code> メソッドを実行します.
+              ここで, 最小値である <code>0</code> と表現しなかったのは理由があります. 理論上は, 停止とみなせる値は <code>0</code> ですが, 実装上では,
               (原因はわかりませんが) 半永久的に <code>0</code> にはなりません. したがって, 停止とみなせる値を <code>0.001</code> 未満と設定しています.
             </p>
             <p>また, 停止とみなせる値になる前に, 再度, <code>mousedown</code> した場合は, <code>OscillatorNode</code> を即時停止します.</p>
@@ -4369,7 +4416,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
               data-prismjs-copy-success="コピーしました"
             ><code class="language-js line-numbers">const context = new AudioContext();
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-envelope-generator&apos;);
 
 const envelopegenerator = new GainNode(context);
 
@@ -4381,7 +4428,11 @@ const release = 1.0;
 let oscillator = null;
 let intervalid = null;
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (oscillator !== null) {
     oscillator.stop(0);
     oscillator = null;
@@ -4437,16 +4488,18 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
 });</code></pre>
             <p>
               これで, 完成しました ... と言いたいところですが, 1 つ問題点があります. もし, attack time もしくは decay time が経過する前に,
-              <code>mouseup</code> イベントが発生するとどうなるでしょう ? attack, decay のゲイン変化のスケジューリングと,
-              release　におけるゲイン変化のスケジューリングが混在してしまいますね. つまり, 上記のコードだと,
-              意図したスケジューリングにならない可能性があるという問題点があります. これを解決するには,
-              イベント発生時にスケジューリングをすべて解除すれば解決します. そして, スケジューリングの解除には,
-              <a href="#section-audio-param-cancel-scheduled-values"><b>cancelScheduledValues</b></a>メソッド, もしくは, 値をそのまま保持しておきたい場合は,
-              <a href="#section-audio-param-cancel-and-hold-at-time"><b>cancelAndHoldAtTime</b></a> メソッドを利用します.
+              <code>mouseup</code> イベントが発生するとどうなるでしょう ? attack, decay のゲイン変化のスケジューリングと, release
+              におけるゲイン変化のスケジューリングが混在してしまいます. したがって, 上記のコードだと,
+              意図したスケジューリングにならない可能性があるという問題点があります. これを解決するには, イベント発生時に,
+              以前に設定されたスケジューリングをすべて解除します.
             </p>
             <p>
-              具体的には, <code>mouseup</code> 時は, 値を保持しておきたいので, <code>cancelAndHoldAtTime</code> メソッドでスケジューリングを解除します. また,
-              ボタンが連打された場合に不要なスケジューリングが解除されるように, <code>mousedown</code> 時は,
+              スケジューリングの解除には, <a href="#section-audio-param-cancel-scheduled-values"><b>cancelScheduledValues</b></a>メソッド, もしくは, 値をそのまま保持しておきたい場合は,
+              <a href="#section-audio-param-cancel-and-hold-at-time"><b>cancelAndHoldAtTime</b></a> メソッドを利用します.
+            </p>
+            <p>具体的には, <code>mouseup</code> 時は, 値を保持しておきたいので, <code>cancelAndHoldAtTime</code> メソッドでスケジューリングを解除します.</p>
+            <p>
+              また, ボタンが連打された場合でも不要なスケジューリングが解除されるように, <code>mousedown</code> 時は,
               <code>cancelScheduledValues</code> メソッドでスケジューリングを解除します (そのあと <code>setValueAtTime</code> メソッドで
               <code>0</code> に初期化されるので値を保持する必要がないので).
             </p>
@@ -4455,7 +4508,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
               data-prismjs-copy-success="コピーしました"
             ><code class="language-js line-numbers">const context = new AudioContext();
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-envelope-generator&apos;);
 
 const envelopegenerator = new GainNode(context);
 
@@ -4467,7 +4520,11 @@ const release = 1.0;
 let oscillator = null;
 let intervalid = null;
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (oscillator !== null) {
     oscillator.stop(0);
     oscillator = null;
@@ -4526,7 +4583,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
             <article id="section-audio-param-cancel-and-hold-at-time-if-firefox">
               <h5>Firefox での <code>cancelAndHoldAtTime</code> の実装状況とポリフィル</h5>
               <p>
-                Firefox 125 の時点では, <code>cancelAndHoldAtTime</code> が実装されていません. しかしながら, <code>cancelScheduledValues</code> と
+                Firefox 151 の時点では, <code>cancelAndHoldAtTime</code> が実装されていません. しかしながら, <code>cancelScheduledValues</code> と
                 <code>setValueAtTime</code> を使うことでポリフィルを実装することは可能です.
               </p>
               <pre
@@ -4545,25 +4602,51 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
           <section id="section-apply-envelope-generator">
             <h4>エンベロープジェネレーターの応用</h4>
             <p>
-              エンベロープジェネレーターの実装, すなわち, <code>gain</code> プロパティのスケジューリングは, オーディオソースに依存したことではないので,
-              <code>AudioBufferSourceNode</code> をオーディオソースとして利用することで,
-              ワンショットオーディオにもエンベロープジェネレーターを適用することが可能になります. また, attack と release を楽曲データの再生に適用することで,
-              フェードイン・フェードアウトの実装も可能になります.
+              エンベロープジェネレーターの実装, すなわち, <code>gain</code> プロパティのスケジューリングは, オーディオソース (音源) に依存していません.
+              したがって, <code>AudioBufferSourceNode</code> をオーディオソースとして利用することで,
+              ワンショットオーディオにもエンベロープジェネレーターを適用することが可能になります. また, attack と release を
+              <code>MediaElementAudioSourceNode</code> をオーディオソースとして利用することで, 楽曲データのフェードイン・フェードアウトの実装も可能になります.
             </p>
           </section>
           <p>
             このセクションのまとめとして, エンベロープジェネレーターの制御となる <code>gain</code> プロパティの値を視覚化するデモとなります. attack, decay,
             sustain, release の値を変えてみて, <code>gain</code> プロパティの値の変化や, それにともなう音色の変化を体感してみてください.
           </p>
-          <div class="app-container">
-            <svg id="svg-envelopegenerator" class="svg-envelopegenerator" width="720" height="240"></svg>
-            <div>
-              <button type="button" id="button-envelopegenerator" class="button-envelopegenerator">start</button>
-              <div class="ranges-envelopegenerator">
-                <label><span>attack</span><input type="range" id="range-attack" value="0.01" min="0" max="1" step="0.01" /></label>
-                <label><span>decay</span><input type="range" id="range-decay" value="0.3" min="0" max="1" step="0.01" /></label>
-                <label><span>sustain</span><input type="range" id="range-sustain" value="0.5" min="0" max="1" step="0.01" /></label>
-                <label><span>release</span><input type="range" id="range-release" value="1" min="0" max="1" step="0.01" /></label>
+          <div class="app-container flexbox-column">
+            <svg id="svg-envelope-generator" width="720" height="240"></svg>
+            <div class="flexbox-column">
+              <div>
+                <button type="button" id="button-envelope-generator">start</button>
+              </div>
+              <div class="flexbox">
+                <div class="flexbox">
+                  <label class="flexbox">
+                    <span>attack</span>
+                    <input type="range" id="range-attack" value="0.01" min="0" max="1" step="0.01" />
+                  </label>
+                  <output id="output-attack-value" for="range-attack">0.01</output>
+                </div>
+                <div class="flexbox">
+                  <label class="flexbox">
+                    <span>decay</span>
+                    <input type="range" id="range-decay" value="0.3" min="0" max="1" step="0.01" />
+                  </label>
+                  <output id="output-decay-value" for="range-decay">0.30</output>
+                </div>
+                <div class="flexbox">
+                  <label class="flexbox">
+                    <span>sustain</span>
+                    <input type="range" id="range-sustain" value="0.5" min="0" max="1" step="0.01" />
+                  </label>
+                  <output id="output-sustain-value" for="range-sustain">0.50</output>
+                </div>
+                <div class="flexbox">
+                  <label class="flexbox">
+                    <span>release</span>
+                    <input type="range" id="range-release" value="1" min="0" max="1" step="0.01" />
+                  </label>
+                  <output id="output-release-value" for="range-release">1.00</output>
+                </div>
               </div>
             </div>
           </div>
@@ -4581,9 +4664,9 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
               href="https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process#examples"
               target="_blank"
               rel="noopener noreferrer"
-              >実装イメージ</a>. <code>&apos;k-rate&apos;</code> の場合, <code>128</code> サンプルのパラメータの <code>0</code> 番目だけ適用すればよいので最適化しやすい). また,
+              >実装イメージ</a>. <code>&apos;k-rate&apos;</code> の場合は, <code>128</code> サンプルのパラメータの <code>0</code> 番目だけ適用すればよいので最適化しやすい).
             <code>AudioWorkletProcessor</code> クラスで, <code>AudioParam</code> を定義する場合 (<code>parameterDescriptors</code> プロパティ),
-            適切に選択する必要がある場合もあります (デフォルトは, <code>&apos;a-rate&apos;</code>).
+            適切に選択する必要があります (デフォルトは, <code>&apos;a-rate&apos;</code>).
           </p>
           <p>
             もっとも, <code>AudioParam</code> のほとんどは <code>&apos;a-rate&apos;</code> です. 現在の仕様では, 以下のリストにある <code>AudioParam</code> が

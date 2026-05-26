@@ -2259,6 +2259,140 @@ const audioWorkletVocalCanceler = () => {
     .catch(console.error);
 };
 
+const scheduleOscillatorNode = () => {
+  let oscillatorC = null;
+  let oscillatorE = null;
+  let oscillatorG = null;
+
+  const buttonElement = document.getElementById('button-scheduling-oscillator-node');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillatorC !== null || oscillatorE !== null || oscillatorG !== null) {
+      return;
+    }
+
+    oscillatorC = new OscillatorNode(audiocontext, { frequency: 261.6255653005991 });
+    oscillatorE = new OscillatorNode(audiocontext, { frequency: 329.6275569128705 });
+    oscillatorG = new OscillatorNode(audiocontext, { frequency: 391.99543598175 });
+
+    const gain = new GainNode(audiocontext, { gain: 0.25 });
+
+    oscillatorC.connect(gain);
+    oscillatorE.connect(gain);
+    oscillatorG.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    // Schedule oscillator start
+    oscillatorC.start(audiocontext.currentTime + 0.0);
+    oscillatorE.start(audiocontext.currentTime + 0.1);
+    oscillatorG.start(audiocontext.currentTime + 0.2);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillatorC === null || oscillatorE === null || oscillatorG === null) {
+      return;
+    }
+
+    oscillatorC.stop(audiocontext.currentTime + 0.0);
+    oscillatorE.stop(audiocontext.currentTime + 0.1);
+    oscillatorG.stop(audiocontext.currentTime + 0.2);
+
+    oscillatorC = null;
+    oscillatorE = null;
+    oscillatorG = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+};
+
+const scheduleAudioBufferSourceNode = () => {
+  let sourceC = null;
+  let sourceE = null;
+  let sourceG = null;
+
+  let buffer = null;
+
+  const buttonElement = document.getElementById('button-scheduling-audio-buffer-source-node');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (buffer === null) {
+      return;
+    }
+
+    sourceC = new AudioBufferSourceNode(audiocontext, { buffer });
+    sourceE = new AudioBufferSourceNode(audiocontext, { buffer });
+    sourceG = new AudioBufferSourceNode(audiocontext, { buffer });
+
+    sourceC.detune.value = 0;
+    sourceE.detune.value = 400;
+    sourceG.detune.value = 700;
+
+    const gain = new GainNode(audiocontext, { gain: 0.25 });
+
+    sourceC.connect(gain);
+    sourceE.connect(gain);
+    sourceG.connect(gain);
+    gain.connect(audiocontext.destination);
+
+    sourceC.start(audiocontext.currentTime + 0.0, 0, sourceC.buffer.duration);
+    sourceE.start(audiocontext.currentTime + 0.1, 0, sourceE.buffer.duration);
+    sourceG.start(audiocontext.currentTime + 0.2, 0, sourceG.buffer.duration);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (buffer === null) {
+      return;
+    }
+
+    if (sourceC === null || sourceE === null || sourceG === null) {
+      return;
+    }
+
+    sourceC.stop(audiocontext.currentTime + 0.0);
+    sourceE.stop(audiocontext.currentTime + 0.1);
+    sourceG.stop(audiocontext.currentTime + 0.2);
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  fetch('./assets/one-shots/piano-C.mp3')
+    .then((response) => {
+      return response.arrayBuffer();
+    })
+    .then((arrayBuffer) => {
+      const successCallback = (audioBuffer) => {
+        buffer = audioBuffer;
+      };
+
+      const errorCallback = (error) => {};
+
+      audiocontext.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+    })
+    .catch(console.error);
+};
+
 const createCareer = (svg) => {
   const sampleRate = audiocontext.sampleRate;
 
@@ -2396,7 +2530,7 @@ const createEnvelope = (svg) => {
 };
 
 const visualADSR = (svg) => {
-  const buttonElement = document.getElementById('button-envelopegenerator');
+  const buttonElement = document.getElementById('button-envelope-generator');
 
   const envelopegenerator = new GainNode(audiocontext);
 
@@ -2418,7 +2552,7 @@ const visualADSR = (svg) => {
   rectTop.setAttribute('width', innerWidth.toString(10));
   rectTop.setAttribute('height', lineWidth.toString(10));
   rectTop.setAttribute('stroke', 'none');
-  rectTop.setAttribute('fill', baseColor);
+  rectTop.setAttribute('fill', alphaBaseColor);
 
   svg.appendChild(rectTop);
 
@@ -2429,7 +2563,7 @@ const visualADSR = (svg) => {
   rectMiddle.setAttribute('width', innerWidth.toString(10));
   rectMiddle.setAttribute('height', lineWidth.toString(10));
   rectMiddle.setAttribute('stroke', 'none');
-  rectMiddle.setAttribute('fill', baseColor);
+  rectMiddle.setAttribute('fill', alphaBaseColor);
 
   svg.appendChild(rectMiddle);
 
@@ -2440,34 +2574,17 @@ const visualADSR = (svg) => {
   rectBottom.setAttribute('width', innerWidth.toString(10));
   rectBottom.setAttribute('height', lineWidth.toString(10));
   rectBottom.setAttribute('stroke', 'none');
-  rectBottom.setAttribute('fill', baseColor);
+  rectBottom.setAttribute('fill', alphaBaseColor);
 
   svg.appendChild(rectBottom);
 
-  ['1.0', '0.5', '0.0'].forEach((text) => {
+  [1, 0.5, 0].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case '1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case '0.5': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '0.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -2486,10 +2603,20 @@ const visualADSR = (svg) => {
 
   svg.appendChild(path);
 
-  let attack = document.getElementById('range-attack').valueAsNumber;
-  let decay = document.getElementById('range-decay').valueAsNumber;
-  let sustain = document.getElementById('range-sustain').valueAsNumber;
-  let release = document.getElementById('range-release').valueAsNumber;
+  const rangeAttackElement = document.getElementById('range-attack');
+  const rangeDecayElement = document.getElementById('range-decay');
+  const rangeSustainElement = document.getElementById('range-sustain');
+  const rangeReleaseElement = document.getElementById('range-release');
+
+  const outputAttackElement = document.getElementById('output-attack-value');
+  const outputDecayElement = document.getElementById('output-decay-value');
+  const outputSustainElement = document.getElementById('output-sustain-value');
+  const outputReleaseElement = document.getElementById('output-release-value');
+
+  let attack = rangeAttackElement.valueAsNumber;
+  let decay = rangeDecayElement.valueAsNumber;
+  let sustain = rangeSustainElement.valueAsNumber;
+  let release = rangeReleaseElement.valueAsNumber;
 
   let oscillator = null;
   let intervalid = null;
@@ -2547,7 +2674,6 @@ const visualADSR = (svg) => {
 
     oscillator = new OscillatorNode(audiocontext);
 
-    // OscillatorNode (Input) -> GainNode (Envelope Generator) -> AudioDestinationNode (Output)
     oscillator.connect(envelopegenerator);
     envelopegenerator.connect(audiocontext.destination);
 
@@ -2600,20 +2726,28 @@ const visualADSR = (svg) => {
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  document.getElementById('range-attack').addEventListener('input', (event) => {
-    attack = event.currentTarget.valueAsNumber;
+  rangeAttackElement.addEventListener('input', () => {
+    attack = rangeAttackElement.valueAsNumber;
+
+    outputAttackElement.textContent = rangeAttackElement.valueAsNumber.toFixed(2);
   });
 
-  document.getElementById('range-decay').addEventListener('input', (event) => {
-    decay = event.currentTarget.valueAsNumber;
+  rangeDecayElement.addEventListener('input', () => {
+    decay = rangeDecayElement.valueAsNumber;
+
+    outputDecayElement.textContent = rangeDecayElement.valueAsNumber.toFixed(2);
   });
 
-  document.getElementById('range-sustain').addEventListener('input', (event) => {
-    sustain = event.currentTarget.valueAsNumber;
+  rangeSustainElement.addEventListener('input', () => {
+    sustain = rangeSustainElement.valueAsNumber;
+
+    outputSustainElement.textContent = rangeSustainElement.valueAsNumber.toFixed(2);
   });
 
-  document.getElementById('range-release').addEventListener('input', (event) => {
-    release = event.currentTarget.valueAsNumber;
+  rangeReleaseElement.addEventListener('input', () => {
+    release = rangeReleaseElement.valueAsNumber;
+
+    outputReleaseElement.textContent = rangeReleaseElement.valueAsNumber.toFixed(2);
   });
 };
 
@@ -21800,13 +21934,16 @@ audioWorkletOscillator();
 audioWorkletChannelReverser();
 audioWorkletVocalCanceler();
 
+scheduleOscillatorNode();
+scheduleAudioBufferSourceNode();
+
 createCoordinateRect(document.getElementById('svg-figure-career'));
 createCareer(document.getElementById('svg-figure-career'));
 
 createCoordinateRect(document.getElementById('svg-figure-envelope'));
 createEnvelope(document.getElementById('svg-figure-envelope'));
 
-visualADSR(document.getElementById('svg-envelopegenerator'));
+visualADSR(document.getElementById('svg-envelope-generator'));
 
 createSampling(document.getElementById('svg-figure-sampling'), 8, true);
 createSampling(document.getElementById('svg-figure-sampling-theorem-with-aliasing'), 2, true);

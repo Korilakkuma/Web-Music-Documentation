@@ -305,12 +305,6 @@ input[type="file"] {
   cursor: pointer;
 }
 
-.button-envelopegenerator {
-  cursor: pointer;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-
 .ranges-envelopegenerator {
   display: flex;
   gap: 12px;
