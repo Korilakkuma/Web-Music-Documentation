@@ -3313,6 +3313,8 @@ const visualFourierSeries = (svg) => {
     const width = Number(svg.getAttribute('width'));
     const height = Number(svg.getAttribute('height'));
 
+    const center = (width - PADDING) / 2 - lineWidth / 2;
+
     const xRect = document.createElementNS(xmlns, 'rect');
 
     xRect.setAttribute('x', PADDING.toString(10));
@@ -3326,7 +3328,7 @@ const visualFourierSeries = (svg) => {
 
     const yRect = document.createElementNS(xmlns, 'rect');
 
-    yRect.setAttribute('x', (width / 2 - lineWidth / 2).toString(10));
+    yRect.setAttribute('x', center.toString(10));
     yRect.setAttribute('y', '0');
     yRect.setAttribute('width', lineWidth.toString(10));
     yRect.setAttribute('height', height.toString(10));
@@ -3335,7 +3337,7 @@ const visualFourierSeries = (svg) => {
 
     svg.appendChild(yRect);
 
-    const textX = width / 2 - lineWidth / 2 - 20;
+    const textX = center - 4;
 
     [
       [' 1.0', 1],
@@ -3350,7 +3352,7 @@ const visualFourierSeries = (svg) => {
 
       text.setAttribute('x', textX.toString(10));
       text.setAttribute('y', ((1 - v) * ((height - 2 * PADDING) / 2) + PADDING).toString(10));
-      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('text-anchor', 'end');
       text.setAttribute('stroke', 'none');
       text.setAttribute('fill', baseColor);
       text.setAttribute('font-family', 'Roboto');
@@ -3567,15 +3569,15 @@ const visualFourierSeries = (svg) => {
     false
   );
 
-  rangeElement.addEventListener('input', (event) => {
-    K = event.currentTarget.valueAsNumber;
+  rangeElement.addEventListener('input', () => {
+    K = rangeElement.valueAsNumber;
 
     outputTextElement.textContent = K;
   });
 
   rangeElement.addEventListener(
     'change',
-    (event) => {
+    () => {
       plotSeries(svg, fourierSeries());
     },
     false
@@ -3583,8 +3585,8 @@ const visualFourierSeries = (svg) => {
 
   functionSelectElement.addEventListener(
     'change',
-    (event) => {
-      if (event.currentTarget.value === 'sinc') {
+    () => {
+      if (functionSelectElement.value === 'sinc') {
         animationButtonElement.setAttribute('disabled', 'disabled');
         intervalSelectElement.setAttribute('disabled', 'disabled');
         rangeElement.setAttribute('disabled', 'disabled');
@@ -5057,30 +5059,13 @@ const visualSpectrum = (svgTime, svgSpectrum) => {
 
   svgSpectrum.appendChild(rectBottomSpectrum);
 
-  [' 1.0', ' 0.0', '-1.0'].forEach((text) => {
+  [1, 0, -1].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case ' 1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case ' 0.0': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '-1.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -5089,30 +5074,13 @@ const visualSpectrum = (svgTime, svgSpectrum) => {
     svgTime.appendChild(yText);
   });
 
-  ['1.0', '0.5', '0.0'].forEach((text) => {
+  [1, 0.5, 0].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case '1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case '0.5': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '0.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -5201,9 +5169,17 @@ const visualSpectrum = (svgTime, svgSpectrum) => {
     timerId = window.setTimeout(drawOscillator, 250);
   };
 
+  const formTypeElement = document.getElementById('form-oscillator-type-spectrum');
+  const rangeGainElement = document.getElementById('range-gain-spectrum');
+  const rangeFrequencyElement = document.getElementById('range-frequency-spectrum');
+  const rangeDetuneElement = document.getElementById('range-detune-spectrum');
+  const outputGainElement = document.getElementById('output-gain-spectrum0-value');
+  const outputFrequencyElement = document.getElementById('output-frequency-spectrum-value');
+  const outputDetuneElement = document.getElementById('output-detune-spectrum-value');
+
   let type = 'sine';
-  let frequency = document.getElementById('range-frequency-spectrum').valueAsNumber;
-  let detune = document.getElementById('range-detune-spectrum').valueAsNumber;
+  let frequency = rangeFrequencyElement.valueAsNumber;
+  let detune = rangeDetuneElement.valueAsNumber;
 
   let oscillator = null;
 
@@ -5219,13 +5195,8 @@ const visualSpectrum = (svgTime, svgSpectrum) => {
       oscillator = null;
     }
 
-    oscillator = new OscillatorNode(audiocontext);
+    oscillator = new OscillatorNode(audiocontext, { type, frequency, detune });
 
-    oscillator.type = type;
-    oscillator.frequency.value = frequency;
-    oscillator.detune.value = detune;
-
-    // OscillatorNode (Input) -> GainNode -> AnalyserNode -> AudioDestinationNode (Output)
     oscillator.connect(gain);
     gain.connect(analyser);
     analyser.connect(audiocontext.destination);
@@ -5258,8 +5229,8 @@ const visualSpectrum = (svgTime, svgSpectrum) => {
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  document.getElementById('form-oscillator-type-spectrum').addEventListener('change', (event) => {
-    const radios = event.currentTarget.elements['radio-oscillator-type-spectrum'];
+  formTypeElement.addEventListener('change', () => {
+    const radios = formTypeElement.elements['radio-oscillator-type-spectrum'];
 
     for (const radio of radios) {
       if (radio.checked) {
@@ -5274,24 +5245,30 @@ const visualSpectrum = (svgTime, svgSpectrum) => {
     }
   });
 
-  document.getElementById('range-gain-spectrum').addEventListener('input', (event) => {
-    gain.gain.value = event.currentTarget.valueAsNumber;
+  rangeGainElement.addEventListener('input', () => {
+    gain.gain.value = rangeGainElement.valueAsNumber;
+
+    outputGainElement.textContent = gain.gain.value.toFixed(2);
   });
 
-  document.getElementById('range-frequency-spectrum').addEventListener('input', (event) => {
-    frequency = event.currentTarget.valueAsNumber;
+  rangeFrequencyElement.addEventListener('input', () => {
+    frequency = rangeFrequencyElement.valueAsNumber;
 
     if (oscillator) {
       oscillator.frequency.value = frequency;
     }
+
+    outputFrequencyElement.textContent = `${frequency.toFixed(1)} Hz`;
   });
 
-  document.getElementById('range-detune-spectrum').addEventListener('input', (event) => {
-    detune = event.currentTarget.valueAsNumber;
+  rangeDetuneElement.addEventListener('input', () => {
+    detune = rangeDetuneElement.valueAsNumber;
 
     if (oscillator) {
       oscillator.detune.value = detune;
     }
+
+    outputDetuneElement.textContent = `${detune.toFixed(1)} cent`;
   });
 };
 
