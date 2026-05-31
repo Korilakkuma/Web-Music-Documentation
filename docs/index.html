@@ -4805,8 +4805,9 @@ window.setInterval(() =&gt; {
           <h3>A/D 変換</h3>
           <p>
             アナログ信号である音 (媒体の振動) をコンピュータで処理するためには, <code>0</code> と <code>1</code> のみの情報, つまり,
-            デジタル信号に変換する必要があります. この変換処理のことを, <b>A/D変換</b> (<b>Analog to Digital Conversion</b>) と呼びます. A/D 変換は, 大きく 3
-            つの処理があります.
+            デジタル信号に変換する必要があります. この変換処理を, <b>A/D変換</b> (<b>Analog to Digital Conversion</b>) と呼びます. A/D 変換は, 大きく 3
+            つの処理があります (逆に, コンピュータで処理したデジタル信号を, スピーカーなどからアナログ信号で出力するには, <b>D/A変換</b> (<b
+              >Digital to Analog Conversion</b>) を適用します).
           </p>
           <ol>
             <li>サンプリング (標本化)</li>
@@ -4814,11 +4815,12 @@ window.setInterval(() =&gt; {
             <li>符号化</li>
           </ol>
           <p>
-            サンプリング (標本化) と量子化の処理に共通することは, <b>連続した信号を離散した信号に変換することです</b>. コンピュータでは,
-            <b>連続した値や無限大となる値を扱うことが不可能</b>だからです.
+            サンプリング (標本化) と量子化の処理に共通する処理は, <b>連続した信号を対応する物理量に応じて離散した信号に変換することです</b>. コンピュータでは,
+            <b>連続した値や無限大となる値を扱うことが不可能</b>だからです (例えば, 単精度浮動小数点数では,
+            <code>01111111100000000000000000000000</code> が無限大に割り当てられているだけで, 2 進数として無限大を表現しているわけではありません).
           </p>
           <p>
-            <a href="#section-about-sound">「音」</a>のセクションでは, いくつか音の波形のイラストを記載しましたが, それらは常に 2 つの連続した物理量 (次元)
+            <a href="#section-about-sound">「音」</a>のセクションでは, いくつか音の波形のイラストを記載しましたが, それらは 2 つの連続した物理量 (次元)
             をもっていました. <b>時間</b>と<b>振幅</b>です. サンプリング (標本化) と量子化は, これら 2 つの連続した物理量を離散信号に変換する処理となります.
           </p>
           <section id="section-analog-to-digital-conversion-sampling">
@@ -4827,7 +4829,7 @@ window.setInterval(() =&gt; {
               <b>サンプリング</b> (<b>標本化</b>)は, 時間を離散した値に変換する処理です. 離散信号, すなわち, とびとびの値をとっていくためには,
               その間隔を決定するパラメータが必要になります. それが, <b>サンプリング周期</b> (<b>標本化周期</b>) です. サンプリング周期の逆数となるパラメータは,
               <b>標本化周波数</b> (<b>サンプリング周波数</b>) です. 簡単に解説すれば, サンプリング周波数は, <code>1 sec</code> の間に, いくつのサンプル (離散点)
-              をとるか ? ということを意味しています. 例えば, サンプリング周波数が <code>48000 Hz</code> の場合, <code>1 sec</code> の間に
+              をとるか ? ということを意味しています. 例えば, サンプリング周波数が <code>48000 Hz</code> の場合, <code>1 sec</code> に
               <code>48000</code> サンプル (離散点) をとることになります.
             </p>
             <figure>
@@ -4838,8 +4840,8 @@ window.setInterval(() =&gt; {
               </figcaption>
             </figure>
             <p>
-              サンプリング (標本化) では重要な定理があります. それは, サンプリング周波数の
-              <span class="math-inline">$\frac{1}{2}$</span> 以上の周波数は元のアナログ信号に復元できないという定理です. この定理は,
+              サンプリング (標本化) では重要な定理があります. サンプリング周波数の
+              <span class="math-inline">$\frac{1}{2}$</span> 以上の周波数は元のアナログ信号に復元できないという定理で,
               <b>サンプリング定理</b> (<b>標本化定理</b>, <b>シャノンの定理</b>) と呼ばれます. 逆の視点で表現すれば, サンプリング周波数の
               <span class="math-inline">$\frac{1}{2}$</span> より低い周波数は元のアナログ信号に復元可能ということです. また, サンプリング周波数の
               <span class="math-inline">$\frac{1}{2}$</span> は, <b>ナイキスト周波数</b>と呼ばれます. サンプリング定理から, 原信号に含まれる最大の周波数成分の
@@ -4915,8 +4917,8 @@ window.setInterval(() =&gt; {
             </p>
             <p>
               サンプリングされたアナログ信号は時間軸方向は, 離散化されていますが, 振幅軸の方向は連続したままです. 量子化では,
-              量子化ビットで指定された精度にしたがって, 振幅を整数値に丸める処理を実行します. 例えば, 量子化ビットが <code>2 bit</code> の場合, 4
-              つのステップの値 (<span class="math-inline">$2^{2} = 4$</span>) のいずれかに, <code>3 bit</code> の場合, 8 つのステップの値 (<span
+              量子化ビットで指定された精度にしたがって, 振幅を整数値に丸める処理を実行します. 例えば, 量子化ビットが <code>2 bit</code> の場合は, 4
+              つのステップの値 (<span class="math-inline">$2^{2} = 4$</span>) のいずれかに, <code>3 bit</code> の場合は, 8 つのステップの値 (<span
                 class="math-inline"
                 >$2^{3} = 8$</span>) のいずれかに振幅が丸められます.
             </p>
@@ -4950,12 +4952,12 @@ window.setInterval(() =&gt; {
           <article id="section-analog-to-digital-conversion-pcm">
             <h4>PCM (Pulse Code Modulation)</h4>
             <p>
-              <b>PCM</b> (<b>Pulse Code Modulation</b>) とは, このセクションで解説したように, アナログ信号をデジタル信号に変換する変調方式のことです.
-              厳密に表現すると, このセクションで解説した PCM は, 量子化の幅を均等 (線形的) に取得しているので, <b>Linear PCM</b> です. 量子化の方式によって,
-              <b>log-PCM</b>, <b>DPCM</b> (<b>Differential PCM</b>), <b>ADPCM</b> (<b>Adaptive Differential PCM</b>) などがあります.
-              どれが優れた方式というのはなく, ケースによって使い分けますが, 多くの場合, Linear PCM が使われているので, 単純に PCM と言った場合, Linear PCM
-              を意味することが多いです. Web Audio API でもオーディオデータの実体である <code>AudioBuffer</code> では, <code>32 bit</code> (浮動小数点数) の
-              Linear PCM による値を格納しています.
+              <b>PCM</b> (<b>Pulse Code Modulation</b>) とは, このセクションで解説したように, アナログ信号をデジタル信号に変換する変調方式のことです. 厳密には,
+              このセクションで解説した PCM は, 量子化の幅を均等 (線形的) にしているので, <b>Linear PCM</b> です. 量子化の方式によって, <b>log-PCM</b>,
+              <b>DPCM</b> (<b>Differential PCM</b>), <b>ADPCM</b> (<b>Adaptive Differential PCM</b>) などがあります. どれが優れた方式というのはなく,
+              ユースケースによって使い分けますが, 多くの場合, Linear PCM が使われています. したがって, 単純に PCM と言った場合, Linear PCM
+              を意味することが多いです. Web Audio API でも, オーディオデータを抽象化している <code>AudioBuffer</code> は, <code>32 bit</code> 浮動小数点数
+              (単精度浮動小数点数) の Linear PCM による値を格納しています.
             </p>
           </article>
         </section>
@@ -4995,16 +4997,69 @@ window.setInterval(() =&gt; {
             <p>
               厳密には, フーリエ級数が成立する条件は, 周期関数であるだけでは不十分で, <b>ディリクレの条件</b>と合わせて十分条件となります.
               これを理解するためには, 三角関数の基本的な性質 (高校レベルの数学) や三角関数の直交性などをもとに,
-              <b>リーマン・ルベーグの補助定理</b>や<b>パーセバルの等式</b>などを理解する必要があるので, 数学的な厳密性を理解したい場合は,
-              それぞれ最適なドキュメントを参考にしてください.
+              <b>リーマン・ルベーグの補助定理</b>や<b>パーセバルの等式</b>などを理解する必要があります. 簡単な解説を記載しますが,
+              数学的な厳密性を理解したい場合は, それぞれ最適なドキュメントを参考にしてください.
             </p>
+            <article id="section-fourier-series-riemann–lebesgue-lemma">
+              <h5>リーマン・ルベーグの補助定理 (リーマン・ルベーグの補題)</h5>
+              <p>
+                <span class="math-inline">$f\left(t\right)$</span> が閉区間 <span class="math-inline">$a \le t \le b$</span> で区分的に連続な関数であるとき,
+                以下の式が成立する.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &\lim_{\alpha \to \infty}\int_{a}^{b}f\left(t\right)\sin\left(\alpha t\right)dt = 0 \\
+                    &\lim_{\alpha \to \infty}\int_{a}^{b}f\left(t\right)\cos\left(\alpha t\right)dt = 0 \\
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                区分的に連続な関数とは, <span class="math-inline">$f\left(t\right)$</span> が閉区間において, 端点を除いてすべての点で微分可能で, 端点においては,
+                右側極限・左側極限が有界な値に収束するような関数です.
+              </p>
+              <p>
+                さらに, 1 階導関数 <span class="math-inline">$f'\left(t\right)$</span> も閉区間において連続な関数であれば,
+                <span class="math-inline">$f\left(t\right)$</span> が閉区間 <span class="math-inline">$a \le t \le b$</span> で区分的に滑らかな関数であり,
+                この性質はフーリエ級数やフーリエ変換において重要な性質となります.
+              </p>
+            </article>
+            <article id="section-fourier-series-parseval-identity">
+              <h5>パーセバルの等式</h5>
+              <p>
+                周期 <span class="math-inline">$2\pi$</span> の区分的に滑らかな周期関数 <span class="math-inline">$f\left(t\right)$</span> において,
+                正規直交関数系 <span class="math-inline">$\left\{\mathrm{u}_{k}\left(t\right)\right\}$</span> として, フーリエ係数
+                <span class="math-inline">$\alpha_{k} = \int_{-\pi}^{\pi} f\left(t\right) \cdot \mathrm{u}_{k}\left(t\right) dt$</span> とすると,
+                以下の等式が成立する.
+              </p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &||f\left(t\right)||^{2} = \sum_{k=0}^{\infty}{\alpha_{k}}^{2} \\
+                    &\left( ||f\left(t\right)|| = \sqrt{\int_{-\pi}^{\pi} \left\{f\left(t\right)\right\}^{2}dx} \right) \\
+                  \end{flalign}
+                $
+              </div>
+              <p>
+                直交関数系とは, ノルム (ベクトルで言うところの内積) が <code>0</code> になる関数系のことです. 例えば,
+                <span class="math-inline">$\left\{1, \cos\left(t\right), \sin\left(t\right), \cos\left(2t\right), \sin\left(2t\right) \cdots \right\}$</span>
+                は直交関数系であり, ノルムを <code>1</code> に正規化すれば正規直交関数系なので,
+                <span class="math-inline"
+                  >$\left\{\mathrm{u}_{k}\left(t\right)\right\} = \left\{\frac{1}{\sqrt{2\pi}}, \frac{\cos\left(t\right)}{\sqrt{2\pi}},
+                  \frac{\sin\left(t\right)}{\sqrt{2\pi}}, \frac{\cos\left(2t\right)}{\sqrt{2\pi}}, \frac{\sin\left(2t\right)}{\sqrt{2\pi}} \cdots \right\}$
+                  の一例と言えます (この正規直交関数系からなんとなく, フーリエ級数の形が見えるのではないでしょうか).</span>
+              </p>
+              <p>実は, パーセバルの等式は中学数学で習う, ピタゴラスの定理の一般化 (内積空間におけるピタゴラスの定理) でもあります.</p>
+            </article>
             <p>
               ここでは, 視覚的に理解するために, 周波数の異なる正弦波の級数で, 矩形波やノコギリ波, 三角波を生成してみます. また, 級数を大きくする
               (項数を大きくする) ほど, 実際の波形により近似することもわかります.
             </p>
-            <div class="app-container">
+            <div class="app-container flexbox-column">
               <svg id="svg-fourier-series" class="svg-fourier-series" width="720" height="240"></svg>
-              <div class="forms-fourier-series">
+              <div class="flexbox flexbox-align-items-center">
                 <button type="button" id="button-plot-fourier-series">Plot</button>
                 <button type="button" id="button-clear-fourier-series">Clear</button>
                 <button type="button" id="button-animation-fourier-series">Animation</button>
@@ -5017,7 +5072,7 @@ window.setInterval(() =&gt; {
                   <option value="250">250 msec</option>
                 </select>
               </div>
-              <div class="forms-fourier-series">
+              <div class="flexbox flexbox-align-items-center">
                 <label for="select-function-fourier-series">Wave Type</label>
                 <select id="select-function-fourier-series">
                   <option value="square" selected>Square</option>
@@ -5025,7 +5080,8 @@ window.setInterval(() =&gt; {
                   <option value="triangle">Triangle</option>
                 </select>
                 <label>
-                  <span id="output-sum-box-fourier-series">&Sigma; <sub>k</sub> = <span id="output-sum-fourier-series">1</span></span>
+                  <span id="output-sum-box-fourier-series"
+                    >&Sigma; <sub>k</sub> = <span id="output-sum-fourier-series" class="inline-block-min-width">1</span></span>
                   <input type="range" id="range-sum-fourier-series" value="1" min="1" max="100" step="1" />
                 </label>
               </div>
@@ -5047,7 +5103,7 @@ window.setInterval(() =&gt; {
             </div>
             <p>
               物理的な観点で理解すると, 複素フーリエ級数は, 余弦波と正弦波の 2 次元の<b>振動現象</b>であるフーリエ級数を, 3 次元の<b>回転</b>へと拡張します.
-              また, 複素フーリエ級数によって, フーリエ級数の問題点, すなわち, 位相をシフトするとフーリエ係数の値が変化する問題
+              また, 複素フーリエ級数によって, フーリエ級数の問題点である, 位相をシフトするとフーリエ係数の値が変化する問題
               (余弦波と正弦波は位相の違いでしかないので, 原信号が同じでもフーリエ係数が異なることが起きうる) を発展的に解決します.
             </p>
           </section>
@@ -5061,11 +5117,6 @@ window.setInterval(() =&gt; {
               <span class="math-inline">$\omega (= \frac{2 \pi}{T} = 2 \pi f)$</span> が連続的な角速度になることで導出できます (以下は,
               フーリエ変換と逆フーリエ変換の定義式です).
             </p>
-            <p>
-              フーリエ変換の厳密な導出を理解するには, <b>デルタ関数</b>や<b>単位階段関数</b>の理解が必要になります (さらに, フーリエ変換では,
-              <b>絶対可積分</b> (<span class="math-inline">$\int_{-\infty}^{\infty}\left|f\left(t\right)\right|dt \lt \infty$</span> ) が必要条件となります.
-              フーリエ級数からフーリエ変換の数学的な導出の詳細に関しては, それぞれ最適なドキュメントを参考にしてください).
-            </p>
             <div class="math-block">
               <!-- prettier-ignore -->
               $
@@ -5075,6 +5126,22 @@ window.setInterval(() =&gt; {
                 \end{flalign}
               $
             </div>
+            <p>
+              フーリエ変換と逆フーリエ変換の導出 (内側の積分がフーリエ変換, 外側の積分が逆フーリエ変換で元の関数に戻ります. 導出の詳細に関しては,
+              最適なドキュメントを参考にしてください).
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &f\left(t\right) = \lim_{T \to \infty} \sum_{n=-\infty}^{\infty}c_{n}e^{jn\frac{2 \pi}{T}t} = \lim_{T \to \infty} \sum_{n=-\infty}^{\infty}\left\{\frac{1}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f\left(t\right)e^{-jn\frac{2 \pi}{T}t}dt\right\}e^{jn\frac{2 \pi}{T}t} = \frac{1}{2 \pi}\int_{-\infty}^{\infty}\left\{\int_{-\infty}^{\infty}f\left(t\right)e^{-j2 \pi ft}dt\right\}e^{j2 \pi tf}df \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              フーリエ変換では, ディリクレの条件に追加して, <b>絶対可積分</b> (<span class="math-inline"
+                >$\int_{-\infty}^{\infty}\left|f\left(t\right)\right|dt \lt \infty$</span>) が必要条件となります. フーリエ変換をより理解するには, <b>デルタ関数</b>や<b>単位階段関数</b>の理解もあるとよいかもしれません.
+            </p>
             <section id="section-spectrum">
               <h5>スペクトル</h5>
               <p>
@@ -5087,7 +5154,15 @@ window.setInterval(() =&gt; {
               </p>
               <div class="math-block">
                 <!-- prettier-ignore -->
-                $\left|z\right| = \sqrt{x^{2} + y^{2}} \quad \cos\theta = \frac{x}{\sqrt{x^{2} + y^{2}}} \quad \sin\theta = \frac{y}{\sqrt{x^{2} + y^{2}}} \quad \tan\theta = \left(\frac{\sin\theta}{\cos\theta}\right) \quad \theta = \tan^{-1}\left(\frac{\sin\theta}{\cos\theta}\right) = \tan^{-1}\left(\frac{y}{x}\right)$
+                $
+                  \begin{flalign}
+                    &\left|z\right| = \sqrt{x^{2} + y^{2}} \\
+                    &\theta = \tan^{-1}\left(\frac{\sin\theta}{\cos\theta}\right) = \tan^{-1}\left(\frac{y}{x}\right) \\
+                    &\cos\theta = \frac{x}{\sqrt{x^{2} + y^{2}}} \\
+                    &\sin\theta = \frac{y}{\sqrt{x^{2} + y^{2}}} \\
+                    &\tan\theta = \left(\frac{\sin\theta}{\cos\theta}\right) \\
+                  \end{flalign}
+                $
               </div>
               <p>
                 ちなみに, <b>人間の聴覚は位相スペクトルの違いに鈍感</b>という特性があるので, 一般的に, スペクトルと表現した場合,
@@ -5103,9 +5178,9 @@ window.setInterval(() =&gt; {
           <section id="section-discrete-fourier-transform">
             <h4>離散フーリエ変換 (DFT)</h4>
             <p>
-              コンピュータで実現する場合, 無限区間の積分は原理上できないので, ある区間で和分を算出する必要があります. これが,
-              <b>離散フーリエ変換</b> (<b>DFT</b>: <b>Discrete Fourier Transform</b>)です (余談ですが, コンピュータにおいて, 積分は和分,
-              微分は差分で実装します).
+              コンピュータでフーリエ変換をそのまま実装することはできません (無限区間の積分はコンピュータの原理上できません). コンピュータで実装できるように,
+              有限区間の和分に適用したフーリエ変換が, <b>離散フーリエ変換</b> (<b>DFT</b>: <b>Discrete Fourier Transform</b>)です (コンピュータにおいて,
+              積分は和分, 微分は差分で実装します).
             </p>
             <p>
               フーリエ変換から, 離散フーリエ変換を導出するには, 周波数 (周期) と, サンプリング周波数 (サンプリング周期) を数列 (離散値) で対応づけます.
@@ -5138,7 +5213,7 @@ window.setInterval(() =&gt; {
             </div>
             <p>
               多くのプログラミング言語において, 配列のようなコレクションのインデックスは <code>0</code> から開始するので, 離散フーリエ変換の積和演算の範囲も,
-              <code>0</code> から開始している点と有界となっている点に着目してください.
+              <code>0</code> から開始している点と有限区間の和分となっている点に着目してください.
             </p>
             <p>また, <span class="math-inline">$e^{-j\frac{2 \pi n}{N}}$</span> は, <b>回転因子</b> (<b>回転子</b>) と呼ばれ, 以下のように定義されます.</p>
             <div class="math-block">
@@ -5171,6 +5246,98 @@ window.setInterval(() =&gt; {
                 \end{flalign}
               $
             </div>
+            <p>
+              実装する場合, 信号を実部と虚部の配列に分割する必要があるので (複素数型があるプログラミング言語でも考え方は同じです), オイラーの公式 (<span
+                class="math-inline"
+                >$e^{j\theta} = \cos\left(\theta\right) + j\sin\left(\theta\right)$ </span>) を利用して, ネイピア数を実部と虚部に分解すると実装しやすいでしょう. また, 時間領域の信号は実部しかありませんが, 逆離散フーリエ変換も考慮して,
+              信号も実部と虚部に分解して実装します (<span class="math-inline"
+                >$x\left(n\right) = x_{\mathrm{real}}\left(n\right) + jx_{\mathrm{imag}}\left(n\right), X\left(k\right) = X_{\mathrm{real}}\left(k\right) +
+                jX_{\mathrm{imag}}\left(k\right)$</span>).
+            </p>
+            <p>実装のために, 離散フーリエ変換の式を変形すると以下のようになります.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &X\left(k\right) = \sum_{n = 0}^{N - 1}x\left(n\right)e^{-j\frac{2 \pi kn}{N}} = \sum_{n = 0}^{N - 1}\left\{x_{\mathrm{real}}\left(n\right) + jx_{\mathrm{imag}}\left(n\right)\right\}\left\{\cos\left(\frac{2 \pi kn}{N}\right) + j\sin\left(-\frac{2 \pi kn}{N}\right)\right\} = \sum_{n = 0}^{N - 1}\left\{\left(\cos\left(\frac{2 \pi kn}{N}\right)\left(x_{\mathrm{real}}\left(n\right) + jx_{\mathrm{imag}}\left(n\right)\right)\right) + j\left(\sin\left(-\frac{2 \pi kn}{N}\right)\left(x_{\mathrm{real}}\left(n\right) + jx_{\mathrm{imag}}\left(n\right)\right)\right)\right\} \\
+                  &X_{\mathrm{real}}\left(k\right) = \sum_{n = 0}^{N - 1}\left(\cos\left(\frac{2 \pi kn}{N}\right)x_{\mathrm{real}}\left(n\right) + j^{2}\sin\left(-\frac{2 \pi kn}{N}\right)x_{\mathrm{imag}}\left(n\right)\right) = \sum_{n = 0}^{N - 1}\left(\cos\left(\frac{2 \pi kn}{N}\right)x_{\mathrm{real}}\left(n\right) - \sin\left(-\frac{2 \pi kn}{N}\right)x_{\mathrm{imag}}\left(n\right)\right) \\
+                  &X_{\mathrm{imag}}\left(k\right) = \sum_{n = 0}^{N - 1}\left(j\cos\left(\frac{2 \pi kn}{N}\right)x_{\mathrm{imag}}\left(n\right) + j\sin\left(-\frac{2 \pi kn}{N}\right)x_{\mathrm{real}}\left(n\right)\right) \\
+
+                \end{flalign}
+              $
+            </div>
+            <p>逆離散フーリエ変換の式も同様に導出できます</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &x\left(n\right) = \frac{1}{N}\sum_{k = 0}^{N - 1}X\left(k\right)e^{j\frac{2 \pi nk}{N}} = \frac{1}{N}\sum_{k = 0}^{N - 1}\left\{X_{\mathrm{real}}\left(k\right) + jX_{\mathrm{imag}}\left(k\right)\right\}\left\{\cos\left(\frac{2 \pi nk}{N}\right) + j\sin\left(\frac{2 \pi nk}{N}\right)\right\} = \frac{1}{N}\sum_{k = 0}^{N - 1}\left\{\left(\cos\left(\frac{2 \pi nk}{N}\right)\left(X_{\mathrm{real}}\left(k\right) + jX_{\mathrm{imag}}\left(k\right)\right)\right) + j\left(\sin\left(\frac{2 \pi nk}{N}\right)\left(X_{\mathrm{real}}\left(k\right) + jX_{\mathrm{imag}}\left(k\right)\right)\right)\right\} \\
+                  &x_{\mathrm{real}}\left(n\right) = \frac{1}{N}\sum_{k = 0}^{N - 1}\left(\cos\left(\frac{2 \pi kn}{N}\right)X_{\mathrm{real}}\left(k\right) + j^{2}\sin\left(\frac{2 \pi nk}{N}\right)X_{\mathrm{imag}}\left(k\right)\right) = \frac{1}{N}\sum_{k = 0}^{N - 1}\left(\cos\left(\frac{2 \pi nk}{N}\right)X_{\mathrm{real}}\left(k\right) - \sin\left(\frac{2 \pi nk}{N}\right)X_{\mathrm{imag}}\left(k\right)\right) \\
+                  &x_{\mathrm{imag}}\left(n\right) = \frac{1}{N}\sum_{k = 0}^{N - 1}\left(j\cos\left(\frac{2 \pi nk}{N}\right)X_{\mathrm{imag}}\left(k\right) + j\sin\left(\frac{2 \pi nk}{N}\right)X_{\mathrm{real}}\left(k\right)\right) \\
+
+                \end{flalign}
+              $
+            </div>
+            <p>実装上は, 虚数単位をそのまま実装できないので, 虚部の配列として実装します.</p>
+            <pre data-prismjs-copy="クリップボードにコピー" data-prismjs-copy-success="コピーしました"><code class="language-js line-numbers">/**
+ * DFT
+ *
+ * @param {Float32Array} inputReals This argument is instance of `Float32Array` for real input signal.
+ * @param {Float32Array} inputImags This argument is instance of `Float32Array` for imaginary input signal.
+ * @param {Float32Array} reals This argument is instance of `Float32Array` for real number.
+ * @param {Float32Array} imags This argument is instance of `Float32Array` for imaginary number.
+ * @param {number} size This argument is DFT size.
+ */
+function DFT(inputReals, inputImags, reals, imags, size) {
+  reals.fill(0.0);
+  imags.fill(0.0);
+
+  for (let k = 0; k &lt; size; k++) {
+    let real = 0.0;
+    let imag = 0.0;
+
+    for (let n = 0; n &lt; size; n++) {
+      const wreal = Math.cos((2.0 * Math.PI * k * n) / size);
+      const wimag = -1 * Math.sin((2.0 * Math.PI * k * n) / size);
+
+      real += (wreal * inputReals[n]) - (wimag * inputImags[n]);
+      imag += (wreal * inputImags[n]) + (wimag * inputReals[n]);
+    }
+
+    reals[k] = real;
+    imags[k] = imag;
+  }
+}
+
+/**
+ * IDFT
+ *
+ * @param {Float32Array} inputReals This argument is instance of `Float32Array` for real input signal.
+ * @param {Float32Array} inputImags This argument is instance of `Float32Array` for imaginary input signal.
+ * @param {Float32Array} reals This argument is instance of `Float32Array` for real number.
+ * @param {Float32Array} imags This argument is instance of `Float32Array` for imaginary number.
+ * @param {number} size This argument is IDFT size.
+ */
+function IDFT(inputReals, inputImags, reals, imags, size) {
+  reals.fill(0.0);
+  imags.fill(0.0);
+
+  for (let n = 0; n &lt; size; n++) {
+    let real = 0.0;
+    let imag = 0.0;
+
+    for (let k = 0; k &lt; size; k++) {
+      const wreal = Math.cos((2.0 * Math.PI * n * k) / size);
+      const wimag = Math.sin((2.0 * Math.PI * n * k) / size);
+
+      real += (wreal * inputReals[k]) - (wimag * inputImags[k]);
+      imag += (wreal * inputImags[k]) + (wimag * inputReals[k]);
+    }
+
+    reals[n] = real / size;
+    imags[n] = imag / size;
+  }
+}</code></pre>
           </section>
           <section id="section-fast-fourier-transform">
             <h4>高速フーリエ変換 (FFT)</h4>
@@ -6011,6 +6178,11 @@ function IFFT(reals, imags, size) {
                 FFT と IFFT の実装上の違いは, 回転因子の回転方向が互いに逆なのと, IFFT の場合 <span class="math-inline">$N$</span> 倍された値になるので,
                 最後に正規化の処理がある点です.
               </p>
+              <p>
+                また, 理論上, FFT / IFFT のサイズに上限はありませんが, 高速化されたアルゴリズムとは言え, サイズが大きくなるほど計算に時間を要します. したがって,
+                上記のコードは, リアルタイム処理を考慮して, <code>32768</code> (<span class="math-inline">$2^{16} - 1$</span> 以下の 2 の冪乗で最大)
+                を上限としています (実際, <code>AnalyserNode</code> の <code>fftSize</code> プロパティも上限は <code>32768</code> です).
+              </p>
               <article id="section-fast-fourier-transform-algorithms">
                 <h6>改良された高速フーリエ変換の実装</h6>
                 <p>
@@ -6083,29 +6255,49 @@ function IFFT(reals, imags, size) {
           <div class="app-container">
             <dl>
               <dt>Time Domain</dt>
-              <dd><svg id="svg-time" class="svg-time" width="720" height="240"></svg></dd>
+              <dd><svg id="svg-time" class="svg-time" width="720" height="160"></svg></dd>
               <dt>Frequency Domain (Spectrum)</dt>
-              <dd><svg id="svg-spectrum" class="svg-spectrum" width="720" height="240"></svg></dd>
+              <dd><svg id="svg-spectrum" class="svg-spectrum" width="720" height="160"></svg></dd>
             </dl>
-            <div>
-              <button type="button" id="button-spectrum" class="button-spectrum">start</button>
-              <form id="form-oscillator-type-spectrum" class="form-oscillator-type">
-                <label><span>sine</span><input type="radio" name="radio-oscillator-type-spectrum" value="sine" checked /></label>
-                <label><span>square</span><input type="radio" name="radio-oscillator-type-spectrum" value="square" /></label>
-                <label><span>sawtooth</span><input type="radio" name="radio-oscillator-type-spectrum" value="sawtooth" /></label>
-                <label><span>triangle</span><input type="radio" name="radio-oscillator-type-spectrum" value="triangle" /></label>
+            <div class="flexbox-column">
+              <div>
+                <button type="button" id="button-spectrum" class="button-spectrum">start</button>
+              </div>
+              <form id="form-oscillator-type-spectrum" class="flexbox">
+                <label class="flexbox label-radio"><span>sine</span><input type="radio" name="radio-oscillator-type-spectrum" value="sine" checked /></label>
+                <label class="flexbox label-radio"><span>square</span><input type="radio" name="radio-oscillator-type-spectrum" value="square" /></label>
+                <label class="flexbox label-radio"><span>sawtooth</span><input type="radio" name="radio-oscillator-type-spectrum" value="sawtooth" /></label>
+                <label class="flexbox label-radio"><span>triangle</span><input type="radio" name="radio-oscillator-type-spectrum" value="triangle" /></label>
               </form>
-              <div class="ranges-oscillator">
-                <label><span>gain</span><input type="range" id="range-gain-spectrum" value="1" min="0" max="1" step="0.05" /></label>
-                <label><span>frequency</span><input type="range" id="range-frequency-spectrum" value="440" min="27.5" max="1000" step="0.5" /></label>
-                <label><span>detune</span><input type="range" id="range-detune-spectrum" value="0" min="-600" max="600" step="1" /></label>
+              <div class="flexbox">
+                <div class="flexbox">
+                  <label class="flexbox">
+                    <span>gain</span>
+                    <input type="range" id="range-gain-spectrum" value="1" min="0" max="1" step="0.05" />
+                  </label>
+                  <output id="output-gain-spectrum-value" for="range-gain-spectrum">1.00</output>
+                </div>
+                <div class="flexbox">
+                  <label class="flexbox">
+                    <span>frequency</span>
+                    <input type="range" id="range-frequency-spectrum" value="440" min="27.5" max="1000" step="0.5" />
+                  </label>
+                  <output id="output-frequency-spectrum-value" for="range-frequency-spectrum">440.0 Hz</output>
+                </div>
+                <div class="flexbox">
+                  <label class="flexbox">
+                    <span>detune</span>
+                    <input type="range" id="range-detune-spectrum" value="0" min="-600" max="600" step="1" />
+                  </label>
+                  <output id="output-detune-spectrum-value" for="range-detune-spectrum">0 cent</output>
+                </div>
               </div>
             </div>
           </div>
           <p>
-            基本波形と同じように, 楽器音や音声も基本周波数と倍音の周波数成分によって構成されています. 厳密には,
-            自然の音は必ずしもこのような整数倍になっていません. しかし, 実はこのことが人工的な音と感じさせない要因ともなっています. また, エフェクターの 1
-            つである, オーバードライブやディストーションは, 本来発生しない倍音を発生させることによって歪みを与えます
+            基本波形と同じように, 楽器音や音声も基本周波数と倍音の周波数成分によって構成されています. 自然の音は必ずしもこのような整数倍になっていませんが,
+            実はこのことが人工的な音と感じさせない要因となっています. また, エフェクターの 1 つであるオーバードライブやディストーションは,
+            本来発生しない倍音を発生させることによって歪みを与えます
             (オーディオ信号処理における<b>非線形処理</b>によって発生させることができるエフェクターです).
           </p>
           <p>また, ホワイトノイズのような雑音はすべての周波数成分を含んでいるので, そのスペクトルは一様になります.</p>

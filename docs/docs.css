@@ -293,18 +293,6 @@ input[type="file"] {
   overflow: auto hidden;
 }
 
-.ranges-oscillator {
-  display: flex;
-  gap: 12px;
-}
-
-.ranges-oscillator > label {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  cursor: pointer;
-}
-
 .ranges-envelopegenerator {
   display: flex;
   gap: 12px;
@@ -323,20 +311,6 @@ input[type="file"] {
   gap: 4px;
   align-items: center;
   cursor: ew-resize;
-}
-
-.forms-fourier-series {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: flex-start;
-  margin: 12px 0;
-}
-
-.forms-fourier-series label {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
 }
 
 .app-headline > label {
@@ -447,15 +421,6 @@ select {
   user-select: none;
   border: 1px solid var(--gray-lighter);
   -webkit-touch-callout: none;
-}
-
-.forms-fourier-series select {
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-#output-sum-box-fourier-series {
-  min-width: 72px;
 }
 
 :disabled {
@@ -587,6 +552,11 @@ select {
   cursor: pointer;
   user-select: none;
   -webkit-touch-callout: none;
+}
+
+.inline-block-min-width {
+  display: inline-block;
+  min-width: 48px;
 }
 
 .nowrap {
