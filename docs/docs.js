@@ -5018,6 +5018,192 @@ const visualSpectrum = (svgTime, svgSpectrum) => {
   });
 };
 
+const createAudioNode = (name, x, y, w = 300, h = 100) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const rect = document.createElementNS(xmlns, 'rect');
+  const text = document.createElementNS(xmlns, 'text');
+
+  rect.setAttribute('x', x.toString(10));
+  rect.setAttribute('y', y.toString(10));
+  rect.setAttribute('width', w.toString(10));
+  rect.setAttribute('height', h.toString(10));
+  rect.setAttribute('stroke', baseColor);
+  rect.setAttribute('stroke-width', lineWidth.toString(10));
+  rect.setAttribute('stroke-linecap', lineCap);
+  rect.setAttribute('stroke-linejoin', lineJoin);
+  rect.setAttribute('fill', white);
+
+  text.textContent = name;
+
+  text.setAttribute('x', (x + w / 2).toString(10));
+  text.setAttribute('y', (y + h / 2 + 4).toString(10));
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('stroke', 'none');
+  text.setAttribute('fill', baseColor);
+  text.setAttribute('font-size', '20px');
+
+  g.appendChild(rect);
+  g.appendChild(text);
+
+  return g;
+};
+
+const createAudioNode2LineText = (name, sub, x, y, w = 300, h = 100) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const rect = document.createElementNS(xmlns, 'rect');
+  const text = document.createElementNS(xmlns, 'text');
+  const subText = document.createElementNS(xmlns, 'text');
+
+  rect.setAttribute('x', x.toString(10));
+  rect.setAttribute('y', y.toString(10));
+  rect.setAttribute('width', w.toString(10));
+  rect.setAttribute('height', h.toString(10));
+  rect.setAttribute('stroke', baseColor);
+  rect.setAttribute('stroke-width', lineWidth.toString(10));
+  rect.setAttribute('stroke-linecap', lineCap);
+  rect.setAttribute('stroke-linejoin', lineJoin);
+  rect.setAttribute('fill', white);
+
+  text.textContent = name;
+
+  text.setAttribute('x', (x + w / 2).toString(10));
+  text.setAttribute('y', (y + h / 2 - 4).toString(10));
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('stroke', 'none');
+  text.setAttribute('fill', baseColor);
+  text.setAttribute('font-size', '20px');
+
+  subText.textContent = sub;
+
+  subText.setAttribute('x', (x + w / 2).toString(10));
+  subText.setAttribute('y', (y + h / 2 + 24).toString(10));
+  subText.setAttribute('text-anchor', 'middle');
+  subText.setAttribute('stroke', 'none');
+  subText.setAttribute('fill', baseColor);
+  subText.setAttribute('font-size', '18px');
+
+  g.appendChild(rect);
+  g.appendChild(text);
+  g.appendChild(subText);
+
+  return g;
+};
+
+const createAudioParam = (name, x, y, w = 80, h = 40) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const ellipse = document.createElementNS(xmlns, 'ellipse');
+  const text = document.createElementNS(xmlns, 'text');
+
+  ellipse.setAttribute('cx', x.toString(10));
+  ellipse.setAttribute('cy', y.toString(10));
+  ellipse.setAttribute('rx', w.toString(10));
+  ellipse.setAttribute('ry', h.toString(10));
+  ellipse.setAttribute('stroke', baseColor);
+  ellipse.setAttribute('stroke-width', lineWidth.toString(10));
+  ellipse.setAttribute('stroke-linecap', lineCap);
+  ellipse.setAttribute('stroke-linejoin', lineJoin);
+  ellipse.setAttribute('fill', white);
+
+  text.textContent = name;
+
+  text.setAttribute('x', (x + 4).toString(10));
+  text.setAttribute('y', (y + h / 2 - 14).toString(10));
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('stroke', 'none');
+  text.setAttribute('fill', baseColor);
+  text.setAttribute('font-size', '16px');
+
+  g.appendChild(ellipse);
+  g.appendChild(text);
+
+  return g;
+};
+
+const createConnection = (startX, startY, endX, endY, color = waveColor) => {
+  const path = document.createElementNS(xmlns, 'path');
+
+  const d = `M${startX} ${startY} L${endX} ${endY}`;
+
+  path.setAttribute('d', d);
+  path.setAttribute('stroke', color);
+  path.setAttribute('stroke-width', '4');
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  return path;
+};
+
+const createConnectionArrow = (posX, posY, direction = 'down', color = waveColor) => {
+  const path = document.createElementNS(xmlns, 'path');
+
+  switch (direction) {
+    case 'down': {
+      const d = `M${posX} ${posY} L${posX + 8} ${posY} L${posX} ${posY + 12} L${posX - 8} ${posY} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+
+    case 'up': {
+      const d = `M${posX} ${posY} L${posX + 8} ${posY} L${posX} ${posY - 12} L${posX - 8} ${posY} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+
+    case 'left': {
+      const d = `M${posX} ${posY} L${posX} ${posY + 8} L${posX - 12} ${posY} L${posX} ${posY - 8} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+
+    case 'right': {
+      const d = `M${posX} ${posY} L${posX} ${posY + 8} L${posX + 12} ${posY} L${posX} ${posY - 8} L${posX} ${posY}`;
+
+      path.setAttribute('d', d);
+      break;
+    }
+  }
+
+  path.setAttribute('stroke', color);
+  path.setAttribute('stroke-width', '4');
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+  path.setAttribute('fill', color);
+
+  return path;
+};
+
+const createNodeConnectionsForLFO = (svg) => {
+  const g = document.createElementNS(xmlns, 'g');
+
+  const oscillatorNodeRect = createAudioNode2LineText('OscillatorNode (LFO)', '(`frequency` is Rate)', 0, 0);
+  const depthNodeRect = createAudioNode('GainNode (Depth)', 400, 0);
+  const audioParamRect = createAudioParam('AudioParam', 885, 50);
+
+  const oscillatorNodeAndDepthPath = createConnection(300 + 1, 50 - 1, 400 - 16, 50 - 1);
+  const depthAndAudioParamPath = createConnection(700 + 1, 50 - 1, 800 - 12, 50 - 1);
+
+  const oscillatorNodeAndDepthArrow = createConnectionArrow(400 - 16, 50 - 1, 'right');
+  const depthAndAudioParamArrow = createConnectionArrow(800 - 12, 50 - 1, 'right');
+
+  g.appendChild(oscillatorNodeRect);
+  g.appendChild(oscillatorNodeAndDepthPath);
+  g.appendChild(oscillatorNodeAndDepthArrow);
+  g.appendChild(depthNodeRect);
+  g.appendChild(depthAndAudioParamPath);
+  g.appendChild(depthAndAudioParamArrow);
+  g.appendChild(audioParamRect);
+
+  g.setAttribute('transform', 'translate(2, 2)');
+
+  svg.appendChild(g);
+};
+
 const vibrato = () => {
   let oscillator = null;
   let lfo = null;
@@ -5027,17 +5213,21 @@ const vibrato = () => {
   let depthRate = 0.1;
   let rateValue = 1;
 
-  const buttonElement = document.getElementById('button-vibrato');
+  const buttonElement = document.getElementById('button-lfo');
 
   const rangeFrequencyElement = document.getElementById('range-oscillator-frequency');
   const rangeDepthElement = document.getElementById('range-lfo-depth');
   const rangeRateElement = document.getElementById('range-lfo-rate');
 
-  const spanPrintFrequencyElement = document.getElementById('print-oscillator-frequency-value');
-  const spanPrintDepthElement = document.getElementById('print-lfo-depth-value');
-  const spanPrintRateElement = document.getElementById('print-lfo-rate-value');
+  const outputFrequencyElement = document.getElementById('output-oscillator-frequency-value');
+  const outputDepthElement = document.getElementById('output-lfo-depth-value');
+  const outputRateElement = document.getElementById('output-lfo-rate-value');
 
-  const onDown = (event) => {
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
     if (oscillator !== null || lfo !== null) {
       return;
     }
@@ -5052,17 +5242,19 @@ const vibrato = () => {
     depth.connect(oscillator.frequency);
 
     oscillator.start(0);
+
     lfo.start(0);
 
     buttonElement.textContent = 'stop';
   };
 
-  const onUp = (event) => {
+  const onUp = () => {
     if (oscillator === null || lfo === null) {
       return;
     }
 
     oscillator.stop(0);
+
     lfo.stop(0);
 
     oscillator = null;
@@ -5077,35 +5269,35 @@ const vibrato = () => {
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  rangeFrequencyElement.addEventListener('input', (event) => {
-    frequency = event.currentTarget.valueAsNumber;
+  rangeFrequencyElement.addEventListener('input', () => {
+    frequency = rangeFrequencyElement.valueAsNumber;
 
     if (oscillator && depth) {
       oscillator.frequency.value = frequency;
       depth.gain.value = oscillator.frequency.value * depthRate;
     }
 
-    spanPrintFrequencyElement.textContent = `${Math.trunc(frequency * 10) / 10} Hz`;
+    outputFrequencyElement.textContent = `${frequency.toFixed(1)} Hz`;
   });
 
-  rangeDepthElement.addEventListener('input', (event) => {
-    depthRate = event.currentTarget.valueAsNumber;
+  rangeDepthElement.addEventListener('input', () => {
+    depthRate = rangeDepthElement.valueAsNumber;
 
     if (oscillator && depth) {
       depth.gain.value = oscillator.frequency.value * depthRate;
     }
 
-    spanPrintDepthElement.textContent = depthRate.toString(10);
+    outputDepthElement.textContent = depthRate.toFixed(2);
   });
 
-  rangeRateElement.addEventListener('input', (event) => {
-    rateValue = event.currentTarget.valueAsNumber;
+  rangeRateElement.addEventListener('input', () => {
+    rateValue = rangeRateElement.valueAsNumber;
 
     if (lfo) {
       lfo.frequency.value = rateValue;
     }
 
-    spanPrintRateElement.textContent = Math.trunc(rateValue).toString(10);
+    outputRateElement.textContent = rateValue.toFixed(0);
   });
 };
 
@@ -5238,110 +5430,6 @@ const animateFeedback = (svg) => {
   });
 };
 
-const createAudioNode = (name, x, y, w = 300, h = 100) => {
-  const g = document.createElementNS(xmlns, 'g');
-
-  const rect = document.createElementNS(xmlns, 'rect');
-  const text = document.createElementNS(xmlns, 'text');
-
-  rect.setAttribute('x', x.toString(10));
-  rect.setAttribute('y', y.toString(10));
-  rect.setAttribute('width', w.toString(10));
-  rect.setAttribute('height', h.toString(10));
-  rect.setAttribute('stroke', baseColor);
-  rect.setAttribute('stroke-width', lineWidth.toString(10));
-  rect.setAttribute('stroke-linecap', lineCap);
-  rect.setAttribute('stroke-linejoin', lineJoin);
-  rect.setAttribute('fill', white);
-
-  text.textContent = name;
-
-  text.setAttribute('x', (x + w / 2).toString(10));
-  text.setAttribute('y', (y + h / 2 + 4).toString(10));
-  text.setAttribute('text-anchor', 'middle');
-  text.setAttribute('stroke', 'none');
-  text.setAttribute('fill', baseColor);
-  text.setAttribute('font-size', '20px');
-
-  g.appendChild(rect);
-  g.appendChild(text);
-
-  return g;
-};
-
-const createAudioNode2LineText = (name, sub, x, y, w = 300, h = 100) => {
-  const g = document.createElementNS(xmlns, 'g');
-
-  const rect = document.createElementNS(xmlns, 'rect');
-  const text = document.createElementNS(xmlns, 'text');
-  const subText = document.createElementNS(xmlns, 'text');
-
-  rect.setAttribute('x', x.toString(10));
-  rect.setAttribute('y', y.toString(10));
-  rect.setAttribute('width', w.toString(10));
-  rect.setAttribute('height', h.toString(10));
-  rect.setAttribute('stroke', baseColor);
-  rect.setAttribute('stroke-width', lineWidth.toString(10));
-  rect.setAttribute('stroke-linecap', lineCap);
-  rect.setAttribute('stroke-linejoin', lineJoin);
-  rect.setAttribute('fill', white);
-
-  text.textContent = name;
-
-  text.setAttribute('x', (x + w / 2).toString(10));
-  text.setAttribute('y', (y + h / 2 - 4).toString(10));
-  text.setAttribute('text-anchor', 'middle');
-  text.setAttribute('stroke', 'none');
-  text.setAttribute('fill', baseColor);
-  text.setAttribute('font-size', '20px');
-
-  subText.textContent = sub;
-
-  subText.setAttribute('x', (x + w / 2).toString(10));
-  subText.setAttribute('y', (y + h / 2 + 24).toString(10));
-  subText.setAttribute('text-anchor', 'middle');
-  subText.setAttribute('stroke', 'none');
-  subText.setAttribute('fill', baseColor);
-  subText.setAttribute('font-size', '18px');
-
-  g.appendChild(rect);
-  g.appendChild(text);
-  g.appendChild(subText);
-
-  return g;
-};
-
-const createAudioParam = (name, x, y, w = 80, h = 40) => {
-  const g = document.createElementNS(xmlns, 'g');
-
-  const ellipse = document.createElementNS(xmlns, 'ellipse');
-  const text = document.createElementNS(xmlns, 'text');
-
-  ellipse.setAttribute('cx', x.toString(10));
-  ellipse.setAttribute('cy', y.toString(10));
-  ellipse.setAttribute('rx', w.toString(10));
-  ellipse.setAttribute('ry', h.toString(10));
-  ellipse.setAttribute('stroke', baseColor);
-  ellipse.setAttribute('stroke-width', lineWidth.toString(10));
-  ellipse.setAttribute('stroke-linecap', lineCap);
-  ellipse.setAttribute('stroke-linejoin', lineJoin);
-  ellipse.setAttribute('fill', white);
-
-  text.textContent = name;
-
-  text.setAttribute('x', (x + 4).toString(10));
-  text.setAttribute('y', (y + h / 2 - 14).toString(10));
-  text.setAttribute('text-anchor', 'middle');
-  text.setAttribute('stroke', 'none');
-  text.setAttribute('fill', baseColor);
-  text.setAttribute('font-size', '16px');
-
-  g.appendChild(ellipse);
-  g.appendChild(text);
-
-  return g;
-};
-
 const createLFO = (x, y) => {
   const w = 300;
   const h = 100;
@@ -5387,62 +5475,6 @@ const createLFO = (x, y) => {
   g.appendChild(subText);
 
   return g;
-};
-
-const createConnection = (startX, startY, endX, endY, color = waveColor) => {
-  const path = document.createElementNS(xmlns, 'path');
-
-  const d = `M${startX} ${startY} L${endX} ${endY}`;
-
-  path.setAttribute('d', d);
-  path.setAttribute('stroke', color);
-  path.setAttribute('stroke-width', '4');
-  path.setAttribute('stroke-linecap', lineCap);
-  path.setAttribute('stroke-linejoin', lineJoin);
-
-  return path;
-};
-
-const createConnectionArrow = (posX, posY, direction = 'down', color = waveColor) => {
-  const path = document.createElementNS(xmlns, 'path');
-
-  switch (direction) {
-    case 'down': {
-      const d = `M${posX} ${posY} L${posX + 8} ${posY} L${posX} ${posY + 12} L${posX - 8} ${posY} L${posX} ${posY}`;
-
-      path.setAttribute('d', d);
-      break;
-    }
-
-    case 'up': {
-      const d = `M${posX} ${posY} L${posX + 8} ${posY} L${posX} ${posY - 12} L${posX - 8} ${posY} L${posX} ${posY}`;
-
-      path.setAttribute('d', d);
-      break;
-    }
-
-    case 'left': {
-      const d = `M${posX} ${posY} L${posX} ${posY + 8} L${posX - 12} ${posY} L${posX} ${posY - 8} L${posX} ${posY}`;
-
-      path.setAttribute('d', d);
-      break;
-    }
-
-    case 'right': {
-      const d = `M${posX} ${posY} L${posX} ${posY + 8} L${posX + 12} ${posY} L${posX} ${posY - 8} L${posX} ${posY}`;
-
-      path.setAttribute('d', d);
-      break;
-    }
-  }
-
-  path.setAttribute('stroke', color);
-  path.setAttribute('stroke-width', '4');
-  path.setAttribute('stroke-linecap', lineCap);
-  path.setAttribute('stroke-linejoin', lineJoin);
-  path.setAttribute('fill', color);
-
-  return path;
 };
 
 const createNodeConnectionsForDelay = (svg) => {
@@ -21938,6 +21970,8 @@ createFFT4(document.getElementById('svg-figure-fft-4'));
 createFFT8(document.getElementById('svg-figure-fft-8'));
 
 visualSpectrum(document.getElementById('svg-time'), document.getElementById('svg-spectrum'));
+
+createNodeConnectionsForLFO(document.getElementById('svg-figure-node-connections-for-lfo'));
 
 vibrato();
 
