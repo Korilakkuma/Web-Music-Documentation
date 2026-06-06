@@ -6633,9 +6633,9 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
             <section id="section-effectors-delay-delay-node">
               <h5>DelayNode</h5>
               <p>
-                遅延処理を (抽象化して) 実装するために定義されているのが, <b><code>DelayNode</code></b> です. コンストラクタの第 2 引数 (<b
+                遅延処理を (抽象化して) 実装するために定義されているのが, <b><code>DelayNode</code></b> クラスです. コンストラクタの第 2 引数 (<b
                   ><code>DelayOptions</code></b>
-                の <b><code>maxDelayTime</code></b> プロパティ) には (ファクトリメソッドの場合, 第 1 引数), 遅延時間 (ディレイタイム)
+                型の <b><code>maxDelayTime</code></b> プロパティ) には (ファクトリメソッドの場合, 第 1 引数), 遅延時間 (ディレイタイム)
                 の最大値を秒単位で指定します. 省略した場合のデフォルト値は <code>1 sec</code> です.
               </p>
               <pre
@@ -6750,11 +6750,10 @@ oscillator.stop(context.currentTime + 2);</code></pre>
                 <li>フィードバック (エフェクト音を再び入力する) のための接続</li>
               </ul>
               <p>
-                フィードバック (エフェクト音を再び入力する) の接続によって, 遅延音が少しずつ減衰しながら何度も繰り返し生成されます. 具体例として, 原音のゲインを
-                <code>1</code>, フィードバッグのゲインが <code>0.5</code> とすると, 1 つめの遅延音のゲインは, <code>0.5</code> (<code>1 x 0.5</code>), 2
-                つめの遅延音のゲインは, <code>0.25</code> (<code>0.5 x 0.5</code>), 3 つめの遅延音のゲインは, <code>0.125</code> (<code>0.25 x 0.5</code>) ...
-                といった繰り返しで, 遅延音が少しずつ減衰しながら生成されます. つまり, フィードバックの <code>GainNode</code> の
-                <code>gain</code> プロパティを適切に設定すれば, エフェクターとしてのディレイにバリエーションが出せるというこでもあります.
+                フィードバック (エフェクト音を再び入力する) の接続によって, 遅延音が減衰しながら繰り返し生成されます. 具体例として, 原音のゲインを
+                <code>1</code>, フィードバックのゲインが <code>0.5</code> とすると, 1 つめの遅延音のゲインは, <code>0.5</code> (<code>1 x 0.5</code>), 2
+                つめの遅延音のゲインは, <code>0.25</code> (<code>0.5 x 0.5</code>), 3 つめの遅延音のゲインは, <code>0.125</code> (<code>0.25 x 0.5</code>)
+                といった繰り返しで, 遅延音が減衰しながら生成されます.
               </p>
               <p>
                 ただし, <b>フィードバックの値は <code>1</code> 未満にする必要があります</b>. これは, 直感的な説明をすれば,
@@ -6827,6 +6826,145 @@ oscillator.stop(context.currentTime + 2);</code></pre>
                 ノード接続が比較的単純なディレイの実装でそれらを理解しておくとよいでしょう.
               </p>
             </section>
+            <p>以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, ディレイに関わるパラメータを制御できるようにしたコード例です.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-delay&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-delay-delay-time&quot;&gt;delayTime&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-delay-delay-time&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;2&quot; step=&quot;0.01&quot; /&gt;
+&lt;output id=&quot;output-delay-delay-time-value&quot; for=&quot;range-delay-delay-time&quot;&gt;0.00 sec&lt;/output&gt;
+&lt;label for=&quot;range-delay-dry&quot;&gt;Dry&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-delay-dry&quot; value=&quot;1&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;output id=&quot;output-delay-dry-value&quot; for=&quot;range-delay-dry&quot;&gt;1.00&lt;/output&gt;
+&lt;label for=&quot;range-delay-wet&quot;&gt;Wet&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-delay-wet&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;output id=&quot;output-delay-wet-value&quot; for=&quot;range-delay-wet&quot;&gt;0.00&lt;/output&gt;
+&lt;label for=&quot;range-delay-feedback"&gt;Feedback&lt;/label&gt;
+&lt;input type=&quot;range" id=&quot;range-delay-feedback&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;0.95&quot; step=&quot;0.05&quot; /&gt;
+&lt;output id=&quot;output-delay-feedback-value&quot; for=&quot;range-delay-feedback&quot;&gt;0.00&lt;/output&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const delay = new DelayNode(context, { maxDelayTime: 2, delayTime: 0.0 });
+
+const dry      = new GainNode(context, { gain: 1.0 });  // for gain of original sound
+const wet      = new GainNode(context, { gain: 0.0 });  // for gain of delay sound
+const feedback = new GainNode(context, { gain: 0.0 });  // for feedback
+
+const buttonElement = document.getElementById(&apos;button-delay&apos;);
+
+const rangeDelayTimeElement = document.getElementById(&apos;range-delay-delay-time&apos;);
+const rangeDryElement       = document.getElementById(&apos;range-delay-dry&apos;);
+const rangeWetElement       = document.getElementById(&apos;range-delay-wet&apos;);
+const rangeFeedbackElement  = document.getElementById(&apos;range-delay-feedback&apos;);
+
+const outputDelayTimeElement = document.getElementById(&apos;output-delay-delay-time-value&apos;);
+const outputDryElement       = document.getElementById(&apos;output-delay-dry-value&apos;);
+const outputWetElement       = document.getElementById(&apos;output-delay-wet-value&apos;);
+const outputFeedbackElement  = document.getElementById(&apos;output-delay-feedback-value&apos;);
+
+let oscillator = null;
+
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  if (oscillator !== null) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context);
+
+  // Connect nodes for original sound
+  // OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(dry);
+  dry.connect(context.destination);
+
+  // Connect nodes for delay sound
+  // OscillatorNode (Input) -&gt; DelayNode (Delay) -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(delay);
+  delay.connect(wet);
+  wet.connect(context.destination);
+
+  // Connect nodes for feedback
+  // (OscillatorNode (Input) -&gt;) DelayNode (Delay) -&gt; GainNode (Feedback) -&gt; DelayNode (Delay) -&gt; GainNode (Feedback) -&gt; ...
+  delay.connect(feedback);
+  feedback.connect(delay);
+
+  // Start oscillator immediately
+  oscillator.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (oscillator === null) {
+    return;
+  }
+
+  // Stop oscillator immediately
+  oscillator.stop(0);
+
+  // GC (Garbage Collection)
+  oscillator = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeDelayTimeElement.addEventListener(&apos;input&apos;, () =&gt; {
+  delay.delayTime.value = rangeDelayTimeElement.valueAsNumber;
+
+  outputDelayTimeElement.textContent = `${delay.delayTime.value.toFixed(2)} sec`;
+});
+
+rangeDryElement.addEventListener(&apos;input&apos;, () =&gt; {
+  dry.gain.value = rangeDryElement.valueAsNumber;
+
+  outputDryElement.textContent = dry.gain.value.toFixed(2);
+});
+
+rangeWetElement.addEventListener(&apos;input&apos;, () =&gt; {
+  wet.gain.value = rangeWetElement.valueAsNumber;
+
+  outputWetElement.textContent = wet.gain.value.toFixed(2);
+});
+
+rangeFeedbackElement.addEventListener(&apos;input&apos;, () =&gt; {
+  feedback.gain.value = rangeFeedbackElement.valueAsNumber;
+
+  outputFeedbackElement.textContent = feedback.gain.value.toFixed(2);
+});</code></pre>
+            <div class="app-container flexbox-column">
+              <div>
+                <button type="button" id="button-delay">start</button>
+              </div>
+              <div class="flexbox">
+                <div class="flexbox">
+                  <label for="range-delay-delay-time">delayTime</label>
+                  <input type="range" id="range-delay-delay-time" value="0" min="0" max="2" step="0.01" />
+                  <output id="output-delay-delay-time-value" for="range-delay-delay-time">0.00 sec</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-delay-dry">Dry</label>
+                  <input type="range" id="range-delay-dry" value="1" min="0" max="1" step="0.05" />
+                  <output id="output-delay-dry-value" for="range-delay-dry">1.00</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-delay-wet">Wet</label>
+                  <input type="range" id="range-delay-wet" value="0" min="0" max="1" step="0.05" />
+                  <output id="output-delay-wet-value" for="range-delay-wet">0.00</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-delay-feedback">Feedback</label>
+                  <input type="range" id="range-delay-feedback" value="0" min="0" max="0.95" step="0.05" />
+                  <output id="output-delay-feedback-value" for="range-delay-feedback">0.00</output>
+                </div>
+              </div>
+            </div>
             <article id="section-effectors-delay-ring-buffer">
               <h5>遅延音の実装とリングバッファ</h5>
               <p>
@@ -6836,10 +6974,297 @@ oscillator.stop(context.currentTime + 2);</code></pre>
                 <b>リングバッファ</b>に入力された音を格納する (enqueue) ことで, 過去の入力音をリングバッファのサイズだけ蓄積する事が可能です (<code
                   >DelayNode</code>
                 コンストラクタで指定する遅延時間の最大値は, このリングバッファのサイズを決定するためにあります). 指定した
-                <code>delayTime</code> の値が経過したら, リングバッファに格納した過去の入力音を, 原音 (現在時刻の音) と合成して出力します.
+                <code>delayTime</code> の値が経過したら, リングバッファに格納している過去の入力音を出力します.
+              </p>
+              <p>
                 加算・乗算・遅延はデジタルフィルタを構成する基本処理なので, 遅延に関しても,
-                ローレイヤーでどのように実装されているかを理解しておくと応用が利くはずです. 実装言語は C++ になりますが, より詳細な解説は,
-                <a href="https://www.utsbox.com/?p=1517" target="_blank" rel="noopener noreferrer">ディレイの実装例 | C++でVST作り</a>を参考にするとよいと思います.
+                ローレイヤーでどのように実装されているかを理解しておくと応用が利くはずです.
+              </p>
+              <p>
+                以下の <code>AudioWorkletProcessor</code> のサブクラスは, <code>DelayNode</code> のように指定した遅延時間に 1 つの遅延音を発生させます.
+                実装の本質を理解するために, <code>maxDelayTime</code> プロパティはハードコーディングしています). また, 複数チャンネルがある場合は,
+                チャンネルの数だけリングバッファが必要になります.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-delay-node&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-delay-node-delay-time&quot;&gt;delayTime&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-delay-node-delay-time&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;0.5&quot; step=&quot;0.01&quot; /&gt;
+&lt;output id=&quot;output-delay-node-delay-time-value&quot; for=&quot;range-delay-node-delay-time&quot;&gt;0.00 sec&lt;/output&gt;
+&lt;label for=&quot;range-delay-node-dry&quot;&gt;Dry&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-delay-node-dry&quot; value=&quot;1&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;output id=&quot;output-delay-node-dry-value&quot; for=&quot;range-delay-node-dry&quot;&gt;1.00&lt;/output&gt;
+&lt;label for=&quot;range-delay-node-wet&quot;&gt;Wet&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-delay-node-wet&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;output id=&quot;output-delay-node-wet-value&quot; for=&quot;range-delay-node-wet&quot;&gt;0.00&lt;/output&gt;</code></pre>
+              <pre data-prismjs-copy="クリップボードにコピー" data-prismjs-copy-success="コピーしました"><code class="language-js line-numbers">// Main thread
+
+const context = new AudioContext();
+
+// &apos;./audio-worklets/delay-node.js&apos; is URL that has subclass that extends `AudioWorkletProcessor`
+context.audioWorklet.addModule(&apos;./audio-worklets/delay-node.js&apos;)
+  .then(() =&gt; {
+    const delayProcessor = new AudioWorkletNode(context, &apos;DelayNodeProcessor&apos;);
+
+    const gain = new GainNode(audiocontext, { gain: 1 });
+
+    const buttonElement = document.getElementById(&apos;button-delay-node&apos;);
+
+    const rangeDelayTimeElement = document.getElementById(&apos;range-delay-node-delay-time&apos;);
+    const rangeDryElement       = document.getElementById(&apos;range-delay-node-dry&apos;);
+    const rangeWetElement       = document.getElementById(&apos;range-delay-node-wet&apos;);
+
+    const outputDelayTimeElement = document.getElementById(&apos;output-delay-node-delay-time-value&apos;);
+    const outputDryElement       = document.getElementById(&apos;output-delay-node-dry-value&apos;);
+    const outputWetElement       = document.getElementById(&apos;output-delay-node-wet-value&apos;);
+
+    let oscillator = null;
+
+    const onDown = async () =&gt; {
+      if (context.state !== &apos;running&apos;) {
+        await context.resume();
+      }
+
+      if (oscillator !== null) {
+        return;
+      }
+
+      oscillator = new OscillatorNode(context);
+
+      // OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+
+      // OscillatorNode (Input) -&gt; AudioWorkletNode (DelayNode and Wet) -&gt; AudioDestinationNode (Output)
+      oscillator.connect(delayProcessor);
+      delayProcessor.connect(context.destination);
+
+      oscillator.start(0);
+
+      buttonElement.textContent = &apos;stop&apos;;
+    };
+
+    const onUp = () =&gt; {
+      if (oscillator === null) {
+        return;
+      }
+
+      oscillator.stop(0);
+
+      oscillator = null;
+
+      delayProcessor.port.postMessage({ reset: true });
+
+      buttonElement.textContent = &apos;start&apos;;
+    };
+
+    buttonElement.addEventListener(&apos;mousedown&apos;, onDown);
+    buttonElement.addEventListener(&apos;mouseup&apos;, onUp);
+
+    rangeDelayTimeElement.addEventListener(&apos;input&apos;, () =&gt; {
+      const delayTime = rangeDelayTimeElement.valueAsNumber;
+
+      delayProcessor.port.postMessage({ delayTime });
+
+      outputDelayTimeElement.textContent = `${delayTime.toFixed(2)} sec`;
+    });
+
+    rangeDryElement.addEventListener(&apos;input&apos;, () =&gt; {
+      gain.gain.value = rangeDryElement.valueAsNumber;
+
+      outputDryElement.textContent = gain.gain.value.toFixed(2);
+    });
+
+    rangeWetElement.addEventListener(&apos;input&apos;, () =&gt; {
+      const wet = rangeWetElement.valueAsNumber;
+
+      delayProcessor.port.postMessage({ wet });
+
+      outputWetElement.textContent = wet.toFixed(2);
+    });
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">// Filename is &apos;./audio-worklets/delay-node.js&apos;
+
+class RingBuffer {
+  constructor(size) {
+    this.size  = size;
+    this.queue = new Float32Array(size);
+
+    this.rear  = 0;  // enqueue
+    this.front = 0;  // dequeue
+
+    // number of samples for delay time
+    this.interval = 0;
+  }
+
+  write(data) {
+    if (this.isFull()) {
+      return;
+    }
+
+    this.queue[this.rear++] = data;
+
+    if (this.rear &gt;= this.size) {
+      this.rear = 0;
+    }
+  }
+
+  read() {
+    if (this.isEmpty()) {
+      return 0.0;
+    }
+
+    if (this.interval === 0) {
+      return 0.0;
+    }
+
+    const interval = this.rear - this.interval;
+
+    this.front = interval &gt;= 0 ? interval : (this.rear + this.interval);
+
+    if (this.front &lt; 0) {
+      return 0.0;
+    }
+
+    const data = this.queue[this.front++];
+
+    if (this.front &gt;= this.size) {
+      this.front = 0;
+    }
+
+    return data;
+  }
+
+  isEmpty() {
+    return this.rear === this.front;
+  }
+
+  isFull() {
+    return ((this.rear + 1) % this.size) === this.front;
+  }
+
+  reset() {
+    this.queue.fill(0.0);
+
+    this.rear  = 0;
+    this.front = 0;
+  }
+
+  setInerval(interval) {
+    this.interval = Math.trunc(interval);
+  }
+}
+
+class DelayNodeProcessor extends AudioWorkletProcessor {
+  static MAX_DELAY_TIME = 0.5;
+
+  constructor() {
+    super();
+
+    this.ringbuffer = new RingBuffer(DelayNodeProcessor.MAX_DELAY_TIME * sampleRate);
+
+    this.delayTime = 0.0;
+    this.wet       = 0.0;
+
+    this.port.onmessage = (event) =&gt; {
+      if (typeof event.data.delayTime === &apos;number&apos;) {
+        if (event.data.delayTime &lt;= DelayNodeProcessor.MAX_DELAY_TIME) {
+          this.delayTime = event.data.delayTime;
+          this.ringbuffer.setInerval(this.delayTime * sampleRate);
+        }
+      }
+
+      if (typeof event.data.wet === &apos;number&apos;) {
+        if ((event.data.wet &gt;= 0.0) &amp;&amp; (event.data.wet &lt;= 1.0)) {
+          this.wet = event.data.wet;
+        }
+      }
+
+      if (typeof event.data.reset === &apos;boolean&apos;) {
+        if (event.data.reset) {
+          this.ringbuffer.reset();
+        }
+      }
+    };
+  }
+
+  process(inputs, outputs) {
+    const input  = inputs[0];
+    const output = outputs[0];
+
+    const numberOfChannels = input.length;
+
+    for (let channelNumber = 0; channelNumber &lt; numberOfChannels; channelNumber++) {
+      const bufferSize = input[channelNumber].length;
+
+      for (let n = 0; n &lt; bufferSize; n++) {
+        const inputData = input[channelNumber][n];
+
+        this.ringbuffer.write(inputData);
+
+        output[channelNumber][n] = this.wet * this.ringbuffer.read();
+      }
+    }
+
+    return true;
+  }
+}
+
+registerProcessor(&apos;DelayNodeProcessor&apos;, DelayNodeProcessor);</code></pre>
+              <p>
+                一般的なリングバッファと異なる点は, <var>front</var> (読み込み (dequeue) 位置) は, <var>rear</var> (書き込み (enqueue) 位置)
+                からディレイタイムのサンプル数だけ後の位置にします (通常のリングバッファは, <code>0</code> から開始します. また, リングバッファなので,
+                負数になる場合は, <var>rear</var> からディレイタイムのサンプル数だけ先の位置にします). あとは,
+                <code>process</code> メソッドで入力オーディオデータを enqueue して, 出力オーディオデータに dequeue した遅延音を格納すれば,
+                指定したディレイタイムで遅延音が 1 つだけ発生します (ディレイタイムが経過していない場合, <code>0</code> が dequeue されるので, 実質,
+                遅延音はありません).
+              </p>
+              <p>
+                また, 以前の発音時のオーディオデータ (遅延音) を破棄するため, 発音を停止するたびに, リングバッファの状態を初期化しておきます
+                (この初期化処理がないと, 短時間に発音・停止を繰り返すと意図しない挙動になります).
+              </p>
+              <p>
+                もっとも, 上記の実装では <code>DelayNode</code> を完全に再現していません. 改善すべき点の最優先は, 発音を停止すると,
+                再生されるべき遅延音も発音されない点です. これは, 上記のコード例だと, 入力となる
+                <code>OscillatorNode</code> インスタンスがガベージコレクションされた時点で, 接続が破棄されて遅延音も再生されなくなるからです. それと,
+                停止時のリングバッファの初期化処理も, enqueue されているオーディオデータ (遅延音) をすべて dequeue してから初期化する必要があります.
+                メインスレッドの実装は同じでも, <code>DelayNode</code> の場合, 遅延音が確実に再生されるはずです.
+              </p>
+              <p>
+                あとは, JavaScript による実装なので, 設定できるディレイタイムが短くなってしまうことです
+                (ディレイタイムが長くなるほどリングバッファのサイズも大きくなってしまいます. また, JavaScript のパフォーマンスが向上したとは言え,
+                ネイティブコード (レンダリングエンジンの実装コードである C++) よりはやはり劣ります. JavaScript で実装する以上, 解決は難しいかもしれません).
+              </p>
+              <div class="app-container flexbox">
+                <div>
+                  <button type="button" id="button-delay-node">start</button>
+                </div>
+                <div class="flexbox">
+                  <label for="range-delay-node-delay-time">delayTime</label>
+                  <input type="range" id="range-delay-node-delay-time" value="0" min="0" max="0.5" step="0.01" />
+                  <output id="output-delay-node-delay-time-value" for="range-delay-node-delay-time">0.00 sec</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-delay-node-dry">Dry</label>
+                  <input type="range" id="range-delay-node-dry" value="1" min="0" max="1" step="0.05" />
+                  <output id="output-delay-node-dry-value" for="range-delay-node-dry">1.00</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-delay-node-wet">Wet</label>
+                  <input type="range" id="range-delay-node-wet" value="0" min="0" max="1" step="0.05" />
+                  <output id="output-delay-node-wet-value" for="range-delay-node-wet">0.00</output>
+                </div>
+              </div>
+              <p>
+                チャレンジングな実装として, AudioWorklet でエフェクターとしてのディレイを実装したい場合, 実装言語は C++ になりますが,
+                <a href="https://www.utsbox.com/?p=1517" target="_blank" rel="noopener noreferrer">ディレイの実装例 | C++でVST作り</a>などを参考にするとよいと思います.
               </p>
             </article>
           </section>
@@ -6854,10 +7279,10 @@ oscillator.stop(context.currentTime + 2);</code></pre>
             <section id="section-effectors-reverb-convolver-node">
               <h5>ConvolverNode</h5>
               <p>
-                インパルス応答のオーディオデータをエフェクターとして利用するには, <b><code>ConvolverNode</code></b> を利用します. <code>ConvolverNode</code> は,
-                <b>コンボリューション積分</b> (<b>畳み込み積分</b>, <b>合成積</b>) という数学的な演算を抽象化する <code>AudioNode</code> です
-                (デジタルフィルタの視点では, <b>FIR フィルタ</b>を抽象化します. のちほど解説しますが, 見立ての違いであり, 本質的には, コンボリューション積分も
-                FIR フィルタも同じです. コンボリューション積分も FIR フィルタも次のセクション以降で解説しています).
+                インパルス応答のオーディオデータをエフェクターとして利用するには, <b><code>ConvolverNode</code></b> クラスを利用します.
+                <code>ConvolverNode</code> は<b>コンボリューション積分</b> (<b>畳み込み積分</b>や<b>合成積</b>とも呼ばれます) という数学的な演算を抽象化する
+                <code>AudioNode</code> です (デジタルフィルタの視点では, <b>FIR フィルタ</b>を抽象化します. のちほど解説しますが, 見立ての違いであり,
+                本質的には, コンボリューション積分も FIR フィルタも同じです. コンボリューション積分も FIR フィルタも次のセクション以降で解説しています).
               </p>
               <pre
                 data-prismjs-copy="クリップボードにコピー"
@@ -6872,7 +7297,7 @@ const convolver = new ConvolverNode(context);
               <p>
                 <code>ConvolverNode</code> には, <b><code>buffer</code></b> プロパティが定義されており, この <code>buffer</code> プロパティに, インパルス応答
                 (RIR) のオーディオデータの <code>AudioBuffer</code> インスタンスを設定します (コンストラクタ生成であれば,
-                <b><code>ConvolverOptions</code></b> の <code>buffer</code> プロパティで設定することも可能です).
+                <b><code>ConvolverOptions</code></b> 型の <code>buffer</code> プロパティで設定することも可能です).
               </p>
               <p><code>AudioBuffer</code> インスタンスの生成は, <a href="#section-create-audio-buffer">ワンショットオーディオ</a>と同じです.</p>
               <pre
@@ -6980,13 +7405,139 @@ fetch(&apos;./assets/rirs/rir.mp3&apos;)
                 Copyright のセクションに, 「<b
                   >The data are provided free for noncommercial purposes, provided the authors are cited when the data are used in any research application.</b>」と記載されているので, 非商用利用であれば, 自身が開発されている Web アプリケーションに利用しても問題なさそうです.
               </p>
+              <p>以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, リバーブに関わるパラメータを制御できるようにしたコード例です.</p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-reverb-load&quot;&gt;load&lt;/button&gt;
+&lt;button type=&quot;button&quot; id=&quot;button-reverb&quot; disabled&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-delay-dry&quot;&gt;Dry&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-reverb-dry&quot; value=&quot;1&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;output id=&quot;output-reverb-dry-value&quot; for=&quot;range-reverb-dry&quot;&gt;1.00&lt;/output&gt;
+&lt;label for=&quot;range-reverb-wet&quot;&gt;Wet&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-reverb-wet&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;output id=&quot;output-reverb-wet-value&quot; for=&quot;range-reverb-wet&quot;&gt;0.00&lt;/output&gt;</code></pre>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">const context = new AudioContext();
+
+const convolver = new ConvolverNode(context);
+const dry       = new GainNode(context, { gain: 1.0 });
+const wet       = new GainNode(context, { gain: 0.0 });
+
+const buttonLoadElement = document.getElementById(&apos;button-reverb-load&apos;);
+const buttonElement     = document.getElementById(&apos;button-reverb&apos;);
+
+const rangeDryElement  = document.getElementById(&apos;range-reverb-dry&apos;);
+const rangeWetElement  = document.getElementById(&apos;range-reverb-wet&apos;);
+
+const outputDryElement = document.getElementById(&apos;output-reverb-dry-value&apos;);
+const outputWetElement = document.getElementById(&apos;output-reverb-wet-value&apos;);
+
+let oscillator = null;
+
+buttonLoadElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  fetch(&apos;./assets/rirs/rir.mp3&apos;)
+    .then((response) =&gt; {
+      return response.arrayBuffer();
+    })
+    .then((arrayBuffer) =&gt; {
+      const successCallback = (audioBuffer) =&gt; {
+        convolver.buffer = audioBuffer;
+
+        buttonElement.removeAttribute(&apos;disabled&apos;);
+        buttonLoadElement.setAttribute(&apos;disabled&apos;, &apos;disabled&apos;);
+      };
+
+      const errorCallback = (error) =&gt; {
+        // error handling
+      };
+
+      context.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+    })
+    .catch((error) =&gt; {
+      // error handling
+    });
+});
+
+buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+  if (oscillator !== null) {
+    return;
+  }
+
+  oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+
+  // Connect nodes for original sound
+  // OscillatorNode (Input) -&gt; GainNode (Dry) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(dry);
+  dry.connect(context.destination);
+
+  // Connect nodes for reverb sound
+  // OscillatorNode (Input) -&gt; ConvolverNode (Reverb) -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
+  oscillator.connect(convolver);
+  convolver.connect(wet);
+  wet.connect(context.destination);
+
+  oscillator.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if (oscillator === null) {
+    return;
+  }
+
+  oscillator.stop(0);
+
+  oscillator = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeDryElement.addEventListener(&apos;input&apos;, () =&gt; {
+  dry.gain.value = rangeDryElement.valueAsNumber;
+
+  outputDryElement.textContent = dry.gain.value.toFixed(2);
+});
+
+rangeWetElement.addEventListener(&apos;input&apos;, () =&gt; {
+  wet.gain.value = rangeWetElement.valueAsNumber;
+
+  outputWetElement.textContent = wet.gain.value.toFixed(2);
+});</code></pre>
+              <div class="app-container flexbox">
+                <div>
+                  <button type="button" id="button-reverb-load">load</button>
+                </div>
+                <div>
+                  <button type="button" id="button-reverb" disabled>start</button>
+                </div>
+                <div class="flexbox">
+                  <div class="flexbox">
+                    <label for="range-reverb-dry">Dry</label>
+                    <input type="range" id="range-reverb-dry" value="1" min="0" max="1" step="0.05" />
+                    <output id="output-reverb-dry-value" for="range-reverb-dry">1.00</output>
+                  </div>
+                  <div class="flexbox">
+                    <label for="range-reverb-wet">Wet</label>
+                    <input type="range" id="range-reverb-wet" value="0" min="0" max="1" step="0.05" />
+                    <output id="output-reverb-wet-value" for="range-reverb-wet">0.00</output>
+                  </div>
+                </div>
+              </div>
             </section>
             <section id="section-effectors-reverb-rir">
               <h5>インパルス応答</h5>
               <p>
-                インパルス応答を理解するには, まずは, <b>インパルス音</b>について理解する必要があります. インパルス音とは,
+                インパルス応答を理解するには, 先に, <b>インパルス音</b>について理解する必要があります. インパルス音とは,
                 ごく短時間において瞬間的に発生する音です. 具体的には, ピストルの音や風船が破裂するときの音がインパルス音と言えるでしょう.
-                インパルス音のイメージは以下のグラフのようになります. このような物理現象を数式でモデリングするための最適な関数が, <b>デルタ関数</b>です.
+                インパルス音のイメージは, 以下のグラフのようになります. このような物理現象を数式でモデリングする最適な関数が, <b>デルタ関数</b>です.
               </p>
               <figure>
                 <svg id="svg-figure-impulse" width="720" height="405" data-parameters="true" />
@@ -7048,7 +7599,7 @@ fetch(&apos;./assets/rirs/rir.mp3&apos;)
               </figure>
               <p>
                 また, この残響が, ディレイにおけるフィードバックと類似した音響効果を発生させることになります
-                (フィードバックのアニメーションとインパルス応答のアニメーションが類似していることに気付いたかもしれません).
+                (フィードバックのアニメーションとインパルス応答のアニメーションが類似していることに気づいたかもしれません).
               </p>
               <p>
                 イメージでインパルス応答は理解できるかと思いますが, それをコンピュータで実現する場合, 数式でモデリングできる必要があります.
@@ -7069,13 +7620,13 @@ fetch(&apos;./assets/rirs/rir.mp3&apos;)
               <!-- prettier-ignore -->
               $
               \begin{flalign}
-                &y\left(t\right) = \int_{0}^{\infty}x\left(t - t_{r}\right)h\left(t_{r}\right)dt
+                &y\left(t\right) = \int_{-\infty}^{\infty}x\left(t - t_{r}\right)h\left(t_{r}\right)dt
               \end{flalign}
               $
             </div>
             <p>
-              コンピュータでは, 連続信号をあつかうことはできないので, サンプリングされた離散信号の遅延と乗算, それらの加算となります. また,
-              無限の加算はできないので, 有界な値 (サンプル数) <span class="math-inline">$N$</span> となります.
+              コンピュータでは, 連続信号をあつかうことはできないので, サンプリングされた, 有限区間の離散信号の<span class="math-inline">$N$</span>
+              サンプルの遅延と乗算, それらの加算となります.
             </p>
             <div class="math-block">
               <!-- prettier-ignore -->
@@ -7173,9 +7724,9 @@ fetch(&apos;./assets/rirs/rir.mp3&apos;)
               $
             </div>
             <p>
-              目視レベルではありますが, グラフで表示されている出力信号と (大きく) 値の相違がないことが確認できます. 計算結果を抽象化すると,
-              コンボリューション積分で生成された出力信号は, <b>現在の時刻の信号だけではなく, 過去の信号の影響も受ける</b>ということですということです (逆に,
-              それを, 厳密に数式で定義したのがコンボリューション積分と言えます).
+              (目視レベルですが) グラフで表示されている出力信号と (大きく) 相違がないことが確認できます. 計算結果を抽象化すると,
+              コンボリューション積分で生成された出力信号は, <b>現在の時刻の信号だけではなく, 過去の信号の影響も受ける</b>ということですということです (それを,
+              厳密に数式で定義したのがコンボリューション積分と言えます).
             </p>
             <figure>
               <svg id="svg-animation-convolution" width="720" height="600" />
@@ -7195,7 +7746,7 @@ fetch(&apos;./assets/rirs/rir.mp3&apos;)
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-js line-numbers">// コンボリューション積分のコード片
+            ><code class="language-js line-numbers">// Code Snippet for Convolution
 
 const X_L = 2400;
 const H_L = 1200;
@@ -7205,17 +7756,17 @@ const x = new Float32Array(X_L);
 const h = new Float32Array(H_L);
 const y = new Float32Array(Y_L);
 
-// 入力信号
+// Input
 for (let n = 0; n &lt; X_L; n++) {
   x[n] = Math.sin((2 * Math.PI * n * 2) / 1200);
 }
 
-// インパルス応答
+// Impulse Response
 for (let m = 0; m &lt; H_L; m++) {
   h[m] = 0.5 * Math.exp(-m);
 }
 
-// 出力信号
+// Output
 for (let n = 0; n &lt; Y_L; n++) {
   for (let m = 0; m &lt; H_L; m++) {
     if (((n - m) &gt;= 0) &amp;&amp; ((n - m) &lt; X_L)) {
@@ -7248,8 +7799,45 @@ for (let n = 0; n &lt; Y_L; n++) {
             </p>
             <article id="section-effectors-delay-and-reverb-cyclic-convolution">
               <h5>巡回畳み込み</h5>
+              <p>コンボリューション積分は, <b>周波数領域においては乗算</b>となります.</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &Y\left(f\right) = \int_{-\infty}^{\infty}\left\{\int_{-\infty}^{\infty}x\left(t - f\right)h\left(f\right)df\right\}e^{-j2 \pi ft}dt = \left\{\int_{-\infty}^{\infty}x\left(t - f\right)e^{-j2 \pi ft}dt\right\}\left\{\int_{-\infty}^{\infty}h\left(f\right)df\right\} \\
+                  \end{flalign}
+                $
+              </div>
+              <p>ここで, <span class="math-inline">$f_{r} = t - f$</span> と変数変換して, 置換積分すると,</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &\int_{-\infty}^{\infty}x\left(t - f\right)e^{-j2 \pi ft}dt = e^{-j2 \pi ft}\int_{-\infty}^{\infty}x\left(f_{r}\right)e^{-j2 \pi ff_{r}}df_{r} \\
+                  \end{flalign}
+                $
+              </div>
+              <p>この結果を, コンボリューション積分のフーリエ変換に適用すると,</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &Y\left(f\right) = \int_{-\infty}^{\infty}\left\{\int_{-\infty}^{\infty}x\left(t - f\right)h\left(f\right)df\right\}e^{-j2 \pi ft}dt = \left\{\int_{-\infty}^{\infty}x\left(f_{r}\right)e^{-j2 \pi ff_{r}}df_{r}\right\}\left\{\int_{-\infty}^{\infty}h\left(f\right)e^{-j2 \pi ft}df\right\} \\
+                  \end{flalign}
+                $
+              </div>
+              <p>さらに, <span class="math-inline">$t = f_{r}$</span>, <span class="math-inline">$f = t$</span> と変数変換して, 置換積分すると,</p>
+              <div class="math-block">
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &Y\left(f\right) = \left\{\int_{-\infty}^{\infty}x\left(t\right)e^{-j2 \pi ft}dt\right\}\left\{\int_{-\infty}^{\infty}h\left(t\right)e^{-j2 \pi ft}dt\right\} = X\left(f\right)H\left(f\right) \\
+                  \end{flalign}
+                $
+              </div>
+              <p>したがって, コンボリューション積分のフーリエ変換は, フーリエ変換した関数の積となるので, 周波数領域においては乗算ということが導出できます.</p>
               <p>
-                コンボリューション積分は, <b>周波数領域においては乗算</b>となります. したがって, 時間領域の入力信号
+                離散信号でも同じように, コンボリューション積分は, 周波数領域において乗算となります. したがって, 時間領域の入力信号
                 <span class="math-inline">$x\left(n\right)$</span> を (離散) フーリエ変換した信号を <span class="math-inline">$X\left(k\right)$</span>,
                 インパルス応答を (離散) フーリエ変換した信号を <span class="math-inline">$H\left(k\right)$</span>, 出力信号
                 <span class="math-inline">$y\left(n\right)$</span> を (離散) フーリエ変換した信号を
@@ -7363,9 +7951,101 @@ for (let n = 0; n &lt; Y_L; n++) {
               <h5>Schroeder Reverberator (シュレーダーリバーブ)</h5>
               <p>
                 コムフィルタ (遅延音を生成) と All-Pass Filter (位相変化によって, 遅延音の間を補間して残響音の密度を高める) を駆使して, 人工的にリバーブ
-                (人工インパルス応答) を生成する実装が知られています. 実装言語は Python になりますが,
+                (人工インパルス応答) を生成する実装が知られています. 一般的に, 前段のコムフィルタの並列接続と,
+                後段のオールパスフィルタの直列接続によって実装されます.
+              </p>
+              <p>前段のコムフィルタで遅延音を生成して, 後段のオールパスフィルタで遅延音の密度を高めることによって残響音を生成します.</p>
+              <figure>
+                <svg id="svg-figure-comb-filter-and-all-pass-filter-in-schroeder-reverberator" width="720" height="240" />
+                <figcaption>Schroeder Reverberator で利用するコムフィルタ (フィードバック型コムフィルタ) (左) とオールパスフィルタ (右)</figcaption>
+              </figure>
+              <p>
+                Web Audio API で実装すると以下のようになるでしょう. 前段のコムフィルタは,
+                エフェクターとしてのディレイからフィードバック音のみを通過させるフィルタとなります. 後段のオールパスフィルタは, コムフィルタに,
+                原音をパスするようにノード接続したフィルタとなります. Web Audio API の <code>BiquadFilterNode</code> では, Schroeder Reverberator
+                が定めるオールパスフィルタの遅延時間やフィードバック・フィードフォワードのゲインを指定できないので,
+                <code>BiquadFilterNode</code> は使わずに実装しています.
+              </p>
+              <p>
+                遅延時間やフィードバックゲインの設定の自由度は高くなく, 前段のコムフィルタの遅延時間は, 互いに素の関係となるように設定したり,
+                後段のオールパスフィルタの遅延時間は <code>0.005 sec</code> と <code>0.0017 sec</code>, フィードバック・フィードフォワードゲインは
+                <code>0.7</code>・<code>-0.7</code> と厳密に定められていたりします.
+              </p>
+              <p>
+                詳細は,
+                <a href="https://ccrma.stanford.edu/~jos/pasp/Schroeder_Reverberators.html" target="_blank" rel="noopener noreferrer"
+                  >Schroeder Reverberators</a>
+                を参考にしてください.
+              </p>
+              <pre
+                data-prismjs-copy="クリップボードにコピー"
+                data-prismjs-copy-success="コピーしました"
+              ><code class="language-js line-numbers">function createCombFilter(context, delayTime, gain) {
+  const delay    = new DelayNode(context, { delayTime });
+  const feedback = new GainNode(context, { gain });
+
+  // DelayNode -&gt; GainNode (Feedback) -&gt; DelayNode -&gt; GainNode (Feedback) -&gt; ...
+  delay.connect(feedback);
+  feedback.connect(delay);
+
+  return delay;
+}
+
+function createAllPassFilter(context, input, output, delayTime, gain) {
+  const delay       = new DelayNode(context, { delayTime });
+  const feedforward = new GainNode(context, { gain });
+  const feedback    = new GainNode(context, { gain });
+
+  // (Input) -&gt; GainNode (Feedforward) -&gt; (Output)
+  input.connect(feedforward);
+  feedforward.connect(output);
+
+  // (Input) -&gt; DelayNode -&gt; GainNode (Feedback) -&gt; DelayNode -&gt; GainNode (Feedback) -&gt; ...
+  input.connect(delay)
+  delay.connect(feedback);
+  feedback.connect(delay);
+
+  return input;
+}
+
+const context = new AudioContext();
+
+const mix0 = new GainNode(context);
+const mix1 = new GainNode(context);
+const mix2 = new GainNode(context);
+
+const combFilters = [
+  createCombFilter(context, 0.03985, 0.871402),
+  createCombFilter(context, 0.03610, 0.882762),
+  createCombFilter(context, 0.03327, 0.891443),
+  createCombFilter(context, 0.03015, 0.901117),
+];
+
+// 2 cascade (GainNode (Mix) -&gt; All-Pass Filter -&gt; GainNode (Mix) -&gt; All-Pass Filter -&gt; GainNode (Mix))
+const allpassFilters = [
+  createAllPassFilter(context, mix0, mix1, 0.00500, 0.700000),
+  createAllPassFilter(context, mix1, mix2, 0.00170, 0.700000)
+];
+
+const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
+
+// OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
+oscillator.connect(context.destination);
+
+// OscillatorNode (Input) -&gt; Comb Filter (4 parallel) -&gt; GainNode (Mix) -&gt; All-Pass Filter -&gt; GainNode (Mix) -&gt; All-Pass Filter -&gt; GainNode (Mix) -&gt; AudioDestinationNode (Output)
+for (let i = 0; i &lt; 4; i++) {
+  oscillator.connect(combFilters[i]);
+  combFilters[i].connect(mix0);
+}
+
+mix2.connect(context.destination);
+
+oscillator.start(0);
+oscillator.stop(context.currentTime + 5);</code></pre>
+              <p>
+                また, 実装言語は Python になりますが,
                 <a href="https://www.wizard-notes.com/entry/asp/schroeder-reverberator" target="_blank" rel="noopener noreferrer"
-                  >シュレーダーリバーブ（人工残響エフェクタ）のPython実装と試聴デモ</a>などが参考になります.
+                  >シュレーダーリバーブ（人工残響エフェクタ）のPython実装と試聴デモ</a>による実験も興味深いです.
               </p>
             </article>
           </section>

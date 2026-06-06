@@ -5547,7 +5547,271 @@ const createNodeConnectionsForDelay = (svg) => {
   g.appendChild(delayNodeAndFeedbackArrow);
   g.appendChild(feedbackAndDelayNodeArrow);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
+};
+
+const delay = () => {
+  const delayElement = new DelayNode(audiocontext, { maxDelayTime: 2, delayTime: 0.0 });
+
+  const dry = new GainNode(audiocontext, { gain: 1.0 });
+  const wet = new GainNode(audiocontext, { gain: 0.0 });
+  const feedback = new GainNode(audiocontext, { gain: 0.0 });
+
+  const buttonElement = document.getElementById('button-delay');
+  const rangeDelayTimeElement = document.getElementById('range-delay-delay-time');
+  const rangeDryElement = document.getElementById('range-delay-dry');
+  const rangeWetElement = document.getElementById('range-delay-wet');
+  const rangeFeedbackElement = document.getElementById('range-delay-feedback');
+  const outputDelayTimeElement = document.getElementById('output-delay-delay-time-value');
+  const outputDryElement = document.getElementById('output-delay-dry-value');
+  const outputWetElement = document.getElementById('output-delay-wet-value');
+  const outputFeedbackElement = document.getElementById('output-delay-feedback-value');
+
+  let oscillator = null;
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillator !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext);
+
+    oscillator.connect(dry);
+    dry.connect(audiocontext.destination);
+
+    oscillator.connect(delayElement);
+    delayElement.connect(wet);
+    wet.connect(audiocontext.destination);
+
+    delayElement.connect(feedback);
+    feedback.connect(delayElement);
+
+    oscillator.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeDelayTimeElement.addEventListener('input', () => {
+    delayElement.delayTime.value = rangeDelayTimeElement.valueAsNumber;
+
+    outputDelayTimeElement.textContent = `${delayElement.delayTime.value.toFixed(2)} sec`;
+  });
+
+  rangeDryElement.addEventListener('input', () => {
+    dry.gain.value = rangeDryElement.valueAsNumber;
+
+    outputDryElement.textContent = dry.gain.value.toFixed(2);
+  });
+
+  rangeWetElement.addEventListener('input', () => {
+    wet.gain.value = rangeWetElement.valueAsNumber;
+
+    outputWetElement.textContent = wet.gain.value.toFixed(2);
+  });
+
+  rangeFeedbackElement.addEventListener('input', () => {
+    feedback.gain.value = rangeFeedbackElement.valueAsNumber;
+
+    outputFeedbackElement.textContent = feedback.gain.value.toFixed(2);
+  });
+};
+
+const delayNode = () => {
+  audiocontext.audioWorklet
+    .addModule('./audio-worklets/delay-node.js')
+    .then(() => {
+      const delayProcessor = new AudioWorkletNode(audiocontext, 'DelayNodeProcessor');
+
+      const gain = new GainNode(audiocontext, { gain: 1 });
+
+      const buttonElement = document.getElementById('button-delay-node');
+      const rangeDelayTimeElement = document.getElementById('range-delay-node-delay-time');
+      const rangeDryElement = document.getElementById('range-delay-node-dry');
+      const rangeWetElement = document.getElementById('range-delay-node-wet');
+      const outputDelayTimeElement = document.getElementById('output-delay-node-delay-time-value');
+      const outputDryElement = document.getElementById('output-delay-node-dry-value');
+      const outputWetElement = document.getElementById('output-delay-node-wet-value');
+
+      let oscillator = null;
+
+      const onDown = async () => {
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
+
+        if (oscillator !== null) {
+          return;
+        }
+
+        oscillator = new OscillatorNode(audiocontext);
+
+        oscillator.connect(gain);
+        gain.connect(audiocontext.destination);
+
+        oscillator.connect(delayProcessor);
+        delayProcessor.connect(audiocontext.destination);
+
+        oscillator.start(0);
+
+        buttonElement.textContent = 'stop';
+      };
+
+      const onUp = () => {
+        if (oscillator === null) {
+          return;
+        }
+
+        oscillator.stop(0);
+
+        oscillator = null;
+
+        delayProcessor.port.postMessage({ reset: true });
+
+        buttonElement.textContent = 'start';
+      };
+
+      buttonElement.addEventListener('mousedown', onDown);
+      buttonElement.addEventListener('touchstart', onDown);
+      buttonElement.addEventListener('mouseup', onUp);
+      buttonElement.addEventListener('touchend', onUp);
+
+      rangeDelayTimeElement.addEventListener('input', () => {
+        const delayTime = rangeDelayTimeElement.valueAsNumber;
+
+        delayProcessor.port.postMessage({ delayTime });
+
+        outputDelayTimeElement.textContent = `${delayTime.toFixed(2)} sec`;
+      });
+
+      rangeDryElement.addEventListener('input', () => {
+        gain.gain.value = rangeDryElement.valueAsNumber;
+
+        outputDryElement.textContent = gain.gain.value.toFixed(2);
+      });
+
+      rangeWetElement.addEventListener('input', () => {
+        const wet = rangeWetElement.valueAsNumber;
+
+        delayProcessor.port.postMessage({ wet });
+
+        outputWetElement.textContent = wet.toFixed(2);
+      });
+    })
+    .catch(console.error);
+};
+
+const reverb = () => {
+  const convolver = new ConvolverNode(audiocontext);
+  const dry = new GainNode(audiocontext, { gain: 1.0 });
+  const wet = new GainNode(audiocontext, { gain: 0.0 });
+
+  const buttonLoadElement = document.getElementById('button-reverb-load');
+  const buttonElement = document.getElementById('button-reverb');
+  const rangeDryElement = document.getElementById('range-reverb-dry');
+  const rangeWetElement = document.getElementById('range-reverb-wet');
+  const outputDryElement = document.getElementById('output-reverb-dry-value');
+  const outputWetElement = document.getElementById('output-reverb-wet-value');
+
+  let oscillator = null;
+
+  const onLoad = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    fetch('./assets/rirs/rir.mp3')
+      .then((response) => {
+        return response.arrayBuffer();
+      })
+      .then((arrayBuffer) => {
+        const successCallback = (audioBuffer) => {
+          convolver.buffer = audioBuffer;
+
+          buttonElement.removeAttribute('disabled');
+          buttonLoadElement.setAttribute('disabled', 'disabled');
+        };
+
+        const errorCallback = (error) => {
+          console.error(error);
+        };
+
+        audiocontext.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+      })
+      .catch(console.error);
+  };
+
+  const onDown = () => {
+    if (oscillator !== null) {
+      return;
+    }
+
+    oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth' });
+
+    oscillator.connect(dry);
+    dry.connect(audiocontext.destination);
+
+    oscillator.connect(convolver);
+    convolver.connect(wet);
+    wet.connect(audiocontext.destination);
+
+    oscillator.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillator === null) {
+      return;
+    }
+
+    oscillator.stop(0);
+
+    oscillator = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonLoadElement.addEventListener('mousedown', onLoad);
+  buttonLoadElement.addEventListener('touchstart', onLoad);
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeDryElement.addEventListener('input', () => {
+    dry.gain.value = rangeDryElement.valueAsNumber;
+
+    outputDryElement.textContent = dry.gain.value.toFixed(2);
+  });
+
+  rangeWetElement.addEventListener('input', () => {
+    wet.gain.value = rangeWetElement.valueAsNumber;
+
+    outputWetElement.textContent = wet.gain.value.toFixed(2);
+  });
 };
 
 const createNodeConnectionsForReverb = (svg) => {
@@ -5597,6 +5861,8 @@ const createNodeConnectionsForReverb = (svg) => {
   g.appendChild(oscillatorNodeAndConvolverNodeNodeArrow);
   g.appendChild(convolverNodeAndWetArrow);
   g.appendChild(wetAndAudioDestiationArrow);
+
+  g.setAttribute('transform', 'translate(2, 2)');
 
   svg.appendChild(g);
 };
@@ -6656,7 +6922,7 @@ const createMultiplyElement = (x, y, direction = 'right') => {
   return path;
 };
 
-const createDelayElement = (x, y) => {
+const createDelayElement = (x, y, n = 1) => {
   const g = document.createElementNS(xmlns, 'g');
 
   const rect = document.createElementNS(xmlns, 'rect');
@@ -6673,7 +6939,7 @@ const createDelayElement = (x, y) => {
   const superText = document.createElementNS(xmlns, 'text');
 
   text.textContent = 'z';
-  superText.textContent = '-1';
+  superText.textContent = `-${n}`;
 
   text.setAttribute('x', (x + 16).toString(10));
   text.setAttribute('y', (y + 18).toString(10));
@@ -6867,6 +7133,87 @@ const createFIRFilter = (svg) => {
   svg.appendChild(adder0);
   svg.appendChild(inputText);
   svg.appendChild(outputText);
+};
+
+const createCombFilterInSchroederReverberator = (svg, offset = 0) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const width = innerWidth / 2;
+
+  const bus0 = createBus(padding + offset, padding + innerHeight / 2, padding + offset + width, padding + innerHeight / 2);
+  const arrow0 = createBusArrow(padding + offset + width - 8, padding + innerHeight / 2, 'right');
+
+  const adder0 = createAddElement(padding + offset + 48, padding + innerHeight / 2);
+
+  const feedback = createMultiplyElement(padding + offset + innerWidth / 4 - 8, padding + innerHeight, 'left');
+
+  const feedbackText = document.createElementNS(xmlns, 'text');
+
+  feedbackText.textContent = 'g';
+
+  feedbackText.setAttribute('x', (padding + offset + width / 2 - 16).toString(10));
+  feedbackText.setAttribute('y', (padding + innerHeight + 24).toString(10));
+  feedbackText.setAttribute('text-anchor', 'middle');
+  feedbackText.setAttribute('stroke', 'none');
+  feedbackText.setAttribute('fill', baseColor);
+  feedbackText.setAttribute('font-size', '16px');
+
+  const delayElement = createDelayElement(padding + offset + width / 2 - 35, padding + innerHeight / 2 - 12, 'd');
+
+  const feedbackBus0 = createBus(offset + width - 24, padding + innerHeight / 2, offset + width - 24, padding + innerHeight);
+  const feedbackBus1 = createBus(padding + offset + 48, padding + innerHeight, offset + width - 24, padding + innerHeight);
+  const feedbackBus2 = createBus(padding + offset + 48, padding + innerHeight, padding + offset + 48, padding + innerHeight / 2 + 24);
+  const feedbackArrow = createBusArrow(padding + offset + 48, padding + innerHeight / 2 + 24, 'up');
+
+  svg.appendChild(bus0);
+  svg.appendChild(arrow0);
+  svg.appendChild(feedbackBus0);
+  svg.appendChild(feedbackBus1);
+  svg.appendChild(feedbackBus2);
+  svg.appendChild(feedbackArrow);
+  svg.appendChild(feedback);
+  svg.appendChild(feedbackText);
+  svg.appendChild(adder0);
+  svg.appendChild(delayElement);
+};
+
+const createAllPassFilterInSchroederReverberator = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const width = innerWidth / 2;
+  const offset = width + padding / 2;
+
+  createCombFilterInSchroederReverberator(svg, offset);
+
+  const adder1 = createAddElement(offset + width, padding + innerHeight / 2);
+
+  const feedforward = createMultiplyElement(padding + offset + width / 2, padding, 'right');
+
+  const feedforwardText = document.createElementNS(xmlns, 'text');
+
+  feedforwardText.textContent = '-g';
+
+  feedforwardText.setAttribute('x', (padding + offset + width / 2).toString(10));
+  feedforwardText.setAttribute('y', (padding + 24).toString(10));
+  feedforwardText.setAttribute('text-anchor', 'middle');
+  feedforwardText.setAttribute('stroke', 'none');
+  feedforwardText.setAttribute('fill', baseColor);
+  feedforwardText.setAttribute('font-size', '16px');
+
+  const feedforwardBus0 = createBus(padding + offset + 80, padding + innerHeight / 2, padding + offset + 80, padding);
+  const feedforwardBus1 = createBus(padding + offset + 80, padding, offset + width, padding);
+  const feedforwardBus2 = createBus(offset + width, padding, offset + width, padding + innerHeight / 2 - 24);
+  const feedforwardArrow = createBusArrow(offset + width, padding + innerHeight / 2 - 24, 'down');
+
+  svg.appendChild(feedforwardBus0);
+  svg.appendChild(feedforwardBus1);
+  svg.appendChild(feedforwardBus2);
+  svg.appendChild(feedforwardArrow);
+  svg.appendChild(feedforward);
+  svg.appendChild(feedforwardText);
+  svg.appendChild(adder1);
 };
 
 const createNodeConnectionsForChorus = (svg) => {
@@ -21978,7 +22325,13 @@ vibrato();
 animateFeedback(document.getElementById('svg-animation-feedback'));
 createNodeConnectionsForDelay(document.getElementById('svg-figure-node-connections-for-delay'));
 
+delay();
+delayNode();
+
 createNodeConnectionsForReverb(document.getElementById('svg-figure-node-connections-for-reverb'));
+
+reverb();
+
 createRIR(document.getElementById('svg-figure-impulse'));
 animateRIR(document.getElementById('svg-animation-impulse-response'));
 renderRIR(document.getElementById('svg-rir'));
@@ -21988,6 +22341,9 @@ animateConvolution(document.getElementById('svg-animation-convolution'));
 createConvolutionSize(document.getElementById('svg-figure-convolution-output-signal-size'));
 
 createFIRFilter(document.getElementById('svg-figure-fir-filter'));
+
+createCombFilterInSchroederReverberator(document.getElementById('svg-figure-comb-filter-and-all-pass-filter-in-schroeder-reverberator'));
+createAllPassFilterInSchroederReverberator(document.getElementById('svg-figure-comb-filter-and-all-pass-filter-in-schroeder-reverberator'));
 
 createNodeConnectionsForChorus(document.getElementById('svg-figure-node-connections-for-chorus'));
 
