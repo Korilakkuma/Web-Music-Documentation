@@ -428,8 +428,6 @@ select {
   opacity: 0.6;
 }
 
-.app-chorus,
-.app-flanger,
 .app-phaser,
 .app-tremolo,
 .app-ringmodulator,
@@ -448,8 +446,6 @@ select {
   margin: 24px 0;
 }
 
-.app-chorus dl dd,
-.app-flanger dl dd,
 .app-phaser dl dd,
 .app-tremolo dl dd,
 .app-ringmodulator dl dd,
@@ -545,6 +541,10 @@ select {
   cursor: pointer;
   user-select: none;
   -webkit-touch-callout: none;
+}
+
+.label-min-width {
+  min-width: 128px;
 }
 
 .inline-block-min-width {

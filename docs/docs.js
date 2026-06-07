@@ -7274,6 +7274,8 @@ const createNodeConnectionsForChorus = (svg) => {
   g.appendChild(lfoAndDelayTimeParamPath);
   g.appendChild(lfoAndDelayTimeParamArrow);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
@@ -7297,12 +7299,16 @@ const chorus = () => {
   const rangeRateElement = document.getElementById('range-chorus-rate');
   const rangeMixElement = document.getElementById('range-chorus-mix');
 
-  const spanPrintDelayTimeElement = document.getElementById('print-chorus-delay-time-value');
-  const spanPrintDepthElement = document.getElementById('print-chorus-depth-value');
-  const spanPrintRateElement = document.getElementById('print-chorus-rate-value');
-  const spanPrintMixElement = document.getElementById('print-chorus-mix-value');
+  const outputDelayTimeElement = document.getElementById('output-chorus-delay-time-value');
+  const outputDepthElement = document.getElementById('output-chorus-depth-value');
+  const outputRateElement = document.getElementById('output-chorus-rate-value');
+  const outputMixElement = document.getElementById('output-chorus-mix-value');
 
-  const onDown = (event) => {
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
     if (oscillator !== null || lfo !== null) {
       return;
     }
@@ -7326,7 +7332,7 @@ const chorus = () => {
     buttonElement.textContent = 'stop';
   };
 
-  const onUp = (event) => {
+  const onUp = () => {
     if (oscillator === null || lfo === null) {
       return;
     }
@@ -7345,38 +7351,38 @@ const chorus = () => {
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  rangeDelayTimeElement.addEventListener('input', (event) => {
-    delay.delayTime.value = event.currentTarget.valueAsNumber * 0.001;
+  rangeDelayTimeElement.addEventListener('input', () => {
+    delay.delayTime.value = rangeDelayTimeElement.valueAsNumber * 0.001;
     depth.gain.value = delay.delayTime.value * depthRate;
 
-    spanPrintDelayTimeElement.textContent = `${Math.trunc(delay.delayTime.value * 1000)} msec`;
+    outputDelayTimeElement.textContent = `${Math.trunc(delay.delayTime.value * 1000)} msec`;
   });
 
-  rangeDepthElement.addEventListener('input', (event) => {
-    depthRate = event.currentTarget.valueAsNumber;
+  rangeDepthElement.addEventListener('input', () => {
+    depthRate = rangeDepthElement.valueAsNumber;
 
     depth.gain.value = delay.delayTime.value * depthRate;
 
-    spanPrintDepthElement.textContent = depthRate.toString(10);
+    outputDepthElement.textContent = depthRate.toFixed(2);
   });
 
-  rangeRateElement.addEventListener('input', (event) => {
-    rateValue = event.currentTarget.valueAsNumber;
+  rangeRateElement.addEventListener('input', () => {
+    rateValue = rangeRateElement.valueAsNumber;
 
     if (lfo) {
       lfo.frequency.value = rateValue;
     }
 
-    spanPrintRateElement.textContent = rateValue.toString(10);
+    outputRateElement.textContent = rateValue.toFixed(2);
   });
 
-  rangeMixElement.addEventListener('input', (event) => {
-    mixValue = event.currentTarget.valueAsNumber;
+  rangeMixElement.addEventListener('input', () => {
+    mixValue = rangeMixElement.valueAsNumber;
 
     dry.gain.value = 1 - mixValue;
     wet.gain.value = mixValue;
 
-    spanPrintMixElement.textContent = mixValue.toString(10);
+    outputMixElement.textContent = mixValue.toFixed(2);
   });
 };
 
@@ -7462,6 +7468,8 @@ const createNodeConnectionsForFlanger = (svg) => {
   g.appendChild(lfoAndDelayTimeParamPath2);
   g.appendChild(lfoAndDelayTimeParamArrow);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
@@ -7487,13 +7495,13 @@ const flanger = () => {
   const rangeMixElement = document.getElementById('range-flanger-mix');
   const rangeFeedbackElement = document.getElementById('range-flanger-feedback');
 
-  const spanPrintDelayTimeElement = document.getElementById('print-flanger-delay-time-value');
-  const spanPrintDepthElement = document.getElementById('print-flanger-depth-value');
-  const spanPrintRateElement = document.getElementById('print-flanger-rate-value');
-  const spanPrintMixElement = document.getElementById('print-flanger-mix-value');
-  const spanPrintFeedbackElement = document.getElementById('print-flanger-feedback-value');
+  const outputDelayTimeElement = document.getElementById('output-flanger-delay-time-value');
+  const outputDepthElement = document.getElementById('output-flanger-depth-value');
+  const outputRateElement = document.getElementById('output-flanger-rate-value');
+  const outputMixElement = document.getElementById('output-flanger-mix-value');
+  const outputFeedbackElement = document.getElementById('output-flanger-feedback-value');
 
-  const onDown = async (event) => {
+  const onDown = async () => {
     if (audiocontext.state !== 'running') {
       await audiocontext.resume();
     }
@@ -7524,7 +7532,7 @@ const flanger = () => {
     buttonElement.textContent = 'stop';
   };
 
-  const onUp = (event) => {
+  const onUp = () => {
     if (oscillator === null || lfo === null) {
       return;
     }
@@ -7543,46 +7551,46 @@ const flanger = () => {
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  rangeDelayTimeElement.addEventListener('input', (event) => {
-    delay.delayTime.value = event.currentTarget.valueAsNumber * 0.001;
+  rangeDelayTimeElement.addEventListener('input', () => {
+    delay.delayTime.value = rangeDelayTimeElement.valueAsNumber * 0.001;
     depth.gain.value = delay.delayTime.value * depthRate;
 
-    spanPrintDelayTimeElement.textContent = `${Math.trunc(delay.delayTime.value * 1000)} msec`;
+    outputDelayTimeElement.textContent = `${Math.trunc(delay.delayTime.value * 1000)} msec`;
   });
 
-  rangeDepthElement.addEventListener('input', (event) => {
-    depthRate = event.currentTarget.valueAsNumber;
+  rangeDepthElement.addEventListener('input', () => {
+    depthRate = rangeDepthElement.valueAsNumber;
 
     depth.gain.value = delay.delayTime.value * depthRate;
 
-    spanPrintDepthElement.textContent = depthRate.toString(10);
+    outputDepthElement.textContent = depthRate.toFixed(2);
   });
 
-  rangeRateElement.addEventListener('input', (event) => {
-    rateValue = event.currentTarget.valueAsNumber;
+  rangeRateElement.addEventListener('input', () => {
+    rateValue = rangeRateElement.valueAsNumber;
 
     if (lfo) {
       lfo.frequency.value = rateValue;
     }
 
-    spanPrintRateElement.textContent = rateValue.toString(10);
+    outputRateElement.textContent = rateValue.toFixed(2);
   });
 
-  rangeMixElement.addEventListener('input', (event) => {
-    mixValue = event.currentTarget.valueAsNumber;
+  rangeMixElement.addEventListener('input', () => {
+    mixValue = rangeMixElement.valueAsNumber;
 
     dry.gain.value = 1 - mixValue;
     wet.gain.value = mixValue;
 
-    spanPrintMixElement.textContent = mixValue.toString(10);
+    outputMixElement.textContent = mixValue.toFixed(2);
   });
 
-  rangeFeedbackElement.addEventListener('input', (event) => {
-    const feedbackValue = event.currentTarget.valueAsNumber;
+  rangeFeedbackElement.addEventListener('input', () => {
+    const feedbackValue = rangeFeedbackElement.valueAsNumber;
 
     feedback.gain.value = feedbackValue;
 
-    spanPrintFeedbackElement.textContent = feedbackValue.toString(10);
+    outputFeedbackElement.textContent = feedbackValue.toFixed(2);
   });
 };
 
@@ -7670,30 +7678,13 @@ const animateFM = (svgTime, svgSpectrum) => {
 
   svgSpectrum.appendChild(yText);
 
-  ['1.0', '0.5', '0.0'].forEach((text) => {
+  [1, 0.5, 0].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case '1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case '0.5': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '0.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
