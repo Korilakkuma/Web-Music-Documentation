@@ -8542,6 +8542,8 @@ const createNodeConnectionsForPhaser = (svg) => {
   g.appendChild(lfoAndAllpass4Path);
   g.appendChild(lfoAndAllpass4Arrow);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
@@ -8576,13 +8578,13 @@ const phaser = () => {
   const rangeResonanceElement = document.getElementById('range-phaser-resonance');
   const rangeMixElement = document.getElementById('range-phaser-mix');
 
-  const spanPrintFrequencyElement = document.getElementById('print-phaser-frequency-value');
-  const spanPrintDepthElement = document.getElementById('print-phaser-depth-value');
-  const spanPrintRateElement = document.getElementById('print-phaser-rate-value');
-  const spanPrintResonanceElement = document.getElementById('print-phaser-resonance-value');
-  const spanPrintMixElement = document.getElementById('print-phaser-mix-value');
+  const outputFrequencyElement = document.getElementById('output-phaser-frequency-value');
+  const outputDepthElement = document.getElementById('output-phaser-depth-value');
+  const outputRateElement = document.getElementById('output-phaser-rate-value');
+  const outputResonanceElement = document.getElementById('output-phaser-resonance-value');
+  const outputMixElement = document.getElementById('output-phaser-mix-value');
 
-  const onDown = async (event) => {
+  buttonElement.addEventListener('mousedown', async () => {
     if (audiocontext.state !== 'running') {
       await audiocontext.resume();
     }
@@ -8616,9 +8618,9 @@ const phaser = () => {
     lfo.start(0);
 
     buttonElement.textContent = 'stop';
-  };
+  });
 
-  const onUp = (event) => {
+  buttonElement.addEventListener('mouseup', () => {
     if (oscillator === null || lfo === null) {
       return;
     }
@@ -8630,15 +8632,10 @@ const phaser = () => {
     lfo = null;
 
     buttonElement.textContent = 'start';
-  };
+  });
 
-  buttonElement.addEventListener('mousedown', onDown);
-  buttonElement.addEventListener('touchstart', onDown);
-  buttonElement.addEventListener('mouseup', onUp);
-  buttonElement.addEventListener('touchend', onUp);
-
-  selectPhaserStagesElement.addEventListener('change', (event) => {
-    numberOfStages = Number(event.currentTarget.value);
+  selectPhaserStagesElement.addEventListener('change', () => {
+    numberOfStages = Number(selectPhaserStagesElement.value);
 
     for (let i = 0, len = allpasses.length; i < len; i++) {
       allpasses[i].disconnect(0);
@@ -8664,51 +8661,51 @@ const phaser = () => {
     }
   });
 
-  rangeFrequencyElement.addEventListener('input', (event) => {
-    baseFrequency = event.currentTarget.valueAsNumber;
+  rangeFrequencyElement.addEventListener('input', () => {
+    baseFrequency = rangeFrequencyElement.valueAsNumber;
 
     for (let i = 0; i < numberOfStages; i++) {
       allpasses[i].frequency.value = baseFrequency;
     }
 
-    spanPrintFrequencyElement.textContent = `${Math.trunc(baseFrequency)} Hz`;
+    outputFrequencyElement.textContent = `${Math.trunc(baseFrequency)} Hz`;
   });
 
-  rangeDepthElement.addEventListener('input', (event) => {
-    depthRate = event.currentTarget.valueAsNumber;
+  rangeDepthElement.addEventListener('input', () => {
+    depthRate = rangeDepthElement.valueAsNumber;
 
     depth.gain.value = baseFrequency * depthRate;
 
-    spanPrintDepthElement.textContent = depthRate.toString(10);
+    outputDepthElement.textContent = depthRate.toFixed(2);
   });
 
-  rangeRateElement.addEventListener('input', (event) => {
-    rateValue = event.currentTarget.valueAsNumber;
+  rangeRateElement.addEventListener('input', () => {
+    rateValue = rangeRateElement.valueAsNumber;
 
     if (lfo) {
       lfo.frequency.value = rateValue;
     }
 
-    spanPrintRateElement.textContent = rateValue.toString(10);
+    outputRateElement.textContent = rateValue.toFixed(2);
   });
 
-  rangeResonanceElement.addEventListener('input', (event) => {
-    resonance = event.currentTarget.valueAsNumber;
+  rangeResonanceElement.addEventListener('input', () => {
+    resonance = rangeResonanceElement.valueAsNumber;
 
     for (let i = 0; i < numberOfStages; i++) {
       allpasses[i].Q.value = resonance;
     }
 
-    spanPrintResonanceElement.textContent = resonance.toString(10);
+    outputResonanceElement.textContent = resonance.toFixed(2);
   });
 
-  rangeMixElement.addEventListener('input', (event) => {
-    mixValue = event.currentTarget.valueAsNumber;
+  rangeMixElement.addEventListener('input', () => {
+    mixValue = rangeMixElement.valueAsNumber;
 
     dry.gain.value = 1 - mixValue;
     wet.gain.value = mixValue;
 
-    spanPrintMixElement.textContent = mixValue.toString(10);
+    outputMixElement.textContent = mixValue.toFixed(2);
   });
 };
 

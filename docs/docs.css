@@ -428,7 +428,6 @@ select {
   opacity: 0.6;
 }
 
-.app-phaser,
 .app-tremolo,
 .app-ringmodulator,
 .app-3-bands-equalizer,
@@ -446,7 +445,6 @@ select {
   margin: 24px 0;
 }
 
-.app-phaser dl dd,
 .app-tremolo dl dd,
 .app-ringmodulator dl dd,
 .app-3-bands-equalizer dl dd,
