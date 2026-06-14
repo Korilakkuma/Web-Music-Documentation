@@ -9171,7 +9171,7 @@ rangeMixElement.addEventListener(&apos;input&apos;, () =&gt; {
 const depthValue = 0.25;
 const rateValue  = 2.5;
 
-const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- ${depthValue}
+const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- depthValue
 
 const oscillator = new OscillatorNode(context);
 
@@ -9188,16 +9188,16 @@ amplitude.connect(context.destination);
 lfo.connect(depth);
 depth.connect(amplitude.gain);
 
-// Start oscillator and LFO
+// Start oscillator and LFO immediately
 oscillator.start(0);
 lfo.start(0);
 
-// Stop oscillator and LFO
+// Stop oscillator and LFO aftter 5 sec
 oscillator.stop(context.currentTime + 5);
 lfo.stop(context.currentTime + 5);</code></pre>
             <p>
               トレモロは, 振幅 <code>1</code> を基準に値が変化するように定義されています (<span class="math-inline">$f_{s}$</span> はサンプリング周波数).
-              しかしながら, そのまま実装すると, 実際には音割れ (クリッピング) が発生してしまうので, 実装では, <code>0.5</code> を基準に, Depth
+              しかしながら, そのまま実装すると, 実際にはクリッピングが発生してしまうので, 実装では, <code>0.5</code> を基準に, Depth
               の値が増減するようにしています.
             </p>
             <div class="math-block">
@@ -9212,17 +9212,17 @@ lfo.stop(context.currentTime + 5);</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-tremolo&quot;&gt;start&lt;/button&gt;
 &lt;label&gt;
   &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-tremolo&quot; checked /&gt;
-  &lt;span id=&quot;print-checked-tremolo&quot;&gt;ON&lt;/span&gt;
+  &lt;span&gt;Tremolo&lt;/span&gt;
 &lt;/label&gt;
 &lt;label for=&quot;range-tremolo-depth&quot;&gt;Depth&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-tremolo-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
-&lt;span id=&quot;print-tremolo-depth-value&quot;&gt;0&lt;/span&gt;
+&lt;output id=&quot;output-tremolo-depth-value&quot; for=&quot;range-tremolo-depth&quot;&gt;0.00&lt;/output&gt;
 &lt;label for=&quot;range-tremolo-rate&quot;&gt;Rate&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-tremolo-rate&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;0.5&quot; /&gt;
-&lt;span id=&quot;print-tremolo-rate-value&quot;&gt;0&lt;/span&gt;</code></pre>
+&lt;output id=&quot;output-tremolo-rate-value&quot;&gt;0.00&lt;/output&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -9236,18 +9236,19 @@ let lfo        = new OscillatorNode(context, { frequency: rateValue });
 
 let isStop = true;
 
-const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- ${depthValue}
+const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- depthValue
 const depth     = new GainNode(context, { gain: amplitude.gain.value * depthRate });
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
-const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-tremolo&apos;);
+
+const checkboxElement = document.getElementById(&apos;checkbox-tremolo&apos;);
 
 const rangeDepthElement = document.getElementById(&apos;range-tremolo-depth&apos;);
 const rangeRateElement  = document.getElementById(&apos;range-tremolo-rate&apos;);
 
-const spanPrintCheckedElement = document.getElementById(&apos;print-checked-tremolo&apos;);
-const spanPrintDepthElement   = document.getElementById(&apos;print-tremolo-depth-value&apos;);
-const spanPrintRateElement    = document.getElementById(&apos;print-tremolo-rate-value&apos;);
+const outputCheckedElement = document.getElementById(&apos;output-checked-tremolo&apos;);
+const outputDepthElement   = document.getElementById(&apos;output-tremolo-depth-value&apos;);
+const outputRateElement    = document.getElementById(&apos;output-tremolo-rate-value&apos;);
 
 checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
   oscillator.disconnect(0);
@@ -9264,17 +9265,17 @@ checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
     // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; gain (AudioParam)
     lfo.connect(depth);
     depth.connect(amplitude.gain);
-
-    spanPrintCheckedElement.textContent = &apos;ON&apos;;
   } else {
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
     oscillator.connect(context.destination);
-
-    spanPrintCheckedElement.textContent = &apos;OFF&apos;;
   }
 });
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (!isStop) {
     return;
   }
@@ -9285,7 +9286,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
     oscillator.connect(amplitude);
     amplitude.connect(context.destination);
 
-    // Start oscillator
+    // Start oscillator immediately
     oscillator.start(0);
   } else {
     amplitude.disconnect(0);
@@ -9294,7 +9295,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
     oscillator.connect(context.destination);
 
-    // Start oscillator
+    // Start oscillator immediately
     oscillator.start(0);
   }
 
@@ -9303,6 +9304,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
   lfo.connect(depth);
   depth.connect(amplitude.gain);
 
+  // Start LFO immediately
   lfo.start(0);
 
   isStop = false;
@@ -9315,7 +9317,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
     return;
   }
 
-  // Stop immediately
+  // Stop oscillator and LFO immediately
   oscillator.stop(0);
   lfo.stop(0);
 
@@ -9327,53 +9329,45 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
   buttonElement.textContent = &apos;start&apos;;
 });
 
-rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  depthRate = event.currentTarget.valueAsNumber;
+rangeDepthElement.addEventListener(&apos;input&apos;, () =&gt; {
+  depthRate = rangeDepthElement.valueAsNumber;
 
   depth.gain.value = amplitude.gain.value * depthRate;
 
-  spanPrintDepthElement.textContent = depthRate.toString(10);
+  outputDepthElement.textContent = depthRate.toFixed(2);
 });
 
-rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  rateValue = event.currentTarget.valueAsNumber;
+rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
+  rateValue = rangeRateElement.valueAsNumber;
 
   if (lfo) {
     lfo.frequency.value = rateValue;
   }
 
-  spanPrintRateElement.textContent = rateValue.toString(10);
+  outputRateElement.textContent = rateValue.toFixed(2);
 });</code></pre>
-            <div class="app-container app-tremolo">
-              <div class="app-headline">
-                <button type="button" id="button-tremolo">start</button>
-                <label>
-                  <input type="checkbox" id="checkbox-tremolo" checked />
-                  <span id="print-checked-tremolo">ON</span>
-                </label>
-              </div>
+            <div class="app-container flexbox">
               <div>
-                <dl>
-                  <div>
-                    <dt><label for="range-tremolo-depth">Depth</label></dt>
-                    <dd>
-                      <input type="range" id="range-tremolo-depth" value="0" min="0" max="1" step="0.05" />
-                      <span id="print-tremolo-depth-value">0</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt><label for="range-tremolo-rate">Rate</label></dt>
-                    <dd>
-                      <input type="range" id="range-tremolo-rate" value="0" min="0" max="10" step="0.5" />
-                      <span id="print-tremolo-rate-value">0</span>
-                    </dd>
-                  </div>
-                </dl>
+                <button type="button" id="button-tremolo">start</button>
+              </div>
+              <label class="label-checkbox">
+                <input type="checkbox" id="checkbox-tremolo" checked />
+                <span>Tremolo</span>
+              </label>
+              <div class="flexbox">
+                <label for="range-tremolo-depth">Depth</label>
+                <input type="range" id="range-tremolo-depth" value="0" min="0" max="1" step="0.05" />
+                <output id="output-tremolo-depth-value" for="range-tremolo-depth">0.00</output>
+              </div>
+              <div class="flexbox">
+                <label for="range-tremolo-rate">Rate</label>
+                <input type="range" id="range-tremolo-rate" value="0" min="0" max="10" step="0.5" />
+                <output id="output-tremolo-rate-value">0.00</output>
               </div>
             </div>
           </section>
           <section id="section-effectors-ringmodulator">
-            <h4>リンクモジュレーター</h4>
+            <h4>リングモジュレーター</h4>
             <p>
               <b>リングモジュレーター</b>は, <code>AudioNode</code> の接続としてはトレモロと同じです. LFO の Rate (変調の周波数)を, およそ
               <code>100 Hz</code> 以上にしていくと, 原音の周波数成分とは異なる周波数成分が発生するようになります.
@@ -9398,17 +9392,17 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-ringmodulator&quot;&gt;start&lt;/button&gt;
 &lt;label&gt;
   &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-ringmodulator&quot; checked /&gt;
-  &lt;span id=&quot;print-checked-ringmodulator&quot;&gt;ON&lt;/span&gt;
+  &lt;span&gt;Ring Modulator&lt;/span&gt;
 &lt;/label&gt;
 &lt;label for=&quot;range-ringmodulator-depth&quot;&gt;Depth&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-ringmodulator-depth&quot; value=&quot;1&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
-&lt;span id=&quot;print-ringmodulator-depth-value&quot;&gt;1&lt;/span&gt;
+&lt;output id=&quot;output-ringmodulator-depth-value&quot; for=&quot;range-ringmodulator-depth&quot;&gt;1.00&lt;/output&gt;
 &lt;label for=&quot;range-ringmodulator-rate&quot;&gt;Rate&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-ringmodulator-rate&quot; value=&quot;1000&quot; min=&quot;0&quot; max=&quot;2000&quot; step=&quot;100&quot; /&gt;
-&lt;span id=&quot;print-ringmodulator-rate-value&quot;&gt;1000&lt;/span&gt;</code></pre>
+&lt;output id=&quot;output-ringmodulator-rate-value&quot; for=&quot;range-ringmodulator-rate&quot;&gt;1000&lt;/output&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -9422,18 +9416,18 @@ let lfo        = new OscillatorNode(context, { frequency: rateValue });
 
 let isStop = true;
 
-const amplitude = new GainNode(context, { gain: 0 });  // 0 +- ${depthValue}
+const amplitude = new GainNode(context, { gain: 0 });  // 0 +- depthValue
 const depth     = new GainNode(context, { gain: depthRate });
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
-const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-ringmodulator&apos;);
+
+const checkboxElement = document.getElementById(&apos;checkbox-ringmodulator&apos;);
 
 const rangeDepthElement = document.getElementById(&apos;range-ringmodulator-depth&apos;);
 const rangeRateElement  = document.getElementById(&apos;range-ringmodulator-rate&apos;);
 
-const spanPrintCheckedElement = document.getElementById(&apos;print-checked-ringmodulator&apos;);
-const spanPrintDepthElement   = document.getElementById(&apos;print-ringmodulator-depth-value&apos;);
-const spanPrintRateElement    = document.getElementById(&apos;print-ringmodulator-rate-value&apos;);
+const outputDepthElement = document.getElementById(&apos;output-ringmodulator-depth-value&apos;);
+const outputRateElement  = document.getElementById(&apos;output-ringmodulator-rate-value&apos;);
 
 checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
   oscillator.disconnect(0);
@@ -9450,17 +9444,17 @@ checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
     // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; gain (AudioParam)
     lfo.connect(depth);
     depth.connect(amplitude.gain);
-
-    spanPrintCheckedElement.textContent = &apos;ON&apos;;
   } else {
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
     oscillator.connect(context.destination);
-
-    spanPrintCheckedElement.textContent = &apos;OFF&apos;;
   }
 });
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (!isStop) {
     return;
   }
@@ -9471,7 +9465,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
     oscillator.connect(amplitude);
     amplitude.connect(context.destination);
 
-    // Start oscillator
+    // Start oscillator immediately
     oscillator.start(0);
   } else {
     amplitude.disconnect(0);
@@ -9480,7 +9474,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
     oscillator.connect(context.destination);
 
-    // Start oscillator
+    // Start oscillator immediately
     oscillator.start(0);
   }
 
@@ -9489,6 +9483,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
   lfo.connect(depth);
   depth.connect(amplitude.gain);
 
+  // Start LFO immediately
   lfo.start(0);
 
   isStop = false;
@@ -9501,7 +9496,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
     return;
   }
 
-  // Stop immediately
+  // Stop oscillator and LFO immediately
   oscillator.stop(0);
   lfo.stop(0);
 
@@ -9513,48 +9508,40 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
   buttonElement.textContent = &apos;start&apos;;
 });
 
-rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  depthRate = event.currentTarget.valueAsNumber;
+rangeDepthElement.addEventListener(&apos;input&apos;, () =&gt; {
+  depthRate = rangeDepthElement.valueAsNumber;
 
   depth.gain.value = depthRate;
 
-  spanPrintDepthElement.textContent = depthRate.toString(10);
+  outputDepthElement.textContent = depthRate.toFixed(2);
 });
 
-rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  rateValue = event.currentTarget.valueAsNumber;
+rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
+  rateValue = rangeRateElement.valueAsNumber;
 
   if (lfo) {
     lfo.frequency.value = rateValue;
   }
 
-  spanPrintRateElement.textContent = rateValue.toString(10);
+  outputRateElement.textContent = rateValue.toFixed(0);
 });</code></pre>
-            <div class="app-container app-ringmodulator">
-              <div class="app-headline">
-                <button type="button" id="button-ringmodulator">start</button>
-                <label>
-                  <input type="checkbox" id="checkbox-ringmodulator" checked />
-                  <span id="print-checked-ringmodulator">ON</span>
-                </label>
-              </div>
+            <div class="app-container flexbox">
               <div>
-                <dl>
-                  <div>
-                    <dt><label for="range-ringmodulator-depth">Depth</label></dt>
-                    <dd>
-                      <input type="range" id="range-ringmodulator-depth" value="1" min="0" max="1" step="0.05" />
-                      <span id="print-ringmodulator-depth-value">1</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt><label for="range-ringmodulator-rate">Rate</label></dt>
-                    <dd>
-                      <input type="range" id="range-ringmodulator-rate" value="1000" min="0" max="2000" step="100" />
-                      <span id="print-ringmodulator-rate-value">1000</span>
-                    </dd>
-                  </div>
-                </dl>
+                <button type="button" id="button-ringmodulator">start</button>
+              </div>
+              <label class="label-checkbox">
+                <input type="checkbox" id="checkbox-ringmodulator" checked />
+                <span>Ring Modulator</span>
+              </label>
+              <div class="flexbox">
+                <label for="range-ringmodulator-depth">Depth</label>
+                <input type="range" id="range-ringmodulator-depth" value="1" min="0" max="1" step="0.05" />
+                <output id="output-ringmodulator-depth-value" for="range-ringmodulator-depth">1.00</output>
+              </div>
+              <div class="flexbox">
+                <label for="range-ringmodulator-rate">Rate</label>
+                <input type="range" id="range-ringmodulator-rate" value="1000" min="0" max="2000" step="100" />
+                <output id="output-ringmodulator-rate-value" for="range-ringmodulator-rate">1000</output>
               </div>
             </div>
           </section>
@@ -9571,11 +9558,11 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               <figcaption>
                 <span>AM 変調のイメージ</span>
                 <button type="button" id="button-amplitude-modulation-animation">start</button>
-                <span class="app-headline">
+                <div class="flexbox">
                   <label for="range-amplitude-modulation-rate">Rate</label>
                   <input type="range" id="range-amplitude-modulation-rate" value="1" min="0" max="8000" step="1" />
-                  <span id="print-amplitude-modulation-rate">1 Hz</span>
-                </span>
+                  <output id="output-amplitude-modulation-rate">1 Hz</output>
+                </div>
               </figcaption>
             </figure>
             <p>
@@ -9587,13 +9574,23 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               この仕組みを発展させた音合成が, <b>FM シンセサイザー</b> (FM 音源) で, キャリア (搬送波) とモジュレーターの波形を正弦波として,
               それらを合成する正弦波によって定義されます (<span class="math-inline">$A$</span> はキャリアの振幅,
               <span class="math-inline">$f_{c}$</span> はキャリアの周波数, <span class="math-inline">$\beta$</span> は変調指数 (LFO の Depth に相当),
-              <span class="math-inline">$f_{m}$</span> はモジュレーターの周波数 (LFO の Rate に相当)).
+              <span class="math-inline">$f_{m}$</span> はモジュレーターの周波数 (LFO の Rate に相当).
             </p>
             <div class="math-block">
-              $y\left(n\right) = A \cdot \sin\left(\frac{2\pi \cdot f_{c} \cdot n}{f_{s}} + \left(\beta \cdot \sin\left(\frac{2\pi \cdot f_{m} \cdot
-              n}{f_{s}}\right)\right)\right)$
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &y\left(n\right) = A \cdot \sin\left(\frac{2\pi \cdot f_{c} \cdot n}{f_{s}} + \left(\beta \cdot \sin\left(\frac{2\pi \cdot f_{m} \cdot n}{f_{s}}\right)\right)\right) \\
+                \end{flalign}
+              $
             </div>
             <p>(命名的に混同しますが) リングモジュレーター自体の原理は AM 変調であり, それが, FM シンセサイザーの原理になっているということです.</p>
+            <p>
+              モジュレーター部分の正弦波の定義式
+              <span class="math-inline">$\left(\beta \cdot \sin\left(\frac{2\pi \cdot f_{m} \cdot n}{f_{s}}\right)\right)$</span> が,
+              リングモジュレーターと同じであることに着目してください
+              <span class="math-inline">$\left(\mathrm{depth} \cdot \sin\left(\frac{2\pi \cdot \mathrm{rate} \cdot n}{f_{s}}\right)\right)$</span>.
+            </p>
           </section>
         </section>
         <section id="section-effectors-filter">

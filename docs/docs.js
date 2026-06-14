@@ -8742,6 +8742,8 @@ const createNodeConnectionsForTremolo = (svg) => {
   g.appendChild(lfoAndGainParamPath2);
   g.appendChild(lfoAndGainParamArrow);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
@@ -8754,21 +8756,22 @@ const tremolo = () => {
 
   let isStop = true;
 
-  const amplitude = new GainNode(audiocontext, { gain: 0.5 }); // 0.5 +- ${depthValue}
+  const amplitude = new GainNode(audiocontext, { gain: 0.5 });
   const depth = new GainNode(audiocontext, { gain: amplitude.gain.value * depthRate });
 
   const buttonElement = document.getElementById('button-tremolo');
+
   const checkboxElement = document.getElementById('checkbox-tremolo');
 
   const rangeDepthElement = document.getElementById('range-tremolo-depth');
   const rangeRateElement = document.getElementById('range-tremolo-rate');
 
-  const spanPrintCheckedElement = document.getElementById('print-checked-tremolo');
-  const spanPrintDepthElement = document.getElementById('print-tremolo-depth-value');
-  const spanPrintRateElement = document.getElementById('print-tremolo-rate-value');
+  const outputCheckedElement = document.getElementById('output-checked-tremolo');
+  const outputDepthElement = document.getElementById('output-tremolo-depth-value');
+  const outputRateElement = document.getElementById('output-tremolo-rate-value');
 
   const onDown = async () => {
-    if (audiocontext !== 'running') {
+    if (audiocontext.state !== 'running') {
       await audiocontext.resume();
     }
 
@@ -8815,6 +8818,11 @@ const tremolo = () => {
     buttonElement.textContent = 'start';
   };
 
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
   checkboxElement.addEventListener('click', () => {
     oscillator.disconnect(0);
     amplitude.disconnect(0);
@@ -8826,36 +8834,27 @@ const tremolo = () => {
 
       lfo.connect(depth);
       depth.connect(amplitude.gain);
-
-      spanPrintCheckedElement.textContent = 'ON';
     } else {
       oscillator.connect(audiocontext.destination);
-
-      spanPrintCheckedElement.textContent = 'OFF';
     }
   });
 
-  buttonElement.addEventListener('mousedown', onDown);
-  buttonElement.addEventListener('touchstart', onDown);
-  buttonElement.addEventListener('mouseup', onUp);
-  buttonElement.addEventListener('touchend', onUp);
-
-  rangeDepthElement.addEventListener('input', (event) => {
-    depthRate = event.currentTarget.valueAsNumber;
+  rangeDepthElement.addEventListener('input', () => {
+    depthRate = rangeDepthElement.valueAsNumber;
 
     depth.gain.value = amplitude.gain.value * depthRate;
 
-    spanPrintDepthElement.textContent = depthRate.toString(10);
+    outputDepthElement.textContent = depthRate.toFixed(2);
   });
 
-  rangeRateElement.addEventListener('input', (event) => {
-    rateValue = event.currentTarget.valueAsNumber;
+  rangeRateElement.addEventListener('input', () => {
+    rateValue = rangeRateElement.valueAsNumber;
 
     if (lfo) {
       lfo.frequency.value = rateValue;
     }
 
-    spanPrintRateElement.textContent = rateValue.toString(10);
+    outputRateElement.textContent = rateValue.toFixed(2);
   });
 };
 
@@ -8911,6 +8910,8 @@ const createNodeConnectionsForRingmodulator = (svg) => {
   g.appendChild(lfoAndGainParamPath);
   g.appendChild(lfoAndGainParamArrow);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
@@ -8923,18 +8924,18 @@ const ringmodulator = () => {
 
   let isStop = true;
 
-  const amplitude = new GainNode(audiocontext, { gain: 0 }); // 0 +- ${depthValue}
+  const amplitude = new GainNode(audiocontext, { gain: 0 });
   const depth = new GainNode(audiocontext, { gain: depthRate });
 
   const buttonElement = document.getElementById('button-ringmodulator');
+
   const checkboxElement = document.getElementById('checkbox-ringmodulator');
 
   const rangeDepthElement = document.getElementById('range-ringmodulator-depth');
   const rangeRateElement = document.getElementById('range-ringmodulator-rate');
 
-  const spanPrintCheckedElement = document.getElementById('print-checked-ringmodulator');
-  const spanPrintDepthElement = document.getElementById('print-ringmodulator-depth-value');
-  const spanPrintRateElement = document.getElementById('print-ringmodulator-rate-value');
+  const outputDepthElement = document.getElementById('output-ringmodulator-depth-value');
+  const outputRateElement = document.getElementById('output-ringmodulator-rate-value');
 
   const onDown = async () => {
     if (audiocontext.state !== 'running') {
@@ -8968,6 +8969,22 @@ const ringmodulator = () => {
     buttonElement.textContent = 'stop';
   };
 
+  checkboxElement.addEventListener('click', () => {
+    oscillator.disconnect(0);
+    amplitude.disconnect(0);
+    lfo.disconnect(0);
+
+    if (checkboxElement.checked) {
+      oscillator.connect(amplitude);
+      amplitude.connect(audiocontext.destination);
+
+      lfo.connect(depth);
+      depth.connect(amplitude.gain);
+    } else {
+      oscillator.connect(audiocontext.destination);
+    }
+  });
+
   const onUp = () => {
     if (isStop) {
       return;
@@ -8984,47 +9001,27 @@ const ringmodulator = () => {
     buttonElement.textContent = 'start';
   };
 
-  checkboxElement.addEventListener('click', () => {
-    oscillator.disconnect(0);
-    amplitude.disconnect(0);
-    lfo.disconnect(0);
-
-    if (checkboxElement.checked) {
-      oscillator.connect(amplitude);
-      amplitude.connect(audiocontext.destination);
-
-      lfo.connect(depth);
-      depth.connect(amplitude.gain);
-
-      spanPrintCheckedElement.textContent = 'ON';
-    } else {
-      oscillator.connect(audiocontext.destination);
-
-      spanPrintCheckedElement.textContent = 'OFF';
-    }
-  });
-
   buttonElement.addEventListener('mousedown', onDown);
   buttonElement.addEventListener('touchstart', onDown);
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  rangeDepthElement.addEventListener('input', (event) => {
-    depthRate = event.currentTarget.valueAsNumber;
+  rangeDepthElement.addEventListener('input', () => {
+    depthRate = rangeDepthElement.valueAsNumber;
 
     depth.gain.value = depthRate;
 
-    spanPrintDepthElement.textContent = depthRate.toString(10);
+    outputDepthElement.textContent = depthRate.toFixed(2);
   });
 
-  rangeRateElement.addEventListener('input', (event) => {
-    rateValue = event.currentTarget.valueAsNumber;
+  rangeRateElement.addEventListener('input', () => {
+    rateValue = rangeRateElement.valueAsNumber;
 
     if (lfo) {
       lfo.frequency.value = rateValue;
     }
 
-    spanPrintRateElement.textContent = rateValue.toString(10);
+    outputRateElement.textContent = rateValue.toFixed(0);
   });
 };
 
@@ -9040,7 +9037,7 @@ const animateAM = (svgTime, svgSpectrum) => {
 
   const buttonElement = document.getElementById('button-amplitude-modulation-animation');
   const rangeRateElement = document.getElementById('range-amplitude-modulation-rate');
-  const spanPrintRateElement = document.getElementById('print-amplitude-modulation-rate');
+  const outputRateElement = document.getElementById('output-amplitude-modulation-rate');
 
   const rectTopSpectrum = document.createElementNS(xmlns, 'rect');
 
@@ -9114,30 +9111,13 @@ const animateAM = (svgTime, svgSpectrum) => {
 
   svgSpectrum.appendChild(yText);
 
-  ['1.0', '0.5', '0.0'].forEach((text) => {
+  [1, 0.5, 0].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case '1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case '0.5': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '0.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -9294,14 +9274,14 @@ const animateAM = (svgTime, svgSpectrum) => {
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  rangeRateElement.addEventListener('input', (event) => {
-    rateValue = event.currentTarget.valueAsNumber;
+  rangeRateElement.addEventListener('input', () => {
+    rateValue = rangeRateElement.valueAsNumber;
 
     if (lfo) {
       lfo.frequency.value = rateValue;
     }
 
-    spanPrintRateElement.textContent = `${rateValue} Hz`;
+    outputRateElement.textContent = `${rateValue.toFixed(0)} Hz`;
   });
 };
 
