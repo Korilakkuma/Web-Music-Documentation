@@ -9373,10 +9373,10 @@ const renderFrequencyResponse = (svg, type) => {
       svg.appendChild(text);
     }
   } else {
-    const dBs = ['24', '18', '12', '6', '0', '-6', '-12', '-18', '-24'];
+    const dBs = [24, 18, 12, 6, 0, -6, -12, -18, -24];
 
-    for (let i = 0; i < 9; i++) {
-      const y = i * (innerHeight / 8) + padding;
+    dBs.forEach((dB, index) => {
+      const y = (innerHeight / 8) * index + padding;
 
       const rect = document.createElementNS(xmlns, 'rect');
 
@@ -9391,7 +9391,7 @@ const renderFrequencyResponse = (svg, type) => {
 
       const text = document.createElementNS(xmlns, 'text');
 
-      text.textContent = `${dBs[i]} dB`;
+      text.textContent = `${dB} dB`;
 
       text.setAttribute('x', (padding - 8).toString(10));
       text.setAttribute('y', (y + 4).toString(10));
@@ -9402,7 +9402,7 @@ const renderFrequencyResponse = (svg, type) => {
       text.setAttribute('font-size', '12px');
 
       svg.appendChild(text);
-    }
+    });
   }
 
   const filter = new BiquadFilterNode(audiocontext, { type });
@@ -9464,38 +9464,48 @@ const renderFrequencyResponse = (svg, type) => {
     path.setAttribute('d', d);
   };
 
+  const selectTypeElement = document.getElementById('select-filter-type');
+  const rangeFrequencyElement = document.getElementById(`range-filter-${type}-frequency`);
+  const rangeDetuneElement = document.getElementById(`range-filter-${type}-detune`);
+  const rangeQElement = document.getElementById(`range-filter-${type}-Q`);
+  const rangeGainElement = document.getElementById(`range-filter-${type}-gain`);
+  const outputFrequencyElement = document.getElementById(`output-filter-${type}-frequency`);
+  const outputDetuneElement = document.getElementById(`output-filter-${type}-detune`);
+  const outputQElemenet = document.getElementById(`output-filter-${type}-Q`);
+  const outputGainElement = document.getElementById(`output-filter-${type}-gain`);
+
   if (!type) {
-    document.getElementById('select-filter-type').addEventListener('change', (event) => {
-      filter.type = event.currentTarget.value;
+    selectTypeElement.addEventListener('change', () => {
+      filter.type = selectTypeElement.value;
 
       render();
     });
   }
 
-  document.getElementById(`range-filter-${type}-frequency`).addEventListener('input', (event) => {
-    filter.frequency.value = event.currentTarget.valueAsNumber;
+  rangeFrequencyElement.addEventListener('input', () => {
+    filter.frequency.value = rangeFrequencyElement.valueAsNumber;
 
-    document.getElementById(`print-filter-${type}-frequency`).textContent = `${filter.frequency.value} Hz`;
+    outputFrequencyElement.textContent = `${filter.frequency.value} Hz`;
 
     render();
   });
 
-  document.getElementById(`range-filter-${type}-detune`).addEventListener('input', (event) => {
-    filter.detune.value = event.currentTarget.valueAsNumber;
+  rangeDetuneElement.addEventListener('input', () => {
+    filter.detune.value = rangeDetuneElement.valueAsNumber;
 
-    document.getElementById(`print-filter-${type}-detune`).textContent = `${filter.detune.value} cent`;
+    outputDetuneElement.textContent = `${filter.detune.value} cent`;
 
     render();
   });
 
   if (type !== 'lowshelf' && type !== 'highshelf') {
-    document.getElementById(`range-filter-${type}-Q`).addEventListener('input', (event) => {
-      filter.Q.value = event.currentTarget.valueAsNumber;
+    rangeQElement.addEventListener('input', () => {
+      filter.Q.value = rangeQElement.valueAsNumber;
 
       if (type === 'lowpass' || type === 'highpass') {
-        document.getElementById(`print-filter-${type}-Q`).textContent = `${filter.Q.value} dB`;
+        outputQElemenet.textContent = `${filter.Q.value} dB`;
       } else {
-        document.getElementById(`print-filter-${type}-Q`).textContent = `${filter.Q.value}`;
+        outputQElemenet.textContent = `${filter.Q.value}`;
       }
 
       render();
@@ -9503,10 +9513,10 @@ const renderFrequencyResponse = (svg, type) => {
   }
 
   if (type === 'lowshelf' || type === 'highshelf' || type === 'peaking') {
-    document.getElementById(`range-filter-${type}-gain`).addEventListener('input', (event) => {
-      filter.gain.value = event.currentTarget.valueAsNumber;
+    rangeGainElement.addEventListener('input', () => {
+      filter.gain.value = rangeGainElement.valueAsNumber;
 
-      document.getElementById(`print-filter-${type}-gain`).textContent = `${filter.gain.value} dB`;
+      outputGainElement.textContent = `${filter.gain.value} dB`;
 
       render();
     });

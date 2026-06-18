@@ -9596,8 +9596,8 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
         <section id="section-effectors-filter">
           <h3>フィルタ</h3>
           <p>
-            フィルタという言葉は日常生活でも使われます. コンピュータサイエンスにおいても, UNIX 系 OS でパイプとフィルタがあります. フィルタの概念としては,
-            ある結果を遮断して, ある結果を通過させるということでしょう.
+            フィルタという言葉は日常生活でも使われます. コンピュータサイエンスにおいても, Unix 系 OS でパイプとフィルタがあります.
+            一般的なフィルタの概念としては, ある結果を遮断して, ある結果を通過させるということでしょう.
           </p>
           <p>
             オーディオ信号処理における<b>フィルタ</b>も同様に, ある周波数成分の音を通過・遮断, あるいは, 増幅・減衰させて, 周波数特性を変化させます.
@@ -9710,9 +9710,11 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
             <h4>BiquadFilterNode</h4>
             <p>
               Web Audio API において, 様々なフィルタを簡単に利用するには <code>BiquadFilterNode</code> を使うのが最適です. <b>Biquad</b> とは,
-              <b>双 2 次</b>という意味で, <code>BiquadFilterNode</code> の次数は 2 次となります (以下の伝達関数で定義されています). したがって,
-              <code>BiquadFilterNode</code> では実装できないフィルタ, 具体的には, <code>奇数次</code>のフィルタを使いたい場合, あとのセクションで解説する
-              <code>IIRFilterNode</code> を使う必要があります (<code>BiquadFilterNode</code> は 2 次の IIR フィルタです).
+              <b>双 2 次</b>という意味で, <code>BiquadFilterNode</code> の次数は 2 次となります (<a href="#section-biquad-filter-node-definition"
+                >以下の伝達関数で定義されています</a>). したがって, <code>BiquadFilterNode</code> では実装できないフィルタ, 具体的には, <code>奇数次</code>のフィルタを使いたい場合,
+              あとのセクションで解説する <a href="#section-effectors-iir-filter-node"><code>IIRFilterNode</code></a> を使う必要があります (<code
+                >BiquadFilterNode</code>
+              は 2 次の IIR フィルタです).
             </p>
             <p>
               <code>BiquadFilterNode</code> では, フィルタの特性に関わるプロパティとして, <b><code>type</code></b> プロパティ (<b
@@ -9723,7 +9725,7 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
             </p>
             <p>
               フィルタの種類に関わらず, <code>BiquadFilterNode</code> は, そのインスタンスを接続するだけで機能します (また, コンストラクタ形式であれば,
-              インスタンス生成時に, 第 2 引数に <b>BiquadFilterOptions</b> を指定して, 初期値を変更することも可能です).
+              インスタンス生成時に, 第 2 引数に <b>BiquadFilterOptions</b> 型のオブジェクトを指定して, 初期値を変更することも可能です).
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
@@ -9740,26 +9742,35 @@ const filter     = new BiquadFilterNode(context);
 oscillator.connect(filter);
 filter.connect(context.destination);
 
-oscillator.start(0);</code></pre>
+oscillator.start(0);
+oscillator.stop(context.currentTime + 2);</code></pre>
             <img src="images/biquad-filter-node.png" alt="BiquadFilterNode" width="1232" height="770" loading="lazy" />
             <section id="section-effectors-filter-biquad-filter-node-frequency-and-detune">
               <h5>frequency / detune プロパティ</h5>
               <p>
                 フィルタの種類に関わらず, <b><code>frequency</code></b> / <b><code>detune</code></b> プロパティはすべてのフィルタにおいて有効になります (ただし,
                 フィルタの特性への影響はフィルタの種類ごとに異なります). <code>OscillatorNode</code> などと同じように, <code>frequency</code> プロパティと
-                <code>detune</code> プロパティを合わせて算出される周波数 (<span class="math-inline">$f_{\mathrm{computed}}\left(t\right)$</span>)
+                <code>detune</code> プロパティを合わせて算出される周波数 (<span class="math-inline">$\mathrm{computedFrequency}\left(t\right)$</span>)
                 は以下のように定義されています.
               </p>
               <div class="math-block">
-                $f_{\mathrm{computed}}\left(t\right) = \mathrm{frequency}\left(t\right) \cdot \mathrm{pow}\left(2, \left(\mathrm{detune}\left(t\right) / 1200
-                \right)\right)$
+                <!-- prettier-ignore -->
+                $
+                  \begin{flalign}
+                    &\mathrm{computedFrequency}\left(t\right) = \mathrm{frequency}\left(t\right) \cdot \mathrm{pow}\left(2, \left(\mathrm{detune}\left(t\right) / 1200 \right)\right) \\
+                  \end{flalign}
+                $
               </div>
               <p>
                 <code>frequency</code> / <code>detune</code> プロパティ, <code>Q</code> プロパティ, <code>gain</code> プロパティは, すべて
                 <code>AudioParam</code> なので, オートメーションさせたり, LFO を接続したりすることが可能です.
               </p>
+              <p>
+                以降の解説では, <span class="math-inline">$\mathrm{computedFrequency}\left(t\right)$</span> の省略表記として,
+                <span class="math-inline">$f_{\mathrm{computed}}$</span> を使います.
+              </p>
             </section>
-            <article class="section-biquad-filter-node-definition">
+            <article id="section-biquad-filter-node-definition">
               <h5>BiquadFilterNode の定義式</h5>
               <p>時間領域での <code>BiquadFilterNode</code> の定義式 (2 次の IIR フィルタ) は, 以下のように定義されています.</p>
               <div class="math-block">
@@ -9784,35 +9795,42 @@ oscillator.start(0);</code></pre>
                 <a href="https://www.w3.org/TR/audio-eq-cookbook/" target="_blank" rel="noopener noreferrer">W3C のドキュメント</a>としても公開されています. Web
                 Audio API の <code>BiquadFilterNode</code> も Audio EQ Cookbook をベースにした実装になっています (厳密には, 多少の改変がされています).
               </p>
-              <p>IIR フィルタに関してはあとのセクションで解説します.</p>
+              <p>
+                Web Audio API の仕様では, <code>BiquadFilterNode</code> の <code>type</code> プロパティ (フィルタの種類) ごとに<a
+                  href="https://www.w3.org/TR/webaudio-1.1/#filters-characteristics"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >フィルタの係数が記載されている</a>ので詳細を知りたい場合は参考にしてください.
+              </p>
+              <p><a href="#section-effectors-iir-filter-node">IIR フィルタに関してはあとのセクションで解説します</a>.</p>
             </article>
             <section id="section-effectors-filter-biquad-filter-node-lowpass">
               <h5>Low-Pass Filter</h5>
               <p>
                 <b>Low-Pass Filter</b> (<b>低域通過フィルタ</b>) とは, <b>カットオフ周波数</b> (<span class="math-inline">$f_{\mathrm{computed}}$</span>)
-                付近までの周波数成分を通過させ, それより大きい周波数成分を遮断するフィルタです. すでに解説しましたが, サンプリング定理のために, A/D 変換や D/A
-                変換で使われたり, エフェクターのワウで使われたり, エフェクト音のトーンを設定したり, おそらく最も使用頻度の高いフィルタになります
-                (おそらくその理由で, デフォルト値になっていると思われます).
+                付近までの周波数成分を通過させ, それより大きい周波数成分を遮断するフィルタです. すでに解説しましたが, サンプリング定理のために,
+                <abbr title="Analog to Digital">A/D</abbr> 変換や <abbr title="Digital to Analog">D/A</abbr> 変換で使われたり, エフェクターのワウで使われたり,
+                エフェクト音のトーンを設定したり, おそらく最も使用頻度の高いフィルタになります (おそらくその理由で, デフォルト値になっていると思われます).
               </p>
               <p>
                 Low-Pass Filter における, <b><code>Q</code></b> プロパティ (<b>クオリティファクタ</b>, または, <b>レゾナンス</b>と呼ばれることが多いです) は,
-                カットオフ周波数付近の急峻を変化させます. 正の値にすると, 急峻が鋭くなって, カットオフ周波数付近の周波数成分を増幅させます (これは,
-                ワウの実装において重要になる点です). 負の値を設定すると, カットオフ周波数付近の周波数成分を減衰させるフィルタ特性になります.
+                カットオフ周波数付近の急峻を変化させます. 正の値にすると, 急峻が鋭くなって, カットオフ周波数付近の周波数成分を増幅させます
+                (ワウの実装において重要になる点です). 負の値を設定すると, カットオフ周波数付近の周波数成分を減衰させるフィルタ特性になります.
               </p>
               <p>
                 Low-Pass Filter においては, <b><code>gain</code></b> プロパティは無効で, フィルタ特性に影響を与えることはありません.
               </p>
               <figure>
-                <div class="app-headline">
+                <div class="flexbox">
                   <label for="range-filter-lowpass-frequency">frequency</label>
                   <input type="range" id="range-filter-lowpass-frequency" value="350" min="1" max="8000" step="1" />
-                  <span id="print-filter-lowpass-frequency">350 Hz</span>
+                  <output id="output-filter-lowpass-frequency">350 Hz</output>
                   <label for="range-filter-lowpass-detune">detune</label>
                   <input type="range" id="range-filter-lowpass-detune" value="0" min="-1200" max="1200" step="1" />
-                  <span id="print-filter-lowpass-detune">0 cent</span>
+                  <output id="output-filter-lowpass-detune">0 cent</output>
                   <label for="range-filter-lowpass-Q">Q</label>
                   <input type="range" id="range-filter-lowpass-Q" value="1" min="-20" max="20" step="1" />
-                  <span id="print-filter-lowpass-Q">1 dB</span>
+                  <output id="output-filter-lowpass-Q">1 dB</output>
                 </div>
                 <svg id="svg-figure-filter-response-lowpass" width="600" height="300" />
                 <figcaption>Low-Pass Filter のフィルタ特性</figcaption>
@@ -9834,16 +9852,16 @@ oscillator.start(0);</code></pre>
                 High-Pass Filter においても, <b><code>gain</code></b> プロパティは無効で, フィルタ特性に影響を与えることはありません.
               </p>
               <figure>
-                <div class="app-headline">
+                <div class="flexbox">
                   <label for="range-filter-highpass-frequency">frequency</label>
                   <input type="range" id="range-filter-highpass-frequency" value="350" min="1" max="8000" step="1" />
-                  <span id="print-filter-highpass-frequency">350 Hz</span>
+                  <output id="output-filter-highpass-frequency">350 Hz</output>
                   <label for="range-filter-highpass-detune">detune</label>
                   <input type="range" id="range-filter-highpass-detune" value="0" min="-1200" max="1200" step="1" />
-                  <span id="print-filter-highpass-detune">0 cent</span>
+                  <output id="output-filter-highpass-detune">0 cent</output>
                   <label for="range-filter-highpass-Q">Q</label>
                   <input type="range" id="range-filter-highpass-Q" value="1" min="-20" max="20" step="1" />
-                  <span id="print-filter-highpass-Q">1 dB</span>
+                  <output id="output-filter-highpass-Q">1 dB</output>
                 </div>
                 <svg id="svg-figure-filter-response-highpass" width="600" height="300" />
                 <figcaption>High-Pass Filter のフィルタ特性</figcaption>
@@ -9864,16 +9882,16 @@ oscillator.start(0);</code></pre>
                 Band-Pass Filter においても, <b><code>gain</code></b> プロパティは無効で, フィルタ特性に影響を与えることはありません.
               </p>
               <figure>
-                <div class="app-headline">
+                <div class="flexbox">
                   <label for="range-filter-bandpass-frequency">frequency</label>
                   <input type="range" id="range-filter-bandpass-frequency" value="350" min="1" max="8000" step="1" />
-                  <span id="print-filter-bandpass-frequency">350 Hz</span>
+                  <output id="output-filter-bandpass-frequency">350 Hz</output>
                   <label for="range-filter-bandpass-detune">detune</label>
                   <input type="range" id="range-filter-bandpass-detune" value="0" min="-1200" max="1200" step="1" />
-                  <span id="print-filter-bandpass-detune">0 cent</span>
+                  <output id="output-filter-bandpass-detune">0 cent</output>
                   <label for="range-filter-bandpass-Q">Q</label>
                   <input type="range" id="range-filter-bandpass-Q" value="1" min="1" max="20" step="1" />
-                  <span id="print-filter-bandpass-Q">1</span>
+                  <output id="output-filter-bandpass-Q">1</output>
                 </div>
                 <svg id="svg-figure-filter-response-bandpass" width="600" height="300" />
                 <figcaption>Band-Pass Filter のフィルタ特性</figcaption>
@@ -9891,16 +9909,16 @@ oscillator.start(0);</code></pre>
                 においては, フィルタ特性に影響しますが, Web Audio API の <code>BiquadFilterNode</code> でやや実装が改変されている点の 1 つです).
               </p>
               <figure>
-                <div class="app-headline">
+                <div class="flexbox">
                   <label for="range-filter-lowshelf-frequency">frequency</label>
                   <input type="range" id="range-filter-lowshelf-frequency" value="350" min="1" max="8000" step="1" />
-                  <span id="print-filter-lowshelf-frequency">350 Hz</span>
+                  <output id="output-filter-lowshelf-frequency">350 Hz</output>
                   <label for="range-filter-lowshelf-detune">detune</label>
                   <input type="range" id="range-filter-lowshelf-detune" value="0" min="-1200" max="1200" step="1" />
-                  <span id="print-filter-lowshelf-detune">0 cent</span>
+                  <output id="output-filter-lowshelf-detune">0 cent</output>
                   <label for="range-filter-lowshelf-gain">gain</label>
                   <input type="range" id="range-filter-lowshelf-gain" value="0" min="-24" max="24" step="1" />
-                  <span id="print-filter-lowshelf-gain">0 dB</span>
+                  <output id="output-filter-lowshelf-gain">0 dB</output>
                 </div>
                 <svg id="svg-figure-filter-response-lowshelf" width="600" height="300" />
                 <figcaption>Low-Shelving Filter のフィルタ特性</figcaption>
@@ -9918,16 +9936,16 @@ oscillator.start(0);</code></pre>
                 においては, フィルタ特性に影響しますが, Web Audio API の <code>BiquadFilterNode</code> でやや実装が改変されている点の 1 つです).
               </p>
               <figure>
-                <div class="app-headline">
+                <div class="flexbox">
                   <label for="range-filter-highshelf-frequency">frequency</label>
                   <input type="range" id="range-filter-highshelf-frequency" value="350" min="1" max="8000" step="1" />
-                  <span id="print-filter-highshelf-frequency">350 Hz</span>
+                  <output id="output-filter-highshelf-frequency">350 Hz</output>
                   <label for="range-filter-highshelf-detune">detune</label>
                   <input type="range" id="range-filter-highshelf-detune" value="0" min="-1200" max="1200" step="1" />
-                  <span id="print-filter-highshelf-detune">0 cent</span>
+                  <output id="output-filter-highshelf-detune">0 cent</output>
                   <label for="range-filter-highshelf-gain">gain</label>
                   <input type="range" id="range-filter-highshelf-gain" value="0" min="-24" max="24" step="1" />
-                  <span id="print-filter-highshelf-gain">0 dB</span>
+                  <output id="output-filter-highshelf-gain">0 dB</output>
                 </div>
                 <svg id="svg-figure-filter-response-highshelf" width="600" height="300" />
                 <figcaption>High-Shelving Filter のフィルタ特性</figcaption>
@@ -9946,19 +9964,19 @@ oscillator.start(0);</code></pre>
                 <b>0 以下の値を設定すると, 中心周波数として機能しなくなるので, 正の値を指定するようにします</b>.
               </p>
               <figure>
-                <div class="app-headline">
+                <div class="flexbox">
                   <label for="range-filter-peaking-frequency">frequency</label>
                   <input type="range" id="range-filter-peaking-frequency" value="350" min="1" max="8000" step="1" />
-                  <span id="print-filter-peaking-frequency">350 Hz</span>
+                  <output id="output-filter-peaking-frequency">350 Hz</output>
                   <label for="range-filter-peaking-detune">detune</label>
                   <input type="range" id="range-filter-peaking-detune" value="0" min="-1200" max="1200" step="1" />
-                  <span id="print-filter-peaking-detune">0 cent</span>
+                  <output id="output-filter-peaking-detune">0 cent</output>
                   <label for="range-filter-peaking-Q">Q</label>
                   <input type="range" id="range-filter-peaking-Q" value="1" min="1" max="20" step="1" />
-                  <span id="print-filter-peaking-Q">1</span>
+                  <output id="output-filter-peaking-Q">1</output>
                   <label for="range-filter-peaking-gain">gain</label>
                   <input type="range" id="range-filter-peaking-gain" value="0" min="-24" max="24" step="1" />
-                  <span id="print-filter-peaking-gain">0 dB</span>
+                  <output id="output-filter-peaking-gain">0 dB</output>
                 </div>
                 <svg id="svg-figure-filter-response-peaking" width="600" height="300" />
                 <figcaption>Peaking Filter のフィルタ特性</figcaption>
@@ -9982,16 +10000,16 @@ oscillator.start(0);</code></pre>
                 Notch Filter においても, <b><code>gain</code></b> プロパティは無効で, フィルタ特性に影響を与えることはありません.
               </p>
               <figure>
-                <div class="app-headline">
+                <div class="flexbox">
                   <label for="range-filter-notch-frequency">frequency</label>
                   <input type="range" id="range-filter-notch-frequency" value="350" min="1" max="8000" step="1" />
-                  <span id="print-filter-notch-frequency">350 Hz</span>
+                  <output id="output-filter-notch-frequency">350 Hz</output>
                   <label for="range-filter-notch-detune">detune</label>
                   <input type="range" id="range-filter-notch-detune" value="0" min="-1200" max="1200" step="1" />
-                  <span id="print-filter-notch-detune">0 cent</span>
+                  <output id="output-filter-notch-detune">0 cent</output>
                   <label for="range-filter-notch-Q">Q</label>
                   <input type="range" id="range-filter-notch-Q" value="1" min="1" max="20" step="1" />
-                  <span id="print-filter-notch-Q">1</span>
+                  <output id="output-filter-notch-Q">1</output>
                 </div>
                 <svg id="svg-figure-filter-response-notch" width="600" height="300" />
                 <figcaption>Notch Filter のフィルタ特性</figcaption>
@@ -10019,16 +10037,16 @@ oscillator.start(0);</code></pre>
                 All-Pass Filter においては, <b><code>gain</code></b> プロパティは無効で, フィルタ特性に影響を与えることはありません.
               </p>
               <figure>
-                <div class="app-headline">
+                <div class="flexbox">
                   <label for="range-filter-allpass-frequency">frequency</label>
                   <input type="range" id="range-filter-allpass-frequency" value="350" min="1" max="8000" step="1" />
-                  <span id="print-filter-allpass-frequency">350 Hz</span>
+                  <output id="output-filter-allpass-frequency">350 Hz</output>
                   <label for="range-filter-allpass-detune">detune</label>
                   <input type="range" id="range-filter-allpass-detune" value="0" min="-1200" max="1200" step="1" />
-                  <span id="print-filter-allpass-detune">0 cent</span>
+                  <output id="output-filter-allpass-detune">0 cent</output>
                   <label for="range-filter-allpass-Q">Q</label>
                   <input type="range" id="range-filter-allpass-Q" value="1" min="1" max="20" step="1" />
-                  <span id="print-filter-allpass-Q">1</span>
+                  <output id="output-filter-allpass-Q">1</output>
                 </div>
                 <svg id="svg-figure-filter-response-allpass" width="600" height="300" />
                 <figcaption>All-Pass Filter のフィルタ特性 (位相スペクトル)</figcaption>
@@ -10081,7 +10099,7 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               <code>IIRFilterNode</code> に与えるパラメータは, <code>AudioParam</code> ではないからです.
             </p>
             <p>
-              実装としては, <code>IIRFilterNode</code> コンストラクタの第 2 引数に, <b><code>IIRFilterOptions</code></b> として,
+              実装としては, <code>IIRFilterNode</code> コンストラクタの第 2 引数に, <b><code>IIRFilterOptions</code></b> 型として,
               フィルタの係数の配列を設定します. <code>IIRFilterOptions</code> オブジェクトの <b><code>feedforward</code></b> プロパティは,
               <b>IIR フィルタの伝達関数の分子となる係数</b> (以下の伝達関数の <span class="math-inline">$b_{m}$</span>),
               <b><code>feedback</code></b> プロパティは, <b>IIR フィルタの伝達関数の分母となる係数</b> (以下の伝達関数の
@@ -10130,7 +10148,8 @@ const filter     = new IIRFilterNode(context, { feedforward, feedback });
 oscillator.connect(filter);
 filter.connect(context.destination);
 
-oscillator.start(0);</code></pre>
+oscillator.start(0);
+oscillator.stop(context.currentTime + 2);</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -10158,7 +10177,8 @@ const filter     = new IIRFilterNode(context, { feedforward, feedback });
 oscillator.connect(filter);
 filter.connect(context.destination);
 
-oscillator.start(0);</code></pre>
+oscillator.start(0);
+oscillator.stop(context.currentTime + 2);</code></pre>
             <img src="images/iir-filter-node.png" alt="IIRFilterNode" width="1232" height="770" loading="lazy" />
           </section>
           <section id="section-effectors-iir-filter">
@@ -10190,242 +10210,246 @@ oscillator.start(0);</code></pre>
               <svg id="svg-figure-iir-filter" width="720" height="400" />
               <figcaption>IIR フィルタ</figcaption>
             </figure>
-            <article class="section-effectors-filter-ideal-filter-and-transition-bandwidth">
-              <h5>理想フィルタと遷移帯域幅</h5>
-              <p>
-                アナログフィルタでは, カットオフ周波数や中心周波数を境に, 通過する周波数成分と阻止される周波数成分がはっきりと分離されます. しかし,
-                <code>BiquadFilterNode</code> のセクションで表示しているフィルタ特性のように, デジタルフィルタにおいては, はっきりと分離されることなく,
-                曖昧な帯域が存在することがわかるかと思います. これは, アナログフィルタにおいては, 無限の区間で定義されるフィルタを,
-                コンピュータでは無限の区間をあつかうことはできないので, 有限の区間でうちきる必要があるからです. その処理によって,
-                どうしても曖昧な帯域が発生してしまいます. これを<b>遷移帯域幅</b>と言います. つまり, デジタルフィルタで, アナログフィルタのような,
-                遷移帯域幅のない<b>理想フィルタ</b>を実装することはコンピュータの原理上, 不可能となります. しかしながら, 可能な限り遷移帯域幅を小さくして,
-                アナログフィルタ (理想フィルタ) に近づけることは可能であり,
-                <b>理想フィルタに近いフィルタが, デジタルフィルタにおいて性能のよいフィルタの重要な指標となります</b>. そして, IIR フィルタは低次数で,
-                性能のよいフィルタ, すなわち, 理想フィルタに近いフィルタを実装することが可能です.
-              </p>
-            </article>
-            <article class="section-effectors-filter-transfer-function">
-              <h5>FIR フィルタと IIR フィルタの伝達関数</h5>
-              <p>
-                これまで, <b>伝達関数</b>という用語をそれとなく使っていましたが, ここで詳細を解説します. 伝達関数とは, その名のとおり,
-                <b>伝わりやすさ</b>を数学の関数として定義したものです. オーディオ信号処理に限定して定義すると,
-                <b>入力音のスペクトルに対する出力音のスペクトルの比の関数</b>で定義できます.
-              </p>
-              <p>
-                FIR フィルタの場合, <span class="math-inline">$x\left(n\right)$</span>, <span class="math-inline">$y\left(n\right)$</span>,
-                <span class="math-inline">$b\left(m\right)$</span> をそれぞれ離散フーリエ変換した関数を <span class="math-inline">$X\left(k\right)$</span>,
-                <span class="math-inline">$Y\left(k\right)$</span>, <span class="math-inline">$H\left(k\right)$</span> とすると,
-              </p>
-              <div class="math-block">
-                <!-- prettier-ignore -->
-                $
-                  \begin{flalign}
-                    &y\left(n\right) = \sum_{m = 0}^{N}b\left(m\right)x\left(n - m\right)
-                  \end{flalign}
-                $
-              </div>
-              <p>時間領域でのコンボリューション積分は周波数領域では乗算となるので,</p>
-              <div class="math-block">
-                <!-- prettier-ignore -->
-                $
-                  \begin{flalign}
-                    &Y\left(k\right) = H\left(k\right)X\left(k\right)
-                  \end{flalign}
-                $
-              </div>
-              <p><span class="math-inline">$H\left(k\right)$</span> が伝達関数となるので, 式を変形すると, 入出力スペクトルの比になることがわかります.</p>
-              <div class="math-block">
-                <!-- prettier-ignore -->
-                $
-                  \begin{flalign}
-                    &H\left(k\right) = \frac{Y\left(k\right)}{X\left(k\right)}
-                  \end{flalign}
-                $
-              </div>
-              <p>
-                IIR フィルタも同様に, <span class="math-inline">$x\left(n\right)$</span>, <span class="math-inline">$y\left(n\right)$</span>,
-                <span class="math-inline">$b\left(m\right)$</span>, <span class="math-inline">$a\left(m\right)$</span> をそれぞれ離散フーリエ変換した関数を
-                <span class="math-inline">$X\left(k\right)$</span>, <span class="math-inline">$Y\left(k\right)$</span>,
-                <span class="math-inline">$B\left(k\right)$</span>, <span class="math-inline">$A\left(k\right)$</span> とすると,
-              </p>
-              <div class="math-block">
-                <!-- prettier-ignore -->
-                $
-                  \begin{flalign}
-                    &y\left(n\right) = \sum_{m = 0}^{J}b\left(m\right)x\left(n - m\right) - \sum_{m = 1}^{I}a\left(m\right)y\left(n - m\right)
-                  \end{flalign}
-                $
-              </div>
-              <p>時間領域でのコンボリューション積分は周波数領域では乗算となるので,</p>
-              <div class="math-block">
-                <!-- prettier-ignore -->
-                $
-                  \begin{flalign}
-                    &Y\left(k\right) = B\left(k\right)X\left(k\right) - A\left(k\right)Y\left(k\right)
-                  \end{flalign}
-                $
-              </div>
-              <p>ここで, IIR フィルタの伝達関数を <span class="math-inline">$H\left(k\right)$</span> として, 式変形すると,</p>
-              <div class="math-block">
-                <!-- prettier-ignore -->
-                $
-                  \begin{flalign}
-                    &H\left(k\right) = \frac{Y\left(k\right)}{X\left(k\right)} = \frac{B\left(k\right)}{1 + A\left(k\right)}
-                  \end{flalign}
-                $
-              </div>
-              <p>
-                FIR フィルタと異なり, フィードバックがあるので, その伝達関数は分数式として表現されます (<code>IIRFilterNode</code> の
-                <span class="math-inline">$a_{0}$</span> が <code>0</code> 以外の値でなければならない理由です).
-              </p>
-              <p>
-                ところで, 伝達関数をオーディオ信号処理に限らずに, 数学的に一般化すると (複素平面へ拡張すると), 離散フーリエ変換ではなく,
-                <b><span class="math-inline">$z$</span> 変換</b>したあるシステムへの入出力比の関数となります (例えば, RIR は, ある室内をシステムとみなして,
-                システムへの入力をインパルス音とした場合の出力ということに特化して説明できます).
-              </p>
-              <p><span class="math-inline">$z$</span> 変換での FIR フィルタ, IIR フィルタの伝達関数は以下のようになります.</p>
-              <div class="math-block">
-                <!-- prettier-ignore -->
-                $
-                  \begin{flalign}
-                    &H\left(z\right) = \frac{Y\left(z\right)}{X\left(z\right)} \quad (FIR) \\
-                    &H\left(z\right) = \frac{B\left(z\right)}{1 + A\left(z\right)} \quad (IIR) \\
-                  \end{flalign}
-                $
-              </div>
-              <p>
-                言い換えると, <span class="math-inline">$z$</span> 変換での伝達関数を, 物理的な音のスペクトル比に特化すると,
-                離散フーリエ変換での入出力比が伝達関数になると言えます.
-              </p>
-              <p>また, 音の伝達特性 (周波数特性) は, RIR 以外にも, 声道フィルタや HRTF (頭部伝達関数), スピーカーキャビネットの響きなどがあります.</p>
-            </article>
-            <article
-              class="section-effectors-filter-relationship-between-fourier-transform-and-laplace-transform-discrete-time-fourier-transform-and-z-transform"
-            >
-              <h5>フーリエ変換とラプラス変換, 離散 (時間) フーリエ変換と <span class="math-inline">$z$</span> 変換の関係性</h5>
-              <p>
-                <span class="math-inline">$z$</span> 変換に関してそれとなく説明していましたが, このセクションで解説します. もっとも,
-                <span class="math-inline">$z$</span> 変換そのものの解説というよりは, <b>連続時間システムにおける, フーリエ変換とラプラス変換の関係</b>, および,
-                <b>離散時間システムにおける, 離散 (時間) フーリエ変換と <span class="math-inline">$z$</span> 変換の関係</b>における観点で解説をします.
-              </p>
-              <table class="auto-table">
-                <caption>
-                  フーリエ変換とラプラス変換, 離散 (時間) フーリエ変換と
-                  <span class="math-inline">$z$</span>
-                  変換の関係
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">システム</th>
-                    <th scope="col"><span class="math-inline">$s = j\omega$</span> または <span class="math-inline">$\left|z\right| = 1$</span></th>
-                    <th scope="col">複素平面への拡張</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th scope="row" class="border-bottom">連続時間系<br />(Continuous-Time system)</th>
-                    <td>
-                      <dl>
-                        <dt>(片側) フーリエ変換 (複素平面における虚軸上のラプラス変換)</dt>
-                        <dd class="math-block">
-                          <!-- prettier-ignore -->
-                          $
-                            \begin{flalign}
-                              &s = j\omega, \omega = -2 \pi f \\
-                              &F\left(f\right) = \int_{0}^{\infty}f\left(t\right)e^{-j2 \pi ft}dt \\
-                            \end{flalign}
-                          $
-                        </dd>
-                      </dl>
-                    </td>
-                    <td>
-                      <dl>
-                        <dt>ラプラス変換</dt>
-                        <dd class="math-block">
-                          <!-- prettier-ignore -->
-                          $
-                            \begin{flalign}
-                              &s = \sigma + j\omega \\
-                              &L\left(s\right) = \int_{0}^{\infty}f\left(t\right)e^{-st}dt \\
-                            \end{flalign}
-                          $
-                        </dd>
-                      </dl>
-                    </td>
-                  </tr>
-                  <tr>
-                    <th scope="row" class="border-bottom">離散時間系<br />(Discrete-Time system)</th>
-                    <td>
-                      <dl>
-                        <dt>離散時間フーリエ変換 (<span class="math-inline">$z$</span> 平面における単位円上の <span class="math-inline">$z$</span> 変換)</dt>
-                        <dd class="math-block">
-                          <!-- prettier-ignore -->
-                          $
-                            \begin{flalign}
-                              &\left|z\right| = 1 \\
-                              &X\left(k\right) = \sum_{n = -\infty}^{\infty}x\left(n\right)e^{-j\frac{2 \pi kn}{N}} \\
-                            \end{flalign}
-                          $
-                        </dd>
-                      </dl>
-                    </td>
-                    <td>
-                      <dl>
-                        <dt><span class="math-inline">$z$</span> 変換</dt>
-                        <dd class="math-block">
-                          <!-- prettier-ignore -->
-                          $
-                            \begin{flalign}
-                              &z = e^{st} \\
-                              &X\left(z\right) = \sum_{n = -\infty}^{\infty}x\left(n\right)z^{-n} \\
-                            \end{flalign}
-                          $
-                        </dd>
-                      </dl>
-                    </td>
-                  </tr>
-                  <tr>
-                    <th scope="row" class="border-bottom">離散時間系 (有限長)<br />(Discrete-Time system)</th>
-                    <td>
-                      <dl>
-                        <dt>離散フーリエ変換 (コンピュータでは無限長は計算できないので, 有限長に打ち切り)</dt>
-                        <dd class="math-block">
-                          <!-- prettier-ignore -->
-                          $
-                            \begin{flalign}
-                              &\left|z\right| = 1 \\
-                              &X\left(k\right) = \sum_{n = 0}^{N - 1}x\left(n\right)e^{-j\frac{2 \pi kn}{N}} \\
-                            \end{flalign}
-                          $
-                        </dd>
-                      </dl>
-                    </td>
-                    <td></td>
-                  </tr>
-                </tbody>
-              </table>
-              <p>
-                (<span class="math-inline">$j$</span> は虚数単位. <span class="math-inline">$\sigma$</span>, <span class="math-inline">$\omega$</span> は実数).
-              </p>
-              <p>
-                (数学的な厳密性は欠きますが, イメージとしては) <span class="math-inline">$z$</span> 平面は, 複素平面 (<span class="math-inline">$s$</span> 平面)
-                における離散群の集合と考えることができます. そして, ラプラス変換を離散時間システムに適用したのが, <span class="math-inline">$z$</span> 変換です.
-                ちなみに, 2 つの変換は, <b><span class="math-inlin">$s$</span> - <span class="math-inline">$z$</span> 変換</b> (<b>双一次変換</b>)
-                によって相互に変換することができます.
-              </p>
-              <p>
-                そして, 連続時間システムにおけるラプラス変換を虚軸上のみで適用するのが (片側) フーリエ変換です (フーリエ変換は, 厳密には
-                <span class="math-inline">$-\infty$</span> から <span class="math-inline">$\infty$</span> の積分で定義されますが, ラプラス変換は因果性のシステム
-                (<span class="math-inline">$0 \le t$</span>) に適用するので, <b>片側</b>フーリエ変換となります.
-              </p>
-              <p>
-                同様に, 離散時間システムにおける <span class="math-inline">$z$</span> 変換を単位円上のみで適用するのが 離散時間フーリエ変換です.
-                <b>離散時間</b>フーリエ変換であることに注意してください. あくまで, 和分の範囲は <span class="math-inline">$-\infty$</span> から
-                <span class="math-inline">$\infty$</span> だからです. しかし, コンピュータでは無限長の和分を計算できないので,
-                有限長の和分に打ち切ったアルゴリズムが, 離散フーリエ変換です.
-              </p>
-            </article>
           </section>
+          <section class="section-effectors-filter-ideal-filter-and-transition-bandwidth">
+            <h4>理想フィルタと遷移帯域幅</h4>
+            <p>
+              アナログフィルタでは, カットオフ周波数や中心周波数を境にして, 通過する周波数成分と阻止される周波数成分がはっきりと分離されます. しかし,
+              <code>BiquadFilterNode</code> のセクションで表示しているフィルタ特性のように, デジタルフィルタにおいては, はっきりと分離されることなく,
+              曖昧な帯域が存在することがわかるかと思います. これは, アナログフィルタにおいては, 無限の区間で定義されるフィルタを,
+              コンピュータでは無限の区間をあつかうことはできないので, 有限の区間でうちきる必要があるからです. その処理によって,
+              どうしても曖昧な帯域が発生してしまいます. これを<b>遷移帯域幅</b>と言います.
+            </p>
+            <p>
+              したがって, デジタルフィルタで, アナログフィルタと同様に, 遷移帯域幅のない<b>理想フィルタ</b>を実装することはコンピュータの原理上, 不可能です.
+            </p>
+            <p>
+              それでも, できるだけ移帯域幅を小さくして, アナログフィルタ (理想フィルタ) に近づけることは可能であり,
+              <b>理想フィルタに近いフィルタが, デジタルフィルタにおいて性能のよいフィルタの重要な指標となります</b>. そして, IIR フィルタは低次数で,
+              性能のよいフィルタ, すなわち, 理想フィルタに近いフィルタを実装することが可能です.
+            </p>
+          </section>
+          <article class="section-effectors-filter-transfer-function">
+            <h4>FIR フィルタと IIR フィルタの伝達関数</h4>
+            <p>
+              これまで, <b>伝達関数</b>という用語をそれとなく使っていましたが, ここで詳細を解説します. 伝達関数とは, その名のとおり, システム
+              (音であれば振動する媒体) において, <b>どのように伝わるか</b>を定義した数学の関数です. オーディオ信号処理に限定して定義すると,
+              <b>入力スペクトルに対する出力スペクトルの比の関数</b>です.
+            </p>
+            <p>
+              FIR フィルタの場合, <span class="math-inline">$x\left(n\right)$</span>, <span class="math-inline">$y\left(n\right)$</span>,
+              <span class="math-inline">$b\left(m\right)$</span> をそれぞれ離散フーリエ変換した関数を <span class="math-inline">$X\left(k\right)$</span>,
+              <span class="math-inline">$Y\left(k\right)$</span>, <span class="math-inline">$H\left(k\right)$</span> とすると,
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &y\left(n\right) = \sum_{m = 0}^{N}b\left(m\right)x\left(n - m\right)
+                \end{flalign}
+              $
+            </div>
+            <p>時間領域でのコンボリューション積分は周波数領域では乗算となるので,</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &Y\left(k\right) = H\left(k\right)X\left(k\right)
+                \end{flalign}
+              $
+            </div>
+            <p><span class="math-inline">$H\left(k\right)$</span> が伝達関数となるので, 式を変形すると, 入出力スペクトルの比になることがわかります.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &H\left(k\right) = \frac{Y\left(k\right)}{X\left(k\right)}
+                \end{flalign}
+              $
+            </div>
+            <p>
+              IIR フィルタも同様に, <span class="math-inline">$x\left(n\right)$</span>, <span class="math-inline">$y\left(n\right)$</span>,
+              <span class="math-inline">$b\left(m\right)$</span>, <span class="math-inline">$a\left(m\right)$</span> をそれぞれ離散フーリエ変換した関数を
+              <span class="math-inline">$X\left(k\right)$</span>, <span class="math-inline">$Y\left(k\right)$</span>,
+              <span class="math-inline">$B\left(k\right)$</span>, <span class="math-inline">$A\left(k\right)$</span> とすると,
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &y\left(n\right) = \sum_{m = 0}^{J}b\left(m\right)x\left(n - m\right) - \sum_{m = 1}^{I}a\left(m\right)y\left(n - m\right)
+                \end{flalign}
+              $
+            </div>
+            <p>時間領域でのコンボリューション積分は周波数領域では乗算となるので,</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &Y\left(k\right) = B\left(k\right)X\left(k\right) - A\left(k\right)Y\left(k\right)
+                \end{flalign}
+              $
+            </div>
+            <p>ここで, IIR フィルタの伝達関数を <span class="math-inline">$H\left(k\right)$</span> として, 式変形すると,</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &H\left(k\right) = \frac{Y\left(k\right)}{X\left(k\right)} = \frac{B\left(k\right)}{1 + A\left(k\right)}
+                \end{flalign}
+              $
+            </div>
+            <p>
+              FIR フィルタと異なり, フィードバックがあるので, その伝達関数は分数式として表現されます (<code>IIRFilterNode</code> の
+              <span class="math-inline">$a_{0}$</span> が <code>0</code> 以外の値でなければならない理由です).
+            </p>
+            <p>
+              ところで, 離散信号系における伝達関数をオーディオ信号処理に限らずに, 数学的に一般化すると (複素平面へ拡張すると), 離散フーリエ変換ではなく,
+              <b><span class="math-inline">$z$</span> 変換</b> (連続信号系であれば, ラプラス変換) したあるシステムへの入出力比の関数となります (例として, RIR
+              は, ある室内をシステムとみなして, システムへの入力をインパルス音とした場合の出力ということに特化して説明できます).
+            </p>
+            <p><span class="math-inline">$z$</span> 変換での FIR フィルタ, IIR フィルタの伝達関数は以下のようになります.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &H\left(z\right) = \frac{Y\left(z\right)}{X\left(z\right)} \quad (FIR) \\
+                  &H\left(z\right) = \frac{B\left(z\right)}{1 + A\left(z\right)} \quad (IIR) \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              言い換えると, <span class="math-inline">$z$</span> 変換での伝達関数を, 物理的な音のスペクトル比に特化すると,
+              離散フーリエ変換での入出力比が伝達関数になると言えます.
+            </p>
+            <p>また, 音の伝達特性 (周波数特性) は, RIR 以外にも, 声道フィルタや HRTF (頭部伝達関数), スピーカーキャビネットの響きなどがあります.</p>
+          </article>
+          <article
+            class="section-effectors-filter-relationship-between-fourier-transform-and-laplace-transform-discrete-time-fourier-transform-and-z-transform"
+          >
+            <h4>フーリエ変換とラプラス変換, 離散 (時間) フーリエ変換と z 変換の関係性</h4>
+            <p>
+              <span class="math-inline">$z$</span> 変換に関してそれとなく説明していましたが, このセクションで解説します. もっとも,
+              <span class="math-inline">$z$</span> 変換そのものの解説というよりは, <b>連続時間システムにおける, フーリエ変換とラプラス変換の関係</b>, および,
+              <b>離散時間システムにおける, 離散 (時間) フーリエ変換と <span class="math-inline">$z$</span> 変換の関係</b>における観点で解説をします.
+            </p>
+            <table class="auto-table">
+              <caption>
+                フーリエ変換とラプラス変換, 離散 (時間) フーリエ変換と
+                <span class="math-inline">$z$</span>
+                変換の関係
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">システム</th>
+                  <th scope="col"><span class="math-inline">$s = j\omega$</span> または <span class="math-inline">$\left|z\right| = 1$</span></th>
+                  <th scope="col">複素平面への拡張</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row" class="border-bottom">連続時間系<br />(Continuous-Time system)</th>
+                  <td>
+                    <dl>
+                      <dt>(片側) フーリエ変換 (複素平面における虚軸上のラプラス変換)</dt>
+                      <dd class="math-block">
+                        <!-- prettier-ignore -->
+                        $
+                          \begin{flalign}
+                            &s = j\omega, \omega = 2 \pi f \\
+                            &F\left(f\right) = \int_{0}^{\infty}f\left(t\right)e^{-j2 \pi ft}dt \\
+                          \end{flalign}
+                        $
+                      </dd>
+                    </dl>
+                  </td>
+                  <td>
+                    <dl>
+                      <dt>ラプラス変換</dt>
+                      <dd class="math-block">
+                        <!-- prettier-ignore -->
+                        $
+                          \begin{flalign}
+                            &s = \sigma + j\omega \\
+                            &L\left(s\right) = \int_{0}^{\infty}f\left(t\right)e^{-st}dt \\
+                          \end{flalign}
+                        $
+                      </dd>
+                    </dl>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row" class="border-bottom">離散時間系<br />(Discrete-Time system)</th>
+                  <td>
+                    <dl>
+                      <dt>離散時間フーリエ変換 (<span class="math-inline">$z$</span> 平面における単位円上の <span class="math-inline">$z$</span> 変換)</dt>
+                      <dd class="math-block">
+                        <!-- prettier-ignore -->
+                        $
+                          \begin{flalign}
+                            &\left|z\right| = 1 \\
+                            &X\left(k\right) = \sum_{n = -\infty}^{\infty}x\left(n\right)e^{-j\frac{2 \pi kn}{N}} \\
+                          \end{flalign}
+                        $
+                      </dd>
+                    </dl>
+                  </td>
+                  <td>
+                    <dl>
+                      <dt><span class="math-inline">$z$</span> 変換</dt>
+                      <dd class="math-block">
+                        <!-- prettier-ignore -->
+                        $
+                          \begin{flalign}
+                            &z = e^{st} \\
+                            &X\left(z\right) = \sum_{n = -\infty}^{\infty}x\left(n\right)z^{-n} \\
+                          \end{flalign}
+                        $
+                      </dd>
+                    </dl>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row" class="border-bottom">離散時間系 (有限長)<br />(Discrete-Time system)</th>
+                  <td>
+                    <dl>
+                      <dt>離散フーリエ変換 (コンピュータでは無限長は計算できないので, 有限長に打ち切り)</dt>
+                      <dd class="math-block">
+                        <!-- prettier-ignore -->
+                        $
+                          \begin{flalign}
+                            &\left|z\right| = 1 \\
+                            &X\left(k\right) = \sum_{n = 0}^{N - 1}x\left(n\right)e^{-j\frac{2 \pi kn}{N}} \\
+                          \end{flalign}
+                        $
+                      </dd>
+                    </dl>
+                  </td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              (<span class="math-inline">$j$</span> は虚数単位. <span class="math-inline">$\sigma$</span>, <span class="math-inline">$\omega$</span> は実数).
+            </p>
+            <p>
+              (数学的な厳密性は欠きますが, イメージとしては) <span class="math-inline">$z$</span> 平面は, 複素平面 (<span class="math-inline">$s$</span> 平面)
+              における離散群の集合と考えることができます. そして, ラプラス変換を離散時間システムに適用したのが, <span class="math-inline">$z$</span> 変換です.
+              ちなみに, 2 つの変換は, <b><span class="math-inlin">$s$</span> - <span class="math-inline">$z$</span> 変換</b> (<b>双一次変換</b>)
+              によって相互に変換することができます.
+            </p>
+            <p>
+              そして, 連続時間システムにおけるラプラス変換を虚軸上のみで適用するのが (片側) フーリエ変換です (フーリエ変換は, 厳密には
+              <span class="math-inline">$-\infty$</span> から <span class="math-inline">$\infty$</span> の積分で定義されますが, ラプラス変換は因果性のシステム
+              (<span class="math-inline">$0 \le t$</span>) に適用するので, <b>片側</b>フーリエ変換となります.
+            </p>
+            <p>
+              同様に, 離散時間システムにおける <span class="math-inline">$z$</span> 変換を単位円上のみで適用するのが 離散時間フーリエ変換です.
+              <b>離散時間</b>フーリエ変換であることに注意してください. あくまで, 和分の範囲は <span class="math-inline">$-\infty$</span> から
+              <span class="math-inline">$\infty$</span> だからです. しかし, コンピュータでは無限長の和分を計算できないので,
+              有限長の和分に打ち切ったアルゴリズムが, 離散フーリエ変換です.
+            </p>
+          </article>
         </section>
         <section id="section-effectors-equalizer">
           <h3>イコライザー</h3>
