@@ -293,6 +293,10 @@ input[type="file"] {
   overflow: auto hidden;
 }
 
+.margin-16-auto {
+  margin: 16px auto;
+}
+
 .ranges-envelopegenerator {
   display: flex;
   gap: 12px;
@@ -428,8 +432,6 @@ select {
   opacity: 0.6;
 }
 
-.app-3-bands-equalizer,
-.app-graphic-equalizer,
 .app-pedal-wah,
 .app-vcf-auto-wah,
 .app-auto-wah,
@@ -443,8 +445,6 @@ select {
   margin: 24px 0;
 }
 
-.app-3-bands-equalizer dl dd,
-.app-graphic-equalizer dl dd,
 .app-pedal-wah dl dd,
 .app-vcf-auto-wah dl dd,
 .app-auto-wah dl dd,
@@ -501,17 +501,6 @@ select {
   display: grid;
   grid-template-rows: repeat(2, auto);
   grid-template-columns: repeat(2, auto);
-}
-
-.grid-3x3-layout {
-  display: grid;
-  grid-template-rows: repeat(3, auto);
-  grid-template-columns: repeat(3, auto);
-}
-
-.grid-3x3-layout label {
-  display: inline-block;
-  min-width: 64px;
 }
 
 .checkbox-container {

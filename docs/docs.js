@@ -9745,6 +9745,8 @@ const createNodeConnectionsFor3BandsEqualizer = (svg) => {
   g.appendChild(highshelfAndAudiodDestinationNodeArrow);
   g.appendChild(audioDestinationNodeRect);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
@@ -9821,10 +9823,10 @@ const renderFrequencyResponse3BandsEqualizer = (svg) => {
     svg.appendChild(text);
   }
 
-  const dBs = ['24', '18', '12', '6', '0', '-6', '-12', '-18', '-24'];
+  const dBs = [24, 18, 12, 6, 0, -6, -12, -18, -24];
 
-  for (let i = 0; i < 9; i++) {
-    const y = i * (innerHeight / 8) + padding;
+  dBs.forEach((dB, index) => {
+    const y = (innerHeight / 8) * index + padding;
 
     const rect = document.createElementNS(xmlns, 'rect');
 
@@ -9839,7 +9841,7 @@ const renderFrequencyResponse3BandsEqualizer = (svg) => {
 
     const text = document.createElementNS(xmlns, 'text');
 
-    text.textContent = `${dBs[i]} dB`;
+    text.textContent = `${dB} dB`;
 
     text.setAttribute('x', (padding - 8).toString(10));
     text.setAttribute('y', (y + 4).toString(10));
@@ -9850,7 +9852,7 @@ const renderFrequencyResponse3BandsEqualizer = (svg) => {
     text.setAttribute('font-size', '12px');
 
     svg.appendChild(text);
-  }
+  });
 
   const bass = new BiquadFilterNode(audiocontext, { type: 'lowshelf', frequency: 250 });
   const middle = new BiquadFilterNode(audiocontext, { type: 'peaking', frequency: 1000, Q: Math.SQRT1_2 });
@@ -9960,13 +9962,25 @@ const equalizer3bands = () => {
   const rangeMiddleElement = document.getElementById('range-3-bands-equalizer-middle');
   const rangeTrebleElement = document.getElementById('range-3-bands-equalizer-treble');
 
-  const spanPrintCheckedElement = document.getElementById('print-checked-3-bands-equalizer');
-  const spanPrintBassElement = document.getElementById('print-3-bands-equalizer-bass-value');
-  const spanPrintMiddleElement = document.getElementById('print-3-bands-equalizer-middle-value');
-  const spanPrintTrebleElement = document.getElementById('print-3-bands-equalizer-treble-value');
+  const outputBassElement = document.getElementById('output-3-bands-equalizer-bass-value');
+  const outputMiddleElement = document.getElementById('output-3-bands-equalizer-middle-value');
+  const outputTrebleElement = document.getElementById('output-3-bands-equalizer-treble-value');
 
   const rangeOscillatorFrequencyElement = document.getElementById('range-3-bands-equalizer-oscillator-frequency');
-  const spanPrintOscillatorFrequencyElement = document.getElementById('print-3-bands-equalizer-oscillator-frequency-value');
+  const outputOscillatorFrequencyElement = document.getElementById('output-3-bands-equalizer-oscillator-frequency-value');
+
+  checkboxElement.addEventListener('click', () => {
+    oscillator.disconnect(0);
+
+    if (checkboxElement.checked) {
+      oscillator.connect(bass);
+      bass.connect(middle);
+      middle.connect(treble);
+      treble.connect(audiocontext.destination);
+    } else {
+      oscillator.connect(audiocontext.destination);
+    }
+  });
 
   const onDown = async () => {
     if (audiocontext.state !== 'running') {
@@ -10007,60 +10021,43 @@ const equalizer3bands = () => {
     buttonElement.textContent = 'start';
   };
 
-  checkboxElement.addEventListener('click', () => {
-    oscillator.disconnect(0);
-
-    if (checkboxElement.checked) {
-      oscillator.connect(bass);
-      bass.connect(middle);
-      middle.connect(treble);
-      treble.connect(audiocontext.destination);
-
-      spanPrintCheckedElement.textContent = 'ON';
-    } else {
-      oscillator.connect(audiocontext.destination);
-
-      spanPrintCheckedElement.textContent = 'OFF';
-    }
-  });
-
   buttonElement.addEventListener('mousedown', onDown);
   buttonElement.addEventListener('touchstart', onDown);
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  rangeOscillatorFrequencyElement.addEventListener('input', (event) => {
-    frequency = event.currentTarget.valueAsNumber;
+  rangeOscillatorFrequencyElement.addEventListener('input', () => {
+    frequency = rangeOscillatorFrequencyElement.valueAsNumber;
 
     if (oscillator) {
       oscillator.frequency.value = frequency;
     }
 
-    spanPrintOscillatorFrequencyElement.textContent = `${frequency} Hz`;
+    outputOscillatorFrequencyElement.textContent = `${frequency} Hz`;
   });
 
-  rangeBassElement.addEventListener('input', (event) => {
-    const gain = event.currentTarget.valueAsNumber;
+  rangeBassElement.addEventListener('input', () => {
+    const gain = rangeBassElement.valueAsNumber;
 
     bass.gain.value = gain;
 
-    spanPrintBassElement.textContent = `${gain} dB`;
+    outputBassElement.textContent = `${gain} dB`;
   });
 
-  rangeMiddleElement.addEventListener('input', (event) => {
-    const gain = event.currentTarget.valueAsNumber;
+  rangeMiddleElement.addEventListener('input', () => {
+    const gain = rangeMiddleElement.valueAsNumber;
 
     middle.gain.value = gain;
 
-    spanPrintMiddleElement.textContent = `${gain} dB`;
+    outputMiddleElement.textContent = `${gain} dB`;
   });
 
-  rangeTrebleElement.addEventListener('input', (event) => {
-    const gain = event.currentTarget.valueAsNumber;
+  rangeTrebleElement.addEventListener('input', () => {
+    const gain = rangeTrebleElement.valueAsNumber;
 
     treble.gain.value = gain;
 
-    spanPrintTrebleElement.textContent = `${gain} dB`;
+    outputTrebleElement.textContent = `${gain} dB`;
   });
 };
 
@@ -10122,6 +10119,8 @@ const createNodeConnectionsForGraphicEqualizer = (svg) => {
 
   g.appendChild(path0);
   g.appendChild(path1);
+
+  g.setAttribute('transform', 'translate(2, 2)');
 
   svg.appendChild(g);
 };
@@ -10198,10 +10197,10 @@ const renderFrequencyResponseGraphicEqualizer = (svg) => {
     svg.appendChild(text);
   }
 
-  const dBs = ['24', '18', '12', '6', '0', '-6', '-12', '-18', '-24'];
+  const dBs = [24, 18, 12, 6, 0, -6, -12, -18, -24];
 
-  for (let i = 0; i < 9; i++) {
-    const y = i * (innerHeight / 8) + padding;
+  dBs.forEach((dB, index) => {
+    const y = (innerHeight / 8) * index + padding;
 
     const rect = document.createElementNS(xmlns, 'rect');
 
@@ -10216,7 +10215,7 @@ const renderFrequencyResponseGraphicEqualizer = (svg) => {
 
     const text = document.createElementNS(xmlns, 'text');
 
-    text.textContent = `${dBs[i]} dB`;
+    text.textContent = `${dB} dB`;
 
     text.setAttribute('x', (padding - 8).toString(10));
     text.setAttribute('y', (y + 4).toString(10));
@@ -10227,7 +10226,7 @@ const renderFrequencyResponseGraphicEqualizer = (svg) => {
     text.setAttribute('font-size', '12px');
 
     svg.appendChild(text);
-  }
+  });
 
   const render = (filter, path) => {
     const magResponses = new Float32Array(frequencies.length);
@@ -10270,12 +10269,15 @@ const renderFrequencyResponseGraphicEqualizer = (svg) => {
   });
 
   centerFrequencies.forEach((frequency, index) => {
-    document.getElementById(`range-graphic-equalizer-${Math.trunc(frequency)}Hz-gain`).addEventListener('input', (event) => {
+    const rangeElement = document.getElementById(`range-graphic-equalizer-${Math.trunc(frequency)}Hz-gain`);
+    const outputElement = document.getElementById(`output-graphic-equalizer-${Math.trunc(frequency)}Hz-gain`);
+
+    rangeElement.addEventListener('input', () => {
       const peakingFilter = peakingFilters[index];
 
-      peakingFilter.gain.value = event.currentTarget.valueAsNumber;
+      peakingFilter.gain.value = rangeElement.valueAsNumber;
 
-      document.getElementById(`print-graphic-equalizer-${Math.trunc(frequency)}Hz-gain`).textContent = `${peakingFilter.gain.value} dB`;
+      outputElement.textContent = `${peakingFilter.gain.value} dB`;
 
       render(peakingFilter, pathes[index]);
     });
@@ -10295,25 +10297,14 @@ const equalizerGraphic = () => {
 
   const buttonElement = document.getElementById('button-graphic-equalizer');
   const checkboxElement = document.getElementById('checkbox-graphic-equalizer');
-  const spanPrintCheckedElement = document.getElementById('print-checked-graphic-equalizer');
 
   const rangeOscillatorFrequencyElement = document.getElementById('range-graphic-equalizer-oscillator-frequency');
-  const spanPrintOscillatorFrequencyElement = document.getElementById('print-graphic-equalizer-oscillator-frequency-value');
+  const outputOscillatorFrequencyElement = document.getElementById('output-graphic-equalizer-oscillator-frequency-value');
 
   const centerFrequencies = [32, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 
   const peakingFilters = centerFrequencies.map((frequency) => {
     return new BiquadFilterNode(audiocontext, { type: 'peaking', frequency, Q: Math.SQRT1_2 });
-  });
-
-  centerFrequencies.forEach((frequency, index) => {
-    document.getElementById(`range-graphic-equalizer-${Math.trunc(frequency)}Hz`).addEventListener('input', (event) => {
-      const peakingFilter = peakingFilters[index];
-
-      peakingFilter.gain.value = event.currentTarget.valueAsNumber;
-
-      document.getElementById(`print-graphic-equalizer-${Math.trunc(frequency)}Hz-value`).textContent = `${peakingFilter.gain.value} dB`;
-    });
   });
 
   const onDown = async () => {
@@ -10358,6 +10349,24 @@ const equalizerGraphic = () => {
     buttonElement.textContent = 'start';
   };
 
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  centerFrequencies.forEach((frequency, index) => {
+    const rangeElement = document.getElementById(`range-graphic-equalizer-${Math.trunc(frequency)}Hz`);
+    const outputElement = document.getElementById(`output-graphic-equalizer-${Math.trunc(frequency)}Hz-value`);
+
+    rangeElement.addEventListener('input', () => {
+      const peakingFilter = peakingFilters[index];
+
+      peakingFilter.gain.value = rangeElement.valueAsNumber;
+
+      outputElement.textContent = `${peakingFilter.gain.value} dB`;
+    });
+  });
+
   checkboxElement.addEventListener('click', () => {
     oscillator.disconnect(0);
 
@@ -10369,28 +10378,19 @@ const equalizerGraphic = () => {
       }
 
       peakingFilters[peakingFilters.length - 1].connect(audiocontext.destination);
-
-      spanPrintCheckedElement.textContent = 'ON';
     } else {
       oscillator.connect(audiocontext.destination);
-
-      spanPrintCheckedElement.textContent = 'OFF';
     }
   });
 
-  buttonElement.addEventListener('mousedown', onDown);
-  buttonElement.addEventListener('touchstart', onDown);
-  buttonElement.addEventListener('mouseup', onUp);
-  buttonElement.addEventListener('touchend', onUp);
-
-  rangeOscillatorFrequencyElement.addEventListener('input', (event) => {
-    frequency = event.currentTarget.valueAsNumber;
+  rangeOscillatorFrequencyElement.addEventListener('input', () => {
+    frequency = rangeOscillatorFrequencyElement.valueAsNumber;
 
     if (oscillator) {
       oscillator.frequency.value = frequency;
     }
 
-    spanPrintOscillatorFrequencyElement.textContent = `${frequency} Hz`;
+    outputOscillatorFrequencyElement.textContent = `${frequency} Hz`;
   });
 };
 
