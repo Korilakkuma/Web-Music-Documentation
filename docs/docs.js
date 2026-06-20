@@ -10451,10 +10451,10 @@ const renderWahPrinciple = (svg) => {
     svg.appendChild(text);
   }
 
-  const dBs = ['24', '18', '12', '6', '0', '-6', '-12', '-18', '-24'];
+  const dBs = [24, 18, 12, 6, 0, -6, -12, -18, -24];
 
-  for (let i = 0; i < 9; i++) {
-    const y = i * (innerHeight / 8) + padding;
+  dBs.forEach((dB, index) => {
+    const y = (innerHeight / 8) * index + padding;
 
     const rect = document.createElementNS(xmlns, 'rect');
 
@@ -10469,7 +10469,7 @@ const renderWahPrinciple = (svg) => {
 
     const text = document.createElementNS(xmlns, 'text');
 
-    text.textContent = `${dBs[i]} dB`;
+    text.textContent = `${dB} dB`;
 
     text.setAttribute('x', (padding - 8).toString(10));
     text.setAttribute('y', (y + 4).toString(10));
@@ -10480,7 +10480,7 @@ const renderWahPrinciple = (svg) => {
     text.setAttribute('font-size', '12px');
 
     svg.appendChild(text);
-  }
+  });
 
   const filter = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: 250, Q: 15 });
 
@@ -10601,6 +10601,8 @@ const createNodeConnectionsForPedalWah = (svg) => {
   g.appendChild(lfoAndFrequencyParamPath2);
   g.appendChild(lfoAndFrequencyParamArrow);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
@@ -10626,11 +10628,11 @@ const pedalWah = () => {
   const rangeRateElement = document.getElementById('range-pedal-wah-rate');
   const rangeResonanceElement = document.getElementById('range-pedal-wah-resonance');
 
-  const spanPrintCheckedElement = document.getElementById('print-checked-pedal-wah');
-  const spanPrintCutoffElement = document.getElementById('print-pedal-wah-cutoff-value');
-  const spanPrintDepthElement = document.getElementById('print-pedal-wah-depth-value');
-  const spanPrintRateElement = document.getElementById('print-pedal-wah-rate-value');
-  const spanPrintResonanceElement = document.getElementById('print-pedal-wah-resonance-value');
+  const outputCheckedElement = document.getElementById('output-checked-pedal-wah');
+  const outputCutoffElement = document.getElementById('output-pedal-wah-cutoff-value');
+  const outputDepthElement = document.getElementById('output-pedal-wah-depth-value');
+  const outputRateElement = document.getElementById('output-pedal-wah-rate-value');
+  const outputResonanceElement = document.getElementById('output-pedal-wah-resonance-value');
 
   const onDown = async () => {
     if (audiocontext.state !== 'running') {
@@ -10680,6 +10682,11 @@ const pedalWah = () => {
     buttonElement.textContent = 'start';
   };
 
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
   checkboxElement.addEventListener('click', () => {
     oscillator.disconnect(0);
     lowpass.disconnect(0);
@@ -10691,52 +10698,43 @@ const pedalWah = () => {
 
       lfo.connect(depth);
       depth.connect(lowpass.frequency);
-
-      spanPrintCheckedElement.textContent = 'ON';
     } else {
       oscillator.connect(audiocontext.destination);
-
-      spanPrintCheckedElement.textContent = 'OFF';
     }
   });
 
-  buttonElement.addEventListener('mousedown', onDown);
-  buttonElement.addEventListener('touchstart', onDown);
-  buttonElement.addEventListener('mouseup', onUp);
-  buttonElement.addEventListener('touchend', onUp);
-
-  rangeCutoffElement.addEventListener('input', (event) => {
-    cutoff = event.currentTarget.valueAsNumber;
+  rangeCutoffElement.addEventListener('input', () => {
+    cutoff = rangeCutoffElement.valueAsNumber;
 
     lowpass.frequency.value = cutoff;
 
-    spanPrintCutoffElement.textContent = `${cutoff.toString(10)} Hz`;
+    outputCutoffElement.textContent = `${cutoff.toFixed(0)} Hz`;
   });
 
-  rangeDepthElement.addEventListener('input', (event) => {
-    depthRate = event.currentTarget.valueAsNumber;
+  rangeDepthElement.addEventListener('input', () => {
+    depthRate = rangeDepthElement.valueAsNumber;
 
     depth.gain.value = lowpass.frequency.value * depthRate;
 
-    spanPrintDepthElement.textContent = depthRate.toString(10);
+    outputDepthElement.textContent = depthRate.toFixed(2);
   });
 
-  rangeRateElement.addEventListener('input', (event) => {
-    rateValue = event.currentTarget.valueAsNumber;
+  rangeRateElement.addEventListener('input', () => {
+    rateValue = rangeRateElement.valueAsNumber;
 
     if (lfo) {
       lfo.frequency.value = rateValue;
     }
 
-    spanPrintRateElement.textContent = rateValue.toString(10);
+    outputRateElement.textContent = rateValue.toFixed(2);
   });
 
-  rangeResonanceElement.addEventListener('input', (event) => {
-    resonance = event.currentTarget.valueAsNumber;
+  rangeResonanceElement.addEventListener('input', () => {
+    resonance = rangeResonanceElement.valueAsNumber;
 
     lowpass.Q.value = resonance;
 
-    spanPrintResonanceElement.textContent = resonance.toString(10);
+    outputResonanceElement.textContent = resonance.toFixed(2);
   });
 };
 
@@ -10765,10 +10763,10 @@ const vcfAutoWah = () => {
   const rangeSustainElement = document.getElementById('range-vcf-auto-wah-sustain');
   const rangeReleaseElement = document.getElementById('range-vcf-auto-wah-release');
 
-  const spanPrintAttackElement = document.getElementById('print-vcf-auto-wah-attack-value');
-  const spanPrintDecayElement = document.getElementById('print-vcf-auto-wah-decay-value');
-  const spanPrintSutainElement = document.getElementById('print-vcf-auto-wah-sustain-value');
-  const spanPrintReleaseElement = document.getElementById('print-vcf-auto-wah-release-value');
+  const outputAttackElement = document.getElementById('output-vcf-auto-wah-attack-value');
+  const outputDecayElement = document.getElementById('output-vcf-auto-wah-decay-value');
+  const outputSustainElement = document.getElementById('output-vcf-auto-wah-sustain-value');
+  const outputReleaseElement = document.getElementById('output-vcf-auto-wah-release-value');
 
   const onDown = async () => {
     if (audiocontext.state !== 'running') {
@@ -10834,28 +10832,28 @@ const vcfAutoWah = () => {
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  rangeAttackElement.addEventListener('input', (event) => {
-    attack = event.currentTarget.valueAsNumber;
+  rangeAttackElement.addEventListener('input', () => {
+    attack = rangeAttackElement.valueAsNumber;
 
-    spanPrintAttackElement.textContent = attack.toString(10);
+    outputAttackElement.textContent = attack.toFixed(2);
   });
 
-  rangeDecayElement.addEventListener('input', (event) => {
-    decay = event.currentTarget.valueAsNumber;
+  rangeDecayElement.addEventListener('input', () => {
+    decay = rangeDecayElement.valueAsNumber;
 
-    spanPrintDecayElement.textContent = decay.toString(10);
+    outputDecayElement.textContent = decay.toFixed(2);
   });
 
-  rangeSustainElement.addEventListener('input', (event) => {
-    sustain = event.currentTarget.valueAsNumber;
+  rangeSustainElement.addEventListener('input', () => {
+    sustain = rangeSustainElement.valueAsNumber;
 
-    spanPrintSutainElement.textContent = sustain.toString(10);
+    outputSustainElement.textContent = sustain.toFixed(2);
   });
 
-  rangeReleaseElement.addEventListener('input', (event) => {
-    release = event.currentTarget.valueAsNumber;
+  rangeReleaseElement.addEventListener('input', () => {
+    release = rangeReleaseElement.valueAsNumber;
 
-    spanPrintReleaseElement.textContent = release.toString(10);
+    outputReleaseElement.textContent = release.toFixed(2);
   });
 };
 
@@ -10913,6 +10911,8 @@ const createNodeConnectionsForAutoWah = (svg) => {
   g.appendChild(lowpassAndDepthPath);
   g.appendChild(lowpassAndDepthArrow);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
@@ -10927,14 +10927,12 @@ const autoWah = () => {
   let oscillator = new OscillatorNode(audiocontext, { type: 'sawtooth', frequency: 440 });
   let lfo = new OscillatorNode(audiocontext, { frequency: tremoloRateValue });
 
-  // for Tremolo
   const lfoDepth = new GainNode(audiocontext, { gain: tremoloDepthValue });
-  const amplitude = new GainNode(audiocontext, { gain: 0.5 }); // 0.5 +- ${tremoloDepthValue}
+  const amplitude = new GainNode(audiocontext, { gain: 0.5 });
 
   lfo.connect(lfoDepth);
   lfoDepth.connect(amplitude.gain);
 
-  // Start LFO (for simulating amplitude modulation)
   lfo.start(0);
 
   const envelopeFollower = new WaveShaperNode(audiocontext, { buffer: new Float32Array([1, 0, 1]) });
@@ -10952,10 +10950,9 @@ const autoWah = () => {
   const rangeSensitivityDepthElement = document.getElementById('range-auto-wah-depth');
   const rangeResonanceElement = document.getElementById('range-auto-wah-resonance');
 
-  const spanPrintCheckedElement = document.getElementById('print-checked-auto-wah');
-  const spanPrintSensitivityFrequencyElement = document.getElementById('print-auto-wah-sensitivity-value');
-  const spanPrintDepthElement = document.getElementById('print-auto-wah-depth-value');
-  const spanPrintResonanceElement = document.getElementById('print-auto-wah-resonance-value');
+  const outputSensitivityFrequencyElement = document.getElementById('output-auto-wah-sensitivity-value');
+  const outputDepthElement = document.getElementById('output-auto-wah-depth-value');
+  const outputResonanceElement = document.getElementById('output-auto-wah-resonance-value');
 
   const onDown = async () => {
     if (audiocontext.state !== 'running') {
@@ -10982,7 +10979,6 @@ const autoWah = () => {
 
       oscillator.connect(audiocontext.destination);
 
-      // Start oscillator
       oscillator.start(0);
     }
 
@@ -11005,6 +11001,11 @@ const autoWah = () => {
     buttonElement.textContent = 'start';
   };
 
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
   checkboxElement.addEventListener('click', () => {
     oscillator.disconnect(0);
     sensitivity.disconnect(0);
@@ -11021,42 +11022,33 @@ const autoWah = () => {
       envelopeFollower.connect(lowpass);
       lowpass.connect(depth);
       depth.connect(sensitivity.frequency);
-
-      spanPrintCheckedElement.textContent = 'ON';
     } else {
       oscillator.connect(audiocontext.destination);
-
-      spanPrintCheckedElement.textContent = 'OFF';
     }
   });
 
-  buttonElement.addEventListener('mousedown', onDown);
-  buttonElement.addEventListener('touchstart', onDown);
-  buttonElement.addEventListener('mouseup', onUp);
-  buttonElement.addEventListener('touchend', onUp);
-
-  rangeSensitivityFrequencyElement.addEventListener('input', (event) => {
-    sensitivityFrequency = event.currentTarget.valueAsNumber;
+  rangeSensitivityFrequencyElement.addEventListener('input', () => {
+    sensitivityFrequency = rangeSensitivityFrequencyElement.valueAsNumber;
 
     sensitivity.frequency.value = sensitivityFrequency;
 
-    spanPrintSensitivityFrequencyElement.textContent = `${sensitivityFrequency.toString(10)} Hz`;
+    outputSensitivityFrequencyElement.textContent = `${sensitivityFrequency.toFixed(0)} Hz`;
   });
 
-  rangeSensitivityDepthElement.addEventListener('input', (event) => {
-    sensitivityDepthRate = event.currentTarget.valueAsNumber;
+  rangeSensitivityDepthElement.addEventListener('input', () => {
+    sensitivityDepthRate = rangeSensitivityDepthElement.valueAsNumber;
 
     depth.gain.value = sensitivityFrequency * sensitivityDepthRate;
 
-    spanPrintDepthElement.textContent = sensitivityDepthRate.toString(10);
+    outputDepthElement.textContent = sensitivityDepthRate.toFixed(2);
   });
 
-  rangeResonanceElement.addEventListener('input', (event) => {
-    sensitivityResonance = event.currentTarget.valueAsNumber;
+  rangeResonanceElement.addEventListener('input', () => {
+    sensitivityResonance = rangeResonanceElement.valueAsNumber;
 
     sensitivity.Q.value = sensitivityResonance;
 
-    spanPrintResonanceElement.textContent = sensitivityResonance.toString(10);
+    outputResonanceElement.textContent = sensitivityResonance.toFixed(2);
   });
 };
 

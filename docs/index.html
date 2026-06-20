@@ -11037,8 +11037,7 @@ rangeOscillatorFrequencyElement.addEventListener(&apos;input&apos;, () =&gt; {
             ワウを実装するためには, <span class="math-inline">$f_{\mathrm{computed}}$</span> (Low-Pass Filter のカットオフ周波数, もしくは, Band-Pass Filter
             の中心周波数) を時間経過とともに変化させる必要があります. これをワウペダル (参考:
             <a href="https://voxamps.com/ja/product/v847-wah-pedal/" target="_blank" rel="noopener noreferrer">VOX 社のワウペダル</a>)
-            と呼ばれるコントローラーで変化させるするのが<b>ペダルワウ</b>, 楽器の発音時の振幅の変化 (打弦や撥弦の強弱)
-            に応じて変化させるのが<b>オートワウ</b>となります .
+            と呼ばれるコントローラーで変化させるのが<b>ペダルワウ</b>, 楽器の振幅の変化 (打弦や撥弦の強弱) に応じて変化させるのが<b>オートワウ</b>となります .
           </p>
           <figure>
             <svg id="svg-figure-wah-principle" width="600" height="300" />
@@ -11098,13 +11097,13 @@ lowpass.connect(context.destination);
 lfo.connect(depth);
 depth.connect(lowpass.frequency);
 
-// Start oscillator and LFO
+// Start oscillator and LFO immediately
 oscillator.start(0);
 lfo.start(0);
 
-// Stop oscillator and LFO
-oscillator.stop(context.currentTime + 10);
-lfo.stop(context.currentTime + 10);</code></pre>
+// Stop oscillator and LFO after 5 sec
+oscillator.stop(context.currentTime + 5);
+lfo.stop(context.currentTime + 5);</code></pre>
             <p>
               以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, ペダルワウに関わるパラメータを制御できるようにしたコード例です.
               一般的なペダルワウでは, ワウペダルのプレッシャーレベルに応じて, カットオフ周波数 (<span class="math-inline">$f_{\mathrm{computed}}$</span>)
@@ -11114,23 +11113,23 @@ lfo.stop(context.currentTime + 10);</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-pedal-wah&quot;&gt;start&lt;/button&gt;
 &lt;label&gt;
   &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-pedal-wah&quot; checked /&gt;
-  &lt;span id=&quot;print-checked-pedal-wah&quot;&gt;ON&lt;/span&gt;
+  &lt;span&gt;Pedal Wah&lt;/span&gt;
 &lt;/label&gt;
 &lt;label for=&quot;range-pedal-wah-cutoff&quot;&gt;Cutoff Frequency&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-pedal-wah-cutoff&quot; value=&quot;1000&quot; min=&quot;1000&quot; max=&quot;2000&quot; step=&quot;1&quot; /&gt;
-&lt;span id=&quot;print-pedal-wah-cutoff-value&quot;&gt;1000 Hz&lt;/span&gt;
+&lt;output id=&quot;output-pedal-wah-cutoff-value&quot; for=&quot;range-pedal-wah-cutoff&quot;&gt;1000 Hz&lt;/output&gt;
 &lt;label for=&quot;range-pedal-wah-depth&quot;&gt;Depth&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-pedal-wah-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
-&lt;span id=&quot;print-pedal-wah-depth-value&quot;&gt;0&lt;/span&gt;
+&lt;output id=&quot;output-pedal-wah-depth-value&quot; for=&quot;range-pedal-wah-depth&quot;&gt;0.00&lt;/output&gt;
 &lt;label for=&quot;range-pedal-wah-rate&quot;&gt;Rate&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-pedal-wah-rate&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;0.5&quot; /&gt;
-&lt;span id=&quot;print-pedal-wah-rate-value&quot;&gt;0&lt;/span&gt;
+&lt;output id=&quot;output-pedal-wah-rate-value&quot; for=&quot;range-pedal-wah-rate&quot;&gt;0.00&lt;/output&gt;
 &lt;label for=&quot;range-pedal-wah-resonance&quot;&gt;Resonance&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-pedal-wah-resonance&quot; value=&quot;1&quot; min=&quot;1&quot; max=&quot;20&quot; step=&quot;1&quot; /&gt;
-&lt;span id=&quot;print-pedal-wah-resonance-value&quot;&gt;1&lt;/span&gt;</code></pre>
+&lt;output id=&quot;output-pedal-wah-resonance-value&quot; for=&quot;range-pedal-wah-resonance&quot;&gt;1.00&lt;/output&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -11149,19 +11148,19 @@ let isStop = true;
 const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: cutoff, Q: resonance });
 const depth   = new GainNode(context, { gain: lowpass.frequency.value * depthRate });
 
-const buttonElement   = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
-const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+const buttonElement   = document.getElementById(&apos;button-pedal-wah&apos;);
+const checkboxElement = document.getElementById(&apos;checkbox-pedal-wah&apos;);
 
 const rangeCutoffElement    = document.getElementById(&apos;range-pedal-wah-cutoff&apos;);
 const rangeDepthElement     = document.getElementById(&apos;range-pedal-wah-depth&apos;);
 const rangeRateElement      = document.getElementById(&apos;range-pedal-wah-rate&apos;);
 const rangeResonanceElement = document.getElementById(&apos;range-pedal-wah-resonance&apos;);
 
-const spanPrintCheckedElement   = document.getElementById(&apos;print-checked-pedal-wah&apos;);
-const spanPrintCutoffElement    = document.getElementById(&apos;print-pedal-wah-cutoff-value&apos;);
-const spanPrintDepthElement     = document.getElementById(&apos;print-pedal-wah-depth-value&apos;);
-const spanPrintRateElement      = document.getElementById(&apos;print-pedal-wah-rate-value&apos;);
-const spanPrintResonanceElement = document.getElementById(&apos;print-pedal-wah-resonance-value&apos;);
+const outputCheckedElement   = document.getElementById(&apos;output-checked-pedal-wah&apos;);
+const outputCutoffElement    = document.getElementById(&apos;output-pedal-wah-cutoff-value&apos;);
+const outputDepthElement     = document.getElementById(&apos;output-pedal-wah-depth-value&apos;);
+const outputRateElement      = document.getElementById(&apos;output-pedal-wah-rate-value&apos;);
+const outputResonanceElement = document.getElementById(&apos;output-pedal-wah-resonance-value&apos;);
 
 checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
   oscillator.disconnect(0);
@@ -11178,17 +11177,17 @@ checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
     // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
     lfo.connect(depth);
     depth.connect(lowpass.frequency);
-
-    spanPrintCheckedElement.textContent = &apos;ON&apos;;
   } else {
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
     oscillator.connect(context.destination);
-
-    spanPrintCheckedElement.textContent = &apos;OFF&apos;;
   }
 });
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (!isStop) {
     return;
   }
@@ -11199,7 +11198,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
     oscillator.connect(lowpass);
     lowpass.connect(context.destination);
 
-    // Start oscillator
+    // Start oscillator immediately
     oscillator.start(0);
   } else {
     lowpass.disconnect(0);
@@ -11208,7 +11207,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
     oscillator.connect(context.destination);
 
-    // Start oscillator
+    // Start oscillator immediately
     oscillator.start(0);
   }
 
@@ -11217,7 +11216,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
   lfo.connect(depth);
   depth.connect(lowpass.frequency);
 
-  // Start LFO
+  // Start LFO immediately
   lfo.start(0);
 
   isStop = false;
@@ -11230,7 +11229,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
     return;
   }
 
-  // Stop immediately
+  // Stop oscillator and LFO immediately
   oscillator.stop(0);
   lfo.stop(0);
 
@@ -11242,78 +11241,66 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
   buttonElement.textContent = &apos;start&apos;;
 });
 
-rangeCutoffElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  cutoff = event.currentTarget.valueAsNumber;
+rangeCutoffElement.addEventListener(&apos;input&apos;, () =&gt; {
+  cutoff = rangeCutoffElement.valueAsNumber;
 
   lowpass.frequency.value = cutoff;
 
-  spanPrintCutoffElement.textContent = `${cutoff.toString(10)} Hz`;
+  outputCutoffElement.textContent = `${cutoff.toFixed(0)} Hz`;
 });
 
-rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  depthRate = event.currentTarget.valueAsNumber;
+rangeDepthElement.addEventListener(&apos;input&apos;, () =&gt; {
+  depthRate = rangeDepthElement.valueAsNumber;
 
   depth.gain.value = lowpass.frequency.value * depthRate;
 
-  spanPrintDepthElement.textContent = depthRate.toString(10);
+  outputDepthElement.textContent = depthRate.toFixed(2);
 });
 
-rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  rateValue = event.currentTarget.valueAsNumber;
+rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
+  rateValue = rangeRateElement.valueAsNumber;
 
   if (lfo) {
     lfo.frequency.value = rateValue;
   }
 
-  spanPrintRateElement.textContent = rateValue.toString(10);
+  outputRateElement.textContent = rateValue.toFixed(2);
 });
 
-rangeResonanceElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  resonance = event.currentTarget.valueAsNumber;
+rangeResonanceElement.addEventListener(&apos;input&apos;, () =&gt; {
+  resonance = rangeResonanceElement.valueAsNumber;
 
   lowpass.Q.value = resonance;
 
-  spanPrintResonanceElement.textContent = resonance.toString(10);
+  outputResonanceElement.textContent = resonance.toFixed(2);
 });</code></pre>
-            <div class="app-container app-pedal-wah">
-              <div class="app-headline">
+            <div class="app-container flexbox-column">
+              <div class="flexbox">
                 <button type="button" id="button-pedal-wah">start</button>
-                <label>
+                <label class="label-checkbox">
                   <input type="checkbox" id="checkbox-pedal-wah" checked />
-                  <span id="print-checked-pedal-wah">ON</span>
+                  <span>Pedal Wah</span>
                 </label>
               </div>
-              <div>
-                <dl>
-                  <div>
-                    <dt><label for="range-pedal-wah-cutoff">Cutoff Frequency</label></dt>
-                    <dd>
-                      <input type="range" id="range-pedal-wah-cutoff" value="1000" min="1000" max="2000" step="1" />
-                      <span id="print-pedal-wah-cutoff-value">1000 Hz</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt><label for="range-pedal-wah-depth">Depth</label></dt>
-                    <dd>
-                      <input type="range" id="range-pedal-wah-depth" value="0" min="0" max="1" step="0.05" />
-                      <span id="print-pedal-wah-depth-value">0</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt><label for="range-pedal-wah-rate">Rate</label></dt>
-                    <dd>
-                      <input type="range" id="range-pedal-wah-rate" value="0" min="0" max="10" step="0.5" />
-                      <span id="print-pedal-wah-rate-value">0</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt><label for="range-pedal-wah-resonance">Resonance</label></dt>
-                    <dd>
-                      <input type="range" id="range-pedal-wah-resonance" value="1" min="1" max="20" step="1" />
-                      <span id="print-pedal-wah-resonance-value">1</span>
-                    </dd>
-                  </div>
-                </dl>
+              <div class="flexbox">
+                <label for="range-pedal-wah-cutoff" class="label-min-width">Cutoff Frequency</label>
+                <input type="range" id="range-pedal-wah-cutoff" value="1000" min="1000" max="2000" step="1" />
+                <output id="output-pedal-wah-cutoff-value" for="range-pedal-wah-cutoff">1000 Hz</output>
+              </div>
+              <div class="flexbox">
+                <label for="range-pedal-wah-depth" class="label-min-width">Depth</label>
+                <input type="range" id="range-pedal-wah-depth" value="0" min="0" max="1" step="0.05" />
+                <output id="output-pedal-wah-depth-value" for="range-pedal-wah-depth">0.00</output>
+              </div>
+              <div class="flexbox">
+                <label for="range-pedal-wah-rate" class="label-min-width">Rate</label>
+                <input type="range" id="range-pedal-wah-rate" value="0" min="0" max="10" step="0.5" />
+                <output id="output-pedal-wah-rate-value" for="range-pedal-wah-rate">0.00</output>
+              </div>
+              <div class="flexbox">
+                <label for="range-pedal-wah-resonance" class="label-min-width">Resonance</label>
+                <input type="range" id="range-pedal-wah-resonance" value="1" min="1" max="20" step="1" />
+                <output id="output-pedal-wah-resonance-value" for="range-pedal-wah-resonance">1.00</output>
               </div>
             </div>
           </section>
@@ -11354,9 +11341,13 @@ let isStop = true;
 
 const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: cutoff, Q: resonance });
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-vcf-auto-wah&apos;);
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (!isStop) {
     return;
   }
@@ -11384,7 +11375,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
   lowpass.frequency.exponentialRampToValueAtTime(targetCutoff, t1);
   lowpass.frequency.setTargetAtTime(t2Level, t1, t2);
 
-  // Start oscillator
+  // Start oscillator immediately
   oscillator.start(0);
 
   isStop = false;
@@ -11428,19 +11419,19 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
-&lt;label for="range-vcf-auto-wah-attack"&gt;attack&lt;/label&gt;
-&lt;input type="range" id="range-vcf-auto-wah-attack" value="1" min="0" max="1" step="0.01" /&gt;
-&lt;span id="print-vcf-auto-wah-attack-value"&gt;1&lt;/span&gt;
-&lt;label for="range-vcf-auto-wah-decay"&gt;decay&lt;/label&gt;
-&lt;input type="range" id="range-vcf-auto-wah-decay" value="0.3" min="0" max="1" step="0.01" /&gt;
-&lt;span id="print-vcf-auto-wah-decay-value"&gt;0.3&lt;/span&gt;
-&lt;label for="range-vcf-auto-wah-sustain"&gt;sustain&lt;/label&gt;
-&lt;input type="range" id="range-vcf-auto-wah-sustain" value="0.5" min="0" max="1" step="0.01" /&gt;
-&lt;span id="print-vcf-auto-wah-sustain-value"&gt;0.5&lt;/span&gt;
-&lt;label for="range-vcf-auto-wah-release"&gt;release&lt;/label&gt;
-&lt;input type="range" id="range-vcf-auto-wah-release" value="1" min="0" max="1" step="0.01" /&gt;
-&lt;span id="print-vcf-auto-wah-release-value"&gt;1&lt;/span&gt;</code></pre>
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-vcf-auto-wah&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-vcf-auto-wah-attack&quot;&gt;attack&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-vcf-auto-wah-attack&quot; value=&quot;1&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.01&quot; /&gt;
+&lt;output id=&quot;output-vcf-auto-wah-attack-value&quot; for=&quot;range-vcf-auto-wah-attack&quot;&gt;1.00&lt;/output&gt;
+&lt;label for=&quot;range-vcf-auto-wah-decay&quot;&gt;decay&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-vcf-auto-wah-decay&quot; value=&quot;0.3&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.01&quot; /&gt;
+&lt;output id=&quot;output-vcf-auto-wah-decay-value&quot; for=&quot;range-vcf-auto-wah-decay&quot;&gt;0.30&lt;/output&gt;
+&lt;label for=&quot;range-vcf-auto-wah-sustain&quot;&gt;sustain&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-vcf-auto-wah-sustain&quot; value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.01&quot; /&gt;
+&lt;output id=&quot;output-vcf-auto-wah-sustain-value&quot; for=&quot;range-vcf-auto-wah-sustain&quot;&gt;0.50&lt;/output&gt;
+&lt;label for=&quot;range-vcf-auto-wah-release&quot;&gt;release&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-vcf-auto-wah-release&quot; value=&quot;1&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.01&quot; /&gt;
+&lt;output id=&quot;output-vcf-auto-wah-release-value&quot; for=&quot;range-vcf-auto-wah-release&quot;&gt;1.00&lt;/output&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -11463,19 +11454,23 @@ let isStop = true;
 
 const lowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: cutoff, Q: resonance });
 
-const buttonElement = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
+const buttonElement = document.getElementById(&apos;button-vcf-auto-wah&apos;);
 
 const rangeAttackElement  = document.getElementById(&apos;range-vcf-auto-wah-attack&apos;);
 const rangeDecayElement   = document.getElementById(&apos;range-vcf-auto-wah-decay&apos;);
 const rangeSustainElement = document.getElementById(&apos;range-vcf-auto-wah-sustain&apos;);
 const rangeReleaseElement = document.getElementById(&apos;range-vcf-auto-wah-release&apos;);
 
-const spanPrintAttackElement  = document.getElementById(&apos;print-vcf-auto-wah-attack-value&apos;);
-const spanPrintDecayElement   = document.getElementById(&apos;print-vcf-auto-wah-decay-value&apos;);
-const spanPrintSutainElement  = document.getElementById(&apos;print-vcf-auto-wah-sustain-value&apos;);
-const spanPrintReleaseElement = document.getElementById(&apos;print-vcf-auto-wah-release-value&apos;);
+const outputAttackElement  = document.getElementById(&apos;output-vcf-auto-wah-attack-value&apos;);
+const outputDecayElement   = document.getElementById(&apos;output-vcf-auto-wah-decay-value&apos;);
+const outputSustainElement = document.getElementById(&apos;output-vcf-auto-wah-sustain-value&apos;);
+const outputReleaseElement = document.getElementById(&apos;output-vcf-auto-wah-release-value&apos;);
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (!isStop) {
     return;
   }
@@ -11503,7 +11498,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
   lowpass.frequency.exponentialRampToValueAtTime(targetCutoff, t1);
   lowpass.frequency.setTargetAtTime(t2Level, t1, t2);
 
-  // Start oscillator
+  // Start oscillator immediately
   oscillator.start(0);
 
   isStop = false;
@@ -11526,7 +11521,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
   lowpass.frequency.cancelAndHoldAtTime(t3);
   lowpass.frequency.setTargetAtTime(cutoff, t3, t4);
 
-  // Stop after Release (+ until nearly zero audio data)
+  // Stop oscillator after Release (+ until nearly zero audio data)
   oscillator.stop(t3 + t4 + 5);
 
   oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
@@ -11536,56 +11531,54 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
   buttonElement.textContent = &apos;start&apos;;
 });
 
-rangeAttackElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  attack = event.currentTarget.valueAsNumber;
+rangeAttackElement.addEventListener(&apos;input&apos;, () =&gt; {
+  attack = rangeAttackElement.valueAsNumber;
 
-  spanPrintAttackElement.textContent = attack.toString(10);
+  outputAttackElement.textContent = attack.toFixed(2);
 });
 
-rangeDecayElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  decay = event.currentTarget.valueAsNumber;
+rangeDecayElement.addEventListener(&apos;input&apos;, () =&gt; {
+  decay = rangeDecayElement.valueAsNumber;
 
-  spanPrintDecayElement.textContent = decay.toString(10);
+  outputDecayElement.textContent = decay.toFixed(2);
 });
 
-rangeSustainElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  sustain = event.currentTarget.valueAsNumber;
+rangeSustainElement.addEventListener(&apos;input&apos;, () =&gt; {
+  sustain = rangeSustainElement.valueAsNumber;
 
-  spanPrintSutainElement.textContent = sustain.toString(10);
+  outputSustainElement.textContent = sustain.toFixed(2);
 });
 
-rangeReleaseElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  release = event.currentTarget.valueAsNumber;
+rangeReleaseElement.addEventListener(&apos;input&apos;, () =&gt; {
+  release = rangeReleaseElement.valueAsNumber;
 
-  spanPrintReleaseElement.textContent = release.toString(10);
+  outputReleaseElement.textContent = release.toFixed(2);
 });</code></pre>
-            <div class="app-container app-vcf-auto-wah">
-              <div class="app-headline">
+            <div class="app-container flexbox-column">
+              <div>
                 <button type="button" id="button-vcf-auto-wah">start</button>
               </div>
-              <div class="ranges-envelopegenerator">
-                <dl>
-                  <dt><label for="range-vcf-auto-wah-attack">attack</label></dt>
-                  <dd>
-                    <input type="range" id="range-vcf-auto-wah-attack" value="1" min="0" max="1" step="0.01" />
-                    <span id="print-vcf-auto-wah-attack-value">1</span>
-                  </dd>
-                  <dt><label for="range-vcf-auto-wah-decay">decay</label></dt>
-                  <dd>
-                    <input type="range" id="range-vcf-auto-wah-decay" value="0.3" min="0" max="1" step="0.01" />
-                    <span id="print-vcf-auto-wah-decay-value">0.3</span>
-                  </dd>
-                  <dt><label for="range-vcf-auto-wah-sustain">sustain</label></dt>
-                  <dd>
-                    <input type="range" id="range-vcf-auto-wah-sustain" value="0.5" min="0" max="1" step="0.01" />
-                    <span id="print-vcf-auto-wah-sustain-value">0.5</span>
-                  </dd>
-                  <dt><label for="range-vcf-auto-wah-release">release</label></dt>
-                  <dd>
-                    <input type="range" id="range-vcf-auto-wah-release" value="1" min="0" max="1" step="0.01" />
-                    <span id="print-vcf-auto-wah-release-value">1</span>
-                  </dd>
-                </dl>
+              <div class="flexbox">
+                <div class="flexbox">
+                  <label for="range-vcf-auto-wah-attack">attack</label>
+                  <input type="range" id="range-vcf-auto-wah-attack" value="1" min="0" max="1" step="0.01" />
+                  <output id="output-vcf-auto-wah-attack-value" for="range-vcf-auto-wah-attack">1.00</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-vcf-auto-wah-decay">decay</label>
+                  <input type="range" id="range-vcf-auto-wah-decay" value="0.3" min="0" max="1" step="0.01" />
+                  <output id="output-vcf-auto-wah-decay-value" for="range-vcf-auto-wah-decay">0.30</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-vcf-auto-wah-sustain">sustain</label>
+                  <input type="range" id="range-vcf-auto-wah-sustain" value="0.5" min="0" max="1" step="0.01" />
+                  <output id="output-vcf-auto-wah-sustain-value" for="range-vcf-auto-wah-sustain">0.50</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-vcf-auto-wah-release">release</label>
+                  <input type="range" id="range-vcf-auto-wah-release" value="1" min="0" max="1" step="0.01" />
+                  <output id="output-vcf-auto-wah-release-value" for="range-vcf-auto-wah-release">1.00</output>
+                </div>
               </div>
             </div>
           </section>
@@ -11616,7 +11609,7 @@ const depth = new GainNode(context, { gain: 1000 });
 
 const lfoDepth = new GainNode(context, { gain: depthValue });
 
-const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- ${depthValue}
+const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- depthValue
 
 // Connect nodes
 // OscillatorNode (Input) -&gt; GainNode (Tremolo) -&gt; BiquadFilterNode (Sensitivity) -&gt; GainNode (Output)
@@ -11630,14 +11623,16 @@ envelopeFollower.connect(lowpass);
 lowpass.connect(depth);
 depth.connect(sensitivity.frequency);
 
+// for Tremolo (simulates amplitude modulation)
+// OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; gain (AudioParam)
 lfo.connect(lfoDepth);
 lfoDepth.connect(amplitude.gain);
 
-// Start oscillator
+// Start oscillator and LFO immediately
 oscillator.start(0);
 lfo.start(0);
 
-// Stop oscillator
+// Stop oscillator and LFO after 5 sec
 oscillator.stop(context.currentTime + 5);
 lfo.stop(context.currentTime + 5);</code></pre>
             <p>
@@ -11666,20 +11661,20 @@ lfo.stop(context.currentTime + 5);</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-auto-wah&quot;&gt;start&lt;/button&gt;
 &lt;label&gt;
   &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-auto-wah&quot; checked /&gt;
-  &lt;span id=&quot;print-checked-auto-wah&quot;&gt;ON&lt;/span&gt;
+  &lt;span&gt;Auto Wah&lt;/span&gt;
 &lt;/label&gt;
 &lt;label for=&quot;range-auto-wah-sensitivity&quot;&gt;Sensitivity&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-auto-wah-sensitivity&quot; value=&quot;1000&quot; min=&quot;1000&quot; max=&quot;2000&quot; step=&quot;1&quot; /&gt;
-&lt;span id=&quot;print-auto-wah-sensitivity-value&quot;&gt;1000 Hz&lt;/span&gt;
+&lt;output id=&quot;output-auto-wah-sensitivity-value&quot; for=&quot;range-auto-wah-sensitivity&quot;&gt;1000 Hz&lt;/output&gt;
 &lt;label for=&quot;range-auto-wah-depth&quot;&gt;Depth&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-auto-wah-depth&quot; value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
-&lt;span id=&quot;print-auto-wah-depth-value&quot;&gt;0.5&lt;/span&gt;
+&lt;output id=&quot;output-auto-wah-depth-value&quot; for=&quot;range-auto-wah-depth&quot;&gt;0.50&lt;/output&gt;
 &lt;label for=&quot;range-auto-wah-resonance&quot;&gt;Resonance&lt;/label&gt;
-&lt;input type=&quot;range&quot; id=&quot;range-auto-wah-resonance&quot; value=&quot;10&quot; min=&quot;1&quot; max=&quot;40&quot; step=&quot;1&quot; /&gt;
-&lt;span id=&quot;print-auto-wah-resonance-value&quot;&gt;10&lt;/span&gt;</code></pre>
+&lt;input type=&quot;range&quot; id=&quot;range-auto-wah-resonance&quot; value=&quot;10&quot; min=&quot;1&quot; max=&quot;20&quot; step=&quot;1&quot; /&gt;
+&lt;output id=&quot;output-auto-wah-resonance-value&quot; for=&quot;range-auto-wah-resonance&quot;&gt;10.00&lt;/output&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -11697,12 +11692,13 @@ let lfo        = new OscillatorNode(context, { frequency: tremoloRateValue });
 
 // for Tremolo (simulates amplitude modulation)
 const lfoDepth  = new GainNode(context, { gain: tremoloDepthValue });
-const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- ${tremoloDepthValue}
+const amplitude = new GainNode(context, { gain: 0.5 });  // 0.5 +- tremoloDepthValue
 
+// OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; gain (AudioParam)
 lfo.connect(lfoDepth);
 lfoDepth.connect(amplitude.gain);
 
-// Start LFO (simulates amplitude modulation)
+// Start LFO immediately
 lfo.start(0);
 
 const envelopeFollower = new WaveShaperNode(context, { buffer: new Float32Array([1, 0, 1]) });
@@ -11713,17 +11709,16 @@ const depth = new GainNode(context, { gain: sensitivity.frequency.value * sensit
 
 let isStop = true;
 
-const buttonElement   = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
-const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+const buttonElement   = document.getElementById(&apos;button-auto-wah&apos;);
+const checkboxElement = document.getElementById(&apos;checkbox-auto-wah&apos;);
 
 const rangeSensitivityFrequencyElement = document.getElementById(&apos;range-auto-wah-sensitivity&apos;);
 const rangeSensitivityDepthElement     = document.getElementById(&apos;range-auto-wah-depth&apos;);
 const rangeResonanceElement            = document.getElementById(&apos;range-auto-wah-resonance&apos;);
 
-const spanPrintCheckedElement              = document.getElementById(&apos;print-checked-auto-wah&apos;);
-const spanPrintSensitivityFrequencyElement = document.getElementById(&apos;print-auto-wah-sensitivity-value&apos;);
-const spanPrintDepthElement                = document.getElementById(&apos;print-auto-wah-depth-value&apos;);
-const spanPrintResonanceElement            = document.getElementById(&apos;print-auto-wah-resonance-value&apos;);
+const outputSensitivityFrequencyElement = document.getElementById(&apos;output-auto-wah-sensitivity-value&apos;);
+const outputDepthElement                = document.getElementById(&apos;output-auto-wah-depth-value&apos;);
+const outputResonanceElement            = document.getElementById(&apos;output-auto-wah-resonance-value&apos;);
 
 checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
   oscillator.disconnect(0);
@@ -11744,17 +11739,17 @@ checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
     envelopeFollower.connect(lowpass);
     lowpass.connect(depth);
     depth.connect(sensitivity.frequency);
-
-    spanPrintCheckedElement.textContent = &apos;ON&apos;;
   } else {
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
     oscillator.connect(context.destination);
-
-    spanPrintCheckedElement.textContent = &apos;OFF&apos;;
   }
 });
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (!isStop) {
     return;
   }
@@ -11772,7 +11767,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
     lowpass.connect(depth);
     depth.connect(sensitivity.frequency);
 
-    // Start oscillator
+    // Start oscillator immediately
     oscillator.start(0);
   } else {
     oscillator.disconnect(0);
@@ -11781,7 +11776,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
     oscillator.connect(context.destination);
 
-    // Start oscillator
+    // Start oscillator immediately
     oscillator.start(0);
   }
 
@@ -11795,7 +11790,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
     return;
   }
 
-  // Stop immediately
+  // Stop oscillator immediately
   oscillator.stop(0);
 
   oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos;, frequency: 440 });
@@ -11805,61 +11800,53 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
   buttonElement.textContent = &apos;start&apos;;
 });
 
-rangeSensitivityFrequencyElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  sensitivityFrequency = event.currentTarget.valueAsNumber;
+rangeSensitivityFrequencyElement.addEventListener(&apos;input&apos;, () =&gt; {
+  sensitivityFrequency = rangeSensitivityFrequencyElement.valueAsNumber;
 
   sensitivity.frequency.value = sensitivityFrequency;
 
-  spanPrintSensitivityFrequencyElement.textContent = `${sensitivityFrequency.toString(10)} Hz`;
+  outputSensitivityFrequencyElement.textContent = `${sensitivityFrequency.toFixed(0)} Hz`;
 });
 
-rangeSensitivityDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  sensitivityDepthRate = event.currentTarget.valueAsNumber;
+rangeSensitivityDepthElement.addEventListener(&apos;input&apos;, () =&gt; {
+  sensitivityDepthRate = rangeSensitivityDepthElement.valueAsNumber;
 
   depth.gain.value = sensitivityFrequency * sensitivityDepthRate;
 
-  spanPrintDepthElement.textContent = sensitivityDepthRate.toString(10);
+  outputDepthElement.textContent = sensitivityDepthRate.toFixed(2);
 });
 
-rangeResonanceElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  sensitivityResonance = event.currentTarget.valueAsNumber;
+rangeResonanceElement.addEventListener(&apos;input&apos;, () =&gt; {
+  sensitivityResonance = rangeResonanceElement.valueAsNumber;
 
   sensitivity.Q.value = sensitivityResonance;
 
-  spanPrintResonanceElement.textContent = sensitivityResonance.toString(10);
+  outputResonanceElement.textContent = sensitivityResonance.toFixed(2);
 });</code></pre>
-            <div class="app-container app-auto-wah">
-              <div class="app-headline">
+            <div class="app-container flexbox-column">
+              <div class="flexbox">
                 <button type="button" id="button-auto-wah">start</button>
                 <label>
                   <input type="checkbox" id="checkbox-auto-wah" checked />
-                  <span id="print-checked-auto-wah">ON</span>
+                  <span>Auto Wah</span>
                 </label>
               </div>
-              <div>
-                <dl>
-                  <div>
-                    <dt><label for="range-auto-wah-sensitivity">Sensitivity</label></dt>
-                    <dd>
-                      <input type="range" id="range-auto-wah-sensitivity" value="1000" min="1000" max="2000" step="1" />
-                      <span id="print-auto-wah-sensitivity-value">1000 Hz</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt><label for="range-auto-wah-depth">Depth</label></dt>
-                    <dd>
-                      <input type="range" id="range-auto-wah-depth" value="0.5" min="0" max="1" step="0.05" />
-                      <span id="print-auto-wah-depth-value">0.5</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt><label for="range-auto-wah-resonance">Resonance</label></dt>
-                    <dd>
-                      <input type="range" id="range-auto-wah-resonance" value="10" min="1" max="40" step="1" />
-                      <span id="print-auto-wah-resonance-value">10</span>
-                    </dd>
-                  </div>
-                </dl>
+              <div class="flexbox">
+                <div class="flexbox">
+                  <label for="range-auto-wah-sensitivity">Sensitivity</label>
+                  <input type="range" id="range-auto-wah-sensitivity" value="1000" min="1000" max="2000" step="1" />
+                  <output id="output-auto-wah-sensitivity-value" for="range-auto-wah-sensitivity">1000 Hz</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-auto-wah-depth">Depth</label>
+                  <input type="range" id="range-auto-wah-depth" value="0.5" min="0" max="1" step="0.05" />
+                  <output id="output-auto-wah-depth-value" for="range-auto-wah-depth">0.50</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-auto-wah-resonance">Resonance</label>
+                  <input type="range" id="range-auto-wah-resonance" value="10" min="1" max="20" step="1" />
+                  <output id="output-auto-wah-resonance-value" for="range-auto-wah-resonance">10.00</output>
+                </div>
               </div>
             </div>
           </section>
