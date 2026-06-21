@@ -11552,9 +11552,9 @@ const createCurveTable = (svg) => {
   const rangeAmountElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-amount');
   const rangeStepElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-step');
 
-  const spanPrintCurveSizeElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-curve-size-value');
-  const spanPrintAmountElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-amount-value');
-  const spanPrintStepElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-step-value');
+  const outputCurveSizeElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-curve-size-value');
+  const outputAmountElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-amount-value');
+  const outputStepElement = document.getElementById('svg-figure-wave-shaper-node-curve-range-step-value');
 
   rangeCurveSizeElement.setAttribute('disabled', 'disabled');
   rangeAmountElement.setAttribute('disabled', 'disabled');
@@ -11600,26 +11600,26 @@ const createCurveTable = (svg) => {
     renderCurve();
   });
 
-  rangeCurveSizeElement.addEventListener('input', (event) => {
-    numberOfSamples = event.currentTarget.valueAsNumber;
+  rangeCurveSizeElement.addEventListener('input', () => {
+    numberOfSamples = rangeCurveSizeElement.valueAsNumber;
 
-    spanPrintCurveSizeElement.textContent = numberOfSamples.toString(10);
-
-    renderCurve();
-  });
-
-  rangeAmountElement.addEventListener('input', (event) => {
-    amount = event.currentTarget.valueAsNumber;
-
-    spanPrintAmountElement.textContent = amount.toString(10);
+    outputCurveSizeElement.textContent = numberOfSamples.toFixed(0);
 
     renderCurve();
   });
 
-  rangeStepElement.addEventListener('input', (event) => {
-    step = event.currentTarget.valueAsNumber;
+  rangeAmountElement.addEventListener('input', () => {
+    amount = rangeAmountElement.valueAsNumber;
 
-    spanPrintStepElement.textContent = step.toString(10);
+    outputAmountElement.textContent = amount.toFixed(2);
+
+    renderCurve();
+  });
+
+  rangeStepElement.addEventListener('input', () => {
+    step = rangeStepElement.valueAsNumber;
+
+    outputStepElement.textContent = step.toFixed(0);
 
     renderCurve();
   });
@@ -11647,6 +11647,8 @@ const createNodeConnectionsForWaveShaperNode = (svg) => {
   g.appendChild(waveShaperNodeAndAudiodDestinationNodePath);
   g.appendChild(waveShaperNodeAndAudiodDestinationNodeArrow);
   g.appendChild(audioDestinationNodeRect);
+
+  g.setAttribute('transform', 'translate(2, 2)');
 
   svg.appendChild(g);
 };
