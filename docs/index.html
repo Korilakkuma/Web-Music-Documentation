@@ -12825,72 +12825,52 @@ mastervolume.connect(context.destination);</code></pre>
   &lt;button type=&quot;button&quot; id=&quot;button-picking-up&quot;   data-index=&quot;1&quot;&gt;Picking Up&lt;/button&gt;
   &lt;button type=&quot;button&quot; id=&quot;button-chord&quot;        data-index=&quot;2&quot;&gt;Chord&lt;/button&gt;
 &lt;/div&gt;
-&lt;dl&gt;
-  &lt;dt&gt;&lt;label for=&quot;select-distortion-type&quot;&gt;Overdrive / Fuzz&lt;/label&gt;&lt;/dt&gt;
-  &lt;dd&gt;
+&lt;div&gt;
+  &lt;div&gt;
+    &lt;label for=&quot;select-distortion-type&quot;&gt;Overdrive / Fuzz&lt;/label&gt;
     &lt;select id=&quot;select-distortion-type&quot;&gt;
       &lt;option value=&quot;&quot; selected&gt;none&lt;/option&gt;
       &lt;option value=&quot;overdrive&quot;&gt;Overdrive&lt;/option&gt;
       &lt;option value=&quot;fuzz&quot;&gt;Fuzz&lt;/option&gt;
     &lt;/select&gt;
-  &lt;/dd&gt;
-  &lt;dt&gt;&lt;label for=&quot;range-distortion-drive&quot;&gt;Drive&lt;/label&gt;&lt;/dt&gt;
-  &lt;dd&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;label for=&quot;range-distortion-drive&quot;&gt;Drive&lt;/label&gt;
     &lt;input type=&quot;range&quot; id=&quot;range-distortion-drive&quot; value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;0.95&quot; step=&quot;0.05&quot; disabled /&gt;
-    &lt;span id=&quot;print-distortion-drive-value&quot;&gt;0.5&lt;/span&gt;
-  &lt;/dd&gt;
-&lt;/dl&gt;
-&lt;dl&gt;
-  &lt;dt&gt;
-    &lt;label for=&quot;checkbox-preamp&quot;&gt;&lt;span&gt;Preamp&lt;/span&gt;&lt;/label&gt;
-  &lt;/dt&gt;
-  &lt;dd&gt;&lt;input type=&quot;checkbox&quot; id=&quot;checkbox-preamp&quot; checked /&gt;&lt;/dd&gt;
-&lt;/dl&gt;
-&lt;dl&gt;
-  &lt;dt&gt;&lt;label for=&quot;range-preamp-normal-gain&quot;&gt;Normal Gain (Middle and Low Gain)&lt;/label&gt;&lt;/dt&gt;
-  &lt;dd&gt;
-    &lt;input type=&quot;range&quot; id=&quot;range-preamp-normal-gain&quot; value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
-    &lt;span id=&quot;print-preamp-normal-gain-value&quot;&gt;0.5&lt;/span&gt;
-  &lt;/dd&gt;
-  &lt;dt&gt;&lt;label for=&quot;range-preamp-high-treble-gain&quot;&gt;High Treble Gain&lt;/label&gt;&lt;/dt&gt;
-  &lt;dd&gt;
-    &lt;input type=&quot;range&quot; id=&quot;range-preamp-high-treble-gain&quot; value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
-    &lt;span id=&quot;print-preamp-high-treble-value&quot;&gt;0.5&lt;/span&gt;
-  &lt;/dd&gt;
-  &lt;dt&gt;&lt;label for=&quot;range-preamp-drive&quot;&gt;Drive&lt;/label&gt;&lt;/dt&gt;
-  &lt;dd&gt;
-    &lt;input type=&quot;range&quot; id=&quot;range-preamp-drive&quot; value=&quot;5&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;0.5&quot; /&gt;
-    &lt;span id=&quot;print-preamp-drive-value&quot;&gt;5.0&lt;/span&gt;
-  &lt;/dd&gt;
-  &lt;dt&gt;&lt;label for=&quot;range-preamp-post-equalizer-bass&quot;&gt;Bass&lt;/label&gt;&lt;/dt&gt;
-  &lt;dd&gt;
-    &lt;input type=&quot;range&quot; id=&quot;range-preamp-post-equalizer-bass&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
-    &lt;span id=&quot;print-preamp-post-equalizer-bass-value&quot;&gt;0 dB&lt;/span&gt;
-  &lt;/dd&gt;
-  &lt;dt&gt;&lt;label for=&quot;range-preamp-post-equalizer-middle&quot;&gt;Middle&lt;/label&gt;&lt;/dt&gt;
-  &lt;dd&gt;
-    &lt;input type=&quot;range&quot; id=&quot;range-preamp-post-equalizer-middle&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
-    &lt;span id=&quot;print-preamp-post-equalizer-middle-value&quot;&gt;0 dB&lt;/span&gt;
-  &lt;/dd&gt;
-  &lt;dt&gt;&lt;label for=&quot;range-preamp-post-equalizer-treble&quot;&gt;Treble&lt;/label&gt;&lt;/dt&gt;
-  &lt;dd&gt;
-    &lt;input type=&quot;range&quot; id=&quot;range-preamp-post-equalizer-treble&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
-    &lt;span id=&quot;print-preamp-post-equalizer-treble-value&quot;&gt;0 dB&lt;/span&gt;
-  &lt;/dd&gt;
-&lt;/dl&gt;
-&lt;dl&gt;
-  &lt;dt&gt;
-    &lt;label for=&quot;checkbox-speaker-simulator&quot;&gt;&lt;span&gt;Speaker Simulator&lt;/span&gt;&lt;/label&gt;
-  &lt;/dt&gt;
-  &lt;dd&gt;&lt;input type=&quot;checkbox&quot; id=&quot;checkbox-speaker-simulator&quot; checked /&gt;&lt;/dd&gt;
-&lt;/dl&gt;
-&lt;dl&gt;
-  &lt;dt&gt;&lt;label for=&quot;range-distortion-mastervolume&quot;&gt;Master Volume&lt;/label&gt;&lt;/dt&gt;
-  &lt;dd&gt;
-    &lt;input type=&quot;range&quot; id=&quot;range-distortion-mastervolume&quot; value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
-    &lt;span id=&quot;print-distortion-mastervolume-value&quot;&gt;0.5&lt;/span&gt;
-  &lt;/dd&gt;
-&lt;/dl&gt;</code></pre>
+    &lt;output id=&quot;output-distortion-drive-value&quot; for=&quot;range-distortion-drive&quot;&gt;0.50&lt;/output&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;
+  &lt;label for=&quot;checkbox-preamp&quot;&gt;&lt;span&gt;Preamp&lt;/span&gt;&lt;/label&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-preamp&quot; checked /&gt;
+  &lt;label for=&quot;range-preamp-normal-gain&quot;&gt;Normal Gain&lt;/label&gt;
+  &lt;input type=&quot;range&quot; id=&quot;range-preamp-normal-gain&quot; value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+  &lt;output id=&quot;output-preamp-normal-gain-value&quot; for=&quot;range-preamp-normal-gain&quot;&gt;0.50&lt;/output&gt;
+  &lt;label for=&quot;range-preamp-high-treble-gain&quot;&gt;High Treble Gain&lt;/label&gt;
+  &lt;input type=&quot;range&quot; id=&quot;range-preamp-high-treble-gain&quot; value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+  &lt;output id=&quot;output-preamp-high-treble-value&quot; for=&quot;range-preamp-high-treble-gain&quot;&gt;0.50&lt;/output&gt;
+  &lt;label for=&quot;range-preamp-drive&quot;&gt;Drive&lt;/label&gt;
+  &lt;input type=&quot;range&quot; id=&quot;range-preamp-drive&quot; value=&quot;5&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;0.5&quot; /&gt;
+  &lt;output id=&quot;output-preamp-drive-value&quot; for=&quot;range-preamp-drive&quot;&gt;5.00&lt;/output&gt;
+  &lt;label for=&quot;range-preamp-post-equalizer-bass&quot;&gt;Bass&lt;/label&gt;
+  &lt;input type=&quot;range&quot; id=&quot;range-preamp-post-equalizer-bass&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+  &lt;output id=&quot;output-preamp-post-equalizer-bass-value&quot; for=&quot;range-preamp-post-equalizer-bass&quot;&gt;0 dB&lt;/output&gt;
+  &lt;label for=&quot;range-preamp-post-equalizer-middle&quot;&gt;Middle&lt;/label&gt;
+  &lt;input type=&quot;range&quot; id=&quot;range-preamp-post-equalizer-middle&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+  &lt;output id=&quot;output-preamp-post-equalizer-middle-value&quot; for=&quot;range-preamp-post-equalizer-middle&quot;&gt;0 dB&lt;/output&gt;
+  &lt;label for=&quot;range-preamp-post-equalizer-treble&quot;&gt;Treble&lt;/label&gt;
+  &lt;input type=&quot;range&quot; id=&quot;range-preamp-post-equalizer-treble&quot; value=&quot;0&quot; min=&quot;-24&quot; max=&quot;24&quot; step=&quot;1&quot; /&gt;
+  &lt;output id=&quot;output-preamp-post-equalizer-treble-value&quot; for=&quot;range-preamp-post-equalizer-treble&quot;&gt;0 dB&lt;/output&gt;
+&lt;/div&gt;
+&lt;div&gt;
+  &lt;label for=&quot;checkbox-speaker-simulator&quot;&gt;&lt;span&gt;Speaker Simulator&lt;/span&gt;&lt;/label&gt;
+  &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-speaker-simulator&quot; checked /&gt;
+&lt;/div&gt;
+&lt;div&gt;
+  &lt;label for=&quot;range-distortion-mastervolume&quot;&gt;Master Volume&lt;/label&gt;
+  &lt;input type=&quot;range&quot; id=&quot;range-distortion-mastervolume&quot; value=&quot;0.5&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+  &lt;output id=&quot;output-distortion-mastervolume-value&quot;&gt;0.50&lt;/output&gt;
+&lt;/div&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -12950,7 +12930,7 @@ const gain   = new GainNode(context, { gain: 1 });
 
 const preLowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 3200, Q: -3 });
 
-const preHighpass1 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 80, Q: -3 });
+const preHighpass1 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 80,  Q: -3 });
 const preHighpass2 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 640, Q: -3 });
 const preHighpass3 = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 160, Q: -3 });
 
@@ -12960,14 +12940,14 @@ const middleAndBassGain = new GainNode(context, { gain: 0.5 });
 const preShaper  = new WaveShaperNode(context, { curve: createPreampCurve(5.0, samples), oversample });
 const postShaper = new WaveShaperNode(context, { curve: createPreampCurve(5.0, samples), oversample });
 
-const lowpass  = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 4000, Q: -3 });
-const highpass = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 40, Q: -3 });
+const lowpass  = new BiquadFilterNode(context, { type: &apos;lowpass&apos;,  frequency: 4000, Q: -3 });
+const highpass = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 40,   Q: -3 });
 
-const bass   = new BiquadFilterNode(context, { type: &apos;lowshelf&apos;, frequency: 240 });
-const middle = new BiquadFilterNode(context, { type: &apos;peaking&apos;, frequency: 500, Q: 1.5 });
+const bass   = new BiquadFilterNode(context, { type: &apos;lowshelf&apos;,  frequency: 240 });
+const middle = new BiquadFilterNode(context, { type: &apos;peaking&apos;,   frequency: 500, Q: 1.5 });
 const treble = new BiquadFilterNode(context, { type: &apos;highshelf&apos;, frequency: 1600 });
 
-const speakerSimulatorNotch   = new BiquadFilterNode(context, { type: &apos;notch&apos;, frequency: 8000, Q: 1 });
+const speakerSimulatorNotch   = new BiquadFilterNode(context, { type: &apos;notch&apos;,   frequency: 8000, Q: 1 });
 const speakerSimulatorLowpass = new BiquadFilterNode(context, { type: &apos;lowpass&apos;, frequency: 3200, Q: 6 });
 
 const mastervolume = new GainNode(context, { gain: 0.5 });
@@ -12991,16 +12971,16 @@ const rangeEffectorDistortionDriveElement = document.getElementById(&apos;range-
 
 const rangeDistortionMasterVolumeElement = document.getElementById(&apos;range-distortion-mastervolume&apos;);
 
-const spanPrintPreampNormalGainElement     = document.getElementById(&apos;print-preamp-normal-gain-value&apos;);
-const spanPrintPreampHighTrebleGainElement = document.getElementById(&apos;print-preamp-high-treble-value&apos;);
-const spanPrintPreampDriveElement          = document.getElementById(&apos;print-preamp-drive-value&apos;);
-const spanPrintPreampBassElement           = document.getElementById(&apos;print-preamp-post-equalizer-bass-value&apos;);
-const spanPrintPreampMiddleElement         = document.getElementById(&apos;print-preamp-post-equalizer-middle-value&apos;);
-const spanPrintPreampTrebleElement         = document.getElementById(&apos;print-preamp-post-equalizer-treble-value&apos;);
+const outputPreampNormalGainElement     = document.getElementById(&apos;output-preamp-normal-gain-value&apos;);
+const outputPreampHighTrebleGainElement = document.getElementById(&apos;output-preamp-high-treble-value&apos;);
+const outputPreampDriveElement          = document.getElementById(&apos;output-preamp-drive-value&apos;);
+const outputPreampBassElement           = document.getElementById(&apos;output-preamp-post-equalizer-bass-value&apos;);
+const outputPreampMiddleElement         = document.getElementById(&apos;output-preamp-post-equalizer-middle-value&apos;);
+const outputPreampTrebleElement         = document.getElementById(&apos;output-preamp-post-equalizer-treble-value&apos;);
 
-const spanPrintEffectorDistortionDriveElement = document.getElementById(&apos;print-distortion-drive-value&apos;);
+const outputEffectorDistortionDriveElement = document.getElementById(&apos;output-distortion-drive-value&apos;);
 
-const spanPrintDistortionMasterVolumeElement = document.getElementById(&apos;print-distortion-mastervolume-value&apos;);
+const outputDistortionMasterVolumeElement = document.getElementById(&apos;output-distortion-mastervolume-value&apos;);
 
 Promise
   .all([
@@ -13017,6 +12997,10 @@ Promise
     }));
 
     const onDown = async (event) =&gt; {
+      if (context.state !== &apos;running&apos;) {
+        await context.resume();
+      }
+
       const index = Number(event.target.getAttribute(&apos;data-index&apos;));
 
       const buffer = audioBuffers[index];
@@ -13098,8 +13082,8 @@ Promise
     buttonElementChord.addEventListener(&apos;mousedown&apos;, onDown);
     buttonElementChord.addEventListener(&apos;touchstart&apos;, onDown);
 
-    checkboxElementPreamp.addEventListener(&apos;change&apos;, (event) =&gt; {
-      if (event.currentTarget.checked) {
+    checkboxElementPreamp.addEventListener(&apos;change&apos;, () =&gt; {
+      if (checkboxElementPreamp.checked) {
         rangePreampNormalGainElement.removeAttribute(&apos;disabled&apos;);
         rangePreampHighTrebleGainElement.removeAttribute(&apos;disabled&apos;);
         rangePreampDriveElement.removeAttribute(&apos;disabled&apos;);
@@ -13116,12 +13100,12 @@ Promise
       }
     });
 
-    selectEffectorDistortionTypeElement.addEventListener(&apos;change&apos;, (event) =&gt; {
+    selectEffectorDistortionTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
       const drive = rangeEffectorDistortionDriveElement.valueAsNumber;
 
       rangeEffectorDistortionDriveElement.removeAttribute(&apos;disabled&apos;);
 
-      switch (event.currentTarget.value) {
+      switch (selectEffectorDistortionTypeElement.value) {
         case &apos;overdrive&apos;: {
           shaper.curve      = createAsymmetricalOverdriveCurve(drive, samples);
           shaper.oversample = &apos;2x&apos;;
@@ -13173,64 +13157,64 @@ Promise
         }
       }
 
-      spanPrintEffectorDistortionDriveElement.textContent = drive.toFixed(1);
+      outputEffectorDistortionDriveElement.textContent = drive.toFixed(1);
     });
 
-    rangePreampNormalGainElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-      const gain = event.currentTarget.valueAsNumber;
+    rangePreampNormalGainElement.addEventListener(&apos;input&apos;, () =&gt; {
+      const gain = rangePreampNormalGainElement.valueAsNumber;
 
       middleAndBassGain.gain.value = gain;
 
-      spanPrintPreampNormalGainElement.textContent = gain.toString(10);
+      outputPreampNormalGainElement.textContent = gain.toFixed(2);
     });
 
-    rangePreampHighTrebleGainElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-      const gain = event.currentTarget.valueAsNumber;
+    rangePreampHighTrebleGainElement.addEventListener(&apos;input&apos;, () =&gt; {
+      const gain = rangePreampHighTrebleGainElement.valueAsNumber;
 
       highTrebleGain.gain.value = gain;
 
-      spanPrintPreampHighTrebleGainElement.textContent = gain.toString(10);
+      outputPreampHighTrebleGainElement.textContent = gain.toFixed(2);
     });
 
-    rangePreampDriveElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-      const drive = event.currentTarget.valueAsNumber;
+    rangePreampDriveElement.addEventListener(&apos;input&apos;, () =&gt; {
+      const drive = rangePreampDriveElement.valueAsNumber;
 
       preShaper.curve  = createPreampCurve(drive, samples);
       postShaper.curve = createPreampCurve(drive, samples);
 
-      spanPrintPreampDriveElement.textContent = drive.toFixed(1);
+      outputPreampDriveElement.textContent = drive.toFixed(2);
     });
 
-    rangePreampBassElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-      const gain = event.currentTarget.valueAsNumber;
+    rangePreampBassElement.addEventListener(&apos;input&apos;, () =&gt; {
+      const gain = rangePreampBassElement.valueAsNumber;
 
       bass.gain.value = gain;
 
-      spanPrintPreampBassElement.textContent = `${gain} dB`;
+      outputPreampBassElement.textContent = `${gain} dB`;
     });
 
-    rangePreampMiddleElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-      const gain = event.currentTarget.valueAsNumber;
+    rangePreampMiddleElement.addEventListener(&apos;input&apos;, () =&gt; {
+      const gain = rangePreampMiddleElement.valueAsNumber;
 
       middle.gain.value = gain;
 
-      spanPrintPreampMiddleElement.textContent = `${gain} dB`;
+      outputPreampMiddleElement.textContent = `${gain} dB`;
     });
 
-    rangePreampTrebleElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-      const gain = event.currentTarget.valueAsNumber;
+    rangePreampTrebleElement.addEventListener(&apos;input&apos;, () =&gt; {
+      const gain = rangePreampTrebleElement.valueAsNumber;
 
       treble.gain.value = gain;
 
-      spanPrintPreampTrebleElement.textContent = `${gain} dB`;
+      outputPreampTrebleElement.textContent = `${gain} dB`;
     });
 
-    rangeDistortionMasterVolumeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-      const gain = event.currentTarget.valueAsNumber;
+    rangeDistortionMasterVolumeElement.addEventListener(&apos;input&apos;, () =&gt; {
+      const gain = rangeDistortionMasterVolumeElement.valueAsNumber;
 
       mastervolume.gain.value = gain;
 
-      spanPrintDistortionMasterVolumeElement.textContent = gain.toString(10);
+      outputDistortionMasterVolumeElement.textContent = gain.toFixed(2);
     });
   })
   .catch((error) =&gt; {
@@ -13251,114 +13235,84 @@ Promise
             </p>
             <p>
               サンプルコードにおける注意点ですが, 歪み系エフェクター, プリアンプ, スピーカーシミュレーターの有効・無効に応じて, 再生時のノード接続が変わるので,
-              ワンショットオーディオを再生するイベントリスナーで, 歪み系エフェクターのためのノード (コードでの変数名は <code>shaper</code>),
-              プリアンプの最後の接続ノード (コードでの変数名は <code>treble</code>), スピーカーシミュレーターの最後の接続ノード (コードでの変数名は
-              <code>speakerSimulatorLowpass</code>) それぞれで <code>disconnect</code> メソッドを呼び出して, 前回再生時のノード接続をクリアしていることです
-              (この処理がないと, 例えば, スピーカーシミュレーターつきで再生後, チェックボックスを外して, スピーカーシミュレーターなしで再生すると,
-              スピーカシミュレーターつきのノード接続が残るので,
-              スピーカーシミュレーターつきの音とスピーカーシミュレーターなしの音が合成されて再生されてしまいます). サンプルコードではありますが,
+              ワンショットオーディオを再生するイベントリスナーで, 歪み系エフェクターのためのノード (コードでの変数名は <var>shaper</var>),
+              プリアンプの最後の接続ノード (コードでの変数名は <var>treble</var>), スピーカーシミュレーターの最後の接続ノード (コードでの変数名は
+              <var>speakerSimulatorLowpass</var>) それぞれで <code>disconnect</code> メソッドを呼び出して, 前回再生時のノード接続をクリアしていることです
+              (ノード接続をクリアしないと, 例えば, スピーカーシミュレーターつきで再生後, チェックボックスを外して, スピーカーシミュレーターなしで再生すると,
+              スピーカーシミュレーターつきのノード接続が残るので,
+              スピーカーシミュレーターつきの音とスピーカーシミュレーターなしの音が同時に再生されてしまいます). サンプルコードではありますが,
               <code>disconnect</code> メソッドの明示的な呼び出しが必要な, 比較的よくあるユースケースです.
             </p>
-            <div class="app-container app-amp-simulator-and-effectors-distortion">
-              <div class="flexbox">
+            <div class="app-container flexbox-column">
+              <div class="flexbox margin-16-0">
                 <button type="button" id="button-picking-down" data-index="0">Picking Down</button>
                 <button type="button" id="button-picking-up" data-index="1">Picking Up</button>
                 <button type="button" id="button-chord" data-index="2">Chord</button>
               </div>
               <div class="flexbox">
-                <div>
-                  <dl>
-                    <div>
-                      <dt><label for="select-distortion-type">Overdrive / Fuzz</label></dt>
-                      <dd>
-                        <select id="select-distortion-type">
-                          <option value="" selected>none</option>
-                          <option value="overdrive">Overdrive</option>
-                          <option value="fuzz">Fuzz</option>
-                        </select>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt><label for="range-distortion-drive">Drive</label></dt>
-                      <dd>
-                        <input type="range" id="range-distortion-drive" value="0.5" min="0" max="0.95" step="0.05" disabled />
-                        <span id="print-distortion-drive-value">0.5</span>
-                      </dd>
-                    </div>
-                  </dl>
+                <div class="flexbox-column">
+                  <div class="flexbox flexbox-align-items-center">
+                    <label for="select-distortion-type">Overdrive / Fuzz</label>
+                    <select id="select-distortion-type">
+                      <option value="" selected>none</option>
+                      <option value="overdrive">Overdrive</option>
+                      <option value="fuzz">Fuzz</option>
+                    </select>
+                  </div>
+                  <div class="flexbox">
+                    <label for="range-distortion-drive">Drive</label>
+                    <input type="range" id="range-distortion-drive" value="0.5" min="0" max="0.95" step="0.05" disabled />
+                    <output id="output-distortion-drive-value" for="range-distortion-drive">0.50</output>
+                  </div>
+                </div>
+                <div class="flexbox-column">
+                  <div class="flexbox">
+                    <label for="checkbox-preamp" class="label-checkbox"><span>Preamp</span></label>
+                    <input type="checkbox" id="checkbox-preamp" checked />
+                  </div>
+                  <div class="flexbox">
+                    <label for="range-preamp-normal-gain" class="label-min-width">Normal Gain</label>
+                    <input type="range" id="range-preamp-normal-gain" value="0.5" min="0" max="1" step="0.05" />
+                    <output id="output-preamp-normal-gain-value" for="range-preamp-normal-gain">0.50</output>
+                  </div>
+                  <div class="flexbox">
+                    <label for="range-preamp-high-treble-gain" class="label-min-width">High Treble Gain</label>
+                    <input type="range" id="range-preamp-high-treble-gain" value="0.5" min="0" max="1" step="0.05" />
+                    <output id="output-preamp-high-treble-value" for="range-preamp-high-treble-gain">0.50</output>
+                  </div>
+                  <div class="flexbox">
+                    <label for="range-preamp-drive" class="label-min-width">Drive</label>
+                    <input type="range" id="range-preamp-drive" value="5" min="0" max="10" step="0.5" />
+                    <output id="output-preamp-drive-value" for="range-preamp-drive">5.00</output>
+                  </div>
+                  <div class="flexbox">
+                    <label for="range-preamp-post-equalizer-bass" class="label-min-width">Bass</label>
+                    <input type="range" id="range-preamp-post-equalizer-bass" value="0" min="-24" max="24" step="1" />
+                    <output id="output-preamp-post-equalizer-bass-value" for="range-preamp-post-equalizer-bass">0 dB</output>
+                  </div>
+                  <div class="flexbox">
+                    <label for="range-preamp-post-equalizer-middle" class="label-min-width">Middle</label>
+                    <input type="range" id="range-preamp-post-equalizer-middle" value="0" min="-24" max="24" step="1" />
+                    <output id="output-preamp-post-equalizer-middle-value" for="range-preamp-post-equalizer-middle">0 dB</output>
+                  </div>
+                  <div class="flexbox">
+                    <label for="range-preamp-post-equalizer-treble" class="label-min-width">Treble</label>
+                    <input type="range" id="range-preamp-post-equalizer-treble" value="0" min="-24" max="24" step="1" />
+                    <output id="output-preamp-post-equalizer-treble-value" for="range-preamp-post-equalizer-treble">0 dB</output>
+                  </div>
                 </div>
                 <div>
-                  <dl>
-                    <div class="checkbox-container">
-                      <dt><input type="checkbox" id="checkbox-preamp" checked /></dt>
-                      <dd><label for="checkbox-preamp">Preamp</label></dd>
-                    </div>
-                  </dl>
+                  <div class="flexbox">
+                    <label for="checkbox-speaker-simulator" class="label-checkbox"><span>Speaker Simulator</span></label>
+                    <input type="checkbox" id="checkbox-speaker-simulator" checked />
+                  </div>
                 </div>
                 <div>
-                  <dl>
-                    <div>
-                      <dt><label for="range-preamp-normal-gain">Normal Gain (Middle and Low Gain)</label></dt>
-                      <dd>
-                        <input type="range" id="range-preamp-normal-gain" value="0.5" min="0" max="1" step="0.05" />
-                        <span id="print-preamp-normal-gain-value">0.5</span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt><label for="range-preamp-high-treble-gain">High Treble Gain</label></dt>
-                      <dd>
-                        <input type="range" id="range-preamp-high-treble-gain" value="0.5" min="0" max="1" step="0.05" />
-                        <span id="print-preamp-high-treble-value">0.5</span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt><label for="range-preamp-drive">Drive</label></dt>
-                      <dd>
-                        <input type="range" id="range-preamp-drive" value="5" min="0" max="10" step="0.5" />
-                        <span id="print-preamp-drive-value">5.0</span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt><label for="range-preamp-post-equalizer-bass">Bass</label></dt>
-                      <dd>
-                        <input type="range" id="range-preamp-post-equalizer-bass" value="0" min="-24" max="24" step="1" />
-                        <span id="print-preamp-post-equalizer-bass-value">0 dB</span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt><label for="range-preamp-post-equalizer-middle">Middle</label></dt>
-                      <dd>
-                        <input type="range" id="range-preamp-post-equalizer-middle" value="0" min="-24" max="24" step="1" />
-                        <span id="print-preamp-post-equalizer-middle-value">0 dB</span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt><label for="range-preamp-post-equalizer-treble">Treble</label></dt>
-                      <dd>
-                        <input type="range" id="range-preamp-post-equalizer-treble" value="0" min="-24" max="24" step="1" />
-                        <span id="print-preamp-post-equalizer-treble-value">0 dB</span>
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-                <div>
-                  <dl>
-                    <div class="checkbox-container">
-                      <dt><input type="checkbox" id="checkbox-speaker-simulator" checked /></dt>
-                      <dd><label for="checkbox-speaker-simulator">Speaker Simulator</label></dd>
-                    </div>
-                  </dl>
-                </div>
-                <div>
-                  <dl>
-                    <div>
-                      <dt><label for="range-distortion-mastervolume">Master Volume</label></dt>
-                      <dd>
-                        <input type="range" id="range-distortion-mastervolume" value="0.5" min="0" max="1" step="0.05" />
-                        <span id="print-distortion-mastervolume-value">0.5</span>
-                      </dd>
-                    </div>
-                  </dl>
+                  <div class="flexbox">
+                    <label for="range-distortion-mastervolume">Master Volume</label>
+                    <input type="range" id="range-distortion-mastervolume" value="0.5" min="0" max="1" step="0.05" />
+                    <output id="output-distortion-mastervolume-value">0.50</output>
+                  </div>
                 </div>
               </div>
             </div>

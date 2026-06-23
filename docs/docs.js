@@ -12447,6 +12447,8 @@ const createNodeConnectionsForAmpSimulator = (svg, withSpeakerSimulator) => {
     g.appendChild(masterVolumeNodeAudioDestinationNodeArrow);
   }
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
@@ -12546,75 +12548,51 @@ const distortion = () => {
 
   const rangeDistortionMasterVolumeElement = document.getElementById('range-distortion-mastervolume');
 
-  const spanPrintPreampNormalGainElement = document.getElementById('print-preamp-normal-gain-value');
-  const spanPrintPreampHighTrebleGainElement = document.getElementById('print-preamp-high-treble-value');
-  const spanPrintPreampDriveElement = document.getElementById('print-preamp-drive-value');
-  const spanPrintPreampBassElement = document.getElementById('print-preamp-post-equalizer-bass-value');
-  const spanPrintPreampMiddleElement = document.getElementById('print-preamp-post-equalizer-middle-value');
-  const spanPrintPreampTrebleElement = document.getElementById('print-preamp-post-equalizer-treble-value');
+  const outputPreampNormalGainElement = document.getElementById('output-preamp-normal-gain-value');
+  const outputPreampHighTrebleGainElement = document.getElementById('output-preamp-high-treble-value');
+  const outputPreampDriveElement = document.getElementById('output-preamp-drive-value');
+  const outputPreampBassElement = document.getElementById('output-preamp-post-equalizer-bass-value');
+  const outputPreampMiddleElement = document.getElementById('output-preamp-post-equalizer-middle-value');
+  const outputPreampTrebleElement = document.getElementById('output-preamp-post-equalizer-treble-value');
 
-  const spanPrintEffectorDistortionDriveElement = document.getElementById('print-distortion-drive-value');
+  const outputEffectorDistortionDriveElement = document.getElementById('output-distortion-drive-value');
 
-  const spanPrintDistortionMasterVolumeElement = document.getElementById('print-distortion-mastervolume-value');
+  const outputDistortionMasterVolumeElement = document.getElementById('output-distortion-mastervolume-value');
 
   Promise.all([
     fetch('./assets/one-shots/electric-guitar-clean-picking-down.mp3'),
     fetch('./assets/one-shots/electric-guitar-clean-picking-up.mp3'),
     fetch('./assets/one-shots/electric-guitar-clean-chord.mp3')
-  ]).then(async (responses) => {
-    const audioBuffers = await Promise.all(
-      responses.map(async (response) => {
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await audiocontext.decodeAudioData(arrayBuffer);
+  ])
+    .then(async (responses) => {
+      const audioBuffers = await Promise.all(
+        responses.map(async (response) => {
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await audiocontext.decodeAudioData(arrayBuffer);
 
-        return audioBuffer;
-      })
-    );
+          return audioBuffer;
+        })
+      );
 
-    const onDown = async (event) => {
-      if (audiocontext.state !== 'running') {
-        await audiocontext.resume();
-      }
+      const onDown = async (event) => {
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
 
-      const index = Number(event.target.getAttribute('data-index'));
+        const index = Number(event.target.getAttribute('data-index'));
 
-      const buffer = audioBuffers[index];
-      const source = new AudioBufferSourceNode(audiocontext, { buffer });
+        const buffer = audioBuffers[index];
+        const source = new AudioBufferSourceNode(audiocontext, { buffer });
 
-      gain.disconnect(0);
-      shaper.disconnect(0);
-      treble.disconnect(0);
-      speakerSimulatorLowpass.disconnect(0);
+        gain.disconnect(0);
+        shaper.disconnect(0);
+        treble.disconnect(0);
+        speakerSimulatorLowpass.disconnect(0);
 
-      source.connect(gain);
-      gain.connect(shaper);
+        source.connect(gain);
+        gain.connect(shaper);
 
-      if (checkboxElementPreamp.checked && checkboxElementSpeakerSimulator.checked) {
-        shaper.connect(preHighpass1);
-        preHighpass1.connect(preLowpass);
-        preLowpass.connect(middleAndBassGain);
-        middleAndBassGain.connect(preHighpass3);
-
-        shaper.connect(preHighpass2);
-        preHighpass2.connect(highTrebleGain);
-        highTrebleGain.connect(preHighpass3);
-
-        preHighpass3.connect(preShaper);
-
-        preShaper.connect(lowpass);
-        lowpass.connect(highpass);
-
-        highpass.connect(postShaper);
-
-        postShaper.connect(bass);
-        bass.connect(middle);
-        middle.connect(treble);
-        treble.connect(speakerSimulatorNotch);
-
-        speakerSimulatorNotch.connect(speakerSimulatorLowpass);
-        speakerSimulatorLowpass.connect(mastervolume);
-      } else {
-        if (checkboxElementPreamp.checked) {
+        if (checkboxElementPreamp.checked && checkboxElementSpeakerSimulator.checked) {
           shaper.connect(preHighpass1);
           preHighpass1.connect(preLowpass);
           preLowpass.connect(middleAndBassGain);
@@ -12634,164 +12612,190 @@ const distortion = () => {
           postShaper.connect(bass);
           bass.connect(middle);
           middle.connect(treble);
-          treble.connect(mastervolume);
-        } else if (checkboxElementSpeakerSimulator.checked) {
-          shaper.connect(speakerSimulatorNotch);
+          treble.connect(speakerSimulatorNotch);
 
           speakerSimulatorNotch.connect(speakerSimulatorLowpass);
           speakerSimulatorLowpass.connect(mastervolume);
         } else {
-          shaper.connect(mastervolume);
-        }
-      }
+          if (checkboxElementPreamp.checked) {
+            shaper.connect(preHighpass1);
+            preHighpass1.connect(preLowpass);
+            preLowpass.connect(middleAndBassGain);
+            middleAndBassGain.connect(preHighpass3);
 
-      mastervolume.connect(audiocontext.destination);
+            shaper.connect(preHighpass2);
+            preHighpass2.connect(highTrebleGain);
+            highTrebleGain.connect(preHighpass3);
 
-      source.start(0);
-    };
+            preHighpass3.connect(preShaper);
 
-    buttonElementPickingDown.addEventListener('mousedown', onDown);
-    buttonElementPickingDown.addEventListener('touchstart', onDown);
-    buttonElementPickingUp.addEventListener('mousedown', onDown);
-    buttonElementPickingUp.addEventListener('touchstart', onDown);
-    buttonElementChord.addEventListener('mousedown', onDown);
-    buttonElementChord.addEventListener('touchstart', onDown);
+            preShaper.connect(lowpass);
+            lowpass.connect(highpass);
 
-    checkboxElementPreamp.addEventListener('change', (event) => {
-      if (event.currentTarget.checked) {
-        rangePreampNormalGainElement.removeAttribute('disabled');
-        rangePreampHighTrebleGainElement.removeAttribute('disabled');
-        rangePreampDriveElement.removeAttribute('disabled');
-        rangePreampBassElement.removeAttribute('disabled');
-        rangePreampMiddleElement.removeAttribute('disabled');
-        rangePreampTrebleElement.removeAttribute('disabled');
-      } else {
-        rangePreampNormalGainElement.setAttribute('disabled', 'disabled');
-        rangePreampHighTrebleGainElement.setAttribute('disabled', 'disabled');
-        rangePreampDriveElement.setAttribute('disabled', 'disabled');
-        rangePreampBassElement.setAttribute('disabled', 'disabled');
-        rangePreampMiddleElement.setAttribute('disabled', 'disabled');
-        rangePreampTrebleElement.setAttribute('disabled', 'disabled');
-      }
-    });
+            highpass.connect(postShaper);
 
-    selectEffectorDistortionTypeElement.addEventListener('change', (event) => {
-      const drive = rangeEffectorDistortionDriveElement.valueAsNumber;
+            postShaper.connect(bass);
+            bass.connect(middle);
+            middle.connect(treble);
+            treble.connect(mastervolume);
+          } else if (checkboxElementSpeakerSimulator.checked) {
+            shaper.connect(speakerSimulatorNotch);
 
-      rangeEffectorDistortionDriveElement.removeAttribute('disabled');
-
-      switch (event.currentTarget.value) {
-        case 'overdrive': {
-          shaper.curve = createAsymmetricalOverdriveCurve(drive, samples);
-          shaper.oversample = '2x';
-
-          gain.gain.value = 1;
-          break;
+            speakerSimulatorNotch.connect(speakerSimulatorLowpass);
+            speakerSimulatorLowpass.connect(mastervolume);
+          } else {
+            shaper.connect(mastervolume);
+          }
         }
 
-        case 'fuzz': {
-          shaper.curve = new Float32Array([drive, 0, drive]);
-          shaper.oversample = '4x';
+        mastervolume.connect(audiocontext.destination);
 
-          gain.gain.value = 2;
-          break;
+        source.start(0);
+      };
+
+      buttonElementPickingDown.addEventListener('mousedown', onDown);
+      buttonElementPickingDown.addEventListener('touchstart', onDown);
+      buttonElementPickingUp.addEventListener('mousedown', onDown);
+      buttonElementPickingUp.addEventListener('touchstart', onDown);
+      buttonElementChord.addEventListener('mousedown', onDown);
+      buttonElementChord.addEventListener('touchstart', onDown);
+
+      checkboxElementPreamp.addEventListener('change', () => {
+        if (checkboxElementPreamp.checked) {
+          rangePreampNormalGainElement.removeAttribute('disabled');
+          rangePreampHighTrebleGainElement.removeAttribute('disabled');
+          rangePreampDriveElement.removeAttribute('disabled');
+          rangePreampBassElement.removeAttribute('disabled');
+          rangePreampMiddleElement.removeAttribute('disabled');
+          rangePreampTrebleElement.removeAttribute('disabled');
+        } else {
+          rangePreampNormalGainElement.setAttribute('disabled', 'disabled');
+          rangePreampHighTrebleGainElement.setAttribute('disabled', 'disabled');
+          rangePreampDriveElement.setAttribute('disabled', 'disabled');
+          rangePreampBassElement.setAttribute('disabled', 'disabled');
+          rangePreampMiddleElement.setAttribute('disabled', 'disabled');
+          rangePreampTrebleElement.setAttribute('disabled', 'disabled');
+        }
+      });
+
+      selectEffectorDistortionTypeElement.addEventListener('change', () => {
+        const drive = rangeEffectorDistortionDriveElement.valueAsNumber;
+
+        rangeEffectorDistortionDriveElement.removeAttribute('disabled');
+
+        switch (selectEffectorDistortionTypeElement.value) {
+          case 'overdrive': {
+            shaper.curve = createAsymmetricalOverdriveCurve(drive, samples);
+            shaper.oversample = '2x';
+
+            gain.gain.value = 1;
+            break;
+          }
+
+          case 'fuzz': {
+            shaper.curve = new Float32Array([drive, 0, drive]);
+            shaper.oversample = '4x';
+
+            gain.gain.value = 2;
+            break;
+          }
+
+          default: {
+            shaper.curve = null;
+            shaper.oversample = 'none';
+
+            gain.gain.value = 1;
+
+            rangeEffectorDistortionDriveElement.setAttribute('disabled', 'disabled');
+            break;
+          }
+        }
+      });
+
+      rangeEffectorDistortionDriveElement.addEventListener('input', (event) => {
+        const drive = event.currentTarget.valueAsNumber;
+
+        switch (selectEffectorDistortionTypeElement.value) {
+          case 'overdrive': {
+            shaper.curve = createAsymmetricalOverdriveCurve(drive, samples);
+            shaper.oversample = '2x';
+            break;
+          }
+
+          case 'fuzz': {
+            shaper.curve = new Float32Array([drive, 0, drive]);
+            shaper.oversample = '4x';
+            break;
+          }
+
+          default: {
+            shaper.curve = null;
+            shaper.oversample = 'none';
+            break;
+          }
         }
 
-        default: {
-          shaper.curve = null;
-          shaper.oversample = 'none';
+        outputEffectorDistortionDriveElement.textContent = drive.toFixed(1);
+      });
 
-          gain.gain.value = 1;
+      rangePreampNormalGainElement.addEventListener('input', () => {
+        const gain = rangePreampNormalGainElement.valueAsNumber;
 
-          rangeEffectorDistortionDriveElement.setAttribute('disabled', 'disabled');
-          break;
-        }
-      }
-    });
+        middleAndBassGain.gain.value = gain;
 
-    rangeEffectorDistortionDriveElement.addEventListener('input', (event) => {
-      const drive = event.currentTarget.valueAsNumber;
+        outputPreampNormalGainElement.textContent = gain.toFixed(2);
+      });
 
-      switch (selectEffectorDistortionTypeElement.value) {
-        case 'overdrive': {
-          shaper.curve = createAsymmetricalOverdriveCurve(drive, samples);
-          shaper.oversample = '2x';
-          break;
-        }
+      rangePreampHighTrebleGainElement.addEventListener('input', () => {
+        const gain = rangePreampHighTrebleGainElement.valueAsNumber;
 
-        case 'fuzz': {
-          shaper.curve = new Float32Array([drive, 0, drive]);
-          shaper.oversample = '4x';
-          break;
-        }
+        highTrebleGain.gain.value = gain;
 
-        default: {
-          shaper.curve = null;
-          shaper.oversample = 'none';
-          break;
-        }
-      }
+        outputPreampHighTrebleGainElement.textContent = gain.toFixed(2);
+      });
 
-      spanPrintEffectorDistortionDriveElement.textContent = drive.toFixed(1);
-    });
+      rangePreampDriveElement.addEventListener('input', () => {
+        const drive = rangePreampDriveElement.valueAsNumber;
 
-    rangePreampNormalGainElement.addEventListener('input', (event) => {
-      const gain = event.currentTarget.valueAsNumber;
+        preShaper.curve = createPreampCurve(drive, samples);
+        postShaper.curve = createPreampCurve(drive, samples);
 
-      middleAndBassGain.gain.value = gain;
+        outputPreampDriveElement.textContent = drive.toFixed(2);
+      });
 
-      spanPrintPreampNormalGainElement.textContent = gain.toString(10);
-    });
+      rangePreampBassElement.addEventListener('input', () => {
+        const gain = rangePreampBassElement.valueAsNumber;
 
-    rangePreampHighTrebleGainElement.addEventListener('input', (event) => {
-      const gain = event.currentTarget.valueAsNumber;
+        bass.gain.value = gain;
 
-      highTrebleGain.gain.value = gain;
+        outputPreampBassElement.textContent = `${gain} dB`;
+      });
 
-      spanPrintPreampHighTrebleGainElement.textContent = gain.toString(10);
-    });
+      rangePreampMiddleElement.addEventListener('input', () => {
+        const gain = rangePreampMiddleElement.valueAsNumber;
 
-    rangePreampDriveElement.addEventListener('input', (event) => {
-      const drive = event.currentTarget.valueAsNumber;
+        middle.gain.value = gain;
 
-      preShaper.curve = createPreampCurve(drive, samples);
-      postShaper.curve = createPreampCurve(drive, samples);
+        outputPreampMiddleElement.textContent = `${gain} dB`;
+      });
 
-      spanPrintPreampDriveElement.textContent = drive.toFixed(1);
-    });
+      rangePreampTrebleElement.addEventListener('input', () => {
+        const gain = rangePreampTrebleElement.valueAsNumber;
 
-    rangePreampBassElement.addEventListener('input', (event) => {
-      const gain = event.currentTarget.valueAsNumber;
+        treble.gain.value = gain;
 
-      bass.gain.value = gain;
+        outputPreampTrebleElement.textContent = `${gain} dB`;
+      });
 
-      spanPrintPreampBassElement.textContent = `${gain} dB`;
-    });
+      rangeDistortionMasterVolumeElement.addEventListener('input', () => {
+        const gain = rangeDistortionMasterVolumeElement.valueAsNumber;
 
-    rangePreampMiddleElement.addEventListener('input', (event) => {
-      const gain = event.currentTarget.valueAsNumber;
+        mastervolume.gain.value = gain;
 
-      middle.gain.value = gain;
-
-      spanPrintPreampMiddleElement.textContent = `${gain} dB`;
-    });
-
-    rangePreampTrebleElement.addEventListener('input', (event) => {
-      const gain = event.currentTarget.valueAsNumber;
-
-      treble.gain.value = gain;
-
-      spanPrintPreampTrebleElement.textContent = `${gain} dB`;
-    });
-
-    rangeDistortionMasterVolumeElement.addEventListener('input', (event) => {
-      const gain = event.currentTarget.valueAsNumber;
-
-      mastervolume.gain.value = gain;
-
-      spanPrintDistortionMasterVolumeElement.textContent = gain.toString(10);
-    });
-  });
+        outputDistortionMasterVolumeElement.textContent = gain.toFixed(2);
+      });
+    })
+    .catch(console.error);
 };
 
 const createNodeConnectionsForDynamicsCompressorNode = (svg) => {

@@ -297,6 +297,10 @@ input[type="file"] {
   margin: 16px auto;
 }
 
+.margin-16-0 {
+  margin: 16px 0;
+}
+
 .ranges-envelopegenerator {
   display: flex;
   gap: 12px;
@@ -442,7 +446,6 @@ select {
   margin: 24px 0;
 }
 
-.app-amp-simulator-and-effectors-distortion dl dd,
 .app-auto-panner dl dd,
 .app-glide dl dd,
 .app-noise-suppressor dl dd,
@@ -452,18 +455,6 @@ select {
   display: flex;
   gap: 8px;
   align-items: center;
-}
-
-.app-amp-simulator-and-effectors-distortion dl dd {
-  margin: 0;
-}
-
-.app-amp-simulator-and-effectors-distortion label {
-  cursor: pointer;
-}
-
-.app-amp-simulator-and-effectors-distortion select {
-  margin: 8px 0;
 }
 
 .form-glide-type {
