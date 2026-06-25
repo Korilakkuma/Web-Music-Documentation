@@ -12819,7 +12819,107 @@ const createNodeConnectionsForDynamicsCompressorNode = (svg) => {
   g.appendChild(waveShaperNodeAndAudiodDestinationNodeArrow);
   g.appendChild(audioDestinationNodeRect);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
+};
+
+const compressor = () => {
+  let oscillatorC = null;
+  let oscillatorE = null;
+  let oscillatorG = null;
+
+  const compressor = new DynamicsCompressorNode(audiocontext);
+
+  const buttonElement = document.getElementById('button-compressor');
+
+  const rangeThresholdElement = document.getElementById('range-compressor-threshold');
+  const rangeKneeElement = document.getElementById('range-compressor-knee');
+  const rangeRatioElement = document.getElementById('range-compressor-ratio');
+  const rangeAttackElement = document.getElementById('range-compressor-attack');
+  const rangeReleaseElement = document.getElementById('range-compressor-release');
+
+  const outputThresholdElement = document.getElementById('output-compressor-threshold-value');
+  const outputKneeElement = document.getElementById('output-compressor-knee-value');
+  const outputRatioElement = document.getElementById('output-compressor-ratio-value');
+  const outputAttackElement = document.getElementById('output-compressor-attack-value');
+  const outputReleaseElement = document.getElementById('output-compressor-release-value');
+
+  const onDown = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (oscillatorC !== null || oscillatorE !== null || oscillatorG !== null) {
+      return;
+    }
+
+    oscillatorC = new OscillatorNode(audiocontext, { frequency: 261.6255653005991 });
+    oscillatorE = new OscillatorNode(audiocontext, { frequency: 329.6275569128705 });
+    oscillatorG = new OscillatorNode(audiocontext, { frequency: 391.99543598175 });
+
+    oscillatorC.connect(compressor);
+    oscillatorE.connect(compressor);
+    oscillatorG.connect(compressor);
+    compressor.connect(audiocontext.destination);
+
+    oscillatorC.start(0);
+    oscillatorE.start(0);
+    oscillatorG.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    if (oscillatorC === null || oscillatorE === null || oscillatorG === null) {
+      return;
+    }
+
+    oscillatorC.stop(0);
+    oscillatorE.stop(0);
+    oscillatorG.stop(0);
+
+    oscillatorC = null;
+    oscillatorE = null;
+    oscillatorG = null;
+
+    buttonElement.textContent = 'start';
+  };
+
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeThresholdElement.addEventListener('input', () => {
+    compressor.threshold.value = rangeThresholdElement.valueAsNumber;
+
+    outputThresholdElement.textContent = `${compressor.threshold.value.toFixed(2)} dB`;
+  });
+
+  rangeKneeElement.addEventListener('input', () => {
+    compressor.knee.value = rangeKneeElement.valueAsNumber;
+
+    outputKneeElement.textContent = `${compressor.knee.value.toFixed(2)} dB`;
+  });
+
+  rangeRatioElement.addEventListener('input', () => {
+    compressor.ratio.value = rangeRatioElement.valueAsNumber;
+
+    outputRatioElement.textContent = compressor.ratio.value.toFixed(0);
+  });
+
+  rangeAttackElement.addEventListener('input', () => {
+    compressor.attack.value = rangeAttackElement.valueAsNumber;
+
+    outputAttackElement.textContent = compressor.attack.value.toFixed(3);
+  });
+
+  rangeReleaseElement.addEventListener('input', () => {
+    compressor.release.value = rangeReleaseElement.valueAsNumber;
+
+    outputReleaseElement.textContent = compressor.release.value.toFixed(3);
+  });
 };
 
 const createCompressorParameters = (svg) => {
@@ -12866,10 +12966,10 @@ const createCompressorParameters = (svg) => {
 
   g.appendChild(outputLabel);
 
-  ['0.00', '0.25', ' 0.50', '0.75', '1.00'].forEach((x, index) => {
+  [0.0, 0.25, 0.5, 0.75, 1.0].forEach((level, index) => {
     const text = document.createElementNS(xmlns, 'text');
 
-    text.textContent = x;
+    text.textContent = level.toFixed(2);
 
     text.setAttribute('x', ((innerWidth / 4) * index + padding).toString(10));
     text.setAttribute('y', (padding + innerHeight + 20).toString(10));
@@ -12880,7 +12980,7 @@ const createCompressorParameters = (svg) => {
 
     g.appendChild(text);
 
-    if (x === -1 || x === 1) {
+    if (level === -1 || level === 1) {
       return;
     }
 
@@ -12896,10 +12996,10 @@ const createCompressorParameters = (svg) => {
     g.appendChild(xRect);
   });
 
-  ['1.00', '0.75', ' 0.50', '0.25', '0.00'].forEach((y, index) => {
+  [1.0, 0.75, 0.5, 0.25, 0.0].forEach((level, index) => {
     const text = document.createElementNS(xmlns, 'text');
 
-    text.textContent = y;
+    text.textContent = level.toFixed(2);
 
     text.setAttribute('x', (padding - 20).toString(10));
     text.setAttribute('y', ((innerHeight / 4) * index + padding).toString(10));
@@ -12910,7 +13010,7 @@ const createCompressorParameters = (svg) => {
 
     g.appendChild(text);
 
-    if (y === -1 || y === 1) {
+    if (level === -1 || level === 1) {
       return;
     }
 
@@ -13086,10 +13186,10 @@ const createCompressorLowerAndRaiseVolumeByCompressorCurve = (svg) => {
 
     g.appendChild(outputLabel);
 
-    ['0.00', '0.25', ' 0.50', '0.75', '1.00'].forEach((x, index) => {
+    [0.0, 0.25, 0.5, 0.75, 1.0].forEach((level, index) => {
       const text = document.createElementNS(xmlns, 'text');
 
-      text.textContent = x;
+      text.textContent = level.toFixed(2);
 
       text.setAttribute('x', (offset + (width / 4) * index + padding).toString(10));
       text.setAttribute('y', (padding + height + 20).toString(10));
@@ -13100,7 +13200,7 @@ const createCompressorLowerAndRaiseVolumeByCompressorCurve = (svg) => {
 
       g.appendChild(text);
 
-      if (x === -1 || x === 1) {
+      if (level === -1 || level === 1) {
         return;
       }
 
@@ -13116,10 +13216,10 @@ const createCompressorLowerAndRaiseVolumeByCompressorCurve = (svg) => {
       g.appendChild(xRect);
     });
 
-    ['1.00', '0.75', ' 0.50', '0.25', '0.00'].forEach((y, index) => {
+    [1.0, 0.75, 0.5, 0.25, 0.0].forEach((level, index) => {
       const text = document.createElementNS(xmlns, 'text');
 
-      text.textContent = y;
+      text.textContent = level.toFixed(2);
 
       text.setAttribute('x', (offset + padding - 20).toString(10));
       text.setAttribute('y', ((height / 4) * index + padding).toString(10));
@@ -13130,7 +13230,7 @@ const createCompressorLowerAndRaiseVolumeByCompressorCurve = (svg) => {
 
       g.appendChild(text);
 
-      if (y === -1 || y === 1) {
+      if (level === -1 || level === 1) {
         return;
       }
 
@@ -13262,7 +13362,7 @@ const createCompressorLowerAndRaiseVolume = (svg) => {
     [1, 0, -1].forEach((amplitude, index) => {
       const text = document.createElementNS(xmlns, 'text');
 
-      text.textContent = amplitude.toString(10);
+      text.textContent = amplitude.toFixed(1);
 
       text.setAttribute('x', (offset + padding - 12).toString(10));
       text.setAttribute('y', (padding + (innerHeight / 2) * (1 - amplitude) + 16).toString(10));
@@ -22399,6 +22499,9 @@ createNodeConnectionsForAmpSimulator(document.getElementById('svg-figure-node-co
 distortion();
 
 createNodeConnectionsForDynamicsCompressorNode(document.getElementById('svg-figure-node-connections-for-dynamics-compressor-node'));
+
+compressor();
+
 createCompressorParameters(document.getElementById('svg-figure-compressor-parameters'));
 createCompressorLowerAndRaiseVolumeByCompressorCurve(document.getElementById('svg-figure-compressor-lower-volume-and-raise-volume-by-compressor-curve'));
 createCompressorLowerAndRaiseVolume(document.getElementById('svg-figure-compressor-lower-volume-and-raise-volume'));

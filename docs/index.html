@@ -13344,15 +13344,15 @@ Promise
           <h3>コンプレッサー</h3>
           <p>
             コンプレッサーは, 振幅の大きな音を (相対的に) 小さく, 振幅の小さな音を (相対的に) 大きくすることによって, 振幅値のオーバーフロー (例として,
-            量子化ビット <code>8 bit</code> で, 2 の補数表現の場合, <code>127</code> (<code>0b0111111</code>) が正の値の上限で, <code>1</code> 増えると,
-            <code>-128</code> (<code>0b1000000</code>) で負数となって波形が大きくゆがんでしまいます) や (振幅値のオーバーフローを防ぐための)
-            クリッピング処理による意図しない歪みを防止しつつ, 迫力のあるサウンドに変化させるエフェクターです. 音楽的な表現だと,
-            <b>音の粒をそろえる</b>エフェクターと言えます.
+            量子化ビット <code>8 bit</code> で, 2 の補数表現の場合, <code>127</code> (<code>0111111</code>) が正の値の上限で, <code>1</code> 増えると,
+            <code>-128</code> (<code>1000000</code>) で負数となって, 波形が大きくゆがんでしまいます) や (振幅値のオーバーフローを防ぐための)
+            クリッピング処理による意図しない歪みを防止しつつ, 迫力のある (客観的な指標だと, <b>ダイナミックレンジ</b>がより狭い)
+            サウンドに変化させるエフェクターです. 音楽的な表現だと, <b>音の粒をそろえる</b>エフェクターと言えます.
           </p>
           <p>
             音楽ジャンルにもよりますが, ロックやポップスのレコーディングでは一般的に利用されるエフェクターです. ロックやポップスでは, ギター数パート, ベース,
-            ドラム, そして, ボーカルと定石の構成でも楽音数が多く, ミキシングをある程度オートマティックにおこなう必要があるからです (逆に, クラシックなどでは
-            (例えば, ピアノ演奏のみの場合), 演奏時の強弱 (フォルテやピアノなど) も忠実に再現することが理想とされます).
+            ドラム, そして, ボーカルと定石の構成でも楽音数が多く, 楽曲全体として音量バランスを整える必要があるからです. 一方で, クラシックなどでは (例えば,
+            ピアノ演奏のみの場合), 演奏時の強弱 (フォルテやピアノなど) も忠実に再現することが理想とされます.
           </p>
           <section id="section-effectors-compressor-dynamics-compressor-node">
             <h4>DynamicsCompressorNode</h4>
@@ -13361,7 +13361,8 @@ Promise
               <b><code>DynamicsCompressorNode</code></b> インスタンスを生成して接続するだけです. これだけで, それなりのコンプレッサーとして機能します (<code
                 >DynamicsCompressorNode</code>
               インスタンスの各 <code>AudioParam</code> のデフォルト値が機能するような値になっていますが, コンストラクタの第 2 引数の
-              <b><code>DynamicsCompressorOptions</code></b> でインスタンス生成時に値を設定したり, <code>AudioParam</code> のセッターで値を設定したりはできます).
+              <b><code>DynamicsCompressorOptions</code></b> 型のオブジェクトでインスタンス生成時に値を設定したり,
+              <code>AudioParam</code> のセッターで値を設定したりはできます).
             </p>
             <figure>
               <svg id="svg-figure-node-connections-for-dynamics-compressor-node" width="400" height="520" />
@@ -13386,8 +13387,8 @@ compressor.connect(context.destination);
 // Start oscillator immediately
 oscillator.start(0);
 
-// Stop oscillator after 10 sec
-oscillator.stop(context.currentTime + 10);</code></pre>
+// Stop oscillator after 5 sec
+oscillator.stop(context.currentTime + 5);</code></pre>
             <img src="images/dynamics-compressor-node.png" alt="DynamicsCompressorNode" width="1232" height="770" loading="lazy" />
             <p>
               以下は, <a href="#section-oscillator-node-synthesize">基本波形の合成セクション</a>でコード例として記載した, 和音となる
@@ -13420,15 +13421,165 @@ oscillatorC.start(0);
 oscillatorE.start(0);
 oscillatorG.start(0);
 
-// Stop oscillators after 10 sec
-oscillatorC.stop(context.currentTime + 10);
-oscillatorE.stop(context.currentTime + 10);
-oscillatorG.stop(context.currentTime + 10);</code></pre>
+// Stop oscillators after 5 sec
+oscillatorC.stop(context.currentTime + 5);
+oscillatorE.stop(context.currentTime + 5);
+oscillatorG.stop(context.currentTime + 5);</code></pre>
             <p>
               「おそらくもっとも簡単」と表現したのは, <code>AudioNode</code> 単体の接続とデフォルト値でエフェクターとして機能することが理由です. すでに,
               解説したように <code>DelayNode</code> や <code>BiquadFilterNode</code> 単体としては現実世界の (音楽表現として意味をもつ)
-              エフェクターとして機能することはないからです.
+              エフェクターとして機能することは少ないからです.
             </p>
+            <p>以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, コンプレッサーに関わるパラメータを制御できるようにしたコード例です.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-compressor&quot;&gt;start&lt;/button&gt;
+&lt;label for=&quot;range-compressor-threshold&quot;&gt;threshold&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-compressor-threshold&quot; value=&quot;-24&quot; min=&quot;-100&quot; max=&quot;0&quot; step=&quot;1&quot; /&gt;
+&lt;output id=&quot;output-compressor-threshold-value&quot; for=&quot;range-compressor-threshold&quot;&gt;-24.00 dB&lt;/output&gt;
+&lt;label for=&quot;range-compressor-knee&quot;&gt;knee&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-compressor-knee&quot; value=&quot;30&quot; min=&quot;0&quot; max=&quot;40&quot; step=&quot;1&quot; /&gt;
+&lt;output id=&quot;output-compressor-knee-value&quot; for=&quot;range-compressor-knee&quot;&gt;40.00 dB&lt;/output&gt;
+&lt;label for=&quot;range-compressor-ratio&quot;&gt;ratio&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-compressor-ratio&quot; value=&quot;12&quot; min=&quot;1&quot; max=&quot;20&quot; step=&quot;1&quot; /&gt;
+&lt;output id=&quot;output-compressor-ratio-value&quot; for=&quot;range-compressor-ratio&quot;&gt;12&lt;/output&gt;
+&lt;label for=&quot;range-compressor-attack&quot;&gt;attack&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-compressor-attack&quot; value=&quot;0.003&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.001&quot; /&gt;
+&lt;output id&quot;output-compressor-attack-value&quot; for=&quot;range-compressor-attack&quot;&gt;0.003&lt;/output&gt;
+&lt;label for=&quot;range-compressor-release&quot;&gt;release&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-compressor-release&quot; value=&quot;0.25&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.001&quot; /&gt;
+&lt;output id=&quot;output-compressor-release-value&quot; for=&quot;range-compressor-release&quot;&gt;0.250&lt;/output&gt;</code></pre>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+// C major chord
+let oscillatorC = null;
+let oscillatorE = null;
+let oscillatorG = null;
+
+const compressor = new DynamicsCompressorNode(context);
+
+const buttonElement = document.getElementById(&apos;button-compressor&apos;);
+
+const rangeThresholdElement = document.getElementById(&apos;range-compressor-threshold&apos;);
+const rangeKneeElement      = document.getElementById(&apos;range-compressor-knee&apos;);
+const rangeRatioElement     = document.getElementById(&apos;range-compressor-ratio&apos;);
+const rangeAttackElement    = document.getElementById(&apos;range-compressor-attack&apos;);
+const rangeReleaseElement   = document.getElementById(&apos;range-compressor-release&apos;);
+
+const outputThresholdElement = document.getElementById(&apos;output-compressor-threshold-value&apos;);
+const outputKneeElement      = document.getElementById(&apos;output-compressor-knee-value&apos;);
+const outputRatioElement     = document.getElementById(&apos;output-compressor-ratio-value&apos;);
+const outputAttackElement    = document.getElementById(&apos;output-compressor-attack-value&apos;);
+const outputReleaseElement   = document.getElementById(&apos;output-compressor-release-value&apos;);
+
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
+  if ((oscillatorC !== null) || (oscillatorE !== null) || (oscillatorG !== null)) {
+    return;
+  }
+
+  // OscillatorNode (Input) -&gt; DynamicsCompressorNode (Compressor) -&gt; AudioDestinationNode (Output)
+  oscillatorC = new OscillatorNode(context, { frequency: 261.6255653005991 });
+  oscillatorE = new OscillatorNode(context, { frequency: 329.6275569128705 });
+  oscillatorG = new OscillatorNode(context, { frequency: 391.99543598175 });
+
+  oscillatorC.connect(compressor);
+  oscillatorE.connect(compressor);
+  oscillatorG.connect(compressor);
+  compressor.connect(context.destination);
+
+  // Start immediately
+  oscillatorC.start(0);
+  oscillatorE.start(0);
+  oscillatorG.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;;
+});
+
+buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
+  if ((oscillatorC === null) || (oscillatorE === null) || (oscillatorG === null)) {
+    return;
+  }
+
+  // Stop immediately
+  oscillatorC.stop(0);
+  oscillatorE.stop(0);
+  oscillatorG.stop(0);
+
+  // GC (Garbage Collection)
+  oscillatorC = null;
+  oscillatorE = null;
+  oscillatorG = null;
+
+  buttonElement.textContent = &apos;start&apos;;
+});
+
+rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
+  compressor.threshold.value = rangeThresholdElement.valueAsNumber;
+
+  outputThresholdElement.textContent = `${compressor.threshold.value.toFixed(2)} dB`;
+});
+
+rangeKneeElement.addEventListener(&apos;input&apos;, () =&gt; {
+  compressor.knee.value = rangeKneeElement.valueAsNumber;
+
+  outputKneeElement.textContent = `${compressor.knee.value.toFixed(2)} dB`;
+});
+
+rangeRatioElement.addEventListener(&apos;input&apos;, () =&gt; {
+  compressor.ratio.value = rangeRatioElement.valueAsNumber;
+
+  outputRatioElement.textContent = compressor.ratio.value.toFixed(0);
+});
+
+rangeAttackElement.addEventListener(&apos;input&apos;, () =&gt; {
+  compressor.attack.value = rangeAttackElement.valueAsNumber;
+
+  outputAttackElement.textContent = compressor.attack.value.toFixed(3);
+});
+
+rangeReleaseElement.addEventListener(&apos;input&apos;, () =&gt; {
+  compressor.release.value = rangeReleaseElement.valueAsNumber;
+
+  outputReleaseElement.textContent = compressor.release.value.toFixed(3);
+});</code></pre>
+            <div class="app-container flexbox-column">
+              <div>
+                <button type="button" id="button-compressor">start</button>
+              </div>
+              <div class="flexbox">
+                <label for="range-compressor-threshold" class="label-min-width">threshold</label>
+                <input type="range" id="range-compressor-threshold" value="-24" min="-100" max="0" step="1" />
+                <output id="output-compressor-threshold-value" for="range-compressor-threshold">-24.00 dB</output>
+              </div>
+              <div class="flexbox">
+                <label for="range-compressor-knee" class="label-min-width">knee</label>
+                <input type="range" id="range-compressor-knee" value="30" min="0" max="40" step="1" />
+                <output id="output-compressor-knee-value" for="range-compressor-knee">40.00 dB</output>
+              </div>
+              <div class="flexbox">
+                <label for="range-compressor-ratio" class="label-min-width">ratio</label>
+                <input type="range" id="range-compressor-ratio" value="12" min="1" max="20" step="1" />
+                <output id="output-compressor-ratio-value" for="range-compressor-ratio">12</output>
+              </div>
+              <div class="flexbox">
+                <label for="range-compressor-attack" class="label-min-width">attack</label>
+                <input type="range" id="range-compressor-attack" value="0.003" min="0" max="1" step="0.001" />
+                <output id="output-compressor-attack-value" for="range-compressor-attack">0.003</output>
+              </div>
+              <div class="flexbox">
+                <label for="range-compressor-release" class="label-min-width">release</label>
+                <input type="range" id="range-compressor-release" value="0.25" min="0" max="1" step="0.001" />
+                <output id="output-compressor-release-value" for="range-compressor-release">0.250</output>
+              </div>
+            </div>
           </section>
           <section id="section-effectors-compressor-parameters">
             <h4>コンプレッサーの仕組み</h4>
@@ -13463,22 +13614,23 @@ oscillatorG.stop(context.currentTime + 10);</code></pre>
             <figure>
               <div class="flexbox">
                 <svg id="svg-figure-compressor-parameters" width="424" height="424" />
-                <dl class="flexbox-column">
-                  <dt>
-                    <label for="svg-figure-compressor-range-threshold">threshold: </label><span id="svg-figure-compressor-range-threshold-value">-24 dB</span>
-                  </dt>
-                  <dd>
+                <div class="flexbox-column" style="margin: 56px 0">
+                  <div class="flexbox">
+                    <label for="svg-figure-compressor-range-threshold" class="label-min-width">threshold</label>
                     <input type="range" id="svg-figure-compressor-range-threshold" value="-24" min="-100" max="0" step="1" />
-                  </dd>
-                  <dt><label for="svg-figure-compressor-range-ratio">ratio: </label><span id="svg-figure-compressor-range-ratio-value">12</span></dt>
-                  <dd>
+                    <output id="svg-figure-compressor-range-threshold-value" for="svg-figure-compressor-range-threshold">-24 dB</output>
+                  </div>
+                  <div class="flexbox">
+                    <label for="svg-figure-compressor-range-ratio" class="label-min-width">ratio</label>
                     <input type="range" id="svg-figure-compressor-range-ratio" value="12" min="1" max="20" step="1" />
-                  </dd>
-                  <dt><label for="svg-figure-compressor-range-knee">knee: </label><span id="svg-figure-compressor-range-knee-value">30 dB</span></dt>
-                  <dd>
+                    <output id="svg-figure-compressor-range-ratio-value" for="svg-figure-compressor-range-ratio">12</output>
+                  </div>
+                  <div class="flexbox">
+                    <label for="svg-figure-compressor-range-knee" class="label-min-width">knee</label>
                     <input type="range" id="svg-figure-compressor-range-knee" value="30" min="0" max="40" step="1" />
-                  </dd>
-                </dl>
+                    <output id="svg-figure-compressor-range-knee-value" for="svg-figure-compressor-range-knee">30 dB</output>
+                  </div>
+                </div>
               </div>
               <figcaption><code>threshold</code> (閾値), <code>ratio</code> (レシオ値), <code>knee</code></figcaption>
             </figure>
@@ -13501,6 +13653,39 @@ oscillatorG.stop(context.currentTime + 10);</code></pre>
               <b><code>reduction</code></b> プロパティ (単位は <code>dB</code>)で参照することが可能です.
             </p>
           </section>
+          <article id="section-effectors-compressor-curve">
+            <h5>一般的なコンプレッションカーブの数式定義</h5>
+            <p>
+              <code>knee</code> に関しては, 単調増加関数と定義されているだけで明確な定義はありませんが, 一般的なコンプレッションカーブ (マッピング関数)
+              の数式定義を理解しておくと, 他のオーディオ API でコンプレッサーを実装をする場合に役立つでしょう.
+            </p>
+            <p>
+              <span class="math-inline">$x$</span> を入力信号の振幅,
+              <span class="math-inline">$f\left(x\right)$</span> をコンプレッサーをかけた出力信号の振幅とすると, コンプレッションカーブ
+              (入力信号の振幅と出力信号の振幅のマッピング関数) は以下の数式で定義できます.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &f\left(x\right) =
+                  \begin{cases}
+                    x \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \quad \left(\left|x\right| \lt \left(\mathrm{threshold} - \frac{\mathrm{knee}}{2}\right)\right) \\
+                    x + \frac{\left(\frac{1}{\mathrm{ratio}} - 1\right)\left(x - \mathrm{threshold} + \frac{\mathrm{knee}}{2}\right)^{2}}{\left(2 \cdot \mathrm{knee}\right)} \quad \left(\left(\mathrm{threshold} - \frac{\mathrm{knee}}{2}\right) \le \left|x\right| \lt \left(\mathrm{threshold} + \frac{\mathrm{knee}}{2}\right)\right) \\
+                    \mathrm{threshold} + \frac{\left(x - \mathrm{threshold}\right)}{\mathrm{ratio}} \quad ~ ~ \quad \left(\left(\mathrm{threshold} + \frac{\mathrm{knee}}{2}\right) \le \left|x\right| \right) \\
+                  \end{cases}
+                \end{flalign}
+              $
+            </div>
+            <p>
+              Web Audio API では, <span class="math-inline">$x$</span> が
+              <span class="math-inline"
+                >$\left(\left(\mathrm{threshold} - \frac{\mathrm{knee}}{2}\right) \le \left|x\right| \lt \left(\mathrm{threshold} +
+                \frac{\mathrm{knee}}{2}\right)\right)$</span>
+              の場合が単調増加関数と定義されているだけなので, ブラウザによって実装が異なるかもしれませんが (ちなみに, それ以外の条件の場合は,
+              コンプレッサーの仕組みから必然的に定義できます), 前のセクションのコンプレッションカーブもこの数式定義にもとづいて描画しています.
+            </p>
+          </article>
         </section>
         <section id="section-effectors-auto-panner">
           <h3>オートパン</h3>
