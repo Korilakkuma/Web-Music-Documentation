@@ -436,7 +436,6 @@ select {
   opacity: 0.6;
 }
 
-.app-auto-panner,
 .app-glide,
 .app-noise-suppressor,
 .app-pitch-shifter,
@@ -446,7 +445,6 @@ select {
   margin: 24px 0;
 }
 
-.app-auto-panner dl dd,
 .app-glide dl dd,
 .app-noise-suppressor dl dd,
 .app-pitch-shifter dl dd,

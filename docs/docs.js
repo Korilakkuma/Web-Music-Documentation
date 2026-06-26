@@ -13552,6 +13552,8 @@ const createNodeConnectionsForAutoPanner = (svg) => {
   g.appendChild(lfoAndPanParamPath2);
   g.appendChild(lfoAndPanParamArrow);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
@@ -13573,9 +13575,9 @@ const autopanner = () => {
   const rangeDepthElement = document.getElementById('range-auto-panner-depth');
   const rangeRateElement = document.getElementById('range-auto-panner-rate');
 
-  const spanPrintCheckedElement = document.getElementById('print-checked-auto-panner');
-  const spanPrintDepthElement = document.getElementById('print-auto-panner-depth-value');
-  const spanPrintRateElement = document.getElementById('print-auto-panner-rate-value');
+  const outputCheckedElement = document.getElementById('output-checked-auto-panner');
+  const outputDepthElement = document.getElementById('output-auto-panner-depth-value');
+  const outputRateElement = document.getElementById('output-auto-panner-rate-value');
 
   const onDown = async () => {
     if (audiocontext.state !== 'running') {
@@ -13625,11 +13627,6 @@ const autopanner = () => {
     buttonElement.textContent = 'start';
   };
 
-  buttonElement.addEventListener('mousedown', onDown);
-  buttonElement.addEventListener('touchstart', onDown);
-  buttonElement.addEventListener('mouseup', onUp);
-  buttonElement.addEventListener('touchend', onUp);
-
   checkboxElement.addEventListener('click', () => {
     oscillator.disconnect(0);
     lfo.disconnect(0);
@@ -13640,31 +13637,32 @@ const autopanner = () => {
 
       lfo.connect(depth);
       depth.connect(panner.pan);
-
-      spanPrintCheckedElement.textContent = 'ON';
     } else {
       oscillator.connect(audiocontext.destination);
-
-      spanPrintCheckedElement.textContent = 'OFF';
     }
   });
 
-  rangeDepthElement.addEventListener('input', (event) => {
-    const depthValue = event.currentTarget.valueAsNumber;
+  buttonElement.addEventListener('mousedown', onDown);
+  buttonElement.addEventListener('touchstart', onDown);
+  buttonElement.addEventListener('mouseup', onUp);
+  buttonElement.addEventListener('touchend', onUp);
+
+  rangeDepthElement.addEventListener('input', () => {
+    const depthValue = rangeDepthElement.valueAsNumber;
 
     depth.gain.value = depthValue;
 
-    spanPrintDepthElement.textContent = depthValue.toString(10);
+    outputDepthElement.textContent = depthValue.toFixed(2);
   });
 
-  rangeRateElement.addEventListener('input', (event) => {
-    rateValue = event.currentTarget.valueAsNumber;
+  rangeRateElement.addEventListener('input', () => {
+    rateValue = rangeRateElement.valueAsNumber;
 
     if (lfo) {
       lfo.frequency.value = rateValue;
     }
 
-    spanPrintRateElement.textContent = rateValue.toString(10);
+    outputRateElement.textContent = rateValue.toFixed(2);
   });
 };
 
@@ -13755,74 +13753,68 @@ const createNodeConnectionsForAutoPannerByTremolo = (svg) => {
   g.appendChild(lfoAndRightGainParamPath2);
   g.appendChild(lfoAndRightGainParamArrow);
 
+  g.setAttribute('transform', 'translate(2, 2)');
+
   svg.appendChild(g);
 };
 
 const autopannerByTremolo = () => {
   const audioElement = document.getElementById('audio-auto-panner-by-tremolo');
 
-  const rangeDepthElement = document.getElementById('range-auto-panner-by-tremolo-depth');
-  const rangeRateElement = document.getElementById('range-auto-panner-by-tremolo-rate');
-
-  const spanPrintDepthElement = document.getElementById('print-auto-panner-by-tremolo-depth-value');
-  const spanPrintRateElement = document.getElementById('print-auto-panner-by-tremolo-rate-value');
+  const source = new MediaElementAudioSourceNode(audiocontext, { mediaElement: audioElement });
 
   const amplitudeL = new GainNode(audiocontext, { gain: +1.0 });
   const amplitudeR = new GainNode(audiocontext, { gain: -1.0 });
+
+  const lfo = new OscillatorNode(audiocontext, { frequency: 0 });
+  const depth = new GainNode(audiocontext, { gain: 0 });
 
   const splitter = new ChannelSplitterNode(audiocontext, { numberOfOutputs: 2 });
   const merger = new ChannelMergerNode(audiocontext, { numberOfInputs: 2 });
 
   const lfoSplitter = new ChannelSplitterNode(audiocontext, { numberOfOutputs: 2 });
 
-  const onPlay = async () => {
+  source.connect(splitter);
+  splitter.connect(amplitudeL, 0, 0);
+  splitter.connect(amplitudeR, 1, 0);
+  amplitudeL.connect(merger, 0, 0);
+  amplitudeR.connect(merger, 0, 1);
+  merger.connect(audiocontext.destination);
+
+  lfo.connect(depth);
+  depth.connect(lfoSplitter);
+  lfoSplitter.connect(amplitudeL.gain, 0);
+  lfoSplitter.connect(amplitudeR.gain, 1);
+
+  lfo.start(0);
+
+  const rangeDepthElement = document.getElementById('range-auto-panner-by-tremolo-depth');
+  const rangeRateElement = document.getElementById('range-auto-panner-by-tremolo-rate');
+
+  const outputDepthElement = document.getElementById('output-auto-panner-by-tremolo-depth-value');
+  const outputRateElement = document.getElementById('output-auto-panner-by-tremolo-rate-value');
+
+  rangeDepthElement.addEventListener('input', () => {
+    const depthValue = rangeDepthElement.valueAsNumber;
+
+    depth.gain.value = depthValue;
+
+    outputDepthElement.textContent = depthValue.toFixed(2);
+  });
+
+  rangeRateElement.addEventListener('input', () => {
+    const rateValue = rangeRateElement.valueAsNumber;
+
+    lfo.frequency.value = rateValue;
+
+    outputRateElement.textContent = rateValue.toFixed(2);
+  });
+
+  audioElement.addEventListener('play', async () => {
     if (audiocontext.state !== 'running') {
       await audiocontext.resume();
     }
-
-    rangeDepthElement.removeAttribute('disabled');
-    rangeRateElement.removeAttribute('disabled');
-
-    const source = new MediaElementAudioSourceNode(audiocontext, { mediaElement: audioElement });
-
-    const lfo = new OscillatorNode(audiocontext, { frequency: 0 });
-    const depth = new GainNode(audiocontext, { gain: 0 });
-
-    source.connect(splitter);
-    splitter.connect(amplitudeL, 0, 0);
-    splitter.connect(amplitudeR, 1, 0);
-    amplitudeL.connect(merger, 0, 0);
-    amplitudeR.connect(merger, 0, 1);
-    merger.connect(audiocontext.destination);
-
-    lfo.connect(depth);
-    depth.connect(lfoSplitter);
-
-    lfoSplitter.connect(amplitudeL.gain, 0);
-    lfoSplitter.connect(amplitudeR.gain, 1);
-
-    lfo.start(0);
-
-    rangeDepthElement.addEventListener('input', (event) => {
-      const depthValue = event.currentTarget.valueAsNumber;
-
-      depth.gain.value = depthValue;
-
-      spanPrintDepthElement.textContent = depthValue.toString(10);
-    });
-
-    rangeRateElement.addEventListener('input', (event) => {
-      const rateValue = event.currentTarget.valueAsNumber;
-
-      lfo.frequency.value = rateValue;
-
-      spanPrintRateElement.textContent = rateValue.toString(10);
-    });
-
-    audioElement.removeEventListener('play', onPlay);
-  };
-
-  audioElement.addEventListener('play', onPlay);
+  });
 };
 
 const glide = () => {

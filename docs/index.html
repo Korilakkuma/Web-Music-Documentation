@@ -13720,14 +13720,14 @@ rangeReleaseElement.addEventListener(&apos;input&apos;, () =&gt; {
               <b><code>StereoPannerNode</code></b> クラスは, 音像を左右に移動させることだけに特化した <code>AudioNode</code> です (<code>PannerNode</code>
               クラスの <code>positionX</code> プロパティ (<code>AudioParam</code>) のみを設定可能なクラスで,
               <code>PannerNode</code> クラスのサブセット的なクラスと言えます). 音楽制作・音源編集などのユースケースでは,
-              左右のチャンネルに音像を振ることができれば十分要件を満たすことができるので, すなわち, オートパンにおいても
-              <code>StereoPannerNode</code> で実装可能です (<code>PannerNode</code> クラスは左右のチャンネルに音像を設定するというよりは,
-              あくまで立体音響でのユースケースのために定義されています).
+              左右のチャンネルに音像を振ることができれば十分要件を満たすことができるので, オートパンも <code>StereoPannerNode</code> で実装可能です (<code
+                >PannerNode</code>
+              クラスはあくまで立体音響でのユースケースのために定義されています).
             </p>
             <p>
               <code>StereoPannerNode</code> には, <code>AudioParam</code> の <b><code>pan</code></b> プロパティのみが定義されています. デフォルト値は
-              <code>0</code> で, 音像は変化しません. <code>pan</code> プロパティの値は, 最大値 (<code>maxValue</code>) が <code>1</code>, 最小値
-              (<code>minValue</code>) が <code>-1</code> ですが,
+              <code>0</code> で, 音像は変化しません. <code>pan</code> プロパティの値は, 最大値 (<code>maxValue</code> プロパティ) が <code>1</code>, 最小値
+              (<code>minValue</code> プロパティ) が <code>-1</code> ですが,
               <b>最大値に近いほど, 右チャンネルに音像が振られ, 最小値に近いほど, 左チャンネルに音像が振られます</b>.
             </p>
             <p>
@@ -13779,17 +13779,17 @@ oscillator.onended = () =&gt; {
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot;&gt;start&lt;/button&gt;
+            ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-auto-panner&quot;&gt;start&lt;/button&gt;
 &lt;label&gt;
   &lt;input type=&quot;checkbox&quot; id=&quot;checkbox-auto-panner&quot; checked /&gt;
-  &lt;span id=&quot;print-checked-auto-panner&quot;&gt;ON&lt;/span&gt;
+  &lt;span&gt;Auto Panner&lt;/span&gt;
 &lt;/label&gt;
 &lt;label for=&quot;range-auto-panner-depth&quot;&gt;Depth&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-auto-panner-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
-&lt;span id=&quot;print-auto-panner-depth-value&quot;&gt;0&lt;/span&gt;
+&lt;output id=&quot;output-auto-panner-depth-value&quot; for=&quot;range-auto-panner-depth&quot;&gt;0.00&lt;/output&gt;
 &lt;label for=&quot;range-auto-panner-rate&quot;&gt;Rate&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-auto-panner-rate&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;5&quot; step=&quot;0.05&quot; /&gt;
-&lt;span id=&quot;print-auto-panner-rate-value&quot;&gt;0&lt;/span&gt;</code></pre>
+&lt;output id=&quot;output-auto-panner-rate-value&quot; for=&quot;range-auto-panner-rate&quot;&gt;0.00&lt;/output&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
@@ -13806,15 +13806,15 @@ const depth = new GainNode(context);
 
 const panner = new StereoPannerNode(context);
 
-const buttonElement   = document.querySelector(&apos;button[type=&quot;button&quot;]&apos;);
-const checkboxElement = document.querySelector(&apos;input[type=&quot;checkbox&quot;]&apos;);
+const buttonElement   = document.getElementById(&apos;button-auto-panner&apos;);
+const checkboxElement = document.getElementById(&apos;checkbox-auto-panner&apos;);
 
 const rangeDepthElement = document.getElementById(&apos;range-auto-panner-depth&apos;);
 const rangeRateElement  = document.getElementById(&apos;range-auto-panner-rate&apos;);
 
-const spanPrintCheckedElement = document.getElementById(&apos;print-checked-auto-panner&apos;);
-const spanPrintDepthElement   = document.getElementById(&apos;print-auto-panner-depth-value&apos;);
-const spanPrintRateElement    = document.getElementById(&apos;print-auto-panner-rate-value&apos;);
+const outputCheckedElement = document.getElementById(&apos;output-checked-auto-panner&apos;);
+const outputDepthElement   = document.getElementById(&apos;output-auto-panner-depth-value&apos;);
+const outputRateElement    = document.getElementById(&apos;output-auto-panner-rate-value&apos;);
 
 checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
   oscillator.disconnect(0);
@@ -13830,17 +13830,17 @@ checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
     // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; pan (AudioParam)
     lfo.connect(depth);
     depth.connect(panner.pan);
-
-    spanPrintCheckedElement.textContent = &apos;ON&apos;;
   } else {
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
     oscillator.connect(context.destination);
-
-    spanPrintCheckedElement.textContent = &apos;OFF&apos;;
   }
 });
 
-buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
+buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
+
   if (!isStop) {
     return;
   }
@@ -13851,7 +13851,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
     oscillator.connect(panner);
     panner.connect(context.destination);
 
-    // Start oscillator
+    // Start oscillator immediately
     oscillator.start(0);
   } else {
     panner.disconnect(0);
@@ -13860,7 +13860,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
     oscillator.connect(context.destination);
 
-    // Start oscillator
+    // Start oscillator immediately
     oscillator.start(0);
   }
 
@@ -13869,6 +13869,7 @@ buttonElement.addEventListener(&apos;mousedown&apos;, () =&gt; {
   lfo.connect(depth);
   depth.connect(panner.pan);
 
+  // Start LFO immediately
   lfo.start(0);
 
   isStop = false;
@@ -13881,7 +13882,7 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
     return;
   }
 
-  // Stop immediately
+  // Stop oscillator and LFO immediately
   oscillator.stop(0);
   lfo.stop(0);
 
@@ -13893,48 +13894,40 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
   buttonElement.textContent = &apos;start&apos;;
 });
 
-rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  const depthValue = event.currentTarget.valueAsNumber;
+rangeDepthElement.addEventListener(&apos;input&apos;, () =&gt; {
+  const depthValue = rangeDepthElement.valueAsNumber;
 
   depth.gain.value = depthValue;
 
-  spanPrintDepthElement.textContent = depthValue.toString(10);
+  outputDepthElement.textContent = depthValue.toFixed(2);
 });
 
-rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  rateValue = event.currentTarget.valueAsNumber;
+rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
+  rateValue = rangeRateElement.valueAsNumber;
 
   if (lfo) {
     lfo.frequency.value = rateValue;
   }
 
-  spanPrintRateElement.textContent = rateValue.toString(10);
+  outputRateElement.textContent = rateValue.toFixed(2);
 });</code></pre>
-            <div class="app-container app-auto-panner">
-              <div class="app-headline">
-                <button type="button" id="button-auto-panner">start</button>
-                <label>
-                  <input type="checkbox" id="checkbox-auto-panner" checked />
-                  <span id="print-checked-auto-panner">ON</span>
-                </label>
-              </div>
+            <div class="app-container flexbox">
               <div>
-                <dl>
-                  <div>
-                    <dt><label for="range-auto-panner-depth">Depth</label></dt>
-                    <dd>
-                      <input type="range" id="range-auto-panner-depth" value="0" min="0" max="1" step="0.05" />
-                      <span id="print-auto-panner-depth-value">0</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt><label for="range-auto-panner-rate">Rate</label></dt>
-                    <dd>
-                      <input type="range" id="range-auto-panner-rate" value="0" min="0" max="5" step="0.05" />
-                      <span id="print-auto-panner-rate-value">0</span>
-                    </dd>
-                  </div>
-                </dl>
+                <button type="button" id="button-auto-panner">start</button>
+              </div>
+              <label class="label-checkbox">
+                <input type="checkbox" id="checkbox-auto-panner" checked />
+                <span>Auto Panner</span>
+              </label>
+              <div class="flexbox">
+                <label for="range-auto-panner-depth">Depth</label>
+                <input type="range" id="range-auto-panner-depth" value="0" min="0" max="1" step="0.05" />
+                <output id="output-auto-panner-depth-value" for="range-auto-panner-depth">0.00</output>
+              </div>
+              <div class="flexbox">
+                <label for="range-auto-panner-rate">Rate</label>
+                <input type="range" id="range-auto-panner-rate" value="0" min="0" max="5" step="0.05" />
+                <output id="output-auto-panner-rate-value" for="range-auto-panner-rate">0.00</output>
               </div>
             </div>
           </section>
@@ -13953,9 +13946,9 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             <section id="section-effectors-auto-panner-tremolo-channel-splitter-node">
               <h5>ChannelSplitterNode</h5>
               <p>
-                <b><code>ChannelSplitterNode</code></b> は, 指定のチャンネル数に分割するためのクラスです. デフォルト値としては,
-                <code>6</code> チャンネルに分割します (おそらく, このデフォルト値は, 5.1 チャンネルサラウンド方式を考慮しての値と思われます). つまり, ステレオ
-                (2 チャンネル) に分割するのであれば, コンストラクタの第 2 引数 <b><code>ChannelSplitterOptions</code></b> 型の
+                <b><code>ChannelSplitterNode</code></b> は, オーディオグラフをチャンネルごとに分割するためのクラスです. デフォルト値では,
+                <code>6</code> チャンネルに分割します (おそらく, このデフォルト値は, 5.1 チャンネルサラウンド方式を考慮しての値と思われます). したがって,
+                ステレオ (2 チャンネル) に分割するのであれば, コンストラクタの第 2 引数 <b><code>ChannelSplitterOptions</code></b> 型の
                 <b><code>numberOfOutputs</code></b> プロパティに <code>2</code> を指定します (ファクトリメソッドを利用する場合は, 第 1 引数に指定します).
               </p>
               <pre
@@ -13974,8 +13967,8 @@ const splitter = new ChannelSplitterNode(context, { numberOfOutputs: 2 });
               <p>
                 <b><code>ChannelMergerNode</code></b> は, <code>ChannelSplitterNode</code> によって分割された複数のチャンネルを 1 つのチャンネル (ストリーム)
                 にまとめるためのクラスです (したがって, <code>ChannelSplitterNode</code> と併用するケースがほとんどです).
-                <code>ChannelSplitterNode</code> のデフォルト値にしたがって, デフォルトの入力チャンネル数は <code>6</code> チャンネルです. つまり, ステレオ (2
-                チャンネル) を 1 つのチャンネルにまとめるのであれば, コントラクタの第 2 引数 <b><code>ChannelMergerOptions</code></b> 型の
+                <code>ChannelSplitterNode</code> のデフォルト値にしたがって, デフォルトの入力チャンネル数は <code>6</code> チャンネルです. したがって, ステレオ
+                (2 チャンネル) を 1 つのチャンネルにまとめるのであれば, コントラクタの第 2 引数 <b><code>ChannelMergerOptions</code></b> 型の
                 <b><code>numberOfInputs</code></b> プロパティに <code>2</code> を指定します (ファクトリメソッドを利用する場合は, 第 1 引数に指定します).
               </p>
               <pre
@@ -13992,9 +13985,9 @@ const merger = new ChannelMergerNode(context, { numberOfInputs: 2 });
             <section id="section-effectors-auto-panner-tremolo-connect-channel">
               <h5>connect メソッドの接続先チャンネル指定</h5>
               <p>
-                <code>connect</code> メソッドには, いくつかのオーバーロードされたシグネチャがありますが, <code>ChannelSplitterNode</code> /
-                <code>ChannelMergerNode</code> を利用する場合に, 第 2 引数と第 3 引数にチャンネルを指定する形式が実質的に有用になります (ちなみに, 第 2 引数, 第
-                3 引数はオプショナルです).
+                <code>connect</code> メソッドは, いくつかのオーバーロードされたシグネチャがありますが, <code>ChannelSplitterNode</code> /
+                <code>ChannelMergerNode</code> を利用する場合, 第 2 引数と第 3 引数にチャンネルを指定する形式が実質的に有用になります (ちなみに, 第 2 引数, 第 3
+                引数はオプショナルです).
               </p>
               <p>
                 第 2 引数には, <code>ChannelSplitterNode</code> で分割した出力先のチャンネルナンバーを指定します. 例えば, ステレオなら, 左チャンネルであれば
@@ -14010,18 +14003,24 @@ const merger = new ChannelMergerNode(context, { numberOfInputs: 2 });
               <pre
                 data-prismjs-copy="クリップボードにコピー"
                 data-prismjs-copy-success="コピーしました"
-              ><code class="language-html line-numbers">&lt;audio src=&quot;https://korilakkuma.github.io/Web-Music-Documentation/assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&quot; crossorigin="anonymous" controls /&gt;</code></pre>
+              ><code class="language-html line-numbers">&lt;audio controls src=&quot;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&quot; id=&quot;audio-auto-panner-by-tremolo&quot;&gt;&lt;/audio&gt;
+&lt;label for=&quot;range-auto-panner-by-tremolo-depth&quot;&gt;Depth&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-auto-panner-by-tremolo-depth&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot; /&gt;
+&lt;output id=&quot;output-auto-panner-by-tremolo-depth-value&quot; for=&quot;range-auto-panner-by-tremolo-depth&quot;&gt;0.00&lt;/output&gt;
+&lt;label for=&quot;range-auto-panner-by-tremolo-rate&quot;&gt;Rate&lt;/label&gt;
+&lt;input type=&quot;range&quot; id=&quot;range-auto-panner-by-tremolo-rate&quot; value=&quot;0&quot; min=&quot;0&quot; max=&quot;5&quot; step=&quot;0.05&quot; /&gt;
+&lt;output id=&quot;output-auto-panner-by-tremolo-rate-value&quot; for=&quot;range-auto-panner-by-tremolo-rate&quot;&gt;0.00&lt;/output&gt;</code></pre>
               <pre
                 data-prismjs-copy="クリップボードにコピー"
                 data-prismjs-copy-success="コピーしました"
               ><code class="language-js line-numbers">const context = new AudioContext();
 
-const audioElement = document.querySelector(&apos;audio&apos;);
+const audioElement = document.getElementById(&apos;audio-auto-panner-by-tremolo&apos;);
 
 const source = new MediaElementAudioSourceNode(context, { mediaElement: audioElement });
 
-const amplitudeL = new GainNode(context, { gain: +1.0 });  // +1.0 +- ${depthValue}
-const amplitudeR = new GainNode(context, { gain: -1.0 });  // -1.0 +- ${depthValue} Inverse Phase
+const amplitudeL = new GainNode(context, { gain: +1.0 });  // +1.0 +- depthValue
+const amplitudeR = new GainNode(context, { gain: -1.0 });  // -1.0 +- depthValue (Inverse Phase)
 
 const lfo   = new OscillatorNode(context, { frequency: 0 });
 const depth = new GainNode(context, { gain: 0 });
@@ -14053,28 +14052,35 @@ lfoSplitter.connect(amplitudeL.gain, 0);
 // ChannelSplitterNode (Right Channel) -&gt;  gain (AudioParam) (Right Channel)
 lfoSplitter.connect(amplitudeR.gain, 1);
 
+// Start LFO immediately
 lfo.start(0);
 
 const rangeDepthElement = document.getElementById(&apos;range-auto-panner-by-tremolo-depth&apos;);
 const rangeRateElement  = document.getElementById(&apos;range-auto-panner-by-tremolo-rate&apos;);
 
-const spanPrintDepthElement = document.getElementById(&apos;print-auto-panner-by-tremolo-depth-value&apos;);
-const spanPrintRateElement  = document.getElementById(&apos;print-auto-panner-by-tremolo-rate-value&apos;);
+const outputDepthElement = document.getElementById(&apos;output-auto-panner-by-tremolo-depth-value&apos;);
+const outputRateElement  = document.getElementById(&apos;output-auto-panner-by-tremolo-rate-value&apos;);
 
-rangeDepthElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  const depthValue = event.currentTarget.valueAsNumber;
+rangeDepthElement.addEventListener(&apos;input&apos;, () =&gt; {
+  const depthValue = rangeDepthElement.valueAsNumber;
 
   depth.gain.value = depthValue;
 
-  spanPrintDepthElement.textContent = depthValue.toString(10);
+  outputDepthElement.textContent = depthValue.toFixed(2);
 });
 
-rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  const rateValue = event.currentTarget.valueAsNumber;
+rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
+  const rateValue = rangeRateElement.valueAsNumber;
 
   lfo.frequency.value = rateValue;
 
-  spanPrintRateElement.textContent = rateValue.toString(10);
+  outputRateElement.textContent = rateValue.toFixed(2);
+});
+
+audioElement.addEventListener(&apos;play&apos;, async () =&gt; {
+  if (context.state !== &apos;running&apos;) {
+    await context.resume();
+  }
 });</code></pre>
               <p>
                 左右のチャンネルに, 互いに逆位相となるトレモロをかけるので, <code>ChannelSplitterNode</code> の <code>numberOfOutputs</code> プロパティ,
@@ -14115,32 +14121,19 @@ rangeRateElement.addEventListener(&apos;input&apos;, (event) =&gt; {
                 <figcaption>トレモロによるオートパンのノード接続図</figcaption>
               </figure>
               <p>以下は, トレモロによるオートパンのデモです.</p>
-              <div class="app-container">
-                <div class="app-headline">
-                  <audio
-                    id="audio-auto-panner-by-tremolo"
-                    src="https://korilakkuma.github.io/Web-Music-Documentation/assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3"
-                    crossorigin="anonymous"
-                    controls
-                  ></audio>
-                </div>
+              <div class="app-container flexbox-column">
                 <div>
-                  <dl>
-                    <div>
-                      <dt><label for="range-auto-panner-by-tremolo-depth">Depth</label></dt>
-                      <dd>
-                        <input type="range" id="range-auto-panner-by-tremolo-depth" value="0" min="0" max="1" step="0.05" disabled />
-                        <span id="print-auto-panner-by-tremolo-depth-value">0</span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt><label for="range-auto-panner-by-tremolo-rate">Rate</label></dt>
-                      <dd>
-                        <input type="range" id="range-auto-panner-by-tremolo-rate" value="0" min="0" max="5" step="0.05" disabled />
-                        <span id="print-auto-panner-by-tremolo-rate-value">0</span>
-                      </dd>
-                    </div>
-                  </dl>
+                  <audio controls src="./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3" id="audio-auto-panner-by-tremolo"></audio>
+                </div>
+                <div class="flexbox">
+                  <label for="range-auto-panner-by-tremolo-depth" class="label-min-width">Depth</label>
+                  <input type="range" id="range-auto-panner-by-tremolo-depth" value="0" min="0" max="1" step="0.05" />
+                  <output id="output-auto-panner-by-tremolo-depth-value" for="range-auto-panner-by-tremolo-depth">0.00</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-auto-panner-by-tremolo-rate" class="label-min-width">Rate</label>
+                  <input type="range" id="range-auto-panner-by-tremolo-rate" value="0" min="0" max="5" step="0.05" />
+                  <output id="output-auto-panner-by-tremolo-rate-value" for="range-auto-panner-by-tremolo-rate">0.00</output>
                 </div>
               </div>
               <p>
