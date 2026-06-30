@@ -436,7 +436,6 @@ select {
   opacity: 0.6;
 }
 
-.app-glide,
 .app-noise-suppressor,
 .app-pitch-shifter,
 .app-vocal-canceler,
@@ -445,7 +444,6 @@ select {
   margin: 24px 0;
 }
 
-.app-glide dl dd,
 .app-noise-suppressor dl dd,
 .app-pitch-shifter dl dd,
 .app-vocal-canceler dl dd,
@@ -453,23 +451,6 @@ select {
   display: flex;
   gap: 8px;
   align-items: center;
-}
-
-.form-glide-type {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.form-glide-type > label {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  cursor: pointer;
-}
-
-.form-glide-type > label > input[type="radio"] {
-  cursor: pointer;
 }
 
 .app-media-stream-audio-destination-node-and-media-recorder {

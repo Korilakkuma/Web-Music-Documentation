@@ -14197,11 +14197,11 @@ oscillator.stop(t1 + 2.5);</code></pre>
             <p>
               以下は, シンセサイザーで利用することを想定して, 鍵盤の UI でインタラクティブに操作できるようにしたコード例です (グライドタイムとメソッド (<code
                 >linearRampToValueAtTime</code>
-              メソッド, または, <code>exponentialRampToValueAtTime</code> メソッド) もインタラクティブに制御できるようにしています.
+              メソッド, または, <code>exponentialRampToValueAtTime</code> メソッド) もインタラクティブに制御できるようにしています).
             </p>
             <p>また, 鍵盤の UI の実装はいくつかアプローチ (SVG, Canvas ... etc) がありますが, ここではシンプルに HTML と CSS で実装しています).</p>
             <p>
-              HTML や CSS のコードまで記載すると, グライドの本質的な解説からそれてしまうので, ディベロッパーツールなどを使いながら, HTML や CSS
+              HTML や CSS のコードまで記載すると, グライドの本質的な解説からそれてしまうので, ディベロッパーツールなどを使って, HTML や CSS
               をリーディングしていただくとして, その UI がある前提で, グライドのコードを記載します.
             </p>
             <pre
@@ -14222,7 +14222,7 @@ let prevFrequency = -1;
 keyboards.forEach((keyboard) =&gt; {
   let oscillator = null;
 
-  const onDown = async (event) =&gt; {
+  const onDown = async () =&gt; {
     if (context.state !== &apos;running&apos;) {
       await context.resume();
     }
@@ -14290,12 +14290,12 @@ keyboards.forEach((keyboard) =&gt; {
 const rangeGlideTimeElement = document.getElementById(&apos;range-glide-time&apos;);
 const formGlideTypeElement  = document.getElementById(&apos;form-glide-type&apos;);
 
-const spanPrintGlideTimeElement = document.getElementById(&apos;print-glide-time-value&apos;);
+const outputGlideTimeElement = document.getElementById(&apos;output-glide-time-value&apos;);
 
-rangeGlideTimeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-  glideTime = event.currentTarget.valueAsNumber;
+rangeGlideTimeElement.addEventListener(&apos;input&apos;, () =&gt; {
+  glideTime = rangeGlideTimeElement.valueAsNumber;
 
-  spanPrintGlideTimeElement.textContent = glideTime.toFixed(2);
+  outputGlideTimeElement.textContent = glideTime.toFixed(2);
 });
 
 formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
@@ -14337,7 +14337,7 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               を利用すると便利です. <span class="math-inline">$\mathrm{index}$</span> は, ピアノ 88 鍵を配列に見立てて, 最も左側にある鍵盤 (<code>27.5 Hz</code>) のインデックスを <code>0</code> とした場合の値です. また, そのインデックスは, それぞれの鍵盤を構成する HTML
               のカスタムーデータ属性として定義しておくことで, イベントリスナーで簡単に取得することが可能です (もちろん, 他のよりよい実装があるかもしれませんが).
             </p>
-            <div class="app-container app-glide">
+            <div class="app-container flexbox-column">
               <div class="piano">
                 <ul class="white-keyboards">
                   <li><button type="button" data-index="0">A0</button></li>
@@ -14446,24 +14446,18 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
                   <li><button type="button" data-index="85">A7#</button></li>
                 </ul>
               </div>
-              <dl>
-                <div>
-                  <dt><label for="range-glide-time">Glide Time</label></dt>
-                  <dd>
-                    <input type="range" id="range-glide-time" value="0" min="0" max="2" step="0.05" />
-                    <span id="print-glide-time-value">0.00</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Glide Type</dt>
-                  <dd>
-                    <form id="form-glide-type" class="form-glide-type">
-                      <label><input type="radio" name="radio-glide-type" value="linear" checked /><span>Linear</span></label>
-                      <label><input type="radio" name="radio-glide-type" value="exponential" /><span>Exponential</span></label>
-                    </form>
-                  </dd>
-                </div>
-              </dl>
+              <div class="flexbox">
+                <label for="range-glide-time">Glide Time</label>
+                <input type="range" id="range-glide-time" value="0" min="0" max="2" step="0.05" />
+                <output id="output-glide-time-value" for="range-glide-time">0.00</output>
+              </div>
+              <div class="flexbox">
+                <span>Glide Type</span>
+                <form id="form-glide-type" class="flexbox">
+                  <label class="label-radio"><input type="radio" name="radio-glide-type" value="linear" checked /><span>Linear</span></label>
+                  <label class="label-radio"><input type="radio" name="radio-glide-type" value="exponential" /><span>Exponential</span></label>
+                </form>
+              </div>
             </div>
           </section>
         </section>

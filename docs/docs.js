@@ -13830,7 +13830,7 @@ const glide = () => {
   keyboards.forEach((keyboard) => {
     let oscillator = null;
 
-    const onDown = async (event) => {
+    const onDown = async () => {
       if (audiocontext.state !== 'running') {
         await audiocontext.resume();
       }
@@ -13896,12 +13896,12 @@ const glide = () => {
   const rangeGlideTimeElement = document.getElementById('range-glide-time');
   const formGlideTypeElement = document.getElementById('form-glide-type');
 
-  const spanPrintGlideTimeElement = document.getElementById('print-glide-time-value');
+  const outputGlideTimeElement = document.getElementById('output-glide-time-value');
 
-  rangeGlideTimeElement.addEventListener('input', (event) => {
-    glideTime = event.currentTarget.valueAsNumber;
+  rangeGlideTimeElement.addEventListener('input', () => {
+    glideTime = rangeGlideTimeElement.valueAsNumber;
 
-    spanPrintGlideTimeElement.textContent = glideTime.toFixed(2);
+    outputGlideTimeElement.textContent = glideTime.toFixed(2);
   });
 
   formGlideTypeElement.addEventListener('change', () => {
