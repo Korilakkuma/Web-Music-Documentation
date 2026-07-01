@@ -21,7 +21,7 @@ class BypassOverlapAddProcessor extends OverlapAddProcessor {
     this.hanningWindow = BypassOverlapAddProcessor.createHanningWindow(this.frameSize);
   }
 
-  /** @overdrive */
+  /** @override */
   processOverlapAdd(inputs, outputs, parameters) {
     const input = inputs[0];
     const output = outputs[0];

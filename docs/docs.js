@@ -14254,30 +14254,13 @@ const animateTimeAndFrequencyResolution128 = (svgTime, svgSpectrum) => {
 
   svgSpectrum.appendChild(yText);
 
-  ['1.0', '0.5', '0.0'].forEach((text) => {
+  [1.0, 0.5, 0.0].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case '1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case '0.5': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '0.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -14512,30 +14495,13 @@ const animateTimeAndFrequencyResolution2048 = (svgTime, svgSpectrum) => {
 
   svgSpectrum.appendChild(yText);
 
-  ['1.0', '0.5', '0.0'].forEach((text) => {
+  [1.0, 0.5, 0.0].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case '1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case '0.5': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '0.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -14878,6 +14844,191 @@ const createOverlapAddWithoutWindowFunction = (svg) => {
 
   render(0, false);
   render((innerHeight + padding) / 2, true);
+};
+
+const createRelationshipBetweenDFTAndPeriod = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const render = (offset) => {
+    const width = innerWidth / 3;
+
+    const rectTop = document.createElementNS(xmlns, 'rect');
+
+    rectTop.setAttribute('x', (offset + padding).toString(10));
+    rectTop.setAttribute('y', (padding - 1).toString(10));
+    rectTop.setAttribute('width', width.toString(10));
+    rectTop.setAttribute('height', lineWidth.toString(10));
+    rectTop.setAttribute('stroke', 'none');
+    rectTop.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rectTop);
+
+    const rectMiddle = document.createElementNS(xmlns, 'rect');
+
+    rectMiddle.setAttribute('x', (offset + padding).toString(10));
+    rectMiddle.setAttribute('y', (padding + innerHeight / 2 - 1).toString(10));
+    rectMiddle.setAttribute('width', width.toString(10));
+    rectMiddle.setAttribute('height', lineWidth.toString(10));
+    rectMiddle.setAttribute('stroke', 'none');
+    rectMiddle.setAttribute('fill', alphaBaseColor);
+
+    svg.appendChild(rectMiddle);
+
+    const rectBottom = document.createElementNS(xmlns, 'rect');
+
+    rectBottom.setAttribute('x', (offset + padding).toString(10));
+    rectBottom.setAttribute('y', (padding + innerHeight - 1).toString(10));
+    rectBottom.setAttribute('width', width.toString(10));
+    rectBottom.setAttribute('height', lineWidth.toString(10));
+    rectBottom.setAttribute('stroke', 'none');
+    rectBottom.setAttribute('fill', baseColor);
+
+    svg.appendChild(rectBottom);
+
+    const yRect = document.createElementNS(xmlns, 'rect');
+
+    yRect.setAttribute('x', (offset + padding + width / 2 - 1).toString(10));
+    yRect.setAttribute('y', padding.toString(10));
+    yRect.setAttribute('width', lineWidth.toString(10));
+    yRect.setAttribute('height', innerHeight.toString(10));
+    yRect.setAttribute('stroke', 'none');
+    yRect.setAttribute('fill', baseColor);
+
+    svg.appendChild(yRect);
+
+    const xText = document.createElementNS(xmlns, 'text');
+
+    xText.textContent = offset === 0 ? 'Time' : 'Frequency';
+
+    xText.setAttribute('x', (offset + padding + width + 12).toString(10));
+    xText.setAttribute('y', (padding + innerHeight + 4).toString(10));
+
+    xText.setAttribute('text-anchor', 'start');
+    xText.setAttribute('stroke', 'none');
+    xText.setAttribute('fill', baseColor);
+    xText.setAttribute('font-size', '16px');
+
+    svg.appendChild(xText);
+
+    const yText = document.createElementNS(xmlns, 'text');
+
+    yText.textContent = 'Amplitude';
+
+    yText.setAttribute('x', (offset + padding + width / 2).toString(10));
+    yText.setAttribute('y', '32');
+
+    yText.setAttribute('text-anchor', 'middle');
+    yText.setAttribute('stroke', 'none');
+    yText.setAttribute('fill', baseColor);
+    yText.setAttribute('font-size', '18px');
+
+    svg.appendChild(yText);
+
+    if (offset === 0) {
+      ['-2N', '-3N/2', '-N', '-N/2', '0', 'N/2', 'N', '3N/2', '2N'].forEach((frequency, index) => {
+        const text = document.createElementNS(xmlns, 'text');
+
+        text.textContent = frequency;
+
+        text.setAttribute('x', (offset + padding + (width / 8) * index).toString(10));
+        text.setAttribute('y', (padding - 4).toString(10));
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('stroke', 'none');
+        text.setAttribute('fill', baseColor);
+        text.setAttribute('font-size', '16px');
+
+        svg.appendChild(text);
+      });
+
+      [1, 0.5, 0.25, -0.25, -0.5, -0.25, 0.25, 0.5, 1, 0.5, 0.25, -0.25, -0.5, -0.25, 0.25, 0.5, 1].forEach((amplitude, index) => {
+        const rect = document.createElementNS(xmlns, 'rect');
+
+        rect.setAttribute('x', (padding + (width / 16) * index).toString(10));
+
+        if (amplitude >= 0) {
+          rect.setAttribute('y', (padding + (1 - amplitude) * innerHeight).toString(10));
+        } else {
+          rect.setAttribute('y', (padding + innerHeight).toString(10));
+        }
+
+        rect.setAttribute('width', lineWidth.toString(10));
+        rect.setAttribute('height', (innerHeight * Math.abs(amplitude)).toString(10));
+        rect.setAttribute('stroke', 'none');
+        rect.setAttribute('fill', waveColor);
+
+        svg.appendChild(rect);
+      });
+
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', (padding + (width / 16) * 6).toString(10));
+      rect.setAttribute('y', padding.toString(10));
+      rect.setAttribute('width', (width / 4).toString(10));
+      rect.setAttribute('height', innerHeight.toString(10));
+      rect.setAttribute('stroke', 'none');
+      rect.setAttribute('fill', alphaLightWaveColor);
+
+      svg.appendChild(rect);
+    } else {
+      ['-2N', '-3N/2', '-N', '-N/2', '0', 'N/2', 'N', '3N/2', '2N'].forEach((frequency, index) => {
+        const text = document.createElementNS(xmlns, 'text');
+
+        text.textContent = frequency;
+
+        text.setAttribute('x', (offset + padding + (width / 8) * index).toString(10));
+        text.setAttribute('y', (padding - 4).toString(10));
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('stroke', 'none');
+        text.setAttribute('fill', baseColor);
+        text.setAttribute('font-size', '16px');
+
+        svg.appendChild(text);
+      });
+
+      [1, 0.5, 0.25, 0.5, 1, 0.5, 0.25, 0.5, 1, 0.5, 0.25, 0.5, 1, 0.5, 0.25, 0.5, 1].forEach((amplitude, index) => {
+        const rect = document.createElementNS(xmlns, 'rect');
+
+        rect.setAttribute('x', (offset + padding + (width / 16) * index).toString(10));
+        rect.setAttribute('y', (padding + (1 - amplitude) * innerHeight).toString(10));
+        rect.setAttribute('width', lineWidth.toString(10));
+        rect.setAttribute('height', (innerHeight * amplitude).toString(10));
+        rect.setAttribute('stroke', 'none');
+        rect.setAttribute('fill', waveColor);
+
+        svg.appendChild(rect);
+      });
+
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', (offset + padding + (width / 16) * 6).toString(10));
+      rect.setAttribute('y', padding.toString(10));
+      rect.setAttribute('width', (width / 4).toString(10));
+      rect.setAttribute('height', innerHeight.toString(10));
+      rect.setAttribute('stroke', 'none');
+      rect.setAttribute('fill', alphaLightWaveColor);
+
+      svg.appendChild(rect);
+    }
+  };
+
+  const arrow = document.createElementNS(xmlns, 'path');
+
+  arrow.setAttribute(
+    'd',
+    `M${innerWidth / 2 - 60} ${innerHeight} L${innerWidth / 2 - 60 + 12} ${innerHeight + 4} L${innerWidth / 2 - 60 + 12} ${innerHeight - 4} L${innerWidth / 2 - 60} ${innerHeight} L${innerWidth / 2 + 24} ${innerHeight} L${innerWidth / 2 + 24 - 12} ${innerHeight + 4} L${innerWidth / 2 + 24 - 12} ${innerHeight - 4} L${innerWidth / 2 + 24} ${innerHeight}`
+  );
+
+  arrow.setAttribute('stroke', lightWaveColor);
+  arrow.setAttribute('fill', lightWaveColor);
+  arrow.setAttribute('stroke-width', lineWidth.toString(10));
+  arrow.setAttribute('stroke-linecap', lineCap);
+  arrow.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(arrow);
+
+  render(0);
+  render(innerWidth / 2);
 };
 
 const createDFTSizeAndPeriod = (svg) => {
@@ -15487,30 +15638,13 @@ const animateWindowFunctions = (svgTime, svgSpectrum) => {
 
   svgSpectrum.appendChild(yText);
 
-  [0, -50, -100].forEach((dB) => {
+  [0, -50, -100].forEach((dB, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
     yText.textContent = `${dB} dB`;
 
     yText.setAttribute('x', (padding - 4).toString(10));
-
-    switch (dB) {
-      case 0: {
-        yText.setAttribute('y', (padding + 2).toString(10));
-        break;
-      }
-
-      case -50: {
-        yText.setAttribute('y', (padding + innerHeight / 2 + 2).toString(10));
-        break;
-      }
-
-      case -100: {
-        yText.setAttribute('y', (padding + innerHeight + 2).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'end');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -15886,13 +16020,13 @@ const createOverlapAddWithWindowFunction = (svg) => {
 
     const amplitudeTexts = document.createElementNS(xmlns, 'g');
 
-    ['1.0', '0.0', '-1.0'].forEach((amplitude) => {
+    [1, 0, -1].forEach((amplitude, index) => {
       const amplitudeText = document.createElementNS(xmlns, 'text');
 
-      amplitudeText.textContent = amplitude;
+      amplitudeText.textContent = amplitude.toFixed(1);
 
       amplitudeText.setAttribute('x', (padding - 4).toString(10));
-      amplitudeText.setAttribute('y', (padding + offset + (innerHeight / 4) * (1 - Number(amplitude)) - 4).toString(10));
+      amplitudeText.setAttribute('y', (padding + offset + (innerHeight / 4) * index - 4).toString(10));
 
       amplitudeText.setAttribute('text-anchor', 'end');
       amplitudeText.setAttribute('stroke', 'none');
@@ -16096,13 +16230,13 @@ const createOverlapAddByOverlapAddProcessor = (svg) => {
 
   const amplitudeTexts = document.createElementNS(xmlns, 'g');
 
-  ['1.0', '0.0', '-1.0'].forEach((amplitude) => {
+  [1, 0, -1].forEach((amplitude, index) => {
     const amplitudeText = document.createElementNS(xmlns, 'text');
 
-    amplitudeText.textContent = amplitude;
+    amplitudeText.textContent = amplitude.toFixed(1);
 
     amplitudeText.setAttribute('x', (padding - 4).toString(10));
-    amplitudeText.setAttribute('y', (padding + (innerHeight / 2) * (1 - Number(amplitude)) - 4).toString(10));
+    amplitudeText.setAttribute('y', (padding + (innerHeight / 2) * index).toString(10));
 
     amplitudeText.setAttribute('text-anchor', 'end');
     amplitudeText.setAttribute('stroke', 'none');
@@ -16230,13 +16364,13 @@ const createOverlapAddByOverlapAddProcessorWithWindowFunction = (svg) => {
 
   const amplitudeTexts = document.createElementNS(xmlns, 'g');
 
-  ['1.0', '0.0', '-1.0'].forEach((amplitude) => {
+  [1, 0, -1].forEach((amplitude, index) => {
     const amplitudeText = document.createElementNS(xmlns, 'text');
 
-    amplitudeText.textContent = amplitude;
+    amplitudeText.textContent = amplitude.toFixed(1);
 
     amplitudeText.setAttribute('x', (padding - 4).toString(10));
-    amplitudeText.setAttribute('y', (padding + (innerHeight / 2) * (1 - Number(amplitude)) - 4).toString(10));
+    amplitudeText.setAttribute('y', (padding + (innerHeight / 2) * index).toString(10));
 
     amplitudeText.setAttribute('text-anchor', 'end');
     amplitudeText.setAttribute('stroke', 'none');
@@ -16336,6 +16470,63 @@ const createOverlapAddByOverlapAddProcessorWithWindowFunction = (svg) => {
   g.appendChild(amplitudeTexts);
 
   svg.appendChild(g);
+};
+
+const bypassByOverlapAddProcessor = () => {
+  audiocontext.audioWorklet
+    .addModule('./audio-worklets/bypass-overlap-add.js')
+    .then(() => {
+      let oscillator = null;
+      let processor = null;
+
+      const onDown = async () => {
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
+
+        if (oscillator !== null || processor !== null) {
+          return;
+        }
+
+        oscillator = new OscillatorNode(audiocontext);
+
+        processor = new AudioWorkletNode(audiocontext, 'BypassOverlapAddProcessor', {
+          processorOptions: {
+            frameSize: 1024
+          }
+        });
+
+        oscillator.connect(processor);
+        processor.connect(audiocontext.destination);
+
+        oscillator.start(0);
+
+        buttonElement.textContent = 'stop';
+      };
+
+      const onUp = () => {
+        if (oscillator === null || processor === null) {
+          return;
+        }
+
+        oscillator.stop(0);
+
+        processor.disconnect(audiocontext.destination);
+
+        oscillator = null;
+        processor = null;
+
+        buttonElement.textContent = 'start';
+      };
+
+      const buttonElement = document.getElementById('button-bypass-overlap-add-processor');
+
+      buttonElement.addEventListener('mousedown', onDown);
+      buttonElement.addEventListener('touchstart', onDown);
+      buttonElement.addEventListener('mouseup', onUp);
+      buttonElement.addEventListener('touchend', onUp);
+    })
+    .catch(console.error);
 };
 
 const noisesuppressor = () => {
@@ -22775,6 +22966,7 @@ animateTimeAndFrequencyResolution2048(
 );
 
 createOverlapAddWithoutWindowFunction(document.getElementById('svg-figure-overlap-add-without-window-function'));
+createRelationshipBetweenDFTAndPeriod(document.getElementById('svg-figure-relationship-between-dft-and-period'));
 createDFTSizeAndPeriod(document.getElementById('svg-figure-dft-size-and-period'));
 
 createWindowFunctionSpectrum(document.getElementById('svg-figure-window-function-spectrum'));
@@ -22784,6 +22976,8 @@ animateWindowFunctions(document.getElementById('svg-animation-window-functions-t
 createOverlapAddWithWindowFunction(document.getElementById('svg-figure-overlap-add-with-window-function'));
 createOverlapAddByOverlapAddProcessor(document.getElementById('svg-figure-overlap-add-by-overlap-add-processor'));
 createOverlapAddByOverlapAddProcessorWithWindowFunction(document.getElementById('svg-figure-overlap-add-by-overlap-add-processor-with-window-function'));
+
+bypassByOverlapAddProcessor();
 
 noisesuppressor();
 
