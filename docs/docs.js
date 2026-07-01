@@ -14000,30 +14000,13 @@ const animateTimeAndFrequencyResolution128 = (svgTime, svgSpectrum) => {
 
   svgSpectrum.appendChild(yText);
 
-  ['1.0', '0.5', '0.0'].forEach((text) => {
+  [1.0, 0.5, 0.0].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case '1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case '0.5': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '0.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -14258,30 +14241,13 @@ const animateTimeAndFrequencyResolution2048 = (svgTime, svgSpectrum) => {
 
   svgSpectrum.appendChild(yText);
 
-  ['1.0', '0.5', '0.0'].forEach((text) => {
+  [1.0, 0.5, 0.0].forEach((amplitude, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
-    yText.textContent = text;
+    yText.textContent = amplitude.toFixed(1);
 
     yText.setAttribute('x', (padding - 16).toString(10));
-
-    switch (text) {
-      case '1.0': {
-        yText.setAttribute('y', (padding - 4).toString(10));
-        break;
-      }
-
-      case '0.5': {
-        yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-        break;
-      }
-
-      case '0.0': {
-        yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -15233,30 +15199,13 @@ const animateWindowFunctions = (svgTime, svgSpectrum) => {
 
   svgSpectrum.appendChild(yText);
 
-  [0, -50, -100].forEach((dB) => {
+  [0, -50, -100].forEach((dB, index) => {
     const yText = document.createElementNS(xmlns, 'text');
 
     yText.textContent = `${dB} dB`;
 
     yText.setAttribute('x', (padding - 4).toString(10));
-
-    switch (dB) {
-      case 0: {
-        yText.setAttribute('y', (padding + 2).toString(10));
-        break;
-      }
-
-      case -50: {
-        yText.setAttribute('y', (padding + innerHeight / 2 + 2).toString(10));
-        break;
-      }
-
-      case -100: {
-        yText.setAttribute('y', (padding + innerHeight + 2).toString(10));
-        break;
-      }
-    }
-
+    yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
     yText.setAttribute('text-anchor', 'end');
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -15632,13 +15581,13 @@ const createOverlapAddWithWindowFunction = (svg) => {
 
     const amplitudeTexts = document.createElementNS(xmlns, 'g');
 
-    ['1.0', '0.0', '-1.0'].forEach((amplitude) => {
+    [1, 0, -1].forEach((amplitude, index) => {
       const amplitudeText = document.createElementNS(xmlns, 'text');
 
-      amplitudeText.textContent = amplitude;
+      amplitudeText.textContent = amplitude.toFixed(1);
 
       amplitudeText.setAttribute('x', (padding - 4).toString(10));
-      amplitudeText.setAttribute('y', (padding + offset + (innerHeight / 4) * (1 - Number(amplitude)) - 4).toString(10));
+      amplitudeText.setAttribute('y', (padding + offset + (innerHeight / 4) * index - 4).toString(10));
 
       amplitudeText.setAttribute('text-anchor', 'end');
       amplitudeText.setAttribute('stroke', 'none');
@@ -15842,13 +15791,13 @@ const createOverlapAddByOverlapAddProcessor = (svg) => {
 
   const amplitudeTexts = document.createElementNS(xmlns, 'g');
 
-  ['1.0', '0.0', '-1.0'].forEach((amplitude) => {
+  [1, 0, -1].forEach((amplitude, index) => {
     const amplitudeText = document.createElementNS(xmlns, 'text');
 
-    amplitudeText.textContent = amplitude;
+    amplitudeText.textContent = amplitude.toFixed(1);
 
     amplitudeText.setAttribute('x', (padding - 4).toString(10));
-    amplitudeText.setAttribute('y', (padding + (innerHeight / 2) * (1 - Number(amplitude)) - 4).toString(10));
+    amplitudeText.setAttribute('y', (padding + (innerHeight / 2) * index).toString(10));
 
     amplitudeText.setAttribute('text-anchor', 'end');
     amplitudeText.setAttribute('stroke', 'none');
@@ -15976,13 +15925,13 @@ const createOverlapAddByOverlapAddProcessorWithWindowFunction = (svg) => {
 
   const amplitudeTexts = document.createElementNS(xmlns, 'g');
 
-  ['1.0', '0.0', '-1.0'].forEach((amplitude) => {
+  [1, 0, -1].forEach((amplitude, index) => {
     const amplitudeText = document.createElementNS(xmlns, 'text');
 
-    amplitudeText.textContent = amplitude;
+    amplitudeText.textContent = amplitude.toFixed(1);
 
     amplitudeText.setAttribute('x', (padding - 4).toString(10));
-    amplitudeText.setAttribute('y', (padding + (innerHeight / 2) * (1 - Number(amplitude)) - 4).toString(10));
+    amplitudeText.setAttribute('y', (padding + (innerHeight / 2) * index).toString(10));
 
     amplitudeText.setAttribute('text-anchor', 'end');
     amplitudeText.setAttribute('stroke', 'none');
@@ -16082,6 +16031,63 @@ const createOverlapAddByOverlapAddProcessorWithWindowFunction = (svg) => {
   g.appendChild(amplitudeTexts);
 
   svg.appendChild(g);
+};
+
+const bypassByOverlapAddProcessor = () => {
+  audiocontext.audioWorklet
+    .addModule('./audio-worklets/bypass-overlap-add.js')
+    .then(() => {
+      let oscillator = null;
+      let processor = null;
+
+      const onDown = async () => {
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
+
+        if (oscillator !== null || processor !== null) {
+          return;
+        }
+
+        oscillator = new OscillatorNode(audiocontext);
+
+        processor = new AudioWorkletNode(audiocontext, 'BypassOverlapAddProcessor', {
+          processorOptions: {
+            frameSize: 1024
+          }
+        });
+
+        oscillator.connect(processor);
+        processor.connect(audiocontext.destination);
+
+        oscillator.start(0);
+
+        buttonElement.textContent = 'stop';
+      };
+
+      const onUp = () => {
+        if (oscillator === null || processor === null) {
+          return;
+        }
+
+        oscillator.stop(0);
+
+        processor.disconnect(audiocontext.destination);
+
+        oscillator = null;
+        processor = null;
+
+        buttonElement.textContent = 'start';
+      };
+
+      const buttonElement = document.getElementById('button-bypass-overlap-add-processor');
+
+      buttonElement.addEventListener('mousedown', onDown);
+      buttonElement.addEventListener('touchstart', onDown);
+      buttonElement.addEventListener('mouseup', onUp);
+      buttonElement.addEventListener('touchend', onUp);
+    })
+    .catch(console.error);
 };
 
 const noisesuppressor = () => {
@@ -22528,6 +22534,8 @@ animateWindowFunctions(document.getElementById('svg-animation-window-functions-t
 createOverlapAddWithWindowFunction(document.getElementById('svg-figure-overlap-add-with-window-function'));
 createOverlapAddByOverlapAddProcessor(document.getElementById('svg-figure-overlap-add-by-overlap-add-processor'));
 createOverlapAddByOverlapAddProcessorWithWindowFunction(document.getElementById('svg-figure-overlap-add-by-overlap-add-processor-with-window-function'));
+
+bypassByOverlapAddProcessor();
 
 noisesuppressor();
 

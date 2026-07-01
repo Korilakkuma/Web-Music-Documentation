@@ -14466,7 +14466,7 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
           <p>
             ここまでのセクションで解説したエフェクターは, <code>AudioNode</code> (のサブクラス) と <code>AudioNode</code> のサブクラス特有に定義されている
             <code>AudioParam</code> のパラメータの設定, また, それらの接続を駆使する (LFO の接続やフィードバック接続など) ことで実装可能でした. 言い換えると,
-            直接サウンドデータにアクセスすることなく, すなわち, <b>AudioWorklet を必要とすることなく実装可能なエフェクターです</b>.
+            直接サウンドデータにアクセスする必要がない, すなわち, <b>AudioWorklet を必要としないエフェクター</b>でした.
           </p>
           <p>
             しかしながら, 現実世界に存在するエフェクターのなかには, そのアルゴリズムの複雑度に関わらず, 直接サウンドデータにアクセスしないと実装できない,
@@ -14515,20 +14515,20 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
             </p>
             <p>
               では, 周波数分解能の説明をします. 周波数分解能 (<span class="math-inline">$f_{\mathrm{resolution}}$</span>) は以下の数式で定義されます. 分子の
-              <span class="math-inline">$f_{s}$</span> はサンプリング周波数, 分母の <span class="math-inline">$N$</span> は, 高速フーリエ変換のサイズです.
+              <span class="math-inline">$f_{s}$</span> はサンプリング周波数, 分母の <span class="math-inline">$N$</span> は, 離散フーリエ変換のサイズです.
             </p>
             <div class="math-block">$f_{\mathrm{resolution}} = \frac{f_{s}}{N}$</div>
             <p>
-              サンプリング周波数を一定, つまり, 定数とすると, 周波数分解能は, 高速フーリエ変換のサイズによって決まることになります. そして,
-              高速フーリエ変換のサイズである <span class="math-inline">$N$</span> の値を大きくしていくと, 周波数分解能 (<span class="math-inline"
+              サンプリング周波数を一定, つまり, 定数とすると, 周波数分解能は, 離散フーリエ変換のサイズによって決まることになります. そして,
+              離散フーリエ変換のサイズである <span class="math-inline">$N$</span> の値を大きくしていくと, 周波数分解能 (<span class="math-inline"
                 >$f_{\mathrm{resolution}}$</span>) はより小さい値になっていきます. <b>周波数分解能の値が小さいほど, より精度の高い周波数演算ができるので周波数分解能が高くなります</b>.
             </p>
             <p>
               具体的な値で算出すると, サンプリング周波数 <span class="math-inline">$f_{s}$</span> を <code>48000</code> で定数とします.
-              高速フーリエ変換のサイズを, デフォルトの <code>renderQuantumSize</code> の <code>128</code> サンプルとすると,
+              離散フーリエ変換のサイズを, デフォルトの <code>renderQuantumSize</code> の <code>128</code> サンプルとすると,
               <span class="math-inline">$f_{\mathrm{resolution}} = \frac{48000}{128} = 375$</span> となり, 周波数領域での演算を
               <code>375 Hz</code> 単位の粗い単位でしか実行できなくなり, 先に解説した諸問題が発生します. 一方で,
-              高速フーリエ変換のサイズをオーバーラップアドによって, <code>2048</code> サンプル (過去 15 フレーム (<code>renderQuantumSize</code>) 分と現在の 1
+              離散フーリエ変換のサイズをオーバーラップアドによって, <code>2048</code> サンプル (過去 15 フレーム (<code>renderQuantumSize</code>) 分と現在の 1
               フレーム (<code>renderQuantumSize</code>) 分のサンプル (ただし, 厳密には, オーバーラップ, つまり, 重なるサンプルがあるので, 過去の必要なフレームは
               15 フレームより多いです. あくまで, 理解のための概算と考えてください. <code>2048</code> サンプルは,
               時間分解能とのバランスを考慮したよく利用されるサンプル数です) とすると,
@@ -14537,19 +14537,19 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               少なからず丸め誤差によるノイズなどはありますが).
             </p>
             <p>
-              ピアノ 88 鍵の音域で考えると, 高速フーリエ変換のサイズがデフォルトの <code>renderQuantumSize</code> の <code>128</code> サンプルでは, 低音域の 44
+              ピアノ 88 鍵の音域で考えると, 離散フーリエ変換のサイズがデフォルトの <code>renderQuantumSize</code> の <code>128</code> サンプルでは, 低音域の 44
               鍵がまったく演算できないことになりますが, <code>2048</code> サンプルにすると, 最も低い <code>27.5 Hz</code> から 88
               鍵の音域をすべて演算可能できることになります. また, すでに解説したグラフィックイコライザーで考えると, 低音の帯域が <code>32 Hz</code> から
-              <code>250 Hz</code> となるので, 高速フーリエ変換のサイズがデフォルトの <code>renderQuantumSize</code> の <code>128</code> サンプルでは,
+              <code>250 Hz</code> となるので, 離散フーリエ変換のサイズがデフォルトの <code>renderQuantumSize</code> の <code>128</code> サンプルでは,
               低音域をまったく演算できないことになりますが, <code>2048</code> サンプルにすると, 十分に低音域も演算できることになります.
             </p>
             <p>
               ところで, 周波数分解能の低さが問題になるのであれば, なぜ, デフォルトの
               <code>renderQuantumSize</code> をもっと大きな値に仕様策定していないのでしょうか ? 実は,
               <b>周波数分解を高くすると時間分解能が低くなるというトレードオフの関係があるからです</b>. 時間分解能は, 1 フレームあたりのサンプル数です. Web Audio
-              API では, (デフォルトの実装で) <code>renderQuantumSize</code> が時間分解能です. また, 上記の周波数分解能の数式では, 高速フーリエ変換サイズである
+              API では, (デフォルトの実装で) <code>renderQuantumSize</code> が時間分解能です. また, 上記の周波数分解能の数式では, 離散フーリエ変換サイズである
               <span class="math-inline">$N$</span> が時間分解能です. すなわち,
-              <b>単位時間あたりに処理するサンプル数が小さいほど時間分解能は高くなります</b> (高速フーリエ変換のサイズ (時間分解能である)
+              <b>単位時間あたりに処理するサンプル数が小さいほど時間分解能は高くなります</b> (離散フーリエ変換のサイズ (時間分解能である)
               <span class="math-inline">$N$</span> を小さくするほど, 周波数分解能である
               <span class="math-inline">$f_{\mathrm{resolution}}$</span> はより大きな値となります).
               <b>時間分解能が高いほど</b> (単位時間あたりに処理するサンプル数が小さいほど), CPU の負荷を減らせるので, グリッチ (glitch) や遅延 (latency)
@@ -14582,9 +14582,10 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               </dl>
               <figcaption>
                 <span>時間分解能と周波数分解能</span>
-                <span
-                  >(<span class="math-inline">$N = 128$</span>, <span class="math-inline">$f_{s} = 48000 \space \mathrm{Hz}$</span>,
-                  <span class="math-inline">$f_{\mathrm{resolution}} = \frac{f_{s}}{N} = 375 \space \mathrm{Hz}$</span>)</span>
+                <span>
+                  (<span class="math-inline">$N = 128$</span>, <span class="math-inline">$f_{s} = 48000 \space \mathrm{Hz}$</span>,
+                  <span class="math-inline">$f_{\mathrm{resolution}} = \frac{f_{s}}{N} = 375 \space \mathrm{Hz}$</span>)
+                </span>
                 <button type="button" id="button-time-and-frequency-resolution-128-fft-size-animation">start</button>
               </figcaption>
             </figure>
@@ -14601,9 +14602,10 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               </dl>
               <figcaption>
                 <span>時間分解能と周波数分解能</span>
-                <span
-                  >(<span class="math-inline">$N = 2048$</span>, <span class="math-inline">$f_{s} = 48000 \space \mathrm{Hz}$</span>,
-                  <span class="math-inline">$f_{\mathrm{resolution}} = \frac{f_{s}}{N} = 23.4375 \space \mathrm{Hz}$</span>)</span>
+                <span>
+                  (<span class="math-inline">$N = 2048$</span>, <span class="math-inline">$f_{s} = 48000 \space \mathrm{Hz}$</span>,
+                  <span class="math-inline">$f_{\mathrm{resolution}} = \frac{f_{s}}{N} = 23.4375 \space \mathrm{Hz}$</span>)
+                </span>
                 <button type="button" id="button-time-and-frequency-resolution-2048-fft-size-animation">start</button>
               </figcaption>
             </figure>
@@ -14625,11 +14627,11 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               <b
                 >離散フーリエ変換後の信号は周期が <span class="math-inline">$N$</span> (離散フーリエ変換のサイズ. 実用上は, 高速フーリエ変換のサイズ)
                 であることを仮定しています</b>
-              (<span class="math-inline">$-\frac{f_{s}}{2}$</span> (負のナイキスト周波数) から
-              <span class="math-inline">$\frac{f_{s}}{2}$</span> (ナイキスト周波数) までが 1 周期で, その間のサンプル数は
-              <span class="math-inline">$N$</span> (<span class="math-inline">$0 \lt k \leq \frac{f_{s}}{2}$</span> の範囲で
-              <span class="math-inline">$\frac{N}{2}$</span>) となります). したがって,
-              <span class="math-inline">$N$</span> が対象の信号の周期の整数倍となっていない場合, <b>時間領域の波形に不連続点が発生してしまい</b>,
+              (周期 <span class="math-inline">$N$</span> の周期信号と仮定することで, 周波数領域ではサンプリング周波数 (<span class="math-inline">$f_{s}$</span>)
+              を <span class="math-inline">$N$</span> で等分割 (<span class="math-inline">$\frac{f_{s}}{N}$</span>) した周波数のみ値をもつ離散信号となります).
+            </p>
+            <p>
+              したがって, <span class="math-inline">$N$</span> が対象の信号の周期の整数倍となっていない場合, <b>時間領域の波形に不連続点が発生してしまい</b>,
               その波形を離散フーリエ変換することで, <b>本来は存在しない周波数成分が発生してしまいます</b>. そして, 現実のオーディオデータにおいて,
               離散フーリエ変換のサイズが, 周期の整数倍になることは稀です.
             </p>
@@ -14668,7 +14670,6 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               その振幅スペクトルの形状はシンク関数 (<span class="math-inline"
                 >$\left|H_{rect}\left({\omega}\right)\right| = \left|\frac{\sin\left(\omega\right)}{\omega}\right|$</span>) になります.
             </p>
-            <p></p>
             <figure>
               <svg id="svg-figure-window-function-spectrum" width="720" height="405" />
               <figcaption>
@@ -14676,7 +14677,6 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
                 <span class="math-inline">$\omega = \frac{2 \pi}{T}$</span> となります)
               </figcaption>
             </figure>
-            <p></p>
             <p>
               矩形窓の振幅スペクトル (青色のパス) はメインローブの幅 (半透明の青) は狭くて, 周波数分解能は高くなりますが, サイドローブのピーク値
               (青色の破線のパス) が高くなってしまうので, 段差成分の周波数成分を除去することができません. そのために, ハニング窓やハミング窓など (狭義での)
@@ -14785,32 +14785,25 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               </figcaption>
             </figure>
             <article id="section-effectors-by-audio-worklet-overlap-add-window-function-as-system">
-              <h5>システム (系) としての窓関数</h5>
+              <h5>窓関数と時変システム</h5>
               <p>
-                現実世界のオーディオ信号処理システムは, 十分に長い時間, 入力と出力を観測すると, 多くのシステム (系) は, <b>非線形時変システム</b> (<b
-                  >Non-Linear Time-Variant system</b>) となります. 非線形, かつ, 時変システムをモデリングする (数式として表現する) のは一般的に複雑になります. しかしながら,
-                非線形時変システムであっても, ごく短時間だけを観測すれば, ほとんどは, <b>線形時不変システム</b> (<b>Linear Time-Invariant system</b>)
-                となりモデリングが容易となります. 窓関数は, 本来, 非線形時変システムであるオーディオの入出力を, ごく短時間で区切って,
-                線形時不変システムとしてモデリングすることを可能にしています (信号の定常性やエルゴード過程なども担保します).
-                周波数分解能と段差成分の除去のトレードオフの判断の必要はありますが, システムを単純にする役割も果たしています.
+                現実世界のオーディオ信号を十分に長い時間, 観測すると, 時間経過とともに統計的性質が変化する<b>非定常信号</b> (<b>Non-Stationary Signal</b>)
+                となります. 非定常信号を解析的にモデリングする (数式として表現する) のは一般的に困難になります.
               </p>
-              <dl>
-                <dt>定常性</dt>
-                <dd>確率的な信号において, その統計的性質 (期待値 (平均) や分散など) が時刻によらず一定であるような性質 (つまり, 時不変)</dd>
-                <dt>エルゴード過程</dt>
-                <dd>観測信号の期待値と時間平均が一致すると仮定して, 期待値を時間平均で代替可能な性質をもつ信号系列</dd>
-              </dl>
               <p>
-                一方で, 人工知能の発展にともなって, 機械学習, 特に, ニューラルネットワークでは, データセットを元に, 非線形時変システムのまま,
-                モデリングする手法もすでに存在しています.
+                しかし, 非定常信号であっても, ごく短時間だけを観測すれば, ほとんどは, 時間経過とともに統計的性質が変化しない<b>定常信号</b> (<b
+                  >Stationary Signal</b>) (または, 平均や自己相関が時間推移に対して不変となる<b>弱定常信号</b> (<b>Wide Sense Stationary Signal</b>)) となり (あるいは,
+                システムとしてみた場合に, <b>時不変</b> (Time-Invariant) システムとなり), モデリングが容易となります. 窓関数は, 本来,
+                非定常信号であるオーディオ信号を, ごく短時間で区切って, 定常信号としてモデリングすることを可能にしています.
               </p>
+              <p>周波数分解能と段差成分の除去とのトレードオフの判断の必要はありますが, 信号処理を単純にする役割も果たしています.</p>
             </article>
           </section>
           <section id="section-effectors-by-audio-worklet-overlap-add-audio-worklet-processor-and-window-function">
             <h4>オーバーラップアド (AudioWorkletProcessor クラスの拡張) と窓関数の実装</h4>
             <p>
-              一般的な (Web Audio API に限らない), オーディオ信号処理におけるオーバーラップアドと窓関数は, 以下のようなイメージで, フレームごとに,
-              オーバーラップする部分を最適な窓関数で平滑化します.
+              一般的な (Web Audio API に限らない), オーディオ信号処理におけるオーバーラップアドと窓関数は, 以下のようなイメージで,
+              フレームごとにオーバーラップする部分を最適な窓関数で平滑化します.
             </p>
             <figure>
               <svg id="svg-figure-overlap-add-with-window-function" width="720" height="400" />
@@ -15101,7 +15094,7 @@ class OverlapAddProcessor extends AudioWorkletProcessor {
               </p>
               <p>
                 <code>processOverlapAdd</code> メソッドで呼び出している, <code>FFT</code> / <code>IFFT</code> 関数は,
-                <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装</a>セクションで記載している実装を
+                <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装セクション</a>で記載している実装を
                 <code>AudioWorkletGlobalScope</code> 内で定義していると仮定してください.
               </p>
               <pre
@@ -15224,7 +15217,13 @@ context.audioWorklet.addModule(&apos;./audio-worklets/bypass-overlap-add.js&apos
     let oscillator = null;
     let processor  = null;
 
-    const onDown = () =&gt; {
+    const buttonElement = document.getElementById(&apos;button-bypass-overlap-add-processor&apos;);
+
+    buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
+      if (context.state !== &apos;running&apos;) {
+        await context.resume();
+      }
+
       if ((oscillator !== null) || (processor !== null)) {
         return;
       }
@@ -15243,10 +15242,10 @@ context.audioWorklet.addModule(&apos;./audio-worklets/bypass-overlap-add.js&apos
 
       oscillator.start(0);
 
-      buttonElement.textContent = &apos;stop&apos;
-    };
+      buttonElement.textContent = &apos;stop&apos;;
+    });
 
-    const onUp = () =&gt; {
+    buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
       if ((oscillator === null) || (processor === null)) {
         return;
       }
@@ -15258,19 +15257,15 @@ context.audioWorklet.addModule(&apos;./audio-worklets/bypass-overlap-add.js&apos
       oscillator = null;
       processor  = null;
 
-      buttonElement.textContent = &apos;start&apos;
-    };
-
-    const buttonElement = document.getElementById(&apos;button-bypass-overlap-add-processor&apos;);
-
-    buttonElement.addEventListener(&apos;mousedown&apos;, onDown);
-    buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
-    buttonElement.addEventListener(&apos;mouseup&apos;, onUp);
-    buttonElement.addEventListener(&apos;touchend&apos;, onUp);
+      buttonElement.textContent = &apos;start&apos;;
+    });
   })
   .catch((error) =&gt; {
     // error handling
   });</code></pre>
+              <div class="app-container">
+                <button type="button" id="button-bypass-overlap-add-processor">start</button>
+              </div>
             </section>
           </section>
           <section id="section-effectors-by-audio-worklet-noise-suppressor">
