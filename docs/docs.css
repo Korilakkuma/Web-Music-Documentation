@@ -436,7 +436,6 @@ select {
   opacity: 0.6;
 }
 
-.app-noise-suppressor,
 .app-pitch-shifter,
 .app-vocal-canceler,
 .app-periodic-wave,
@@ -444,7 +443,6 @@ select {
   margin: 24px 0;
 }
 
-.app-noise-suppressor dl dd,
 .app-pitch-shifter dl dd,
 .app-vocal-canceler dl dd,
 .app-output-device-by-sink-id dl dd {

@@ -16090,20 +16090,80 @@ const bypassByOverlapAddProcessor = () => {
     .catch(console.error);
 };
 
-const noisesuppressor = () => {
-  const buttonElement = document.getElementById('button-noise-suppressor');
-  const rangeElement = document.getElementById('range-noise-suppressor-threshold');
-  const spanElement = document.getElementById('print-noise-suppressor-threshold-value');
+const noisegate = () => {
+  const buttonElement = document.getElementById('button-noise-gate');
+  const rangeElement = document.getElementById('range-noise-gate-level');
+  const outputElement = document.getElementById('output-noise-gate-level-value');
 
   let processor = null;
   let mediaStream = null;
 
   buttonElement.addEventListener('click', async () => {
-    buttonElement.setAttribute('disabled', 'disabled');
-
     if (audiocontext.state !== 'running') {
       await audiocontext.resume();
     }
+
+    buttonElement.setAttribute('disabled', 'disabled');
+
+    if (processor === null) {
+      await audiocontext.audioWorklet.addModule('./audio-worklets/noise-gate.js');
+    }
+
+    if (mediaStream) {
+      const audioTracks = mediaStream.getAudioTracks();
+
+      for (const audioTrack of audioTracks) {
+        audioTrack.stop();
+      }
+
+      mediaStream = null;
+
+      buttonElement.textContent = 'start';
+      buttonElement.removeAttribute('disabled');
+
+      return;
+    }
+
+    if (mediaStream === null) {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }
+
+    const source = new MediaStreamAudioSourceNode(audiocontext, { mediaStream });
+
+    processor = new AudioWorkletNode(audiocontext, 'NoiseGateProcessor');
+
+    source.connect(processor);
+    processor.connect(audiocontext.destination);
+
+    buttonElement.textContent = 'stop';
+    buttonElement.removeAttribute('disabled');
+  });
+
+  rangeElement.addEventListener('input', () => {
+    const level = rangeElement.valueAsNumber;
+
+    if (processor) {
+      processor.port.postMessage({ level });
+    }
+
+    outputElement.textContent = level.toFixed(2);
+  });
+};
+
+const noisesuppressor = () => {
+  const buttonElement = document.getElementById('button-noise-suppressor');
+  const rangeElement = document.getElementById('range-noise-suppressor-threshold');
+  const outputElement = document.getElementById('output-noise-suppressor-threshold-value');
+
+  let processor = null;
+  let mediaStream = null;
+
+  buttonElement.addEventListener('click', async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    buttonElement.setAttribute('disabled', 'disabled');
 
     if (processor === null) {
       await audiocontext.audioWorklet.addModule('./audio-worklets/noise-suppressor.js');
@@ -16120,6 +16180,7 @@ const noisesuppressor = () => {
 
       buttonElement.textContent = 'start';
       buttonElement.removeAttribute('disabled');
+
       return;
     }
 
@@ -16142,19 +16203,21 @@ const noisesuppressor = () => {
     buttonElement.removeAttribute('disabled');
   });
 
-  rangeElement.addEventListener('input', (event) => {
-    const threshold = event.currentTarget.valueAsNumber;
+  rangeElement.addEventListener('input', () => {
+    const threshold = rangeElement.valueAsNumber;
 
     if (processor) {
       processor.port.postMessage({ threshold });
     }
 
-    spanElement.textContent = threshold.toFixed(2);
+    outputElement.textContent = threshold.toFixed(2);
   });
 };
 
 const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpectrum) => {
   const sampleRate = audiocontext.sampleRate;
+
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 128 });
 
   const innerWidth = Number(svgTime.getAttribute('width')) - padding * 2;
   const innerHeight = Number(svgTime.getAttribute('height')) - padding * 2;
@@ -16229,7 +16292,7 @@ const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpect
     }
 
     yText.setAttribute('x', padding.toString(10));
-    yText.setAttribute('y', '24');
+    yText.setAttribute('y', '32');
 
     yText.setAttribute('stroke', 'none');
     yText.setAttribute('fill', baseColor);
@@ -16238,30 +16301,13 @@ const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpect
     svg.appendChild(yText);
 
     if (showAmplitude) {
-      ['1.0', '0.5', '0.0'].forEach((text) => {
+      [1.0, 0.5, 0.0].forEach((amplitude, index) => {
         const yText = document.createElementNS(xmlns, 'text');
 
-        yText.textContent = text;
+        yText.textContent = amplitude.toFixed(1);
 
         yText.setAttribute('x', (padding - 16).toString(10));
-
-        switch (text) {
-          case '1.0': {
-            yText.setAttribute('y', (padding - 4).toString(10));
-            break;
-          }
-
-          case '0.5': {
-            yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-            break;
-          }
-
-          case '0.0': {
-            yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-            break;
-          }
-        }
-
+        yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
         yText.setAttribute('text-anchor', 'middle');
         yText.setAttribute('stroke', 'none');
         yText.setAttribute('fill', baseColor);
@@ -16270,30 +16316,13 @@ const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpect
         svg.appendChild(yText);
       });
     } else {
-      ['π', '0', '-π'].forEach((rad) => {
+      ['π', '0', '-π'].forEach((rad, index) => {
         const yText = document.createElementNS(xmlns, 'text');
 
         yText.textContent = `${rad} rad`;
 
         yText.setAttribute('x', (padding - 8).toString(10));
-
-        switch (rad) {
-          case 'π': {
-            yText.setAttribute('y', (padding - 4).toString(10));
-            break;
-          }
-
-          case '0': {
-            yText.setAttribute('y', (padding + innerHeight / 2 - 4).toString(10));
-            break;
-          }
-
-          case '-π': {
-            yText.setAttribute('y', (padding + innerHeight - 4).toString(10));
-            break;
-          }
-        }
-
+        yText.setAttribute('y', (padding + (innerHeight / 2) * index + 4).toString(10));
         yText.setAttribute('text-anchor', 'end');
         yText.setAttribute('stroke', 'none');
         yText.setAttribute('fill', baseColor);
@@ -16306,7 +16335,7 @@ const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpect
 
   const timePath = document.createElementNS(xmlns, 'path');
 
-  timePath.setAttribute('stroke', waveColor);
+  timePath.setAttribute('stroke', alphaWaveColor);
   timePath.setAttribute('fill', 'none');
   timePath.setAttribute('stroke-width', lineWidth.toString(10));
   timePath.setAttribute('stroke-linecap', lineCap);
@@ -16333,6 +16362,18 @@ const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpect
   svgPhaseSpectrum.appendChild(phaseSpectrumPath);
 
   let processor = null;
+
+  const w = new Float32Array(analyser.fftSize);
+
+  const alpha = 0.16;
+
+  const a0 = (1 - alpha) / 2;
+  const a1 = 1 / 2;
+  const a2 = alpha / 2;
+
+  for (let n = 0; n < analyser.fftSize; n++) {
+    w[n] = a0 - a1 * Math.cos((2 * Math.PI * n) / (analyser.fftSize - 1)) + a2 * Math.cos((4 * Math.PI * n) / (analyser.fftSize - 1));
+  }
 
   const analyse = (data) => {
     timePath.removeAttribute('d');
@@ -16377,18 +16418,21 @@ const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpect
     const imags = new Float32Array(length);
 
     for (let n = 0; n < length; n++) {
-      reals[n] = data[n];
+      reals[n] = w[n] * data[n];
     }
 
     FFT(reals, imags, length);
 
-    const frequencyBinCount = length / 2;
+    const frequencyBinCount = analyser.frequencyBinCount;
 
-    const amplitudes = new Float32Array(frequencyBinCount);
+    const amplitudes = new Uint8Array(frequencyBinCount);
+    // const amplitudes = new Float32Array(frequencyBinCount);
     const phases = new Float32Array(frequencyBinCount);
 
+    analyser.getByteFrequencyData(amplitudes);
+
     for (let k = 0; k < frequencyBinCount; k++) {
-      amplitudes[k] = Math.sqrt(reals[k] ** 2 + imags[k] ** 2) / length;
+      // amplitudes[k] = Math.sqrt(reals[k] ** 2 + imags[k] ** 2) / frequencyBinCount;
 
       if (reals[k] !== 0 && imags[k] !== 0) {
         phases[k] = Math.atan2(imags[k], reals[k]);
@@ -16399,7 +16443,7 @@ const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpect
 
     for (let k = 0; k < frequencyBinCount; k++) {
       const x = k * (downSampleRate / length) * (innerWidth / frequencyBinCount) + padding;
-      const y = (1 - amplitudes[k]) * (innerHeight / 2) + padding;
+      const y = (1 - amplitudes[k] / 255) * innerHeight + padding;
 
       if (x > innerWidth + padding) {
         break;
@@ -16429,9 +16473,11 @@ const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpect
 
     d = '';
 
+    const threshold = 245;
+
     for (let k = 0; k < frequencyBinCount; k++) {
       const x = k * (downSampleRate / length) * (innerWidth / frequencyBinCount) + padding;
-      const y = -1 * (phases[k] / (2 * Math.PI)) * innerHeight + innerHeight / 2 + padding;
+      const y = (amplitudes[k] > threshold ? -1 * (phases[k] / (2 * Math.PI)) : 0) * innerHeight + innerHeight / 2 + padding;
 
       if (x > innerWidth + padding) {
         break;
@@ -16476,7 +16522,8 @@ const animateWhiteNoiseSpectrums = (svgTime, svgAmplitudeSpectrum, svgPhaseSpect
 
     processor = new AudioWorkletNode(audiocontext, 'WhiteNoiseGeneratorProcessor');
 
-    processor.connect(audiocontext.destination);
+    processor.connect(analyser);
+    analyser.connect(audiocontext.destination);
 
     processor.port.postMessage({ processing: true });
     processor.port.onmessage = (event) => {
@@ -22537,6 +22584,7 @@ createOverlapAddByOverlapAddProcessorWithWindowFunction(document.getElementById(
 
 bypassByOverlapAddProcessor();
 
+noisegate();
 noisesuppressor();
 
 animateWhiteNoiseSpectrums(
