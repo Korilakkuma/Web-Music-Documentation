@@ -31,7 +31,7 @@ class PhaseSpectrumOverlapAddProcessor extends OverlapAddProcessor {
     this.isActual = options.processorOptions.isActual;
   }
 
-  /** @overdrive */
+  /** @override */
   processOverlapAdd(inputs, outputs) {
     const input = inputs[0];
     const output = outputs[0];

@@ -6,7 +6,7 @@ class NoiseSuppressorProcessor extends OverlapAddProcessor {
     const w = new Float32Array(size);
 
     for (let n = 0; n < size; n++) {
-      w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (size - 1));
+      w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / size);
     }
 
     return w;
@@ -49,10 +49,7 @@ class NoiseSuppressorProcessor extends OverlapAddProcessor {
 
       for (let k = 0; k < fftSize; k++) {
         amplitudes[k] = Math.sqrt(reals[k] ** 2 + imags[k] ** 2);
-
-        if (reals[k] !== 0 && imags[k] !== 0) {
-          phases[k] = Math.atan2(imags[k], reals[k]);
-        }
+        phases[k] = Math.atan2(imags[k], reals[k]);
       }
 
       for (let k = 0; k < fftSize; k++) {

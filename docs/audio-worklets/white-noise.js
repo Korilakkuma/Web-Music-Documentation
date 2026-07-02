@@ -22,7 +22,7 @@ class WhiteNoiseGeneratorProcessor extends AudioWorkletProcessor {
       const bufferSize = output[channelNumber].length;
 
       for (let n = 0; n < bufferSize; n++) {
-        output[channelNumber][n] = 0.5 * (2 * Math.random() - 1);
+        output[channelNumber][n] = 2 * Math.random() - 1;
       }
 
       this.port.postMessage(output[channelNumber]);
