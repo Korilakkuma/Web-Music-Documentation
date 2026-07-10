@@ -6,7 +6,7 @@ class PitchShifterProcessor extends OverlapAddProcessor {
     const w = new Float32Array(size);
 
     for (let n = 0; n < size; n++) {
-      w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (size - 1));
+      w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / size);
     }
 
     return w;
@@ -33,7 +33,7 @@ class PitchShifterProcessor extends OverlapAddProcessor {
     };
   }
 
-  /** @overdrive */
+  /** @override */
   processOverlapAdd(inputs, outputs) {
     const input = inputs[0];
     const output = outputs[0];

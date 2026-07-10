@@ -15751,23 +15751,25 @@ rangeElement.addEventListener(&apos;input&apos;, () =&gt; {
           <section id="section-effectors-by-audio-worklet-pitch-shifter">
             <h4>ピッチシフター</h4>
             <p>
-              <b>ピッチシフター</b>とは, <b>再生速度 (音長) を変化させずに, 周波数を変化させる</b>エフェクターです (結果的に,
-              ピッチを変化させるエフェクターとなります). オーディオ処理を適用せずに, 再生速度を変化させると周波数も変化しますが, これは物理的な関係があり,
-              <b>再生速度と周波数は比例関係にあるからです</b>. 実際, <code>AudioBufferSourceNode</code> の <code>playbackRate</code> プロパティで再生速度を
-              <code>2</code> 倍にするとピッチも <code>2</code> 倍に, 逆に, 再生速度を <code>0.5</code> 倍にするとピッチも <code>0.5</code> 倍になって聴こえます.
-              一般的に, ピッチシフターは, <b>再生速度を変化させずに</b>, 周波数のみを変化させるエフェクターを意味します.
+              <b>ピッチシフター</b>とは,
+              <b>再生速度 (音長) を変化させずに, 周波数 (音楽的な意味での音の高さである音高 (ピッチ)) を変化させる</b>エフェクターです.
+              オーディオ処理を適用せずに再生速度を変化させると周波数 (ピッチ) も変化しますが, これは物理的な関係があり,
+              <b>再生速度と周波数は比例関係にあるからです</b>. 実際に, <code>AudioBufferSourceNode</code> の <code>playbackRate</code> プロパティで再生速度を
+              <code>2</code> 倍にすると, ピッチも <code>2</code> 倍に, 逆に, 再生速度を <code>0.5</code> 倍にすると, ピッチも
+              <code>0.5</code> 倍になって聴こえます. 一般的に, ピッチシフターは, <b>再生速度を変化させずに</b>周波数 (ピッチ)
+              のみを変化させるエフェクターを意味します.
             </p>
             <p>
               ピッチシフターは, <b>原音とオクターブ違いの音を合成するオクターバー</b>, <b>ピッチベンド</b> (エレキギターでは,
               <b>ペダルでピッチを変化させるワーミー (Whammy)</b> と呼ばれることが多いです.
               <a href="https://digitech.com/dp/whammy/" target="_blank" rel="noopener noreferrer">DigiTech の Whammy</a>),
-              <b>原音と 3 度音程の音 (ダイアトニック・スケール上のハーモニー) を合成するハーモナイザー</b>など, 派生するエフェクターが多くあります.
+              <b>原音とダイアトニックスケール上のハーモニーを合成するハーモナイザー</b>など, 派生するエフェクターが多くあります.
             </p>
             <p>ピッチシフターのアルゴリズムもいくつかあります. そのすべてを解説することはできないので, このセクションでは, 以下の 2 つを解説します.</p>
             <ul>
               <li>
                 時間領域の演算だけで実装できる<b>リサンプリング</b>と<b>タイムストレッチ</b>を利用した実装 (これは, Adobe Audition で利用されている
-                <b>SOLA</b> (<b>Synchronized Overlap-Add</b>) や, <b>PSOLA</b> (<b>Pitch Synchronous Overlap-Add</b>) の原始的なアルゴリズムです)
+                <b>SOLA</b> (<b>Synchronous Overlap-Add</b>) や, <b>PSOLA</b> (<b>Pitch Synchronous Overlap-Add</b>) の原始的なアルゴリズムです)
               </li>
               <li>周波数領域での演算が必要となりますが, より精度の高いピッチシフターが実現できる, <b>フェーズボコーダ</b>を利用した実装</li>
             </ul>
@@ -15824,7 +15826,7 @@ rangeElement.addEventListener(&apos;input&apos;, () =&gt; {
               </p>
               <p>
                 あとは, タイムストレッチが実装できれば, オフラインピッチシフターが実装できます. タイムストレッチのアルゴリズムの本質は,
-                再生速度に関わらず同じですが, 再生速度が <code>1</code> より大きい場合と, 小さい場合では, 実装は少し異なるので, まずは,
+                再生速度に関わらず同じですが, 再生速度が <code>1</code> より大きい場合と, 小さい場合では, 実装が少し異なるので, まずは,
                 それぞれのケースに対してシンプルに解説します.
               </p>
               <section id="section-effectors-by-audio-worklet-pitch-shifter-by-resampling-and-time-stretch-fast">
@@ -15837,8 +15839,8 @@ rangeElement.addEventListener(&apos;input&apos;, () =&gt; {
                   周期に縮小する処理をオーディオデータ全体に適用します (すなわち, タイムストレッチ適用後のオーディオデータのサイズは,
                   <span class="">$\frac{2}{3} = 0.66 \cdots$</span> 倍となります). ただし, 単純に波形を重ねて縮小するだけでは,
                   <span class="math-inline">$n$</span> 番目の周期と <span class="math-inline">$n + 1$</span> 番目の周期が同時に再生されるだけなので,
-                  <span class="math-inline">$n$</span> 番目の周期には, <b>単調減少関数を乗算した波形</b>と,
-                  <span class="math-inline">$n + 1$</span> 番目の周期には, <b>単調増加関数を乗算した波形</b>を<b>オーバーラップアド</b>することによって,
+                  <span class="math-inline">$n$</span> 番目の周期の<b>単調減少関数を乗算した波形</b>と,
+                  <span class="math-inline">$n + 1$</span> 番目の周期の<b>単調増加関数を乗算した波形</b>を<b>オーバーラップアド</b>することによって,
                   縮小部分における不連続点を除去, あるいは, 緩和しつつ, 再生速度を速くすることができます.
                 </p>
                 <p>
@@ -15854,7 +15856,14 @@ rangeElement.addEventListener(&apos;input&apos;, () =&gt; {
                   <span class="math-inline">$\mathrm{rate}$</span> において, <span class="math-inline">$m$</span> 周期分の波形を,
                   <span class="math-inline">$n$</span> 周期分の波形に縮小するというのは, 以下の関係式が定義できます.
                 </p>
-                <div class="math-block">$n = \mathrm{rate} \cdot m \quad \left(\mathrm{rate} \gt 1\right)$</div>
+                <div class="math-block">
+                  <!-- prettier-ignore -->
+                  $
+                    \begin{flalign}
+                      &n = \mathrm{rate} \cdot m \quad \left(\mathrm{rate} \gt 1\right) \\
+                    \end{flalign}
+                  $
+                </div>
                 <p>
                   <span class="math-inline">$\mathrm{rate} = 1.5 \left(= \frac{3}{2}\right)$</span> の場合,
                   <span class="math-inline">$2n = 3m$</span> が成立します.
@@ -15864,19 +15873,23 @@ rangeElement.addEventListener(&apos;input&apos;, () =&gt; {
                   以下のように定義できます (<span class="math-inline">$\mathrm{period}$</span> は, 波形の周期です).
                 </p>
                 <div class="math-block">
-                  $\mathrm{offset} = \mathrm{round}\left(\frac{\mathrm{period}}{\mathrm{rate} - 1}\right) \quad \left(\mathrm{rate} \gt 1\right)$
+                  <!-- prettier-ignore -->
+                  $
+                    \begin{flalign}
+                      &\mathrm{offset} = \mathrm{round}\left(\frac{\mathrm{period}}{\mathrm{rate} - 1}\right) \quad \left(\mathrm{rate} \gt 1\right) \\
+                    \end{flalign}
+                  $
                 </div>
-                <p><code>playbackRate</code> プロパティによるリサンプリングと, 上記のタイムストレッチのアルゴリズムを実装すると以下のようになります.</p>
+                <p>
+                  <code>playbackRate</code> プロパティによるリサンプリングと, 上記のタイムストレッチのアルゴリズムを実装すると, 再生速度を変化させずに,
+                  ピッチを低くすることができます.
+                </p>
                 <pre
                   data-prismjs-copy="クリップボードにコピー"
                   data-prismjs-copy-success="コピーしました"
                 ><code class="language-js line-numbers">const context = new AudioContext();
 
-// const rate  = 3 / 2;
-// const pitch = 1 / rate;
-
-const rate  = 1.5;
-const pitch = 0.66;
+const rate  = 1.5;  // 3/2
 
 fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apos;)
   .then((response) =&gt; {
@@ -15887,7 +15900,7 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
 
     const numberOfChannels = audioBuffer.numberOfChannels;
 
-    const resampleRate = audioBuffer.sampleRate / pitch;
+    const resampleRate = audioBuffer.sampleRate * rate;
 
     const length = Math.ceil(audioBuffer.length / rate);
 
@@ -15964,7 +15977,7 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
     const source = new AudioBufferSourceNode(context, { buffer: pitchShiftAudioBuffer });
 
     // Resampling
-    source.playbackRate.value = pitch;
+    source.playbackRate.value = 1 / rate;
 
     source.connect(context.destination);
 
@@ -15973,21 +15986,24 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
   .catch((error) =&gt; {
     // error handling
   });</code></pre>
+                <div class="app-container">
+                  <button type="button" id="button-offline-pitchshifter-high">start</button>
+                </div>
               </section>
               <section id="section-effectors-by-audio-worklet-pitch-shifter-by-resampling-and-time-stretch-slow">
                 <h6>再生速度を遅くする場合</h6>
                 <p>
-                  同様に, 再生速度を遅くする場合を解説します. 再生速度を遅くする場合とは, 再生速度を
-                  <span class="math-inline">$\mathrm{rate}$</span> で表した場合, <span class="math-inline">$\mathrm{rate} \lt 1$</span> となる場合です. そして,
-                  <b>再生速度を速くする場合はオーディオデータを縮小</b>するのに対して, <b>再生速度を遅くする場合はオーディオデータを伸長</b>します (つまり,
+                  再生速度を遅くする場合とは, 再生速度を <span class="math-inline">$\mathrm{rate}$</span> で表した場合,
+                  <span class="math-inline">$\mathrm{rate} \lt 1$</span> となる場合です. そして,
+                  <b>再生速度を速くする場合は, オーディオデータを縮小</b>するのに対して, <b>再生速度を遅くする場合は, オーディオデータを伸長</b>します (つまり,
                   オーディオデータを伸縮するというアルゴリズムの本質は同じです). 具体例として,
                   <span class="math-inline">$\mathrm{rate} = \frac{2}{3}$</span> (<span class="math-inline">$0.66 \cdots$</span> 倍速)
                   でタイムストレッチする場合を考えます. この場合, 以下のイラストで表すように, 2 周期分の波形を 3
                   周期に伸長する処理をオーディオデータ全体に適用します (すなわち, タイムストレッチ適用後のオーディオデータのサイズは,
                   <span class="">$\frac{3}{2} = 1.5$</span> 倍となります). ただし, 単純に波形を重ねて伸長するだけでは,
                   <span class="math-inline">$n$</span> 番目の周期と <span class="math-inline">$n + 1$</span> 番目の周期が同時に再生されるだけなので,
-                  <span class="math-inline">$n$</span> 番目の周期には, <b>単調増加関数を乗算した波形</b>と,
-                  <span class="math-inline">$n + 1$</span> 番目の周期には, <b>単調減少関数を乗算した波形</b>を<b>オーバーラップアド</b>することによって,
+                  <span class="math-inline">$n$</span> 番目の周期の<b>単調増加関数を乗算した波形</b>と,
+                  <span class="math-inline">$n + 1$</span> 番目の周期の<b>単調減少関数を乗算した波形</b>を<b>オーバーラップアド</b>することによって,
                   伸長部分における不連続点を除去, あるいは, 緩和しつつ, 再生速度を遅くすることができます.
                 </p>
                 <p>
@@ -16003,7 +16019,14 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
                   <span class="math-inline">$\mathrm{rate}$</span> において, <span class="math-inline">$m$</span> 周期分の波形を,
                   <span class="math-inline">$n$</span> 周期分の波形に伸長するというのは, 再生速度を速くする場合と同様の, 以下の関係式が定義できます.
                 </p>
-                <div class="math-block">$n = \mathrm{rate} \cdot m \quad \left(0 \lt \mathrm{rate} \lt 1\right)$</div>
+                <div class="math-block">
+                  <!-- prettier-ignore -->
+                  $
+                    \begin{flalign}
+                      &n = \mathrm{rate} \cdot m \quad \left(0.5 \le \mathrm{rate} \lt 1\right) \\
+                    \end{flalign}
+                  $
+                </div>
                 <p>
                   <span class="math-inline">$\mathrm{rate} = 0.66 \cdots \left(= \frac{2}{3}\right)$</span> の場合,
                   <span class="math-inline">$3n = 2m$</span> が成立します.
@@ -16013,20 +16036,23 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
                   以下のように定義できます (<span class="math-inline">$\mathrm{period}$</span> は, 波形の周期です).
                 </p>
                 <div class="math-block">
-                  $\mathrm{offset} = \mathrm{round}\left(\frac{\mathrm{period} \cdot \mathrm{rate}}{1.0 - \mathrm{rate}}\right) \quad \left(0 \lt \mathrm{rate}
-                  \lt 1\right)$
+                  <!-- prettier-ignore -->
+                  $
+                    \begin{flalign}
+                      &\mathrm{offset} = \mathrm{round}\left(\frac{\mathrm{period} \cdot \mathrm{rate}}{1.0 - \mathrm{rate}}\right) \quad \left(0.5 \le \mathrm{rate} \lt 1\right) \\
+                    \end{flalign}
+                  $
                 </div>
-                <p><code>playbackRate</code> プロパティによるリサンプリングと, 上記のタイムストレッチのアルゴリズムを実装すると以下のようになります.</p>
+                <p>
+                  <code>playbackRate</code> プロパティによるリサンプリングと, 上記のタイムストレッチのアルゴリズムを実装すると, 再生速度を変化させずに,
+                  ピッチを高くすることができます.
+                </p>
                 <pre
                   data-prismjs-copy="クリップボードにコピー"
                   data-prismjs-copy-success="コピーしました"
                 ><code class="language-js line-numbers">const context = new AudioContext();
 
-// const rate  = 2 / 3;
-// const pitch = 1 / rate;
-
-const rate  = 0.66;
-const pitch = 1.5;
+const rate  = 0.66;  // 2/3
 
 fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apos;)
   .then((response) =&gt; {
@@ -16037,7 +16063,7 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
 
     const numberOfChannels = audioBuffer.numberOfChannels;
 
-    const resampleRate = audioBuffer.sampleRate / pitch;
+    const resampleRate = audioBuffer.sampleRate * rate;
 
     const length = Math.ceil(audioBuffer.length / rate);
 
@@ -16116,7 +16142,7 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
     const source = new AudioBufferSourceNode(context, { buffer: pitchShiftAudioBuffer });
 
     // Resampling
-    source.playbackRate.value = pitch;
+    source.playbackRate.value = 1 / rate;
 
     source.connect(context.destination);
 
@@ -16125,20 +16151,29 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
   .catch((error) =&gt; {
     // error handling
   });</code></pre>
+                <div class="app-container">
+                  <button type="button" id="button-offline-pitchshifter-low">start</button>
+                </div>
               </section>
               <article id="section-effectors-by-audio-worklet-pitch-shifter-by-resampling-and-time-stretch-correlation-functions">
                 <h6>相関関数</h6>
                 <p>
-                  相関関数は以下のように定義されます (ちなみに, <b>同じ信号系列</b>の過去の信号を積和しているので, より厳密には, <b>自己相関関数</b>の定義です).
-                  <span class="math-inline">$y\left(m\right)$</span> は (自己) 相関関数,
+                  相関関数は以下のように定義されます (ちなみに, <b>同じ信号系列</b>を時間シフトさせて積和しているので,
+                  より厳密には<b>自己相関関数</b>の定義です). <span class="math-inline">$y\left(m\right)$</span> は (自己) 相関関数,
                   <span class="math-inline">$x\left(n\right)$</span> は相関対象の信号系列, <span class="math-inline">$N$</span> は (自己)
                   相関関数のサイズを表しています.
                 </p>
-                <div class="math-block">$y\left(m\right) = \sum_{n=0}^{N-1}x\left(n\right)x\left(n + m\right) \quad \left(0 \le m \le N - 1 \right)$</div>
+                <div class="math-block">
+                  <!-- prettier-ignore -->
+                  $
+                    \begin{flalign}
+                      &y\left(m\right) = \sum_{n=0}^{N-1}x\left(n\right)x\left(n + m\right) \quad \left(0 \le m \le N - 1 \right) \\
+                    \end{flalign}
+                  $
+                </div>
                 <p>
-                  (自己) 相関関数は, 元の信号系列と, その <span class="math-inline">$m$</span> サンプル過去の信号を
-                  <span class="math-inline">$N$</span> 個の区間に限定して, 積和演算で算出します (演算の意味は異なりますが, 形式的に数式で考えると,
-                  コンボリューション積分 (畳み込み積分) と同じです).
+                  (自己) 相関関数は, 相関対象の信号系列と, それを <span class="math-inline">$m$</span> サンプルずらした (時間シフトさせた) 信号を
+                  <span class="math-inline">$N$</span> 個の区間に限定して, 積和演算することで算出します.
                 </p>
                 <p>
                   オーディオ信号処理においては, <b>相関関数は, 基本周期とその整数倍で正のピークを表すという特徴があります</b>. つまり,
@@ -16151,6 +16186,19 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
                   一般的なオーディオ信号処理におけるリサンプリングのアルゴリズムには, <b>線形補間</b>によるアルゴリズムと,
                   <b>シンク関数</b>を利用したアルゴリズムがあります.
                 </p>
+                <p>線形補間は, サンプルとサンプルの中間値を求める方法の 1 つで, 以下の数式による比例配分によって算出するアルゴリズムです.</p>
+                <div class="math-block">
+                  <!-- prettier-ignore -->
+                  $
+                    \begin{flalign}
+                      &x\left(t\right) = \delta \cdot x\left(m + 1\right) + \left(1 - \delta\right) \cdot x\left(m\right), \quad \delta = t - m \quad \left(m \le t \lt m + 1 \right) \\
+                    \end{flalign}
+                  $
+                </div>
+                <figure>
+                  <svg id="svg-figure-linear-interpolation" width="720" height="360" />
+                  <figcaption>線形補間</figcaption>
+                </figure>
                 <p>以下は, 線形補間によるリサンプリングの実装例です</p>
                 <pre
                   data-prismjs-copy="クリップボードにコピー"
@@ -16201,6 +16249,10 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
   .catch((error) =&gt; {
     // error handling
   }); </code></pre>
+                <figure>
+                  <svg id="svg-figure-resampling-by-linear-interpolation" width="720" height="360" />
+                  <figcaption>線形補間によるサンプル間の補間</figcaption>
+                </figure>
                 <p>
                   もっとも, 線形補間は, リサンプル点を直線で補間するので, 実際の波形とは異なったオーディオデータとなってしまいます (ユースケースによっては,
                   線形補間で十分な場合もあると思いますが). サンプリング定理にしたがったアルゴリズムは, シンク関数によるリサンプリングの一択です. 以下は,
@@ -16267,20 +16319,24 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
   .catch((error) =&gt; {
     // error handling
   });</code></pre>
+                <figure>
+                  <svg id="svg-figure-resampling-by-sinc-function" width="720" height="360" />
+                  <figcaption>シンク関数による (サンプリング定理にしたがった) サンプル間の補間</figcaption>
+                </figure>
               </article>
               <article id="section-effectors-by-audio-worklet-pitch-shifter-by-resampling-and-time-stretch-web-audio-api-time-stretch">
                 <h6>Web Audio API におけるタイムストレッチ</h6>
                 <p>
                   タイムストレッチのアルゴリズムは複雑になりますが, <code>MediaElementAudioSourceNode</code> を利用する場合, その音源となる,
-                  <code>HTMLAudioElement</code> や <code>HTMLVideoElement</code> の <code>playbackRate</code> プロパティは,
-                  タイムストレッチを効かせながら再生速度を変更することができます (<code>AudioBufferSourceNode</code> の <code>playbackRate</code> プロパティ
+                  <code>HTMLAudioElement</code> や <code>HTMLVideoElement</code> の <code>playbackRate</code> プロパティは, タイムストレッチを効かせながら
+                  (ピッチを変更せずに) 再生速度を変更することができます (<code>AudioBufferSourceNode</code> の <code>playbackRate</code> プロパティ
                   (<code>AudioParam</code>) とは異なるので注意してください). したがって, タイムストレッチのみが目的であれば,
                   <code>MediaElementAudioSourceNode</code> を利用して, <code>HTMLAudioElement</code> や <code>HTMLVideoElement</code> の
                   <code>playbackRate</code> プロパティを制御すれば簡単に実装できます.
                 </p>
                 <p>
-                  ちなみに, <code>HTMLAudioElement</code> や <code>HTMLVideoElement</code> には <b><code>preservesPitch</code></b> プロパティが定義されており,
-                  デフォルト値が <code>true</code> なので, タイムストレッチが効きます. したがって, このプロパティを <code>false</code> にすると,
+                  また, <code>HTMLAudioElement</code> や <code>HTMLVideoElement</code> には <b><code>preservesPitch</code></b> プロパティが定義されており,
+                  デフォルト値が <code>true</code> で, タイムストレッチが有効になっています. したがって, このプロパティを <code>false</code> にすると,
                   タイムストレッチが無効になり, <code>playbackRate</code> プロパティ変更とともに, ピッチも変化します.
                 </p>
               </article>
@@ -16290,35 +16346,40 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
               <p>
                 このセクションでは,
                 <a href="https://github.com/olvb/phaze" target="_blank" rel="noopener noreferrer">Phaze: a real-time web audio pitch-shifter</a>
-                で利用されている, フェーズボコーダを利用したピッチシフター (それと同時に可能な, タイムストレッチ) の実装を解説します.
+                で利用されている, フェーズボコーダを利用したピッチシフター (それと同時に実装可能なタイムストレッチ) の実装を解説します.
               </p>
               <p>
-                フェーズボコーダのアルゴリズムは 1 つではなく, 例えば, 最初期のフェーズボコーダは, パンドパスフィルタを並列接続 (フィルタバンク) して,
-                それぞれの周波数帯域で <b>STFT</b> (<b>Short Time Fourier Transform</b>: <b>短時間フーリエ変換</b>. 実装上は単純に, サンプル数が少ない FFT です)
-                を適用して, ピッチ変換やスペクトルの伸縮を実行します. 変換対象のピッチの検出には, <b>瞬時周波数</b> (位相の時間微分) を利用します.
+                フェーズボコーダのアルゴリズムは 1 つではなく, 例えば, 初期のアナログ・フェーズボコーダは, 物理的なバンドパスフィルタを並列接続 (フィルタバンク)
+                して処理を適用していました. そのあと, デジタル実装においては, <b>STFT</b> (<b>Short Time Fourier Transform</b>: <b>短時間フーリエ変換</b>.
+                実装上は, 窓関数を適用してサンプル数を少なくした短時間の FFT です) の各周波数ビンをフィルタバンクと見立てる手法が定着しました.
+                変換対象のピッチの正確な検出や, 波形をつなぎあわせるための計算には, 位相の時間微分である<b>瞬時周波数</b>を利用します.
               </p>
-              <img src="images/filter-bank.svg" alt="フィルタバンク" width="600" height="420" loading="lazy" />
+              <figure>
+                <svg id="svg-figure-filter-bank" width="480" height="840"></svg>
+                <figcaption>フィルタバンク</figcaption>
+              </figure>
               <p>
-                現代的なフェーズボコーダでは, バンドパスフィルタを利用するのではなく, 振幅スペクトルを走査して, ピークを探索して,
-                それぞれのピークをシフトするのが一般的です.
+                現代的な高音質フェーズボコーダでは, すべての帯域を一律に処理するのではなく, 振幅スペクトルを走査してピークを探索し, それぞれのピーク
+                (顕著な正弦波成分) を個別にシフトする手法 (Phase-Locked Vocoder など) が一般的です.
                 <a href="https://github.com/olvb/phaze" target="_blank" rel="noopener noreferrer">Phaze: a real-time web audio pitch-shifter</a>
                 のフェーズボコーダも, おおよそこのような実装となっています (さらにモダンで高度なフェーズボコーダだと,
-                振幅スペクトルのピークの帯域ごとに窓関数のサイズを可変にするといったより複雑な実装が適用されています.
+                振幅スペクトルのピークの帯域ごとに窓関数のサイズを可変にするといった, より複雑な実装が適用されています).
               </p>
               <p>実装のステップは大きく 3 つです.</p>
               <ol>
-                <li>STFT (FFT) を適用して, 振幅スペクトル (厳密には, その 2 乗なので, パワースペクトル) の配列を取得</li>
+                <li>STFT (FFT) を適用して, 振幅スペクトル (厳密には, その 2 乗なので, パワースペクトル) と位相スペクトルの配列を取得</li>
                 <li>パワースペクトルを走査して, スペクトルのピークのインデックスと, ピークの数を検出</li>
                 <li>
-                  ピークをピッチ (タイムストレッチもする場合は, 再生速度の逆数を乗算) に応じて, 実部と虚部でそれぞれシフトして, ISTFT (IFFT) で,
-                  ピッチシフトした時間領域の波形を取得
+                  ピークをピッチ (タイムストレッチもする場合は, 再生速度の逆数を乗算) に応じてシフトさせ,
+                  <b>位相の連続性が保たれるように再計算 (フェーズアンラップと蓄積) を適用</b>しつつ, 実部と虚部を算出して, ISTFT (IFFT)
+                  でピッチシフトした時間領域の波形を再合成する
                 </li>
               </ol>
               <p>
                 <code>OverlapAddProcessor</code> クラスを拡張した <code>PitchShifterProcessor</code> サブクラスの実装です.
                 (周波数分解能をデフォルトより高くするために, <code>OverlapAddProcessor</code> クラスを拡張します). また,
                 <code>processOverlapAdd</code> メソッドで呼び出している, <code>FFT</code> / <code>IFFT</code> 関数は,
-                <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装</a>セクションで記載している実装を
+                <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装セクション</a>で記載している実装を
                 <code>AudioWorkletGlobalScope</code> 内で定義していると仮定してください.
               </p>
               <pre
@@ -16331,7 +16392,7 @@ class PitchShifterProcessor extends OverlapAddProcessor {
     const w = new Float32Array(size);
 
     for (let n = 0; n &lt; size; n++) {
-      w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (size - 1));
+      w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / size);
     }
 
     return w;
@@ -16358,7 +16419,7 @@ class PitchShifterProcessor extends OverlapAddProcessor {
     };
   }
 
-  /** @overdrive */
+  /** @override */
   processOverlapAdd(inputs, outputs) {
     const input  = inputs[0];
     const output = outputs[0];
@@ -16431,12 +16492,14 @@ class PitchShifterProcessor extends OverlapAddProcessor {
         if (k &gt; 0) {
           const peakIndexBefore = peakIndexes[k - 1];
 
+          // Region of Influence
           startIndex = peakIndex - Math.floor((peakIndex - peakIndexBefore) / 2);
         }
 
         if (k &lt; (numberOfPeaks - 1)) {
           const peakIndexAfter = peakIndexes[k + 1];
 
+          // Region of Influence
           endIndex = peakIndex + Math.ceil((peakIndexAfter - peakIndex) / 2);
         }
 
@@ -16452,11 +16515,13 @@ class PitchShifterProcessor extends OverlapAddProcessor {
             break;
           }
 
+          // Phase Correction
           const omega = (2 * Math.PI * (shiftedBinCountIndex - binCountIndex)) / fftSize;
 
           const shiftedReal = Math.cos(omega * this.timeCursor);
           const shiftedImag = Math.sin(omega * this.timeCursor);
 
+          // Phase Unwrap
           shiftedReals[shiftedBinCountIndex] += (reals[binCountIndex] * shiftedReal) - (imags[binCountIndex] * shiftedImag);
           shiftedImags[shiftedBinCountIndex] += (reals[binCountIndex] * shiftedImag) + (imags[binCountIndex] * shiftedReal);
         }
@@ -16487,10 +16552,10 @@ registerProcessor(&apos;PitchShifterProcessor&apos;, PitchShifterProcessor);</co
               ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-pitch-shifter&quot; disabled&gt;start&lt;/button&gt;
 &lt;label for=&quot;range-pitch-shifter&quot;&gt;pitch&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-pitch-shifter&quot; disabled value=&quot;1&quot; min=&quot;0.5&quot; max=&quot;4&quot; step=&quot;0.05&quot; /&gt;
-&lt;span id=&quot;print-pitch-shifter-value&quot;&gt;1.00&lt;/span&gt;
+&lt;output id=&quot;output-pitch-shifter-value&quot; for=&quot;range-pitch-shifter&quot;&gt;1.00&lt;/output&gt;
 &lt;label for=&quot;range-time-stretch&quot;&gt;speed&lt;/label&gt;
 &lt;input type=&quot;range&quot; id=&quot;range-time-stretch&quot; disabled value=&quot;1&quot; min=&quot;0.5&quot; max=&quot;4&quot; step=&quot;0.05&quot; /&gt;
-&lt;span id=&quot;print-time-stretch-value&quot;&gt;1.00&lt;/span&gt;</code></pre>
+&lt;output id=&quot;output-time-stretch-value&quot; for=&quot;range-time-stretch&quot;&gt;1.00&lt;/output&gt;</code></pre>
               <pre
                 data-prismjs-copy="クリップボードにコピー"
                 data-prismjs-copy-success="コピーしました"
@@ -16498,10 +16563,10 @@ registerProcessor(&apos;PitchShifterProcessor&apos;, PitchShifterProcessor);</co
 
 const buttonElement = document.getElementById(&apos;button-pitch-shifter&apos;);
 
-const rangePitchElement = document.getElementById(&apos;range-pitch-shifter&apos;);
-const rangeSpeedElement = document.getElementById(&apos;range-time-stretch&apos;);
-const spanPitchElement  = document.getElementById(&apos;print-pitch-shifter-value&apos;);
-const spanSpeedElement  = document.getElementById(&apos;print-time-stretch-value&apos;);
+const rangePitchElement  = document.getElementById(&apos;range-pitch-shifter&apos;);
+const rangeSpeedElement  = document.getElementById(&apos;range-time-stretch&apos;);
+const outputPitchElement = document.getElementById(&apos;output-pitch-shifter-value&apos;);
+const outputSpeedElement = document.getElementById(&apos;output-time-stretch-value&apos;);
 
 let source    = null;
 let processor = null;
@@ -16523,7 +16588,11 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
      rangePitchElement.removeAttribute(&apos;disabled&apos;);
      rangeSpeedElement.removeAttribute(&apos;disabled&apos;);
 
-     buttonElement.addEventListener(&apos;click&apos;, () =&gt; {
+     buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
+       if (context.state !== &apos;running&apos;) {
+         await context.resume();
+       }
+
        if ((source === null) &amp;&amp; (processor === null)) {
          source    = new AudioBufferSourceNode(context, { buffer, playbackRate: speed });
          processor = new AudioWorkletNode(context, &apos;PitchShifterProcessor&apos;);
@@ -16562,51 +16631,43 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
        }
      });
 
-     rangePitchElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-       pitch = event.currentTarget.valueAsNumber;
+     rangePitchElement.addEventListener(&apos;input&apos;, () =&gt; {
+       pitch = rangePitchElement.valueAsNumber;
 
        if (processor) {
          processor.port.postMessage({ pitch });
        }
 
-       spanPitchElement.textContent = pitch.toFixed(2);
+       outputPitchElement.textContent = pitch.toFixed(2);
      });
 
-     rangeSpeedElement.addEventListener(&apos;input&apos;, (event) =&gt; {
-       speed = event.currentTarget.valueAsNumber;
+     rangeSpeedElement.addEventListener(&apos;input&apos;, () =&gt; {
+       speed = rangeSpeedElement.valueAsNumber;
 
        if (source &amp;&amp; processor) {
          source.playbackRate.value = speed;
          processor.port.postMessage({ speed });
        }
 
-       spanSpeedElement.textContent = speed.toFixed(2);
+       outputSpeedElement.textContent = speed.toFixed(2);
      });
   })
   .catch((error) =&gt; {
     // error handling
   });</code></pre>
-              <div class="app-container app-pitch-shifter">
-                <div class="app-headline">
+              <div class="app-container flexbox">
+                <div>
                   <button type="button" id="button-pitch-shifter" disabled>start</button>
                 </div>
-                <div>
-                  <dl>
-                    <div>
-                      <dt><label for="range-pitch-shifter">pitch</label></dt>
-                      <dd>
-                        <input type="range" id="range-pitch-shifter" disabled value="1" min="0.5" max="4" step="0.05" /><span id="print-pitch-shifter-value"
-                          >1.00</span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt><label for="range-time-stretch">speed</label></dt>
-                      <dd>
-                        <input type="range" id="range-time-stretch" disabled value="1" min="0.5" max="4" step="0.05" /><span id="print-time-stretch-value"
-                          >1.00</span>
-                      </dd>
-                    </div>
-                  </dl>
+                <div class="flexbox">
+                  <label for="range-pitch-shifter">pitch</label>
+                  <input type="range" id="range-pitch-shifter" disabled value="1" min="0.5" max="4" step="0.05" />
+                  <output id="output-pitch-shifter-value" for="range-pitch-shifter">1.00</output>
+                </div>
+                <div class="flexbox">
+                  <label for="range-time-stretch">speed</label>
+                  <input type="range" id="range-time-stretch" disabled value="1" min="0.5" max="4" step="0.05" />
+                  <output id="output-time-stretch-value" for="range-time-stretch">1.00</output>
                 </div>
               </div>
               <p>

@@ -17089,7 +17089,7 @@ const createResampling = (svg) => {
           if (result) {
             text.textContent = (t / 2).toFixed(2);
           } else {
-            text.textContent = t.toFixed(1);
+            text.textContent = t.toFixed(2);
           }
 
           text.setAttribute('x', (offsetX + padding + index * (w / 4) + 4).toString(10));
@@ -17110,7 +17110,7 @@ const createResampling = (svg) => {
           const text = document.createElementNS(xmlns, 'text');
 
           if (result) {
-            text.textContent = (2 * t).toFixed(1);
+            text.textContent = (2 * t).toFixed(2);
           } else {
             text.textContent = t.toFixed(2);
           }
@@ -17298,7 +17298,7 @@ const createTimeStretchFast = (svg) => {
         text.textContent = amplitude.toFixed(1);
 
         text.setAttribute('x', (padding - 4).toString(10));
-        text.setAttribute('y', (offset + padding / 2 + (h / 2) * (1 - amplitude) + 24).toString(10));
+        text.setAttribute('y', (offset + padding / 2 + (h / 2) * (1 - amplitude) + 32).toString(10));
         text.setAttribute('text-anchor', 'end');
         text.setAttribute('stroke', 'none');
         text.setAttribute('fill', baseColor);
@@ -17425,7 +17425,7 @@ const createTimeStretchFast = (svg) => {
       path6.setAttribute('stroke-linejoin', lineJoin);
       path6.setAttribute('stroke-dasharray', '5,5');
 
-      path7.setAttribute('d', `M${padding + 3 * (innerWidth / 3)} ${padding + h / 2} L${padding + 2 * (innerWidth / 3)} ${offset + padding + h / 2}`);
+      path7.setAttribute('d', `M${padding + 3 * (innerWidth / 3) - 8} ${padding + h / 2} L${padding + 2 * (innerWidth / 3)} ${offset + padding + h / 2}`);
       path7.setAttribute('stroke', baseColor);
       path7.setAttribute('fill', 'none');
       path7.setAttribute('stroke-width', lineWidth.toString(10));
@@ -17459,6 +17459,60 @@ const createTimeStretchFast = (svg) => {
 
       svg.appendChild(offset10);
       svg.appendChild(offset11);
+
+      for (let n = 1; n <= 3; n++) {
+        if (n < 3) {
+          const path = document.createElementNS(xmlns, 'path');
+
+          path.setAttribute(
+            'd',
+            `M${padding + (innerWidth / 3) * (n - 1)} ${offset + padding} L${padding + (innerWidth / 3) * (n - 1) + 12} ${offset + padding - 4} L${padding + (innerWidth / 3) * (n - 1) + 12} ${offset + padding + 4} L${padding + (innerWidth / 3) * (n - 1)} ${offset + padding} L${padding + (innerWidth / 3) * n} ${offset + padding} L${padding + (innerWidth / 3) * n - 12} ${offset + padding - 4} L${padding + (innerWidth / 3) * n - 12} ${offset + padding + 4} L${padding + (innerWidth / 3) * n} ${offset + padding}`
+          );
+          path.setAttribute('width', (innerWidth / 3).toString(10));
+          path.setAttribute('height', (h / 2).toString(10));
+          path.setAttribute('stroke', baseColor);
+          path.setAttribute('fill', baseColor);
+
+          const text = document.createElementNS(xmlns, 'text');
+
+          text.textContent = 'period';
+
+          text.setAttribute('x', (padding + ((innerWidth / 3) * n - innerWidth / 6)).toString(10));
+          text.setAttribute('y', (offset + padding - 4).toString(10));
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('stroke', 'none');
+          text.setAttribute('fill', baseColor);
+          text.setAttribute('font-size', '12px');
+
+          svg.appendChild(path);
+          svg.appendChild(text);
+        } else {
+          const path = document.createElementNS(xmlns, 'path');
+
+          path.setAttribute(
+            'd',
+            `M${padding} ${offset + padding + h} L${padding + 12} ${offset + padding + h - 4} L${padding + 12} ${offset + padding + h + 4} L${padding} ${offset + padding + h} L${padding + (innerWidth / 3) * 2} ${offset + padding + h} L${padding + (innerWidth / 3) * 2 - 12} ${offset + padding + h - 4} L${padding + (innerWidth / 3) * 2 - 12} ${offset + padding + h + 4} L${padding + (innerWidth / 3) * 2} ${offset + padding + h}`
+          );
+          path.setAttribute('width', (innerWidth / 3).toString(10));
+          path.setAttribute('height', (h / 2).toString(10));
+          path.setAttribute('stroke', baseColor);
+          path.setAttribute('fill', baseColor);
+
+          const text = document.createElementNS(xmlns, 'text');
+
+          text.textContent = 'offset';
+
+          text.setAttribute('x', (padding + innerWidth / 3).toString(10));
+          text.setAttribute('y', (offset + padding + h - 4).toString(10));
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('stroke', 'none');
+          text.setAttribute('fill', baseColor);
+          text.setAttribute('font-size', '12px');
+
+          svg.appendChild(path);
+          svg.appendChild(text);
+        }
+      }
     } else {
       const path1 = document.createElementNS(xmlns, 'path');
       const path2 = document.createElementNS(xmlns, 'path');
@@ -17496,7 +17550,7 @@ const createTimeStretchFast = (svg) => {
       offset00.setAttribute('fill', baseColor);
       offset00.setAttribute('font-size', '12px');
 
-      offset01.setAttribute('x', (padding + 3 * (innerWidth / 3)).toString(10));
+      offset01.setAttribute('x', (padding + 3 * (innerWidth / 3) - 8).toString(10));
       offset01.setAttribute('y', (padding - 20).toString(10));
       offset01.setAttribute('text-anchor', 'middle');
       offset01.setAttribute('stroke', 'none');
@@ -17505,6 +17559,80 @@ const createTimeStretchFast = (svg) => {
 
       svg.appendChild(offset00);
       svg.appendChild(offset01);
+
+      const nextOffset0Rect = document.createElementNS(xmlns, 'rect');
+      const nextOffset1Rect = document.createElementNS(xmlns, 'rect');
+
+      nextOffset0Rect.setAttribute('x', (padding + 3 * (innerWidth / 3) - 8).toString(10));
+      nextOffset0Rect.setAttribute('y', (offset + padding).toString(10));
+      nextOffset0Rect.setAttribute('width', lineWidth.toString(10));
+      nextOffset0Rect.setAttribute('height', (h / 2).toString(10));
+      nextOffset0Rect.setAttribute('stroke', 'none');
+      nextOffset0Rect.setAttribute('fill', alphaBaseColor);
+
+      nextOffset1Rect.setAttribute('x', (padding + 2 * (innerWidth / 3)).toString(10));
+      nextOffset1Rect.setAttribute('y', (offset + 2.75 * h).toString(10));
+      nextOffset1Rect.setAttribute('width', lineWidth.toString(10));
+      nextOffset1Rect.setAttribute('height', (h / 2).toString(10));
+      nextOffset1Rect.setAttribute('stroke', 'none');
+      nextOffset1Rect.setAttribute('fill', alphaBaseColor);
+
+      svg.appendChild(nextOffset0Rect);
+      svg.appendChild(nextOffset1Rect);
+
+      for (let n = 1; n <= 4; n++) {
+        if (n < 4) {
+          const path = document.createElementNS(xmlns, 'path');
+
+          path.setAttribute(
+            'd',
+            `M${padding + (innerWidth / 3) * (n - 1)} ${padding} L${padding + (innerWidth / 3) * (n - 1) + 12} ${padding - 4} L${padding + (innerWidth / 3) * (n - 1) + 12} ${padding + 4} L${padding + (innerWidth / 3) * (n - 1)} ${padding} L${padding + (innerWidth / 3) * n} ${padding} L${padding + (innerWidth / 3) * n - 12} ${padding - 4} L${padding + (innerWidth / 3) * n - 12} ${padding + 4} L${padding + (innerWidth / 3) * n} ${padding}`
+          );
+          path.setAttribute('width', (innerWidth / 3).toString(10));
+          path.setAttribute('height', (h / 2).toString(10));
+          path.setAttribute('stroke', baseColor);
+          path.setAttribute('fill', baseColor);
+
+          const text = document.createElementNS(xmlns, 'text');
+
+          text.textContent = 'period';
+
+          text.setAttribute('x', (padding + ((innerWidth / 3) * n - innerWidth / 6)).toString(10));
+          text.setAttribute('y', (padding - 4).toString(10));
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('stroke', 'none');
+          text.setAttribute('fill', baseColor);
+          text.setAttribute('font-size', '12px');
+
+          svg.appendChild(path);
+          svg.appendChild(text);
+        } else {
+          const path = document.createElementNS(xmlns, 'path');
+
+          path.setAttribute(
+            'd',
+            `M${padding + innerWidth / 3} ${padding + h} L${padding + innerWidth / 3 + 12} ${padding + h - 4} L${padding + innerWidth / 3 + 12} ${padding + h + 4} L${padding + innerWidth / 3} ${padding + h} L${padding + (innerWidth / 3) * 3} ${padding + h} L${padding + (innerWidth / 3) * 3 - 12} ${padding + h - 4} L${padding + (innerWidth / 3) * 3 - 12} ${padding + h + 4} L${padding + (innerWidth / 3) * 3} ${padding + h}`
+          );
+          path.setAttribute('width', (innerWidth / 3).toString(10));
+          path.setAttribute('height', (h / 2).toString(10));
+          path.setAttribute('stroke', baseColor);
+          path.setAttribute('fill', baseColor);
+
+          const text = document.createElementNS(xmlns, 'text');
+
+          text.textContent = 'offset';
+
+          text.setAttribute('x', (padding + (innerWidth / 3) * 2).toString(10));
+          text.setAttribute('y', (offset + padding + h - 4).toString(10));
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('stroke', 'none');
+          text.setAttribute('fill', baseColor);
+          text.setAttribute('font-size', '12px');
+
+          svg.appendChild(path);
+          svg.appendChild(text);
+        }
+      }
     }
   };
 
@@ -17589,7 +17717,7 @@ const createTimeStretchSlow = (svg) => {
         text.textContent = amplitude.toFixed(1);
 
         text.setAttribute('x', (padding - 4).toString(10));
-        text.setAttribute('y', (offset + padding / 2 + (h / 2) * (1 - amplitude) + 24).toString(10));
+        text.setAttribute('y', (offset + padding / 2 + (h / 2) * (1 - amplitude) + 32).toString(10));
         text.setAttribute('text-anchor', 'end');
         text.setAttribute('stroke', 'none');
         text.setAttribute('fill', baseColor);
@@ -17726,7 +17854,7 @@ const createTimeStretchSlow = (svg) => {
       path7.setAttribute('stroke-linejoin', lineJoin);
       path7.setAttribute('stroke-dasharray', '5,5');
 
-      path8.setAttribute('d', `M${padding + 2 * (innerWidth / 3)} ${padding + h / 2} L${padding + 3 * (innerWidth / 3)} ${offset + padding + h / 2}`);
+      path8.setAttribute('d', `M${padding + 2 * (innerWidth / 3)} ${padding + h / 2} L${padding + 3 * (innerWidth / 3) - 4} ${offset + padding + h / 2}`);
       path8.setAttribute('stroke', baseColor);
       path8.setAttribute('fill', 'none');
       path8.setAttribute('stroke-width', lineWidth.toString(10));
@@ -17752,7 +17880,7 @@ const createTimeStretchSlow = (svg) => {
       offset10.setAttribute('fill', baseColor);
       offset10.setAttribute('font-size', '12px');
 
-      offset11.setAttribute('x', (padding + 2 * (innerWidth / 3)).toString(10));
+      offset11.setAttribute('x', (padding + 3 * (innerWidth / 3) - 4).toString(10));
       offset11.setAttribute('y', (offset + padding + h + 16).toString(10));
       offset11.setAttribute('text-anchor', 'middle');
       offset11.setAttribute('stroke', 'none');
@@ -17761,6 +17889,60 @@ const createTimeStretchSlow = (svg) => {
 
       svg.appendChild(offset10);
       svg.appendChild(offset11);
+
+      for (let n = 1; n <= 4; n++) {
+        if (n < 4) {
+          const path = document.createElementNS(xmlns, 'path');
+
+          path.setAttribute(
+            'd',
+            `M${padding + (innerWidth / 3) * (n - 1)} ${offset + padding} L${padding + (innerWidth / 3) * (n - 1) + 12} ${offset + padding - 4} L${padding + (innerWidth / 3) * (n - 1) + 12} ${offset + padding + 4} L${padding + (innerWidth / 3) * (n - 1)} ${offset + padding} L${padding + (innerWidth / 3) * n} ${offset + padding} L${padding + (innerWidth / 3) * n - 12} ${offset + padding - 4} L${padding + (innerWidth / 3) * n - 12} ${offset + padding + 4} L${padding + (innerWidth / 3) * n} ${offset + padding}`
+          );
+          path.setAttribute('width', (innerWidth / 3).toString(10));
+          path.setAttribute('height', (h / 2).toString(10));
+          path.setAttribute('stroke', baseColor);
+          path.setAttribute('fill', baseColor);
+
+          const text = document.createElementNS(xmlns, 'text');
+
+          text.textContent = 'period';
+
+          text.setAttribute('x', (padding + ((innerWidth / 3) * n - innerWidth / 6)).toString(10));
+          text.setAttribute('y', (offset + padding - 4).toString(10));
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('stroke', 'none');
+          text.setAttribute('fill', baseColor);
+          text.setAttribute('font-size', '12px');
+
+          svg.appendChild(path);
+          svg.appendChild(text);
+        } else {
+          const path = document.createElementNS(xmlns, 'path');
+
+          path.setAttribute(
+            'd',
+            `M${padding + innerWidth / 3} ${offset + padding + h} L${padding + innerWidth / 3 + 12} ${offset + padding + h - 4} L${padding + innerWidth / 3 + 12} ${offset + padding + h + 4} L${padding + innerWidth / 3} ${offset + padding + h} L${padding + (innerWidth / 3) * 3} ${offset + padding + h} L${padding + (innerWidth / 3) * 3 - 12} ${offset + padding + h - 4} L${padding + (innerWidth / 3) * 3 - 12} ${offset + padding + h + 4} L${padding + (innerWidth / 3) * 3} ${offset + padding + h}`
+          );
+          path.setAttribute('width', (innerWidth / 3).toString(10));
+          path.setAttribute('height', (h / 2).toString(10));
+          path.setAttribute('stroke', baseColor);
+          path.setAttribute('fill', baseColor);
+
+          const text = document.createElementNS(xmlns, 'text');
+
+          text.textContent = 'offset';
+
+          text.setAttribute('x', (padding + (innerWidth / 3) * 2).toString(10));
+          text.setAttribute('y', (offset + padding + h - 4).toString(10));
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('stroke', 'none');
+          text.setAttribute('fill', baseColor);
+          text.setAttribute('font-size', '12px');
+
+          svg.appendChild(path);
+          svg.appendChild(text);
+        }
+      }
     } else {
       const path1 = document.createElementNS(xmlns, 'path');
       const path2 = document.createElementNS(xmlns, 'path');
@@ -17798,7 +17980,7 @@ const createTimeStretchSlow = (svg) => {
       offset00.setAttribute('fill', baseColor);
       offset00.setAttribute('font-size', '12px');
 
-      offset01.setAttribute('x', (padding + 3 * (innerWidth / 3)).toString(10));
+      offset01.setAttribute('x', (padding + 2 * (innerWidth / 3)).toString(10));
       offset01.setAttribute('y', (padding - 20).toString(10));
       offset01.setAttribute('text-anchor', 'middle');
       offset01.setAttribute('stroke', 'none');
@@ -17807,6 +17989,80 @@ const createTimeStretchSlow = (svg) => {
 
       svg.appendChild(offset00);
       svg.appendChild(offset01);
+
+      const nextOffset0Rect = document.createElementNS(xmlns, 'rect');
+      const nextOffset1Rect = document.createElementNS(xmlns, 'rect');
+
+      nextOffset0Rect.setAttribute('x', (padding + 2 * (innerWidth / 3)).toString(10));
+      nextOffset0Rect.setAttribute('y', (offset + padding).toString(10));
+      nextOffset0Rect.setAttribute('width', lineWidth.toString(10));
+      nextOffset0Rect.setAttribute('height', (h / 2).toString(10));
+      nextOffset0Rect.setAttribute('stroke', 'none');
+      nextOffset0Rect.setAttribute('fill', alphaBaseColor);
+
+      nextOffset1Rect.setAttribute('x', (padding + 3 * (innerWidth / 3) - 4).toString(10));
+      nextOffset1Rect.setAttribute('y', (offset + 2.75 * h).toString(10));
+      nextOffset1Rect.setAttribute('width', lineWidth.toString(10));
+      nextOffset1Rect.setAttribute('height', (h / 2).toString(10));
+      nextOffset1Rect.setAttribute('stroke', 'none');
+      nextOffset1Rect.setAttribute('fill', alphaBaseColor);
+
+      svg.appendChild(nextOffset0Rect);
+      svg.appendChild(nextOffset1Rect);
+
+      for (let n = 1; n <= 4; n++) {
+        if (n < 4) {
+          const path = document.createElementNS(xmlns, 'path');
+
+          path.setAttribute(
+            'd',
+            `M${padding + (innerWidth / 3) * (n - 1)} ${padding} L${padding + (innerWidth / 3) * (n - 1) + 12} ${padding - 4} L${padding + (innerWidth / 3) * (n - 1) + 12} ${padding + 4} L${padding + (innerWidth / 3) * (n - 1)} ${padding} L${padding + (innerWidth / 3) * n} ${padding} L${padding + (innerWidth / 3) * n - 12} ${padding - 4} L${padding + (innerWidth / 3) * n - 12} ${padding + 4} L${padding + (innerWidth / 3) * n} ${padding}`
+          );
+          path.setAttribute('width', (innerWidth / 3).toString(10));
+          path.setAttribute('height', (h / 2).toString(10));
+          path.setAttribute('stroke', baseColor);
+          path.setAttribute('fill', baseColor);
+
+          const text = document.createElementNS(xmlns, 'text');
+
+          text.textContent = 'period';
+
+          text.setAttribute('x', (padding + ((innerWidth / 3) * n - innerWidth / 6)).toString(10));
+          text.setAttribute('y', (padding - 4).toString(10));
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('stroke', 'none');
+          text.setAttribute('fill', baseColor);
+          text.setAttribute('font-size', '12px');
+
+          svg.appendChild(path);
+          svg.appendChild(text);
+        } else {
+          const path = document.createElementNS(xmlns, 'path');
+
+          path.setAttribute(
+            'd',
+            `M${padding} ${padding + h} L${padding + 12} ${padding + h - 4} L${padding + 12} ${padding + h + 4} L${padding} ${padding + h} L${padding + (innerWidth / 3) * 2} ${padding + h} L${padding + (innerWidth / 3) * 2 - 12} ${padding + h - 4} L${padding + (innerWidth / 3) * 2 - 12} ${padding + h + 4} L${padding + (innerWidth / 3) * 2} ${offset + padding + h}`
+          );
+          path.setAttribute('width', (innerWidth / 3).toString(10));
+          path.setAttribute('height', (h / 2).toString(10));
+          path.setAttribute('stroke', baseColor);
+          path.setAttribute('fill', baseColor);
+
+          const text = document.createElementNS(xmlns, 'text');
+
+          text.textContent = 'offset';
+
+          text.setAttribute('x', (padding + innerWidth / 3).toString(10));
+          text.setAttribute('y', (offset + padding + h - 4).toString(10));
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('stroke', 'none');
+          text.setAttribute('fill', baseColor);
+          text.setAttribute('font-size', '12px');
+
+          svg.appendChild(path);
+          svg.appendChild(text);
+        }
+      }
     }
   };
 
@@ -17814,13 +18070,282 @@ const createTimeStretchSlow = (svg) => {
   render(padding + innerHeight / 2, 1.74, true);
 };
 
+const pitchShifterHighByTimeStretchAndResampling = () => {
+  let buffer = null;
+  let source = null;
+
+  const rate = 1.5;
+
+  const buttonElement = document.getElementById('button-offline-pitchshifter-high');
+
+  const onClick = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (source) {
+      source.stop(0);
+
+      source = null;
+
+      buttonElement.textContent = 'start';
+    } else {
+      if (buffer === null) {
+        buttonElement.textContent = 'Wait ...';
+
+        fetch('./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3')
+          .then((response) => {
+            return response.arrayBuffer();
+          })
+          .then(async (arrayBuffer) => {
+            const audioBuffer = await audiocontext.decodeAudioData(arrayBuffer);
+
+            const numberOfChannels = audioBuffer.numberOfChannels;
+
+            const resampleRate = audioBuffer.sampleRate * rate;
+
+            const length = Math.ceil(audioBuffer.length / rate);
+
+            const pitchShiftAudioBuffer = audiocontext.createBuffer(numberOfChannels, length, audioBuffer.sampleRate);
+
+            for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
+              const inputBuffer = audioBuffer.getChannelData(channelNumber);
+              const outputBuffer = new Float32Array(length);
+
+              const templateSize = Math.trunc(resampleRate * 0.01);
+
+              const minPeriod = Math.trunc(resampleRate * 0.005);
+              const maxPeriod = Math.trunc(resampleRate * 0.02);
+
+              const x = new Float32Array(templateSize);
+              const y = new Float32Array(templateSize);
+              const r = new Float32Array(maxPeriod + 1);
+
+              let offset0 = 0;
+              let offset1 = 0;
+
+              while (offset0 + 2 * maxPeriod < inputBuffer.length) {
+                for (let n = 0; n < templateSize; n++) {
+                  x[n] = inputBuffer[offset0 + n];
+                }
+
+                let maxCorrelation = 0.0;
+
+                let period = minPeriod;
+
+                for (let m = minPeriod; m <= maxPeriod; m++) {
+                  for (let n = 0; n < templateSize; n++) {
+                    y[n] = inputBuffer[offset0 + m + n];
+                  }
+
+                  r[m] = 0.0;
+
+                  for (let n = 0; n < templateSize; n++) {
+                    r[m] += x[n] * y[n];
+                  }
+
+                  if (r[m] > maxCorrelation) {
+                    maxCorrelation = r[m];
+                    period = m;
+                  }
+                }
+
+                for (let n = 0; n < period; n++) {
+                  outputBuffer[offset1 + n] = inputBuffer[offset0 + n] * ((period - n) / period);
+                  outputBuffer[offset1 + n] += inputBuffer[offset0 + period + n] * (n / period);
+                }
+
+                const offset = Math.round(period / (rate - 1.0));
+
+                for (let n = period; n < offset; n++) {
+                  if (offset0 + period + n >= inputBuffer.length) {
+                    break;
+                  }
+
+                  outputBuffer[offset1 + n] = inputBuffer[offset0 + period + n];
+                }
+
+                offset0 += period + offset;
+                offset1 += offset;
+              }
+
+              pitchShiftAudioBuffer.copyToChannel(outputBuffer, channelNumber);
+            }
+
+            buffer = pitchShiftAudioBuffer;
+
+            source = new AudioBufferSourceNode(audiocontext, { buffer });
+
+            source.playbackRate.value = 1 / rate;
+
+            source.connect(audiocontext.destination);
+
+            source.start(0);
+
+            buttonElement.textContent = 'stop';
+          })
+          .catch(console.error);
+      } else {
+        source = new AudioBufferSourceNode(audiocontext, { buffer });
+
+        source.playbackRate.value = 1 / rate;
+
+        source.connect(audiocontext.destination);
+
+        source.start(0);
+
+        buttonElement.textContent = 'stop';
+      }
+    }
+  };
+
+  buttonElement.addEventListener('click', onClick);
+};
+
+const pitchShifterLowByTimeStretchAndResampling = () => {
+  let buffer = null;
+  let source = null;
+
+  const rate = 0.66;
+
+  const buttonElement = document.getElementById('button-offline-pitchshifter-low');
+
+  const onClick = async () => {
+    if (audiocontext.state !== 'running') {
+      await audiocontext.resume();
+    }
+
+    if (source) {
+      source.stop(0);
+
+      source = null;
+
+      buttonElement.textContent = 'start';
+    } else {
+      if (buffer === null) {
+        buttonElement.textContent = 'Wait ...';
+
+        const rate = 0.66;
+
+        fetch('./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3')
+          .then((response) => {
+            return response.arrayBuffer();
+          })
+          .then(async (arrayBuffer) => {
+            const audioBuffer = await audiocontext.decodeAudioData(arrayBuffer);
+
+            const numberOfChannels = audioBuffer.numberOfChannels;
+
+            const resampleRate = audioBuffer.sampleRate * rate;
+
+            const length = Math.ceil(audioBuffer.length / rate);
+
+            const pitchShiftAudioBuffer = audiocontext.createBuffer(numberOfChannels, length, audioBuffer.sampleRate);
+
+            for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber++) {
+              const inputBuffer = audioBuffer.getChannelData(channelNumber);
+              const outputBuffer = new Float32Array(length);
+
+              const templateSize = Math.trunc(resampleRate * 0.01);
+
+              const minPeriod = Math.trunc(resampleRate * 0.005);
+              const maxPeriod = Math.trunc(resampleRate * 0.02);
+
+              const x = new Float32Array(templateSize);
+              const y = new Float32Array(templateSize);
+              const r = new Float32Array(maxPeriod + 1);
+
+              let offset0 = 0;
+              let offset1 = 0;
+
+              while (offset0 + 2 * maxPeriod < inputBuffer.length) {
+                for (let n = 0; n < templateSize; n++) {
+                  x[n] = inputBuffer[offset0 + n];
+                }
+
+                let maxCorrelation = 0.0;
+                let period = minPeriod;
+
+                for (let m = minPeriod; m <= maxPeriod; m++) {
+                  for (let n = 0; n < templateSize; n++) {
+                    y[n] = inputBuffer[offset0 + m + n];
+                  }
+
+                  r[m] = 0.0;
+
+                  for (let n = 0; n < templateSize; n++) {
+                    r[m] += x[n] * y[n];
+                  }
+
+                  if (r[m] > maxCorrelation) {
+                    maxCorrelation = r[m];
+                    period = m;
+                  }
+                }
+
+                for (let n = 0; n < period; n++) {
+                  outputBuffer[offset1 + n] = inputBuffer[offset0 + n];
+                }
+
+                for (let n = 0; n < period; n++) {
+                  outputBuffer[offset1 + period + n] = inputBuffer[offset0 + period + n] * ((period - n) / period);
+                  outputBuffer[offset1 + period + n] += inputBuffer[offset0 + n] * (n / period);
+                }
+
+                const offset = Math.round((period * rate) / (1.0 - rate));
+
+                for (let n = period; n < offset; n++) {
+                  if (offset0 + n >= inputBuffer.length) {
+                    break;
+                  }
+
+                  outputBuffer[offset1 + period + n] = inputBuffer[offset0 + n];
+                }
+
+                offset0 += offset;
+                offset1 += period + offset;
+              }
+
+              pitchShiftAudioBuffer.copyToChannel(outputBuffer, channelNumber);
+            }
+
+            buffer = pitchShiftAudioBuffer;
+
+            source = new AudioBufferSourceNode(audiocontext, { buffer });
+
+            source.playbackRate.value = 1 / rate;
+
+            source.connect(audiocontext.destination);
+
+            source.start(0);
+
+            buttonElement.textContent = 'stop';
+          })
+          .catch(console.error);
+      } else {
+        source = new AudioBufferSourceNode(audiocontext, { buffer });
+
+        source.playbackRate.value = 1 / rate;
+
+        source.connect(audiocontext.destination);
+
+        source.start(0);
+
+        buttonElement.textContent = 'stop';
+      }
+    }
+  };
+
+  buttonElement.addEventListener('click', onClick);
+};
+
 const pitchshifter = () => {
   const buttonElement = document.getElementById('button-pitch-shifter');
 
   const rangePitchElement = document.getElementById('range-pitch-shifter');
   const rangeSpeedElement = document.getElementById('range-time-stretch');
-  const spanPitchElement = document.getElementById('print-pitch-shifter-value');
-  const spanSpeedElement = document.getElementById('print-time-stretch-value');
+  const outputPitchElement = document.getElementById('output-pitch-shifter-value');
+  const outputSpeedElement = document.getElementById('output-time-stretch-value');
 
   let source = null;
   let processor = null;
@@ -17883,28 +18408,554 @@ const pitchshifter = () => {
         }
       });
 
-      rangePitchElement.addEventListener('input', (event) => {
-        pitch = event.currentTarget.valueAsNumber;
+      rangePitchElement.addEventListener('input', () => {
+        pitch = rangePitchElement.valueAsNumber;
 
         if (processor) {
           processor.port.postMessage({ pitch });
         }
 
-        spanPitchElement.textContent = pitch.toFixed(2);
+        outputPitchElement.textContent = pitch.toFixed(2);
       });
 
-      rangeSpeedElement.addEventListener('input', (event) => {
-        speed = event.currentTarget.valueAsNumber;
+      rangeSpeedElement.addEventListener('input', () => {
+        speed = rangeSpeedElement.valueAsNumber;
 
         if (source && processor) {
           source.playbackRate.value = speed;
           processor.port.postMessage({ speed });
         }
 
-        spanSpeedElement.textContent = speed.toFixed(2);
+        outputSpeedElement.textContent = speed.toFixed(2);
       });
     })
     .catch(console.error);
+};
+
+const createLinearInterpolation = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', padding.toString(10));
+  xRect.setAttribute('y', (padding + innerHeight - 24).toString(10));
+  xRect.setAttribute('width', (innerWidth + padding).toString(10));
+  xRect.setAttribute('height', lineWidth.toString(10));
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  ['x(m)', 'x(t)', 'x(m + 1)'].forEach((amplitude, index) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    if (index === 1) {
+      rect.setAttribute('x', (padding + (innerWidth / 2) * index - 48).toString(10));
+    } else {
+      rect.setAttribute('x', (padding + (innerWidth / 2) * index + 12).toString(10));
+    }
+
+    rect.setAttribute('y', (padding + 8 + 48 * (2 - index) + (index === 1 ? 8 : 0)).toString(10));
+    rect.setAttribute('width', lineWidth.toString(10));
+    rect.setAttribute('height', (innerHeight - 24 - 8 - 48 * (2 - index) - (index === 1 ? 8 : 0)).toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', index === 1 ? alphaWaveColor : waveColor);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = amplitude;
+
+    if (index === 1) {
+      text.setAttribute('x', (padding + (innerWidth / 2) * index - 48).toString(10));
+    } else {
+      text.setAttribute('x', (padding + (innerWidth / 2) * index + 12).toString(10));
+    }
+
+    text.setAttribute('y', padding.toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    svg.appendChild(rect);
+    svg.appendChild(text);
+  });
+
+  ['m', 't', 'm + 1'].forEach((time, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = time;
+
+    if (index === 1) {
+      text.setAttribute('x', (padding + (innerWidth / 2) * index - 48).toString(10));
+    } else {
+      text.setAttribute('x', (padding + (innerWidth / 2) * index + 12).toString(10));
+    }
+
+    text.setAttribute('y', (padding + innerHeight - 8).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    svg.appendChild(text);
+  });
+
+  ['δ', '1 - δ'].forEach((time, index) => {
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding + (innerWidth / 2 - 48) * index} ${padding + innerHeight} L${padding + (innerWidth / 2 - 48) * index + 12} ${padding + innerHeight + 4} L${padding + (innerWidth / 2 - 48) * index + 12} ${padding + innerHeight - 4} L${padding + (innerWidth / 2 - 48) * index} ${padding + innerHeight} L${padding + (innerWidth / 2) * (index + 1) - 48 * (1 - index)} ${padding + innerHeight} L${padding + (innerWidth / 2) * (index + 1) - 48 * (1 - index) - 12} ${padding + innerHeight + 4} L${padding + (innerWidth / 2) * (index + 1) - 48 * (1 - index) - 12} ${padding + innerHeight - 4} L${padding + (innerWidth / 2) * (index + 1) - 48 * (1 - index)} ${padding + innerHeight}`
+    );
+    arrow.setAttribute('stroke', lightWaveColor);
+    arrow.setAttribute('fill', lightWaveColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = time;
+
+    if (index === 0) {
+      text.setAttribute('x', (padding + innerWidth / 4 - 12).toString(10));
+    } else {
+      text.setAttribute('x', (padding + (innerWidth / 4) * 3 - 12).toString(10));
+    }
+
+    text.setAttribute('y', (padding + innerHeight + 16).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    svg.appendChild(arrow);
+    svg.appendChild(text);
+  });
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('d', `M${padding + 12} ${padding + 8 + 96} L${padding + 12 + innerWidth} ${padding + 8}`);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', lightWaveColor);
+  path.setAttribute('stroke-width', '2');
+  path.setAttribute('stroke-dasharray', '5,5');
+
+  svg.appendChild(path);
+};
+
+const createResamplingByLinearInterpolation = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', padding.toString(10));
+  xRect.setAttribute('y', (padding + innerHeight - 24).toString(10));
+  xRect.setAttribute('width', (innerWidth + padding).toString(10));
+  xRect.setAttribute('height', lineWidth.toString(10));
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  ['m - 1', 'm', 'm + 1', 'm + 2'].forEach((time, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = time;
+
+    text.setAttribute('x', (padding + (innerWidth / 3) * index + 24).toString(10));
+    text.setAttribute('y', (padding + innerHeight - 8).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    svg.appendChild(text);
+  });
+
+  ['x(m - 1)', 'x(m)', 'x(m + 1)', 'x(m + 2)'].forEach((amplitude, index) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (padding + (innerWidth / 3) * index + 24).toString(10));
+    rect.setAttribute('y', (padding + 8 + (index % 2 === 0 ? 0 : innerHeight / 2)).toString(10));
+    rect.setAttribute('width', lineWidth.toString(10));
+    rect.setAttribute('height', (innerHeight - 24 - 8 - (index % 2 === 0 ? 0 : innerHeight / 2)).toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', alphaWaveColor);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = amplitude;
+
+    text.setAttribute('x', (padding + (innerWidth / 3) * index + 24).toString(10));
+    text.setAttribute('y', padding.toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    svg.appendChild(rect);
+    svg.appendChild(text);
+  });
+
+  const path1 = document.createElementNS(xmlns, 'path');
+  const path2 = document.createElementNS(xmlns, 'path');
+  const path3 = document.createElementNS(xmlns, 'path');
+
+  path1.setAttribute(
+    'd',
+    `M${padding + 24} ${padding + 8} L${padding + innerWidth / 3 + 24} ${padding + innerHeight - 4 - 24} L${padding + (innerWidth / 3) * 2 + 24} ${padding + 8} L${padding + (innerWidth / 3) * 3 + 24} ${padding + innerHeight - 4 - 24}`
+  );
+  path1.setAttribute('fill', 'none');
+  path1.setAttribute('stroke', baseColor);
+  path1.setAttribute('stroke-width', lineWidth.toString(10));
+  path1.setAttribute('stroke-dasharray', '5,5');
+  path1.setAttribute('stroke-linecap', lineCap);
+  path1.setAttribute('stroke-linejoin', lineJoin);
+
+  path2.setAttribute(
+    'd',
+    `M${padding + 24} ${padding + innerHeight - 4 - 24} L${padding + innerWidth / 3 + 24} ${padding + innerHeight / 2 + 8} ${padding + (innerWidth / 3) * 2 + 24} ${padding + innerHeight - 4 - 24} L${padding + (innerWidth / 3) * 3 + 24} ${padding + innerHeight / 2 + 8}`
+  );
+  path2.setAttribute('fill', 'none');
+  path2.setAttribute('stroke', baseColor);
+  path2.setAttribute('stroke-width', lineWidth.toString(10));
+  path2.setAttribute('stroke-dasharray', '5,5');
+  path2.setAttribute('stroke-linecap', lineCap);
+  path2.setAttribute('stroke-linejoin', lineJoin);
+
+  path3.setAttribute(
+    'd',
+    `M${padding + 24} ${padding + 8} L${padding + innerWidth / 3 + 24} ${padding + innerHeight / 2 + 8} L${padding + (innerWidth / 3) * 2 + 24} ${padding + 8} L${padding + (innerWidth / 3) * 3 + 24} ${padding + innerHeight / 2 + 8}`
+  );
+  path3.setAttribute('fill', 'none');
+  path3.setAttribute('stroke', waveColor);
+  path3.setAttribute('stroke-width', lineWidth.toString(10));
+  path3.setAttribute('stroke-linecap', lineCap);
+  path3.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path1);
+  svg.appendChild(path2);
+  svg.appendChild(path3);
+};
+
+const createResamplingBySincFunction = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', padding.toString(10));
+  xRect.setAttribute('y', (padding + innerHeight - 24).toString(10));
+  xRect.setAttribute('width', (innerWidth + padding).toString(10));
+  xRect.setAttribute('height', lineWidth.toString(10));
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  ['m - 1', 'm', 'm + 1', 'm + 2'].forEach((time, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = time;
+
+    text.setAttribute('x', (padding + (innerWidth / 3) * index + 24).toString(10));
+    text.setAttribute('y', (padding + innerHeight - 8).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    svg.appendChild(text);
+  });
+
+  ['x(m - 1)', 'x(m)', 'x(m + 1)', 'x(m + 2)'].forEach((amplitude, index) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (padding + (innerWidth / 3) * index + 24).toString(10));
+    rect.setAttribute('y', (padding + 8 + (index % 2 === 0 ? 0 : innerHeight / 2)).toString(10));
+    rect.setAttribute('width', lineWidth.toString(10));
+    rect.setAttribute('height', (innerHeight - 24 - 8 - (index % 2 === 0 ? 0 : innerHeight / 2)).toString(10));
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('fill', alphaWaveColor);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = amplitude;
+
+    text.setAttribute('x', (padding + (innerWidth / 3) * index + 24).toString(10));
+    text.setAttribute('y', padding.toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    svg.appendChild(rect);
+    svg.appendChild(text);
+  });
+
+  const path1 = document.createElementNS(xmlns, 'path');
+  const path2 = document.createElementNS(xmlns, 'path');
+  const path3 = document.createElementNS(xmlns, 'path');
+  const path4 = document.createElementNS(xmlns, 'path');
+
+  [path1, path2, path3, path4].forEach((path, index) => {
+    let d = '';
+
+    for (let n = -128; n < 128; n++) {
+      const x = (innerWidth / 64) * n + (innerWidth / 3) * index + 24 + padding;
+      const y = (1 - sinc(Math.PI * n)) * (index % 2 === 0 ? innerHeight - 24 : (innerHeight - 48) / 2) + (index % 2 === 0 ? 0 : innerHeight / 2) + 8 + padding;
+
+      if (d === '') {
+        d += `M${x} ${y}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', baseColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-dasharray', '5,5');
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    svg.appendChild(path);
+  });
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  let d = '';
+
+  const size = 2048;
+
+  for (let n = 0; n < size; n++) {
+    const v = Math.cos(n / 220);
+
+    const x = (innerWidth / size) * n + padding + 24;
+    const y = (1 - v) * (innerHeight / 4) + padding + 8;
+
+    if (d === '') {
+      d += `M${x} ${y}`;
+    } else {
+      d += ` L${x} ${y}`;
+    }
+  }
+
+  path.setAttribute('d', d);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', waveColor);
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+};
+
+const createFilterBank = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const renderFilterBank = () => {
+    for (let n = 0; n <= 10; n++) {
+      if (n === 9) {
+        for (let m = 0; m < 3; m++) {
+          const circle = document.createElementNS(xmlns, 'circle');
+
+          circle.setAttribute('cx', (padding + innerWidth / 2).toString(10));
+          circle.setAttribute('cy', (padding + (560 + 12 * m)).toString(10));
+          circle.setAttribute('r', '4');
+          circle.setAttribute('fill', alphaBaseColor);
+          circle.setAttribute('stroke', 'none');
+
+          g.appendChild(circle);
+        }
+
+        continue;
+      }
+
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', (padding + (innerWidth / 2 - 60)).toString(10));
+      rect.setAttribute('y', (padding + 60 * n).toString(10));
+      rect.setAttribute('width', '120');
+      rect.setAttribute('height', '60');
+      rect.setAttribute('fill', 'none');
+      rect.setAttribute('stroke', baseColor);
+      rect.setAttribute('stroke-width', lineWidth.toString(10));
+      rect.setAttribute('stroke-linecap', lineCap);
+      rect.setAttribute('stroke-linejoin', lineJoin);
+
+      const text = document.createElementNS(xmlns, 'text');
+
+      text.textContent = 'BPF';
+
+      text.setAttribute('x', (padding + innerWidth / 2).toString(10));
+      text.setAttribute('y', (padding + (60 * n + 36)).toString(10));
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', baseColor);
+      text.setAttribute('font-size', '18px');
+
+      const subText = document.createElementNS(xmlns, 'text');
+
+      subText.textContent = n < 10 ? n : 'k';
+
+      subText.setAttribute('x', (padding + (innerWidth / 2 + 16)).toString(10));
+      subText.setAttribute('y', (padding + (60 * n + 40)).toString(10));
+      subText.setAttribute('text-anchor', 'start');
+      subText.setAttribute('stroke', 'none');
+      subText.setAttribute('fill', baseColor);
+      subText.setAttribute('font-size', '12px');
+
+      g.appendChild(rect);
+      g.appendChild(text);
+      g.appendChild(subText);
+    }
+
+    svg.appendChild(g);
+  };
+
+  const renderInput = () => {
+    for (let n = 0; n <= 10; n++) {
+      const path = document.createElementNS(xmlns, 'path');
+
+      path.setAttribute(
+        'd',
+        `M${padding + innerWidth / 2 - 120} ${padding + n * 60 + 30} L${padding + innerWidth / 2 - 60} ${padding + n * 60 + 30} L${padding + innerWidth / 2 - 60 - 12} ${padding + n * 60 + 30 - 4} L${padding + innerWidth / 2 - 60 - 12} ${padding + n * 60 + 30 + 4} L${padding + innerWidth / 2 - 60} ${padding + n * 60 + 30}`
+      );
+      path.setAttribute('fill', waveColor);
+      path.setAttribute('stroke', waveColor);
+      path.setAttribute('stroke-width', '1');
+      path.setAttribute('stroke-linecap', lineCap);
+      path.setAttribute('stroke-linejoin', lineJoin);
+
+      g.appendChild(path);
+    }
+
+    const splitter = document.createElementNS(xmlns, 'path');
+
+    splitter.setAttribute('d', `M${padding + innerWidth / 2 - 120} ${padding + 30} L${padding + innerWidth / 2 - 120} ${padding + 630}`);
+    splitter.setAttribute('fill', waveColor);
+    splitter.setAttribute('stroke', waveColor);
+    splitter.setAttribute('stroke-width', '1');
+    splitter.setAttribute('stroke-linecap', lineCap);
+    splitter.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(splitter);
+
+    const input = document.createElementNS(xmlns, 'path');
+
+    input.setAttribute('d', `M${padding} ${padding + 330} L${padding + innerWidth / 2 - 120} ${padding + 330}`);
+    input.setAttribute('fill', waveColor);
+    input.setAttribute('stroke', waveColor);
+    input.setAttribute('stroke-width', '1');
+    input.setAttribute('stroke-linecap', lineCap);
+    input.setAttribute('stroke-linejoin', lineJoin);
+
+    const inputText = document.createElementNS(xmlns, 'text');
+
+    inputText.textContent = 'Input';
+
+    inputText.setAttribute('x', padding.toString(10));
+    inputText.setAttribute('y', (padding + 330 - 12).toString(10));
+    inputText.setAttribute('text-anchor', 'middle');
+    inputText.setAttribute('stroke', 'none');
+    inputText.setAttribute('fill', baseColor);
+    inputText.setAttribute('font-size', '16px');
+
+    g.appendChild(input);
+    g.appendChild(inputText);
+  };
+
+  const renderOutput = () => {
+    for (let n = 0; n <= 10; n++) {
+      const path = document.createElementNS(xmlns, 'path');
+
+      path.setAttribute('d', `M${padding + innerWidth / 2 + 60} ${padding + n * 60 + 30} L${padding + innerWidth / 2 + 120} ${padding + n * 60 + 30}`);
+      path.setAttribute('fill', waveColor);
+      path.setAttribute('stroke', waveColor);
+      path.setAttribute('stroke-width', '1');
+      path.setAttribute('stroke-linecap', lineCap);
+      path.setAttribute('stroke-linejoin', lineJoin);
+
+      g.appendChild(path);
+    }
+
+    const merger = document.createElementNS(xmlns, 'path');
+
+    merger.setAttribute('d', `M${padding + innerWidth / 2 + 120} ${padding + 30} L${padding + innerWidth / 2 + 120} ${padding + 630}`);
+    merger.setAttribute('fill', waveColor);
+    merger.setAttribute('stroke', waveColor);
+    merger.setAttribute('stroke-width', '1');
+    merger.setAttribute('stroke-linecap', lineCap);
+    merger.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(merger);
+
+    const output = document.createElementNS(xmlns, 'path');
+
+    output.setAttribute(
+      'd',
+      `M${padding + innerWidth / 2 + 120} ${padding + 330} L${padding + innerWidth / 2 + 180} ${padding + 330} L${padding + innerWidth / 2 + 180 - 12} ${padding + 330 - 4} L${padding + innerWidth / 2 + 180 - 12} ${padding + 330 + 4} L${padding + innerWidth / 2 + 180} ${padding + 330}`
+    );
+    output.setAttribute('fill', waveColor);
+    output.setAttribute('stroke', waveColor);
+    output.setAttribute('stroke-width', '1');
+    output.setAttribute('stroke-linecap', lineCap);
+    output.setAttribute('stroke-linejoin', lineJoin);
+
+    const outputText = document.createElementNS(xmlns, 'text');
+
+    outputText.textContent = 'Output';
+
+    outputText.setAttribute('x', (padding + innerWidth / 2 + 180).toString(10));
+    outputText.setAttribute('y', (padding + 330 - 12).toString(10));
+    outputText.setAttribute('text-anchor', 'middle');
+    outputText.setAttribute('stroke', 'none');
+    outputText.setAttribute('fill', baseColor);
+    outputText.setAttribute('font-size', '16px');
+
+    g.appendChild(output);
+    g.appendChild(outputText);
+
+    const circle = document.createElementNS(xmlns, 'circle');
+
+    circle.setAttribute('cx', (padding + innerWidth / 2 + 120).toString(10));
+    circle.setAttribute('cy', (padding + 330).toString(10));
+    circle.setAttribute('r', '12');
+    circle.setAttribute('fill', white);
+    circle.setAttribute('stroke', baseColor);
+    circle.setAttribute('stroke-width', lineWidth.toString(10));
+    circle.setAttribute('stroke-linecap', lineCap);
+    circle.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = '+';
+
+    text.setAttribute('x', (padding + innerWidth / 2 + 120).toString(10));
+    text.setAttribute('y', (padding + 330 + 6).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '24px');
+
+    g.appendChild(circle);
+    g.appendChild(text);
+
+    svg.appendChild(g);
+  };
+
+  renderFilterBank();
+  renderInput();
+  renderOutput();
 };
 
 const vocalcanceler = () => {
@@ -23037,7 +24088,15 @@ createResampling(document.getElementById('svg-figure-resampling'));
 createTimeStretchFast(document.getElementById('svg-figure-time-stretch-fast'));
 createTimeStretchSlow(document.getElementById('svg-figure-time-stretch-slow'));
 
+pitchShifterHighByTimeStretchAndResampling();
+pitchShifterLowByTimeStretchAndResampling();
 pitchshifter();
+
+createLinearInterpolation(document.getElementById('svg-figure-linear-interpolation'));
+createResamplingByLinearInterpolation(document.getElementById('svg-figure-resampling-by-linear-interpolation'));
+createResamplingBySincFunction(document.getElementById('svg-figure-resampling-by-sinc-function'));
+
+createFilterBank(document.getElementById('svg-figure-filter-bank'));
 
 vocalcanceler();
 
