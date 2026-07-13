@@ -18966,17 +18966,18 @@ const vocalcanceler = () => {
   const rangeMinFrequencyElement = document.getElementById('range-vocal-canceler-min-frequency');
   const rangeRangeElement = document.getElementById('range-vocal-canceler-range');
   const rangeThresholdElement = document.getElementById('range-vocal-canceler-threshold');
-  const spanDepthElement = document.getElementById('print-vocal-canceler-depth-value');
-  const spanMinFrequencyElement = document.getElementById('print-vocal-canceler-min-frequency-value');
-  const spanRangeElement = document.getElementById('print-vocal-canceler-range-value');
-  const spanThresholdElement = document.getElementById('print-vocal-canceler-threshold-value');
+
+  const outputDepthElement = document.getElementById('output-vocal-canceler-depth-value');
+  const outputMinFrequencyElement = document.getElementById('output-vocal-canceler-min-frequency-value');
+  const outputRangeElement = document.getElementById('output-vocal-canceler-range-value');
+  const outputThresholdElement = document.getElementById('output-vocal-canceler-threshold-value');
 
   let source = null;
   let processor = null;
 
   let depth = 0;
   let minFrequency = 200;
-  let maxFrequency = 7800;
+  let maxFrequency = 8000;
   let threshold = 0.5;
 
   inputElement.addEventListener(
@@ -19006,8 +19007,8 @@ const vocalcanceler = () => {
     { once: true }
   );
 
-  inputElement.addEventListener('change', (event) => {
-    const file = event.currentTarget.files[0];
+  inputElement.addEventListener('change', () => {
+    const file = inputElement.files[0];
 
     audioElement.src = window.URL.createObjectURL(file);
   });
@@ -19025,28 +19026,28 @@ const vocalcanceler = () => {
     }
   });
 
-  rangeDepthElement.addEventListener('input', (event) => {
-    depth = event.currentTarget.valueAsNumber;
+  rangeDepthElement.addEventListener('input', () => {
+    depth = rangeDepthElement.valueAsNumber;
 
     if (processor) {
       processor.port.postMessage({ depth });
     }
 
-    spanDepthElement.textContent = depth.toFixed(2);
+    outputDepthElement.textContent = depth.toFixed(2);
   });
 
-  rangeMinFrequencyElement.addEventListener('input', (event) => {
-    minFrequency = event.currentTarget.valueAsNumber;
+  rangeMinFrequencyElement.addEventListener('input', () => {
+    minFrequency = rangeMinFrequencyElement.valueAsNumber;
 
     if (processor) {
       processor.port.postMessage({ minFrequency });
     }
 
-    spanMinFrequencyElement.textContent = `${minFrequency} Hz`;
+    outputMinFrequencyElement.textContent = `${minFrequency} Hz`;
   });
 
-  rangeRangeElement.addEventListener('input', (event) => {
-    const range = event.currentTarget.valueAsNumber;
+  rangeRangeElement.addEventListener('input', () => {
+    const range = rangeRangeElement.valueAsNumber;
 
     maxFrequency = minFrequency + range;
 
@@ -19054,17 +19055,17 @@ const vocalcanceler = () => {
       processor.port.postMessage({ maxFrequency });
     }
 
-    spanRangeElement.textContent = `${range} Hz (${maxFrequency} Hz)`;
+    outputRangeElement.textContent = `${range.toFixed(0)} Hz (${maxFrequency.toFixed(0)} Hz)`;
   });
 
-  rangeThresholdElement.addEventListener('input', (event) => {
-    threshold = event.currentTarget.valueAsNumber;
+  rangeThresholdElement.addEventListener('input', () => {
+    threshold = rangeThresholdElement.valueAsNumber;
 
     if (processor) {
       processor.port.postMessage({ threshold });
     }
 
-    spanThresholdElement.textContent = threshold.toFixed(2);
+    outputThresholdElement.textContent = threshold.toFixed(2);
   });
 };
 
