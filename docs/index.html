@@ -17036,8 +17036,8 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
         <section id="section-effectors-connection-order">
           <h3>エフェクターの接続順</h3>
           <p>
-            ここまでのセクションで様々なエフェクター (空間系, モジュレーション系, フィルタ系, 歪み系など) を解説してきました. 最後に, 解説しておくこととして, 1
-            つのエフェクーだけを利用する場合は考慮する必要のない問題ですが, 多くの場合, 複数のエフェクターを同時に利用することになるでしょう.
+            ここまでのセクションで様々なエフェクター (空間系, モジュレーション系, フィルタ系, 歪み系など) を解説してきました. 最後に解説しておくこととして,
+            エフェクター 1 つだけを利用する場合は考慮する必要のない問題ですが, 多くの場合, 複数のエフェクターを同時に利用することになるでしょう.
             <a href="#section-effectors-amp-simulator-and-effectors-distortion">アンプシミュレーターと歪み系エフェクターによるディストーションサウンド</a>のセクションでも記載しましたが, <b>エフェクターの接続順は出力されるサウンドに大きく影響を与えます</b>.
           </p>
           <p>
@@ -17045,17 +17045,17 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
             も接続順が存在することになります. しかしながら, <b>エフェクターの接続順にはおおよその定石があります</b>.
           </p>
           <p>
-            このセクションでは, ローランド社のマルチエフェクターの ME シリーズである,
+            このセクションでは, BOSS (ローランド社) のマルチエフェクターの ME シリーズである,
             <a href="https://www.boss.info/jp/products/me-70/" target="_blank" rel="noopener noreferrer">ME-70</a> と
             <a href="https://www.boss.info/jp/products/me-80/" target="_blank" rel="noopener noreferrer">ME-80</a> にもとづいて,
             エフェクターの接続順の定石を解説します (いずれの機種も, 生産・販売終了していますが, コンパクトエフェクター並べたような UI で直感的で使えるのと,
-            デジタルすぎないサウンドメイクができることから, まだまだ現役で利用されているギタリストは多くいらっしゃいます).
+            アンサンブルに馴染みやすいサウンドメイク (COSM による DSP 処理) ができることから, まだまだ現役で利用されているギタリストは多くいらっしゃいます).
           </p>
           <ol>
             <li>入力 (ギター, ベースなど)</li>
             <li>ワウ, Whammy など飛び道具系</li>
             <li>コンプレッサー</li>
-            <li>歪み系エフェクター (ブースター, オーバードライブ, ファズなど</li>
+            <li>歪み系エフェクター (ブースター, オーバードライブ, ファズなど)</li>
             <li>アンプシミュレーター (もしくは, 実機のアンプにリターン接続) とイコライザー</li>
             <li>ノイズリダクション (ノイズサプレッサー)</li>
             <li>モジュレーション系 (コーラス・フランジャー, トレモロ, フェイザーなど)</li>
@@ -17067,7 +17067,7 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
           <p>
             また, ME-70 と ME-80 にもとづいたエフェクターの接続順の定石を記載しましたが, ローランド社が公開している,
             <a href="https://articles.boss.info/ja/the-ultimate-guide-to-guitar-effects-pedal-order-and-signal-chain/" target="_blank" rel="noopener noreferrer"
-              >ギター用エフェクトの接続順ガイド</a>も非常に参考になると思います.
+              >ギター用エフェクトの接続順ガイド</a>も非常に参考になると思います (もっとも, あくまで定石であって, 必ずしもこれらの接続順である必要はありません).
           </p>
           <table>
             <caption>
@@ -17093,7 +17093,7 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
                 <td class="nowrap"><a href="https://www.boss.info/jp/products/gt-1/" target="_blank" rel="noopener noreferrer">BOSS GT-1</a></td>
                 <td>
                   ディスプレイ下のボタンの並びが一般的なエフェクターの接続順となっていますが, 右側のノブで選択したエフェクターの接続順を変更可能で,
-                  ディスプレイ上の接続で確認できます
+                  ディスプレイ上の接続で確認できます.
                 </td>
                 <td><img src="images/boss-gt-1.png" alt="BOSS GT-1" width="3900" height="2385" loading="lazy" /></td>
               </tr>
@@ -17129,12 +17129,6 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
               </tr>
             </tbody>
           </table>
-          <p>
-            もっとも, あくまで定石であって, 必ずしも上記の接続順である必要はありません. エフェクターの接続順を学び,
-            創造していくのは「守破離」の概念と似ています. 「守」はまず基本や定石を学ぶこと, 知ること. 「破」は「守」を基に, 自分の好みに合う接続にしたり,
-            エフェクター個々の特性に合わせて, エフェクターの接続順をカスタマイズしたりしていくこと. 「離」は, 「守」「破」を経験したうえで,
-            まだこの世の中にはないようなサウンドエフェクトを創造したり, アンチパターンと思われていたことをあえて利用できるジャンルを創造したりしていくことです.
-          </p>
         </section>
         <section id="section-effectors-conclusion">
           <h3>Web Audio API におけるエフェクターの実装のまとめ</h3>
