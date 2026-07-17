@@ -19318,10 +19318,10 @@ const animateVectors = (svg) => {
   svg.appendChild(vectorArrowX);
   svg.appendChild(vectorArrowY);
 
-  const spanPrintVectorXElement = document.getElementById('print-vector-x-value');
-  const spanPrintVectorYElement = document.getElementById('print-vector-y-value');
-  const spanPrintVectorScalarElement = document.getElementById('print-vector-scalar-value');
-  const spanPrintVectorRadianElement = document.getElementById('print-vector-radian-value');
+  const outputVectorXElement = document.getElementById('output-vector-x-value');
+  const outputVectorYElement = document.getElementById('output-vector-y-value');
+  const outputVectorScalarElement = document.getElementById('output-vector-scalar-value');
+  const outputVectorRadianElement = document.getElementById('output-vector-radian-value');
 
   const cx = padding + innerWidth / 2 - 2;
   const cy = padding + innerHeight / 2 - 2;
@@ -19329,14 +19329,16 @@ const animateVectors = (svg) => {
   const halfWidth = Number(svg.getAttribute('width')) / 2;
   const halfHeight = Number(svg.getAttribute('height')) / 2;
 
+  const scale = 65;
+
   const onMove = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
 
     let x = event.clientX - (rect.x + rect.width) + halfWidth;
     let y = -1 * (event.clientY - (rect.y + rect.height) + halfHeight);
 
-    const scalar = Math.sqrt(x ** 2 + y ** 2);
-    const radian = Math.atan2(y, x);
+    const scalar = Math.sqrt(Number((x / scale).toFixed(1)) ** 2 + Number((y / scale).toFixed(1)) ** 2);
+    const radian = Math.atan2(Number((y / scale).toFixed(1)), Number((x / scale).toFixed(1)));
 
     if (x < padding - halfWidth) {
       x = padding - halfWidth;
@@ -19350,15 +19352,28 @@ const animateVectors = (svg) => {
       y = padding - halfHeight;
     }
 
-    spanPrintVectorXElement.textContent = (x / 50).toFixed(6);
-    spanPrintVectorYElement.textContent = (y / 50).toFixed(6);
-    spanPrintVectorScalarElement.textContent = (scalar / 50).toFixed(6);
-    spanPrintVectorRadianElement.textContent = radian.toFixed(6);
+    outputVectorXElement.textContent = (x / scale).toFixed(1);
+    outputVectorYElement.textContent = (y / scale).toFixed(1);
+    outputVectorScalarElement.textContent = scalar.toFixed(1);
+    outputVectorRadianElement.textContent = radian.toFixed(1);
 
-    if (x === 0 && y === 0) {
-      spanPrintVectorScalarElement.textContent = '0';
-      spanPrintVectorRadianElement.textContent = 'NaN';
+    if (x.toFixed(1) === 0) {
+      vectorX.removeAttribute('d');
+      vectorX.removeAttribute('transform');
 
+      vectorArrowX.removeAttribute('points');
+      vectorArrowX.removeAttribute('transform');
+    }
+
+    if (y.toFixed(1) === 0) {
+      vectorY.removeAttribute('d');
+      vectorY.removeAttribute('transform');
+
+      vectorArrowY.removeAttribute('points');
+      vectorArrowY.removeAttribute('transform');
+    }
+
+    if (x.toFixed(1) === 0 && y.toFixed(1) === 0) {
       vector.removeAttribute('d');
       vector.removeAttribute('transform');
 

@@ -17171,9 +17171,9 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
           <b>1 つ以上の <code>PannerNode</code> インスタンスを生成して, 他の <code>AudioNode</code> に接続することで有効になります</b>.
         </p>
         <p>
-          Web Audio API の 3D オーディオ, つまり, <code>PannerNode</code> と <code>AudioListener</code> の仕様の多くは,
-          <a href="https://openal.org/" target="_blank" rel="noopener noreferrer">OpenAL</a> にもとづいています. したがって, OpenAL に理解がある場合, 比較的,
-          Web Audio API の 3D オーディオも理解しやすいと思います.
+          Web Audio API の 3D オーディオ, つまり, <code>PannerNode</code> と <code>AudioListener</code> の仕様の多く (特に,
+          距離による減衰モデルや計算アルゴリズムなど) は, <a href="https://openal.org/" target="_blank" rel="noopener noreferrer">OpenAL</a> にもとづいています.
+          したがって, OpenAL に理解がある場合, 比較的, Web Audio API の 3D オーディオも理解しやすいと思います.
         </p>
         <section id="section-spatialization-x-y-x">
           <h3>3D オーディオの座標系</h3>
@@ -17205,12 +17205,12 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
           <p>
             <code>PannerNode</code> や <code>AudioListener</code> のプロパティには, <b>ベクトル</b> (3 つのプロパティで, 3 次元のベクトルを表現)
             を意味するプロパティがあります. ベクトルに関しては, 数学や物理と同じなので, 高校数学や大学などでベクトル, あるいは,
-            線形代数を学んで理解してればスキップして問題ありません.
+            線形代数を学んで理解していればスキップして問題ありません.
           </p>
           <p>
             <b>ベクトル</b>とは, <b>大きさ</b>と<b>向き</b>をもつ物理量, あるいは, それを抽象化した概念のことです. ベクトルの代表例としては, 速度,
-            重力や電磁気力などの力があります. それに対して, スカラーとは大きさのみで向きの概念をもたない物理量ことです. スカラーの代表例としては,
-            速さや質量などがあります. また, 音の特性に関連する物理量 (振幅・周波数・周期) や, Web Audio API の <code>AudioParam</code> (ゲインやディレイタイム,
+            重力や電磁気力などの力があります. それに対して, スカラーとは大きさのみで向きの概念をもたない物理量のことです. スカラーの代表例としては,
+            速さや質量などがあります. 音の特性に関連する物理量 (振幅・周波数・周期) や, Web Audio API の <code>AudioParam</code> (ゲインやディレイタイム,
             フィルタのカットオフ周波数) も向きの概念をもたず, 大きさのみをもつスカラーです. そして, のちほど解説しますが, 例えば, <code>PannerNode</code> の 3
             つのプロパティ, <code>orientationX</code>, <code>orientationY</code>, <code>orientationZ</code> は, それぞれはスカラーですが, 3
             つのプロパティを合わせて, 大きさと向きを表現するベクトルとなります.
@@ -17246,17 +17246,18 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
             一般にしたがって, x - y 軸を 2 次元平面とします.
           </p>
           <p>
-            x 座標の値と, y 座標の値をそれぞれ 1 つずつ決定すれば, 平面上の任意の点の位置が決まります. そして, 原点
-            <code>(0, 0)</code> とこの点を直線で結ぶことができます. この直線の, <b>原点から 2 次元上の任意の点へ向かう方向</b>
+            x 座標の値と, y 座標の値をそれぞれ 1 つずつ決定すれば, 平面上の任意の点の位置が決まります (この任意の点を
+            <span class="math-inline">$A$</span> とします). そして, 原点 <code>(0, 0)</code> と <span class="math-inline">$A$</span> を直線で結ぶことができます.
+            この直線の, <b>原点から 2 次元上の任意の点へ向かう方向</b>
             <span class="math-inline">$\left(\overrightarrow{OA}\right)$</span> がイメージとしての向きです. これが, 逆だと向きは異なり, 逆ベクトルと呼ばれます
             <span class="math-inline">$\left(\overrightarrow{AO}\right)$</span>.
           </p>
           <p>
             もちろん, ベクトルの演算においては, ラジアンなどで定量的に向きを表します. 2 次元上の任意の点と原点との距離がベクトルの大きさになります. また, x
-            軸とベクトルのなす角がベクトルの向きとなります (説明の便宜上, ベクトルの端点の 1 つを原点に設定していますが, 実際には, 2
-            次元上の任意の点を設定できます). 大きさを求めるには, 任意の点の距離を<b>三平方の定理</b> (<b>ピタゴラスの定理</b>) を使うことで算出できます. 向きは,
-            ほとんどのプログラミング言語の, 数学関数に定義されている <b><code>atan2(y, x)</code></b> 関数を使うことで, ラジアン単位で取得することができます
-            (ただし, この引数 <code>y</code>, <code>x</code> は原点からの座標である必要があります).
+            軸とベクトルのなす角がベクトルの向きとなります (説明の便宜上, ベクトルの始点を原点に固定していますが, 実際には空間上の任意の点を始点にできます).
+            大きさを求めるには, 任意の点の距離を<b>三平方の定理</b> (<b>ピタゴラスの定理</b>) を使うことで算出できます. 向きは, ほとんどのプログラミング言語の,
+            数学関数に定義されている <b><code>atan2(y, x)</code></b> 関数を使うことで, ラジアン単位で取得することができます (ただし, この引数 <code>y</code>,
+            <code>x</code> は<b>原点からの座標である必要があります</b>).
           </p>
           <p>2 次元ベクトルの大きさとなす角 (向き) を算出するメソッドを追加実装した <code>Vector2</code> クラスの実装は以下のようになります.</p>
           <pre data-prismjs-copy="クリップボードにコピー" data-prismjs-copy-success="コピーしました"><code class="language-js line-numbers">class Vector2 {
@@ -17313,10 +17314,10 @@ console.log(v.radian);  // 0.9272952180016122 ... ≒ acos(3/5) ≒ 53.13°</cod
             <div class="flexbox">
               <svg id="svg-animation-vectors" width="600" height="600" style="cursor: move" />
               <ul>
-                <li>x = <span id="print-vector-x-value">0</span></li>
-                <li>y = <span id="print-vector-y-value">0</span></li>
-                <li>Scalar = <span id="print-vector-scalar-value">0</span></li>
-                <li>Radian = <span id="print-vector-radian-value">0</span></li>
+                <li>x = <output id="output-vector-x-value" for="svg-animation-vectors">0.0</output></li>
+                <li>y = <output id="output-vector-y-value" for="svg-animation-vectors">0.0</output></li>
+                <li>Scalar = <output id="output-vector-scalar-value" for="svg-animation-vectors">0.0</output></li>
+                <li>Radian = <output id="output-vector-radian-value" for="svg-animation-vectors">0.0</output></li>
               </ul>
             </div>
             <figcaption>2 次元ベクトル</figcaption>
@@ -17328,12 +17329,12 @@ console.log(v.radian);  // 0.9272952180016122 ... ≒ acos(3/5) ≒ 53.13°</cod
               を求める場合に, <code>atan2</code> 関数を利用してきました. 少し疑問にもたれたかもしれませんが, 座標に相当する値から, その角度を求めるのであれば,
               <code>atan</code> 関数, つまり, 逆正接関数 (<span class="math-inline">$\tan^{-1}\left(\frac{y}{x}\right)$</span>)
               でもよいのではないかという疑問です. 数学的には, <code>atan</code> 関数を利用することも正しいのですが, <code>atan</code> の返すラジアンは,
-              <span class="math-inline">$-\frac{\pi}{2} &le; \tan^{-1}\left(\frac{y}{x}\right) &le; \frac{\pi}{2}$</span> となるので,
+              <span class="math-inline">$-\frac{\pi}{2} \lt \tan^{-1}\left(\frac{y}{x}\right) \lt \frac{\pi}{2}$</span> となるので,
               <span class="math-inline">$2\pi$</span> の範囲の角度を算出する必要がある場合, x, y ごとに場合分けをする必要があり, さらに, x は
               <code>0</code> による除算も防ぐように考慮する必要があります. もちろん, 地道にこの場合分けをして, 角度を求めてもよいのですが,
               ほとんどのプログラミング言語には, この場合分けを必要とせず, 座標から <span class="math-inline">$2\pi$</span> の範囲の角度 (<span
                 class="math-inline"
-                >$-\pi &le; \mathrm{atan2}\left(y, x\right) &le; \pi$</span>) をラジアン単位で取得できる <code>atan2</code> 関数が実装されているので, そちらを利用したほうが,
+                >$-\pi \le \mathrm{atan2}\left(y, x\right) \le \pi$</span>) をラジアン単位で取得できる <code>atan2</code> 関数が実装されているので, そちらを利用したほうが,
               実装コストやレビューコストが圧倒的に少なくて済むというメリットが大きいからです (逆に, デメリットを見つけるほうが難しいかもしれません.
               強いて言えば, <code>atan2</code> 関数が利用できないプログラミング言語を使う場合でしょうか ...).
             </p>
@@ -17794,7 +17795,7 @@ oscillator.stop(context.currentTime + 5);</code></pre>
           <article id="section-spatialization-audio-listener-set-position">
             <h4>Firefox での positionX / positionY / positionZ の設定</h4>
             <p>
-              Firefox 142 の時点では, <code>positionX</code> / <code>positionY</code> / <code>positionZ</code> プロパティが実装されていないので, Firefox
+              Firefox 152 の時点では, <code>positionX</code> / <code>positionY</code> / <code>positionZ</code> プロパティが実装されていないので, Firefox
               も対応ブラウザに含む場合は, 非推奨ではありますが <code>AudioListener</code> の
               <b><code>setPosition(x, y, z)</code></b> メソッドを利用する必要があります.
             </p>
@@ -17802,7 +17803,7 @@ oscillator.stop(context.currentTime + 5);</code></pre>
           <article id="section-spatialization-audio-listener-set-orientation">
             <h4>Firefox での forwardX / forwardY / forwardZ / upX / upY / upZ の設定</h4>
             <p>
-              同じく, Firefox 142 の時点では, <code>forwardX</code> / <code>forwardY</code> / <code>forwardZ</code> プロパティ, および, <code>upX</code> /
+              同じく, Firefox 152 の時点では, <code>forwardX</code> / <code>forwardY</code> / <code>forwardZ</code> プロパティ, および, <code>upX</code> /
               <code>upY</code> / <code>upZ</code> プロパティが実装されていないので, Firefox も対応ブラウザに含む場合は, 非推奨ではありますが
               <code>AudioListener</code> の <b><code>setOrientation(forwardX, forwardY, forwardZ, upX, upY, upZ)</code></b> メソッドを利用する必要があります.
             </p>
