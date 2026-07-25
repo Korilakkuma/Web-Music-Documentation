@@ -15,7 +15,7 @@ class PhaseSpectrumOverlapAddProcessor extends OverlapAddProcessor {
     const a2 = alpha / 2;
 
     for (let n = 0; n < size; n++) {
-      w[n] = a0 - a1 * Math.cos((2 * Math.PI * n) / (size - 1)) + a2 * Math.cos((4 * Math.PI * n) / (size - 1));
+      w[n] = a0 - a1 * Math.cos((2 * Math.PI * n) / size) + a2 * Math.cos((4 * Math.PI * n) / size);
     }
 
     return w;

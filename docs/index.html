@@ -17938,9 +17938,10 @@ oscillator.stop(context.currentTime + 5);</code></pre>
           <h3>AnalyserNode</h3>
           <p>
             <code>AnalyserNode</code> で波形データを取得するためのは, 対象のオーディオグラフ (<code>AudioNode</code> の接続) に
-            <code>AnalyserNode</code> インスタンスを接続している必要があります. <code>AnalyserNode</code> インスタンスので生成は,
-            <code>AnalyserNode</code> コンストラクタ呼び出しか, <code>AudioContext</code> インスタンスの
-            <b><code>createAnalyser</code></b> メソッドを呼び出す必要があります. コンストラクタ呼び出しであれば, 第 2 引数 (<b><code>AnalyserOptions</code></b>
+            <code>AnalyserNode</code> インスタンスを接続している必要があります. <code>AnalyserNode</code> インスタンスの生成は,
+            <code>AnalyserNode</code> コンストラクタ呼び出しか, ファクトリメソッド (<code>AudioContext</code> インスタンスの
+            <b><code>createAnalyser</code></b> メソッド) を呼び出す必要があります. コンストラクタ呼び出しであれば, 第 2 引数 (<b
+              ><code>AnalyserOptions</code></b>
             型) で初期値を設定することが可能です.
           </p>
           <pre
@@ -18028,7 +18029,7 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             <li><code>getByteFrequencyData</code> メソッドのみ, すべてのプロパティが関係します</li>
           </ul>
           <p>したがって, まずは時間領域の波形描画から解説します. また, ここで, SVG と Canvas の API を理解しておきましょう.</p>
-          <p>また, 以降のセクションでは, 以下のような SVG または, Canvas の HTML タグが記述されている前提でコードを解説します.</p>
+          <p>また, 以降のセクションでは, 以下のような SVG, または, Canvas の HTML タグが記述されている前提でコードを解説します.</p>
           <pre
             data-prismjs-copy="クリップボードにコピー"
             data-prismjs-copy-success="コピーしました"
@@ -18050,8 +18051,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
                 <b><code>getFloatTimeDomainData</code></b> メソッドは, <code>Float32Array</code> を引数にとり,
                 <code>Float32Array</code> のサイズだけ時間領域の振幅を格納します. その値の範囲は <b><code>-1</code> ~ <code>1</code></b> です (つまり,
                 <code>0</code> が無音となります). ただし, 引数に指定する <code>Float32Array</code> のサイズが <code>fftSize</code> プロパティより大きい場合,
-                超過した要素は <code>0</code> のままです. また, <code>fftSize</code> プロパティより小さい場合は, 不足した分の値は無視されます. したがって,
-                イディオム的には, <code>fftSize</code> プロパティのサイズの <code>Float32Array</code> を引数に指定します.
+                超過した要素は <code>0</code> のままです. また, <code>fftSize</code> プロパティより小さい場合は, 不足した分の値は無視されます. つまり,
+                イディオム的に, <code>fftSize</code> プロパティのサイズの <code>Float32Array</code> を引数に指定すればよいでしょう.
               </p>
               <p>
                 そして, <code>getFloatTimeDomainData</code> メソッドをアニメーションで繰り返し実行することで, 実行時における,
@@ -18165,8 +18166,8 @@ render();</code></pre>
               <p>
                 SVG の場合, パスの描画は <code>document.createElementNS(&apos;http://www.w3.org/2000/svg&apos;, &apos;path&apos;)</code> で
                 <code>SVGPathElement</code> を生成して, その <code>d</code> 属性に, 座標を設定します. また, パスのスタイルを設定するには,
-                <code>stroke</code> 属性 (パスの色) や <code>stroke-width</code> 属性 (パスの幅) などいくつかあるので, このあたりは
-                <a href="https://svgwg.org/svg2-draft/" target="_blank" rel="noopener noreferrer">SVG の仕様</a>などを参考にしてくださいなどを参考にしてください.
+                <code>stroke</code> 属性 (パスの色) や <code>stroke-width</code> 属性 (パスの幅) などいくつかあるので, 詳細は,
+                <a href="https://svgwg.org/svg2-draft/" target="_blank" rel="noopener noreferrer">SVG の仕様</a>を参考にしてください.
               </p>
               <p>
                 また, <code>SVGPathElement</code> の <code>d</code> 属性は, パスの開始座標のプレフィックスに <code>M</code> をつけて,
@@ -18774,9 +18775,10 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                   時間のテキスト描画は, デジタルオーディオ信号処理の理解が必要といっても, サンプリングを理解していればそれほど難しくはありません.
                   サンプリングの仕組みから, 取得した時間領域の波形を格納している <code>Float32Array</code> の
                   <span class="math-inline">$n$</span> 番目のインデックスと, その次のインデックスは, サンプリング周波数の逆数, つまり,
-                  サンプリング周期だけ時間が進んでいることになります. つまり, <code>Float32Array</code> のインデックスを <span class="math-inline">$n$</span>,
-                  サンプリング周期を <span class="math-inline">$T_{s}$</span> とすると, インデックス <span class="math-inline">$n$</span> における時間
-                  <span class="math-inline">$t_{n}$</span> は, <span class="math-inline">$t_{n} = n \cdot T_{s}$</span> となるわけです.
+                  サンプリング周期だけ時間が進んでいることになります. したがって, <code>Float32Array</code> のインデックスを
+                  <span class="math-inline">$n$</span>, サンプリング周期を <span class="math-inline">$T_{s}$</span> とすると, インデックス
+                  <span class="math-inline">$n$</span> における時間 <span class="math-inline">$t_{n}$</span> は,
+                  <span class="math-inline">$t_{n} = n \cdot T_{s}$</span> となります.
                 </p>
                 <figure>
                   <svg id="svg-figure-sampling-period-to-time-text" width="720" height="360" data-parameters="true" />
@@ -19157,7 +19159,7 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                   波形のパスのみをアニメーションごとに描画しています. 一方で, Canvas の場合, 基本的にはアニメーションのたびに描画をクリアするので,
                   座標軸やテキストなど本来不変な描画もアニメーションごとに描画しています. したがって, この点においては SVG
                   のほうが描画パフォーマンスが優れていると言えます. 描画自体のパフォーマンスは Canvas が優れていますが,
-                  描画するオブジェクトがほとんど不変であれば SVG のほうがパフォーマンスが優れるケースもあるかもしれません.
+                  描画するオブジェクトがほとんど不変であれば SVG のほうが実際のパフォーマンスが優れるケースがあるかもしれません.
                 </p>
               </section>
             </section>
@@ -19167,9 +19169,8 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                 <b><code>getByteTimeDomainData</code></b> メソッドは, <code>Uint8Array</code> を引数にとり,
                 <code>Uint8Array</code> のサイズだけ時間領域の振幅を格納します. その値の範囲は <b><code>0</code> ~ <code>255</code></b> です. ただし,
                 引数に指定する <code>Uint8Array</code> のサイズが <code>fftSize</code> プロパティより大きい場合, 超過した要素は <code>0</code> のままです. また,
-                <code>fftSize</code> プロパティより小さい場合は, 不足した分の値は無視されます. したがって, イディオム的には,
-                <code>fftSize</code> プロパティのサイズの <code>Uint8Array</code> を引数に指定します. サイズと格納される値の仕様は
-                <code>getFloatTimeDomainData</code> メソッドと同じです.
+                <code>fftSize</code> プロパティより小さい場合は, 不足した分の値は無視されます. つまり, イディオム的に, <code>fftSize</code> プロパティのサイズの
+                <code>Uint8Array</code> を引数に指定すればよいでしょう.
               </p>
               <p><code>getFloatTimeDomainData</code> メソッドと異なるのは, 格納される値の型が異なるので, 振幅と y 座標のマッピングのみです.</p>
               <ul>
@@ -19178,9 +19179,10 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                 <li><code>128</code> の場合, 振幅が <code>0</code> で, y 座標は <code>height</code> の半分</li>
               </ul>
               <p>
-                つまり, <code>getFloatTimeDomainData</code> メソッドで取得できる <code>Float32Array</code> の値を
+                したがって, <code>getFloatTimeDomainData</code> メソッドで取得できる <code>Float32Array</code> の値を
                 <span class="math-inline">$x\left[n\right]$</span>, <code>getByteTimeDomainData</code> メソッで取得できる <code>Uint8Array</code> の値を
-                <span class="math-inline">$b\left[n\right]$</span> とすると以下のような値の関係にあります.
+                <span class="math-inline">$b\left[n\right]$</span> とすると以下のような値の関係にあります (ただし,
+                <code>255</code> を超えた値はクリッピングされて, <code>255</code> となります).
               </p>
               <div class="math-block">$b\left[n\right] = \lfloor 128 \cdot \left(1 + x\left[n\right]\right) \rfloor$</div>
               <figure>
@@ -19566,8 +19568,8 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
               デフォルトの <code>2048</code> サンプルでも十分ですが).
             </p>
             <p>
-              また, <code>getFloatFrequencyData</code> メソッド, <code>getByteFrequencyData</code> メソッドで利用される (FFT のプリプロセス処理となる)
-              <b>窓関数は<a href="#section-effectors-by-audio-worklet-overlap-add-window-function">ブラックマン窓</a></b>です.
+              また, <code>getFloatFrequencyData</code> メソッド, <code>getByteFrequencyData</code> メソッドで利用される<b
+                >窓関数は<a href="#section-effectors-by-audio-worklet-overlap-add-window-function">ブラックマン窓</a></b>です.
             </p>
             <section id="section-sound-visualization-analyser-node-render-frequency-domain-smoothing-time-constant">
               <h5>smoothingTimeConstant プロパティ</h5>
@@ -19590,22 +19592,23 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
               </p>
               <p>
                 <code>getFloatFrequencyData</code> メソッドの引数に渡す <code>Float32Array</code> のサイズは, サンプリング定理より,
-                <b><code>frequencyBinCount</code></b> 以下のサイズである必要があります. もっとも, それより大きいサイズを指定してもエラーにはなりませんが,
-                サンプリング定理から, <b>振幅スペクトルはナイキスト周波数を軸に線対称</b>となるので (すなわち,
-                ナイキスト周波数までの振幅スペクトルが取得できればよいので), <code>frequencyBinCount</code> より大きい要素は
-                <code>0</code> のままになる仕様となっています. イディオム的には, <code>frequencyBinCount</code> プロパティのサイズの
-                <code>Float32Array</code> を引数に指定します (もしくは, 例えば, 音楽信号を対象にする場合,
-                ナイキスト周波数付近の振幅スペクトルまで不要であるケースも多いので, <code>frequencyBinCount</code> のさらに
-                <span class="math-inline">$\frac{1}{2}$</span> 程度のサイズでもよいかもしれません. この場合, サンプリング周波数を
-                <code>48000 Hz</code> とすると, <code>12000 Hz</code> ぐらいまでの振幅スペクトルを描画できることになります).
+                <b><code>frequencyBinCount</code></b> 以下である必要があります. それより大きいサイズを指定してもエラーにはなりませんが, サンプリング定理から,
+                <b>振幅スペクトルはナイキスト周波数を軸に線対称</b>となるので (ナイキスト周波数までの振幅スペクトルが取得できればよいので),
+                <code>frequencyBinCount</code> より大きい要素は <code>0</code> のままになる仕様となっています.
+              </p>
+              <p>
+                つまり, イディオム的に, <code>frequencyBinCount</code> プロパティのサイズの <code>Float32Array</code> を引数に指定すればよいでしょう
+                (対象の信号が限定的である場合, 例えば, 音楽信号を対象にする場合, ナイキスト周波数付近の振幅スペクトルまでは不要であるケースも多いので,
+                <code>frequencyBinCount</code> のさらに <span class="math-inline">$\frac{1}{2}$</span> 程度のサイズでもよいかもしれません. この場合,
+                サンプリング周波数を <code>48000 Hz</code> とすると, <code>12000 Hz</code> ぐらいまでの振幅スペクトルを描画できることになります).
               </p>
               <p>
                 そして, <code>getFloatFrequencyData</code> メソッドをアニメーションで繰り返し実行することで, アニメーションごとに,
                 <code>fftSize</code> プロパティで指定されたサイズで FFT を実行して, 結果となる複素数の配列から, 絶対値を取得して,
-                振幅スペクトルをデシベル単位で格納します. そして, サンプリング定理から,
-                <code>frequencyBinCount</code> のインデックスがナイキスト周波数に対応するインデックスとなるので, 引数の <code>Float32Array</code> のサイズを
-                <code>frequencyBinCount</code> にしていた場合, ナイキスト周波数のインデックスの 1 つ前のインデックス (<code>frequencyBinCount - 1</code>)
-                に対応するまでの周波数成分の振幅スペクトルがデシベル単位で格納されることになります. 以下は,
+                振幅スペクトルをデシベル単位で格納します. そして, サンプリング定理と FFT のサイズが 2 の冪乗であるという条件から,
+                <code>frequencyBinCount</code> と <code>frequencyBinCount - 1</code> のインデックスがナイキスト周波数に対応するインデックスとなるので, 引数の
+                <code>Float32Array</code> のサイズを <code>frequencyBinCount</code> に設定している場合,
+                <code>frequencyBinCount - 1</code> のインデックスに対応するまでの周波数成分の振幅スペクトルがデシベル単位で格納されることになります. 以下は,
                 <code>requestAnimationFrame</code> メソッドでアニメーションを実行する場合のコード例です.
               </p>
               <pre
@@ -19644,7 +19647,7 @@ const render = () =&gt; {
 
 render();</code></pre>
               <p>
-                <code>getFloatFrequencyData</code> メソッドで振幅スペクトルを描画するためには, 振幅値の範囲をデシベルで決める必要があります. 今回は,
+                <code>getFloatFrequencyData</code> メソッドで振幅スペクトルを描画するためには, 振幅値の範囲をデシベルで設定する必要があります. 今回は,
                 <code>0 dB</code> から <code>-60 dB</code> までの振幅を対象に描画することにします. この範囲と, SVG または Canvas の高さとのマッピングを考えます.
               </p>
               <ul>
@@ -20178,7 +20181,8 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                   <span class="math-inline">$f_{s}$</span>, FFT サイズ (<code>fftSize</code> プロパティの値) を <span class="math-inline">$N$</span>とすると,
                   <span class="math-inline">$f_{k} = k \cdot \left(\frac{f_{s}}{N}\right)$</span> となります. 周波数軸も,
                   すべてのインデックスでテキストを描画してしまうと, テキストが重なって視認できないので, 実際には, ある程度間引いて描画したり,
-                  <code>frequencyBinCount</code> の <code>1/2</code> や, <code>1/4</code> に対応するインデックスまで描画したりすればよいでしょう.
+                  <code>frequencyBinCount</code> の <code>1/2</code> や, <code>1/4</code> に対応するインデックスまで描画したりすればよいでしょう. あるいは,
+                  <a href="#section-sound-visualization-analyser-node-render-frequency-logarithmic-scale">周波数軸を対数スケールで描画</a>することで広範囲の周波数を描画することができます.
                 </p>
                 <figure>
                   <svg id="svg-figure-frequency-resolution-to-frequency-text" width="720" height="360" />
@@ -20552,8 +20556,8 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                 <b><code>getByteFrequencyData</code></b> メソッドは, <code>Uint8Array</code> を引数にとり,
                 <code>Uint8Array</code> のサイズだけ振幅スペクトル格納します. 振幅スペクトルの範囲は <b><code>0</code> ~ <code>255</code></b> です. ただし,
                 引数に指定する <code>Uint8Array</code> のサイズが <code>frequencyBinCount</code> プロパティより大きい場合, 超過した要素は
-                <code>0</code> のままです. <code>frequencyBinCount</code> プロパティより小さい場合は, 不足した分の値は無視されます. したがって,
-                イディオム的には, <code>frequencyBinCount</code> プロパティのサイズの <code>Uint8Array</code> を引数に指定します. これら仕様は
+                <code>0</code> のままです. <code>frequencyBinCount</code> プロパティより小さい場合は, 不足した分の値は無視されます. つまり, イディオム的に,
+                <code>frequencyBinCount</code> プロパティのサイズの <code>Uint8Array</code> を引数に指定すればよいでしょう. サイズ指定の考え方は
                 <code>getFloatFrequencyData</code> メソッドと同じです.
               </p>
               <p><code>getFloatFrequencyData</code> メソッドと異なるのは, 格納される値の型が異なるので, 振幅と y 座標のマッピングのみです.</p>
@@ -20957,7 +20961,7 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                   ><code>OverlapAddProcessor</code> クラス</a>を拡張子したクラスを利用して実装します (<code>AudioWorkletProcessor</code> クラスで実装すると, FFT サイズが
                 <code>renderQuantumSize</code> (<code>128</code> サンプル) で固定されてしまい, 十分な周波数分解能が確保できないからです).
                 <code>processOverlapAdd</code> メソッドで呼び出している, <code>FFT</code> 関数は,
-                <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装</a>セクションで記載している実装を
+                <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装セクション</a>で記載している実装を
                 <code>AudioWorkletGlobalScope</code> 内で定義していると仮定してください.
               </p>
               <p>
@@ -20991,7 +20995,7 @@ class PhaseSpectrumOverlapAddProcessor extends OverlapAddProcessor {
     const a2 = alpha / 2;
 
     for (let n = 0; n &lt; size; n++) {
-      w[n] = a0 - a1 * Math.cos((2 * Math.PI * n) / (size - 1)) + a2 * Math.cos((4 * Math.PI * n) / (size - 1));
+      w[n] = a0 - a1 * Math.cos((2 * Math.PI * n) / size) + a2 * Math.cos((4 * Math.PI * n) / size);
     }
 
     return w;
@@ -21047,14 +21051,14 @@ class PhaseSpectrumOverlapAddProcessor extends OverlapAddProcessor {
 registerProcessor(&apos;PhaseSpectrumOverlapAddProcessor&apos;, PhaseSpectrumOverlapAddProcessor);</code></pre>
               <p>
                 <b>位相スペクトルはナイキスト周波数を軸に点対称</b>となります. 線対称か点対称かの違いはありますが, 振幅スペクトと同じく,
-                ナイキスト周波数までの位相スペクトルが取得できればよいので, FFT サイズの値を <code>1/2</code> にして
+                ナイキスト周波数までの位相スペクトルが取得できればよいので, FFT サイズの値を <span class="math-inline">$\frac{1}{2}$</span> にして
                 <code>frequencyBinCount</code> プロパティとして算出しています. したがって, メインスレッドに <code>postMessage</code> される
                 <code>Float32Array</code> のサイズは, <code>frequencyBinCount</code> サイズとなります. また, 偏角はすでに解説していますが,
                 <code>Math.atan2</code> メソッドに, 対応するインデックスの虚軸の値と実軸の値を引数に指定することで, ラジアンとして算出できます.
               </p>
               <p>
-                メインスレッドでは, <code>MessagePort</code> の <code>onmessage</code> イベントハンドラで取得した位相スペクトルを描画します. 位相のプロット範囲
-                (プロットの下限と上限) の設定はいくつか考えられるので (<span class="math-inline">$0 \leq \theta \leq 2 \pi$</span>, <code>0°</code> ~
+                メインスレッドでは, <code>MessagePort</code> の <code>message</code> イベントハンドラで取得した位相スペクトルを描画します. 位相のプロット範囲
+                (プロットの下限と上限) の設定は複数考えられるので (<span class="math-inline">$0 \leq \theta \leq 2 \pi$</span>, <code>0°</code> ~
                 <code>360°</code> など), ここでは, <span class="math-inline">$- \pi \leq \theta \leq \pi$</span> の範囲で位相スペクトルを描画することにします.
               </p>
               <pre
@@ -21280,7 +21284,7 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                 これまでの周波数軸でのスペクトル描画の, 周波数軸はすべて線形スケールで表示していました. しかしながら, スペクトルの場合,
                 低音域から高音域まで視覚化したいユースケースも多くあります. 線形スケールでは, 現実的なグラフィックス API の領域の幅
                 (デスクトップサイズで横スクロールが発生しない幅として, 13 インチで <code>1400 px</code> ぐらい) では, 低音域を詳細に視覚化すると,
-                高音域が視覚化できなくなり (視認できなくなり), 小音域まで視覚化すると, 低音域の詳細が視覚化できなく (視認できなく) なります.
+                高音域が視覚化できなくなり (視認できなくなり), 高音域まで視覚化すると, 低音域の詳細が視覚化できなく (視認できなく) なります.
                 この問題を解決するために, 周波数軸を対数スケールで表示するケースがよくあります (すでに,
                 フィルタの周波数特性などでは対数スケールで表示していますが). このセクションでは, 対数スケールで, 振幅スペクトルを描画する実装を解説します.
               </p>

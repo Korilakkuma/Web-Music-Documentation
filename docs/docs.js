@@ -21157,19 +21157,6 @@ const createFrequencyResolutionToFrequencyText = (svg) => {
 
   svg.appendChild(g);
 
-  const nyquistFrequencyText = document.createElementNS(xmlns, 'text');
-
-  nyquistFrequencyText.textContent = 'Nyquist Frequency';
-
-  nyquistFrequencyText.setAttribute('x', (padding + innerWidth / 2).toString(10));
-  nyquistFrequencyText.setAttribute('y', (padding + innerHeight - 20).toString(10));
-  nyquistFrequencyText.setAttribute('text-anchor', 'middle');
-  nyquistFrequencyText.setAttribute('stroke', 'none');
-  nyquistFrequencyText.setAttribute('fill', lightWaveColor);
-  nyquistFrequencyText.setAttribute('font-size', '16px');
-
-  svg.appendChild(nyquistFrequencyText);
-
   const halfRect = document.createElementNS(xmlns, 'rect');
 
   halfRect.setAttribute('x', padding.toString(10));
@@ -21180,6 +21167,30 @@ const createFrequencyResolutionToFrequencyText = (svg) => {
   halfRect.setAttribute('fill', 'rgba(255 0 255 / 8%)');
 
   svg.appendChild(halfRect);
+
+  const nyquistFrequencyText = document.createElementNS(xmlns, 'text');
+
+  nyquistFrequencyText.textContent = 'Nyquist Frequency';
+
+  nyquistFrequencyText.setAttribute('x', (padding + innerWidth / 2 - 28).toString(10));
+  nyquistFrequencyText.setAttribute('y', (padding + innerHeight / 2 + 20).toString(10));
+  nyquistFrequencyText.setAttribute('text-anchor', 'middle');
+  nyquistFrequencyText.setAttribute('stroke', 'none');
+  nyquistFrequencyText.setAttribute('fill', lightWaveColor);
+  nyquistFrequencyText.setAttribute('font-size', '16px');
+
+  svg.appendChild(nyquistFrequencyText);
+
+  const nyquistFrequencyRect = document.createElementNS(xmlns, 'rect');
+
+  nyquistFrequencyRect.setAttribute('x', (padding + innerWidth / 2 - 76).toString(10));
+  nyquistFrequencyRect.setAttribute('y', (padding + innerHeight / 2 + 32).toString(10));
+  nyquistFrequencyRect.setAttribute('width', (innerWidth / 8 + 4).toString(10));
+  nyquistFrequencyRect.setAttribute('height', (innerHeight / 2 - 28).toString(10));
+  nyquistFrequencyRect.setAttribute('stroke', 'none');
+  nyquistFrequencyRect.setAttribute('fill', 'rgba(255 0 255 / 8%)');
+
+  svg.appendChild(nyquistFrequencyRect);
 };
 
 const animateAmplitudeSpectrumToSVG = (svg, button, displayGraph, displayText) => {
