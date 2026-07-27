@@ -21578,12 +21578,12 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
             バッファに再生データを格納し続ける必要があります. さらに, 一度再生完了しないと, オーディオデータ全体を取得することができません.
           </p>
           <p>
-            楽曲データーのような場合, <code>MediaElementAudioSourceNode</code> を利用するのがユースケースとしては正しいのですが,
+            楽曲データのような場合, <code>MediaElementAudioSourceNode</code> を利用するのがユースケースとしては正しいのですが,
             オーディオデータ全体の描画と再生を考慮すると, <code>AudioBufferSourceNode</code> と <code>AudioBuffer</code> を利用するのが合理的と言えます.
           </p>
           <p>
             <code>AudioBuffer</code> インスタンスの <code>getChannelData</code> メソッドで取得できるオーディオデータの型は, <code>Float32Array</code> なので,
-            波形描画の実装は, <code>getFloatTimeDomainData</code> メソッドを利用しする場合と同じです. 描画対象の <code>Float32Array</code> サイズが
+            波形描画の実装は, <code>getFloatTimeDomainData</code> メソッドを利用する場合と同じです. 描画対象の <code>Float32Array</code> サイズが
             <code>AudioBuffer</code> インスタンスの <code>length</code> プロパティの値になっていることが異なるぐらいです.
           </p>
           <p>
