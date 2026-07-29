@@ -23110,7 +23110,7 @@ const animatePeriodicWave = (svg) => {
 
   const buttonElement = document.getElementById('button-periodic-wave');
   const rangeOscillatorFrequencyElement = document.getElementById('range-periodic-wave-oscillator-frequency');
-  const spanPrintOscillatorFrequencyElement = document.getElementById('print-periodic-wave-oscillator-frequency-value');
+  const outputOscillatorFrequencyElement = document.getElementById('output-periodic-wave-oscillator-frequency-value');
 
   let oscillator = null;
   let frequency = 440;
@@ -23171,19 +23171,25 @@ const animatePeriodicWave = (svg) => {
   buttonElement.addEventListener('mouseup', onUp);
   buttonElement.addEventListener('touchend', onUp);
 
-  rangeOscillatorFrequencyElement.addEventListener('input', (event) => {
-    frequency = event.currentTarget.valueAsNumber;
+  rangeOscillatorFrequencyElement.addEventListener('input', () => {
+    frequency = rangeOscillatorFrequencyElement.valueAsNumber;
 
     if (oscillator) {
       oscillator.frequency.value = frequency;
     }
 
-    spanPrintOscillatorFrequencyElement.textContent = `${frequency} Hz`;
+    outputOscillatorFrequencyElement.textContent = `${frequency} Hz`;
   });
 
   [1, 2, 3, 4, 5, 6, 7, 8].forEach((overtone) => {
-    document.getElementById(`range-periodic-wave-real-${overtone}`).addEventListener('input', (event) => {
-      const real = event.currentTarget.valueAsNumber;
+    const rangeRealElement = document.getElementById(`range-periodic-wave-real-${overtone}`);
+    const rangeImagElement = document.getElementById(`range-periodic-wave-imag-${overtone}`);
+
+    const outputRealElement = document.getElementById(`output-periodic-wave-real-${overtone}`);
+    const outputImagElement = document.getElementById(`output-periodic-wave-imag-${overtone}`);
+
+    rangeRealElement.addEventListener('input', () => {
+      const real = rangeRealElement.valueAsNumber;
 
       reals[overtone] = real;
 
@@ -23193,11 +23199,11 @@ const animatePeriodicWave = (svg) => {
         oscillator.setPeriodicWave(periodicWave);
       }
 
-      document.getElementById(`print-periodic-wave-real-${overtone}`).textContent = real.toFixed(2);
+      outputRealElement.textContent = real.toFixed(2);
     });
 
-    document.getElementById(`range-periodic-wave-imag-${overtone}`).addEventListener('input', (event) => {
-      const imag = event.currentTarget.valueAsNumber;
+    rangeImagElement.addEventListener('input', () => {
+      const imag = rangeImagElement.valueAsNumber;
 
       imags[overtone] = imag;
 
@@ -23207,7 +23213,7 @@ const animatePeriodicWave = (svg) => {
         oscillator.setPeriodicWave(periodicWave);
       }
 
-      document.getElementById(`print-periodic-wave-imag-${overtone}`).textContent = imag.toFixed(2);
+      outputImagElement.textContent = imag.toFixed(2);
     });
   });
 

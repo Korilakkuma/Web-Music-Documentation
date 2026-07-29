@@ -437,7 +437,6 @@ select {
   opacity: 0.6;
 }
 
-.app-periodic-wave,
 .app-output-device-by-sink-id {
   margin: 24px 0;
 }
@@ -454,12 +453,6 @@ select {
   grid-template-columns: repeat(1, auto);
   gap: 8px;
   margin: 24px 0;
-}
-
-.grid-2x2-layout {
-  display: grid;
-  grid-template-rows: repeat(2, auto);
-  grid-template-columns: repeat(2, auto);
 }
 
 .checkbox-container {

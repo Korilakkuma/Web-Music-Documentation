@@ -22096,14 +22096,13 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
           <p>
             コンピュータにおける音合成の 1 つとして, <b>波形テーブル合成</b>があります. 波形データ 1 周期分をコンピュータに内蔵しておき, それを繰り返す, さらに,
             複数の波形データを合成するといった手法で, コンピュータで音を生成する手段です.
-            <abbr title="Pulse Code Modulation">PCM</abbr> のようにレコードされた音を保存しないので, 少ないメモリで可能な限り, 様々な音 (波形)
-            を生成する手法です.
+            <abbr title="Pulse Code Modulation">PCM</abbr> のように録音された音を保存しないので, 少ないメモリで可能な限り, 様々な音 (波形) を生成する手法です.
           </p>
           <p>
             <b><code>PeriodicWave</code></b> クラスは, 波形テーブルを定義することによって任意の波形の生成を可能にします. ただし,
             現実世界の波形テーブル合成とは異なり, 1 周期分の波形データではなく, スペクトルのもとになる複素数の実部の値と虚部の値を設定する, すなわち,
             <b>周波数領域で波形テーブルを定義しておくという Web Audio API 特有の仕様となっています</b> (したがって,
-            スペクトルについて一定以上の理解をしておくのがよいので, <a href="#section-oscillator-node">OscillatorNode</a> のセクションではなく,
+            スペクトルについて一定以上の理解をしておくのがよいので, <a href="#section-oscillator-node">OscillatorNode のセクション</a>ではなく,
             こちらのセクションに解説を記載しました).
           </p>
           <p>
@@ -22112,7 +22111,7 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
             (ファクトリメソッドを利用する場合, 実部の値を第 1 引数に, 虚部の値を第 2 引数に指定します).
           </p>
           <p>
-            実部・虚部の値はどちらも <code>Float32Array</code> で設定します. ただし, 任意の <code>Float32Array</code> を設定することはできず, 以下 2
+            実部・虚部の値はどちらも <code>Float32Array</code> で設定します. ただし, 任意の <code>Float32Array</code> を設定することはできず, 以下 3
             つの制約があります.
           </p>
           <ul>
@@ -22120,7 +22119,7 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
             <li>虚部の <code>Float32Array</code> のインデックス <code>0</code> 番目は, (使用禁止の意味で) 必ず <code>0</code> にしておきます</li>
             <li>
               実部・虚部の <code>Float32Array</code> のサイズは, <code>8192</code> 要素以下にしておく (ブラウザによっては,
-              それより多いサイズをサポートしているかもしれませんが, 仕様で保証されるのは <code>8192</code> までです
+              それより多いサイズをサポートしているかもしれませんが, 仕様で保証されるのは <code>8192</code> までです).
             </li>
           </ul>
           <p>
@@ -22255,71 +22254,71 @@ oscillator.setPeriodicWave(periodicWave);
 // OscillatorNode (Input) -&gt; AudioDestinationNode (Output)
 oscillator.connect(context.destination);
 
-// Start immediately
+// Start oscillator immediately
 oscillator.start(0);
 
-// Stop after 10 sec
+// Stop oscillator after 10 sec
 oscillator.stop(context.currentTime + 10);</code></pre>
           <p>
             以下のビジュアライザーは, ユーザーインタラクティブに, <code>PeriodicWave</code> の実部 (余弦波) と虚部 (正弦波) の基本周波数と 8
             倍音までの比率を設定できるようにして, 時間領域の波形と振幅スペクトルを視覚化しています. 倍音成分を同じにしても, 実部 (余弦波) の項のみと, 虚部
             (正弦波) の項のみでは, 音色は知覚できるほどの差異がなくても, 時間領域の波形がかなり違った波形になることも確認できます.
           </p>
-          <div class="app-container app-periodic-wave">
-            <div class="app-headline">
+          <div class="app-container">
+            <div class="flexbox">
               <button type="button" id="button-periodic-wave">start</button>
-              <label>
+              <label class="flexbox">
                 <span>OscillatorNode frequency (Fundamental frequency)</span>
                 <input type="range" id="range-periodic-wave-oscillator-frequency" value="440" min="220" max="880" step="1" />
-                <span id="print-periodic-wave-oscillator-frequency-value">440 Hz</span>
               </label>
+              <output id="output-periodic-wave-oscillator-frequency-value" for="range-periodic-wave-oscillator-frequency">440 Hz</output>
             </div>
             <figure>
               <svg id="svg-animation-periodic-wave" width="1080" height="240"></svg>
               <figcaption><code>PeriodicWave</code> の波形と振幅スペクトル</figcaption>
             </figure>
-            <div class="grid-2x2-layout">
+            <div class="flexbox">
               <dl>
                 <dt>real (cosine) terms</dt>
                 <dt><label for="range-periodic-wave-real-1">1 (Fundamental Frequency)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-real-1" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-real-1">0.00</span>
+                  <output id="output-periodic-wave-real-1" for="range-periodic-wave-real-1">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-real-2">2 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-real-2" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-real-2">0.00</span>
+                  <output id="output-periodic-wave-real-2" for="range-periodic-wave-real-2">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-real-3">3 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-real-3" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-real-3">0.00</span>
+                  <output id="output-periodic-wave-real-3" for="range-periodic-wave-real-3">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-real-4">4 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-real-4" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-real-4">0.00</span>
+                  <output id="output-periodic-wave-real-4" for="range-periodic-wave-real-4">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-real-5">5 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-real-5" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-real-5">0.00</span>
+                  <output id="output-periodic-wave-real-5" for="range-periodic-wave-real-5">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-real-6">6 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-real-6" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-real-6">0.00</span>
+                  <output id="output-periodic-wave-real-6" for="range-periodic-wave-real-6">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-real-7">7 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-real-7" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-real-7">0.00</span>
+                  <output id="output-periodic-wave-real-7" for="range-periodic-wave-real-7">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-real-8">8 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-real-8" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-real-8">0.00</span>
+                  <output id="output-periodic-wave-real-8" for="range-periodic-wave-real-8">0.00</output>
                 </dd>
               </dl>
               <dl>
@@ -22327,42 +22326,42 @@ oscillator.stop(context.currentTime + 10);</code></pre>
                 <dt><label for="range-periodic-wave-imag-1">1 (Fundamental Frequency)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-imag-1" value="1" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-imag-1">1.00</span>
+                  <output id="output-periodic-wave-imag-1" for="range-periodic-wave-imag-1">1.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-imag-2">2 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-imag-2" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-imag-2">0.00</span>
+                  <output id="output-periodic-wave-imag-2" for="range-periodic-wave-imag-2">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-imag-3">3 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-imag-3" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-imag-3">0.00</span>
+                  <output id="output-periodic-wave-imag-3" for="range-periodic-wave-imag-3">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-imag-4">4 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-imag-4" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-imag-4">0.00</span>
+                  <output id="output-periodic-wave-imag-4" for="range-periodic-wave-imag-4">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-imag-5">5 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-imag-5" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-imag-5">0.00</span>
+                  <output id="output-periodic-wave-imag-5" for="range-periodic-wave-imag-5">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-imag-6">6 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-imag-6" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-imag-6">0.00</span>
+                  <output id="output-periodic-wave-imag-6" for="range-periodic-wave-imag-6">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-imag-7">7 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-imag-7" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-imag-7">0.00</span>
+                  <output id="output-periodic-wave-imag-7" for="range-periodic-wave-imag-7">0.00</output>
                 </dd>
                 <dt><label for="range-periodic-wave-imag-8">8 (Overtone)</label></dt>
                 <dd>
                   <input type="range" id="range-periodic-wave-imag-8" value="0" min="0" max="1" step="0.05" />
-                  <span id="print-periodic-wave-imag-8">0.00</span>
+                  <output id="output-periodic-wave-imag-8" for="range-periodic-wave-imag-8">0.00</output>
                 </dd>
               </dl>
             </div>
@@ -22431,14 +22430,81 @@ oscillator.stop(context.currentTime + 10);</code></pre>
               (ユースケースはわからないですが, 正規化しない基本波形の生成として, 仕様では記載があります).
             </p>
           </section>
-          <article id="section-sound-visualization-periodic-sound-synthesis-types">
+          <article id="section-sound-visualization-periodic-wave-band-limited-step-function">
+            <h4>BLEP</h4>
+            <p>
+              一般的な波形生成では, ナイキスト周波数よりも高域の成分を無数に含んでいるために, これらを適切に処理しなければ, エイリアス歪みが発生してしまいます.
+            </p>
+            <p>
+              この問題に対応する方法として, <b>BLEP</b> (<b>Band Limited Step Function</b>) があります. 端的には, アナログ信号とデジタル信号の差分を考慮して,
+              波形の不連続点を丸める処理です.
+            </p>
+            <p>アナログ信号のインパルス音はシンク関数によって定義することができます.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &\mathrm{sinc}\left(t\right) =
+                  \begin{cases}
+                    1                            &\left(t = 0\right) \\
+                    \frac{\sin\left(t\right)}{t} &\left(t \ne 0 \right) \\
+                  \end{cases}
+                \end{flalign}
+              $
+            </div>
+            <p>
+              これを積分すると, アナログ信号の<b>ステップ関数</b>となります. しかしながら, デジタル信号のステップ関数 (単位階段関数) と比較すると,
+              不連続点の近くで信号の違いが顕著に現れます.
+            </p>
+            <p>このような特徴を考慮して, アナログ信号に近づくようにデジタル信号を修正するのが <abbr title="Band Limited Step Function">BLEP</abbr> です.</p>
+            <p>
+              <abbr title="Band Limited Step Function">BLEP</abbr> にはいくつかの種類がありますが, その 1 つに,
+              アナログ信号とデジタル信号の差分を多項式関数で近似する, <b>Poly <abbr title="Band Limited Step Function">BLEP</abbr></b> (<b
+                >Polynomial Band Limited Step Function</b>) があります. <abbr title="Polynomial Band Limited Step Function">Poly BLEP</abbr> では, アナログ信号のインパルス音を以下の 1
+              次方程式で近似しています.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &\mathrm{sinc}\left(t\right) \approx
+                  \begin{cases}
+                    0      &\left(t \lt -1 \right) \\
+                    t + 1  &\left(-1 \le t \lt 0 \right) \\
+                    -t + 1 &\left(0 \le t \lt 1 \right) \\
+                    0      &\left(1 \le t \right) \\
+                  \end{cases}
+                \end{flalign}
+              $
+            </div>
+            <p>そして, これを積分した関数をアナログ信号のステップ関数として利用します.</p>
+            <p>
+              デジタル信号のステップ関数と比較すると, その差分 <span class="math-inline">$d\left(t\right)$</span> は, 以下の 2 次方程式で表すことができます.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &d\left(t\right) =
+                  \begin{cases}
+                    0                                    &\left(t \lt -1 \right) \\
+                    \frac{1}{2}t^{2} + t + \frac{1}{2}   &\left(-1 \le t \lt 0 \right) \\
+                    -\frac{1}{2}t^{2} + t - \frac{1}{2}  &\left(0 \le t \lt 1 \right) \\
+                    0                                    &\left(1 \le t \right) \\
+                  \end{cases}
+                \end{flalign}
+              $
+            </div>
+            <p>このように, <abbr title="Band Limited Step Function">BLEP</abbr> を適用することで, エイリアス歪みをかなり軽減することができます.</p>
+          </article>
+          <article id="section-sound-visualization-periodic-wave-sound-synthesis-types">
             <h4>音合成の種類</h4>
-            <p>音合成, つまり, シンセサイザーにはいくつかの種類があります. 以下に, よくピックアップされる合成を記載します.</p>
+            <p>音合成, つまり, シンセサイザーにはいくつかの種類があります. 以下に, よくピックアップされる合成方式を記載します.</p>
             <dl>
               <dt>加算合成</dt>
               <dd>フーリエ級数をまさにそのまま実装した方式で, 周波数や振幅の異なる正弦波を十分に加算する音合成</dd>
               <dt>減算合成</dt>
-              <dd>倍音の多い原音 (矩形波, ノコギリ波, 三角波をフィルタリングして倍音成分を減算する音合成</dd>
+              <dd>倍音の多い原音 (矩形波, ノコギリ波, 三角波) をフィルタリングして倍音成分を減算する音合成</dd>
               <dt>FM (Frequency Modulation) 合成</dt>
               <dd>
                 <a href="#section-effectors-tremolo-and-ringmodulator">トレモロ・リングモジュレーター</a>のセクションで少し解説していますが, キャリア (搬送波)
