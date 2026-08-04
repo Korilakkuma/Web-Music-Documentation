@@ -437,24 +437,6 @@ select {
   opacity: 0.6;
 }
 
-.app-output-device-by-sink-id {
-  margin: 24px 0;
-}
-
-.app-output-device-by-sink-id dl dd {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.app-media-stream-audio-destination-node-and-media-recorder {
-  display: grid;
-  grid-template-rows: repeat(2, auto);
-  grid-template-columns: repeat(1, auto);
-  gap: 8px;
-  margin: 24px 0;
-}
-
 .checkbox-container {
   display: grid;
   grid-template-columns: repeat(2, auto);

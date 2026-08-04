@@ -22614,7 +22614,7 @@ buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
     oscillator.connect(destination);
 
     // OscillatorNode (Input) -&gt; AudioDestinationNode (Output / Speaker)
-    oscillator.connect(audiocontext.destination);
+    oscillator.connect(context.destination);
 
     recorder.start();
     oscillator.start(0);
@@ -22643,13 +22643,13 @@ recorder.onstop = async () =&gt; {
   anchorElement.setAttribute(&apos;href&apos;, url);
   anchorElement.setAttribute(&apos;download&apos;, &apos;sine.ogg&apos;);
 };</code></pre>
-          <div class="app-container app-media-stream-audio-destination-node-and-media-recorder">
+          <div class="app-container">
             <div class="flexbox">
               <button type="button" id="button-media-stream-audio-destination-node-and-media-recorder">start</button>
               <a href="" id="anchor-media-stream-audio-destination-node-and-media-recorder">download</a>
             </div>
             <div>
-              <audio id="audio-media-stream-audio-destination-node-and-media-recorder" controls></audio>
+              <audio controls id="audio-media-stream-audio-destination-node-and-media-recorder"></audio>
             </div>
           </div>
         </section>
@@ -22775,15 +22775,13 @@ buttonElement.addEventListener(&apos;mousedown&apos;,  onDown);
 buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
 buttonElement.addEventListener(&apos;mouseup&apos;,    onUp);
 buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
-          <div class="app-container app-output-device-by-sink-id">
-            <dl>
-              <dt><label for="select-output-device-by-sink-id">Output Devices</label></dt>
-              <dd>
-                <select id="select-output-device-by-sink-id">
-                  <option value="">-- Select Output Device --</option>
-                </select>
-              </dd>
-            </dl>
+          <div class="app-container flexbox-column">
+            <div class="flexbox flexbox-align-items-center">
+              <label for="select-output-device-by-sink-id">Output Devices</label>
+              <select id="select-output-device-by-sink-id">
+                <option value="">-- Select Output Device --</option>
+              </select>
+            </div>
             <div class="flexbox">
               <button type="button" id="button-output-device-by-sink-id-permission">permission</button>
               <button type="button" id="button-output-device-by-sink-id">start</button>
