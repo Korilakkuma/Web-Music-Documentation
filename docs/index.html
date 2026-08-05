@@ -22909,7 +22909,7 @@ context.startRendering()
             <p>
               <code>startRendering</code> メソッドは非同期処理なので, イベントインターフェースも定義されています. イベントオブジェクト (<b
                 ><code>OfflineAudioCompletionEvent</code></b>
-              オブジェクト) の <b><code>renderedBuffer</code></b> プロパティに, <code>AudioBuffer</code> インスタンスが格納されています. どちら実装でも,
+              オブジェクト) の <b><code>renderedBuffer</code></b> プロパティに, <code>AudioBuffer</code> インスタンスが格納されています. どちらの実装でも,
               取得できる <code>AudioBuffer</code> インスタンスは同じです.
             </p>
             <pre
@@ -22938,13 +22938,13 @@ context.oncomplete = (event) =&gt; {
               オーディオデータの実体である <code>Float32Array</code> の要素はすべて <code>0</code> (つまり, 無音) です.
             </p>
             <p>
-              そこで, <code>startRendering</code> メソッドを実行する前に, オーディオデータをレンダリングする必要があります. 以下のコードでは,
-              <code>440 Hz</code> の正弦波を <code>5 sec</code> 分レンダリングします.
+              オーディオデータを取得するには, <code>startRendering</code> メソッドを実行する前に, オーディオグラフ (オーディオデータ)
+              をレンダリングする必要があります. 以下のコードでは, <code>440 Hz</code> の正弦波を <code>5 sec</code> 分レンダリングします.
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-js line-numbers">const duration = 5;  // sec
+            ><code class="language-js line-numbers">const duration         = 5;  // sec
 const numberOfChannels = 1;
 const sampleRate       = 48000;
 const length           = sampleRate * duration;
@@ -22978,8 +22978,7 @@ context.startRendering()
   });</code></pre>
             <p>
               このコードは, オーディオデータをレンダリングしているので, オーディオデータの実体である <code>Float32Array</code> の要素には,
-              少なくとも無音ではないデータが格納されています. 実際に波形描画して確認してみます (波形が確認しやすいように,
-              <code>10 Hz</code> の正弦波に変更します).
+              無音ではないデータが格納されています. 実際に波形描画して確認してみます (波形が確認しやすいように, <code>10 Hz</code> の正弦波に変更します).
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
@@ -23158,24 +23157,30 @@ context.startRendering()
           <article id="section-web-audio-api-misc-offline-audio-context-current-time">
             <h4>OfflineAudioContext における currentTime プロパティ</h4>
             <p>
-              <code>currentTime</code> プロパティは, <code>BaseAudioContext</code> クラスに定義されているので, <code>OfflineAudioContext</code> クラスも
-              <code>currentTime</code> プロパティを継承します. <code>AudioContext</code> クラスの <code>currentTime</code> プロパティは,
-              <code>AudioContext</code> インスタンスを生成してから (厳密には, <code>AudioContextState</code> が
-              <code>&apos;running&apos;</code> 状態になってから) の経過時間を秒単位で計測していましたが, <code>OfflineAudioContext</code> クラスも,
-              <b><code>resume</code></b> メソッドの実行で <code>AudioContextState</code> が <code>&apos;running&apos;</code> 状態となってから計測が開始されます
-              (また, <b><code>suspend</code></b> メソッドの実行で, 引数で指定された時刻に計測が停止する仕様となっています).
+              <code>currentTime</code> プロパティは <code>BaseAudioContext</code> クラスに定義されているので,
+              <code>OfflineAudioContext</code> クラスもこれを継承します. リアルタイムオーディオ処理をする <code>AudioContext</code> インスタンスの
+              <code>currentTime</code> プロパティが, <code>AudioContextState</code> が
+              <code>&apos;running&apos;</code> になってからの経過時間を格納しているのに対して, <code>OfflineAudioContext</code> インスタンスの
+              <code>currentTime</code> プロパティは, <b>レンダリングに要した時間</b>を格納しています.
             </p>
             <p>
-              <code>resume</code> メソッドは, <code>startRendering</code> メソッド開始後に実行する必要があるようです (実装確認レベルですが, Chrome, Firefox,
-              Safari, Edge いずれも, 開始前に実行してしまうとエラーが発生するようです). また, <code>startRendering</code> メソッドの実行が完了すると,
-              <code>AudioContextState</code> が <code>&apos;closed&apos;</code> 状態に遷移して, そのあとは
-              <code>currentTime</code> プロパティの更新も停止します. オーナーも <code>OfflineAudioContext</code> における, これらの仕様・実装は,
-              あまり理解できていませんが, <code>startRendering</code> メソッドでよほど時間を要するオーディオデータのレンダリングをしない限りは,
-              必要になることは少ないと思います (<code>startRendering</code> メソッドの実行で, <code>AudioContextState</code> が
-              <code>&apos;suspended&apos;</code> (初期状態で <code>startRendering</code> メソッドの実行前) から, <code>&apos;running&apos;</code> (<code
-                >startRendering</code>
-              メソッド実行中), <code>&apos;closed&apos;</code> 状態 (<code>startRendering</code> メソッド実行完了時) に遷移するので,
-              <code>startRendering</code> メソッドの実行時間が短いほど <code>currentTime</code> プロパティの更新も短い時間で停止するからです).
+              <code>OfflineAudioContext</code> インスタンスの初期状態 (<code>AudioContextState</code>) は <code>&apos;suspended&apos;</code> で,
+              <code>currentTime</code> プロパティは <code>0</code> です. <b><code>startRendering</code></b> メソッドを実行すると, 状態が
+              <code>&apos;running&apos;</code> に遷移し, オーディオデータのレンダリングの時間経過にともなって,
+              <code>currentTime</code> プロパティの値も更新されます. そして, 指定したサイズのレンダリングがすべて完了すると, 状態は
+              <code>&apos;closed&apos;</code> に遷移し, <code>currentTime</code> の更新も停止します.
+            </p>
+            <p>
+              さらに, <code>OfflineAudioContext</code> クラスも <b><code>suspend(time)</code></b> / <b><code>resume</code></b> メソッドを継承しています.
+              これらのメソッドは, 再生デバイスを一時停止・再開するためではなく,
+              <b><code>currentTime</code> プロパティが指定した時刻 (<code>time</code>) まで経過した時点でレンダリングを一時停止する</b>ためのメソッドです.
+              レンダリングを一時停止してエフェクトのパラメータを書き換えたり, メインスレッドの処理と同期して,
+              <code>resume</code> メソッドでレンダリングを再開するといった高度なユースケースが想定されています.
+            </p>
+            <p>
+              このような特定のタイミングでの一時停止・再開を必要とするケース (例えば, Audio Worklet とのメッセージングなど) を除けば,
+              波形描画や録音といったユースケースにおいて <code>suspend</code> や <code>resume</code> メソッドを使用することはほとんどありません. 多くの場合,
+              <code>startRendering</code> メソッドを呼び出して, <code>Promise</code> の完了を待機するだけで十分です.
             </p>
           </article>
         </section>
