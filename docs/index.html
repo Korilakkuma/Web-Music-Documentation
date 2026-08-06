@@ -23193,7 +23193,7 @@ context.startRendering()
           <p>
             <b><code>ConstantSourceNode</code></b> クラスの実質的なユースケースは,
             <b><code>AudioParam</code> のパラメータのオートメーションが競合してしまう場合です</b>. 例えば, <code>OscillatorNode</code> の
-            <code>Frequency</code> プロパティ (<code>AudioParam</code>) に, パラメータのオートメーション機能を利用して, グライド (ポルタメント)
+            <code>frequency</code> プロパティ (<code>AudioParam</code>) に, パラメータのオートメーション機能を利用して, グライド (ポルタメント)
             をすでに実装している場合に, ピッチベンドを適用する場合で <code>frequency</code> プロパティのパラメータのオートメーション機能を利用したい場合,
             これは, パラメータのオートメーション機能の競合となるので実装できません.
             <b><code>AudioParam</code> に対するパラメータのオートメーション機能は 1 対 1 だからです</b>.
@@ -23379,12 +23379,7 @@ oscillator.onended = () =&gt; {
               <code>frequency</code> プロパティと <code>detune</code> プロパティの 2 つが定義されています. 同様に, <code>AudioBufferSourceNode</code> には
               <code>playbackRate</code> プロパティと <code>detune</code> プロパティの 2 つが定義されています. これらの <code>AudioParam</code> は,
               インスタンスが異なるだけで, 設定している物理量は同じです. Web Audio API の仕様として, 2 つの <code>AudioParam</code> は, 1
-              つの値の算出に利用されています (<span class="math-inline"
-                >$f_{\mathrm{computed}} = \mathrm{frequency} \cdot \mathrm{pow}\left(2, \left(\mathrm{detune} / 1200 \right)\right)$</span>
-              や
-              <span class="math-inline"
-                >$p_{\mathrm{computed}} = \mathrm{playbackRate} \cdot \mathrm{pow}\left(2, \left(\mathrm{detune} / 1200 \right)\right)$</span>
-              を参考). つまり, 2 つの <code>AudioParam</code> それぞれに, パラメータのオートメーションを適用すれば, 実質的に,
+              つの値の算出に利用されています. つまり, 2 つの <code>AudioParam</code> それぞれに, パラメータのオートメーションを適用すれば, 実質的に,
               複数のオートメーションを適用することが可能になります.
             </p>
             <p>
