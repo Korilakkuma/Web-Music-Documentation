@@ -23393,7 +23393,7 @@ oscillator.onended = () =&gt; {
         <h2>Web MIDI API</h2>
         <p>
           ここからのセクションは, <b>Web MIDI API</b>, および, その仕様の理解のために必要となる <b>MIDI</b> (<b>Musical Instrument Digital Interface</b>)
-          についても解説します. 注意点としては, 執筆時点の 2025 年 12 月現在で, Web MIDI API は <b>W3C Working Draft</b> の状態あり, 今後 API
+          についても解説します. 注意点としては, 執筆時点の 2026 年 8 月現在で, Web MIDI API は <b>W3C Working Draft</b> の状態であり, 今後 API
           が変更される可能性も十分にあるということです. したがって, Web MIDI API を利用した Web アプリケーションを開発する場合には,
           <b>最新の仕様と対応ブラウザの実装を確認するようにしてください</b>.
         </p>
@@ -23402,10 +23402,17 @@ oscillator.onended = () =&gt; {
           <p>
             Web MIDI API を実際に試すには, <b>MIDI デバイスが必要です</b>. 仮想 MIDI デバイスを利用する方法もありますが, プラットフォームの制約があります. また,
             動作の保証もできません. なるべく, 実機の MIDI デバイスを用意することをおすすめします. 特に, 解説の都合上, キーボードの MIDI
-            デバイスであることが望ましいです. さらに, Web MIDI API の <code>MIDIOutput</code> を利用したい場合, <b>音源内蔵</b>の MIDI
-            デバイスを検討してください.
+            デバイスであることが望ましいです.
           </p>
-          <p>以下に, 比較的安価で, Web MIDI API を試すのに十分な MIDI デバイスをいくつか記載します.</p>
+          <p>
+            さらに, Web MIDI API の <code>MIDIOutput</code> を利用して「ブラウザから MIDI 機器に信号を送って音源を再生する」という実験をしたい場合は,
+            <b>音源内蔵</b>の MIDI デバイス (ハードウェア・シンセサイザーなど) を別途検討してください. しかしながら, 現代の DTM (Desktop Music)
+            の状況を踏まえると, <code>MIDIInput</code> が利用できるだけで十分なケースが多いです.
+          </p>
+          <p>
+            以下に, 比較的安価で, Web MIDI API の入力 (<code>MIDIInput</code>) を試すのに十分な MIDI デバイス (内蔵音源がない MIDI コントローラー)
+            をいくつか記載します.
+          </p>
           <dl>
             <dt><a href="http://akai-pro.jp/mpk-mini-iv/" target="_blank" rel="noopener noreferrer">MPK mini MK3</a></dt>
             <dd>おすすめする MIDI キーボードのなかでは, 最も鍵盤数が少なく高機能です. 携帯性と高機能を両立する MIDI デバイスです.</dd>
@@ -23470,7 +23477,10 @@ oscillator.onended = () =&gt; {
                 ステータスバイトもデータバイトもその区別に <code>1 bit</code> を割り当てているので, MIDI メッセージとしての実質的な情報は
                 <code>7 bit</code> で表現されます.
               </p>
-              <img src="images/midi-message-structure.svg" alt="" width="730" height="230" loading="lazy" />
+              <figure>
+                <svg id="svg-figure-midi-message-structure" width="720" height="240" />
+                <figcaption>ステータスバイトとデータバイト</figcaption>
+              </figure>
               <section id="section-web-midi-api-midi-message-structure-types">
                 <h6>MIDI メッセージの種類</h6>
                 <p>
@@ -23556,14 +23566,23 @@ oscillator.onended = () =&gt; {
                 <b>デュレーション</b> (<b>duration</b>) です. MIDI では, ゲートタイムを指定するのではなく, あくまで,
                 ノートオンの送受信からノートオフの送受信までの時間で決定されます.
               </p>
-              <img src="images/midi-message-between-note-on-and-note-off.svg" alt="" width="800" height="300" loading="lazy" />
+              <figure>
+                <svg id="svg-figure-midi-message-between-note-on-and-note-off" width="800" height="300" />
+                <figcaption>ノートオンとノートオフ</figcaption>
+              </figure>
               <p>
                 MIDI メッセージのタイプがノートオンかノートオフの場合, ステータスバイトのあとのデータバイトは <code>2</code> バイト (ステータスバイトと合計して
                 <code>3</code> バイト) です. 最初のデータバイトがノートナンバーを表し, 音高を決定するのに利用します. 次のデータバイトがベロシティを表し,
                 鍵盤の打鍵の強弱に合わせて音量を決定するのに利用します.
               </p>
-              <img src="images/midi-message-note-on.svg" alt="" width="720" height="180" loading="lazy" />
-              <img src="images/midi-message-note-off.svg" alt="" width="720" height="180" loading="lazy" />
+              <figure>
+                <svg id="svg-figure-midi-message-note-on" width="720" height="240" />
+                <figcaption>ノートオンのメッセージ構造</figcaption>
+              </figure>
+              <figure>
+                <svg id="svg-figure-midi-message-note-off" width="720" height="240" />
+                <figcaption>ノートオフのメッセージ構造</figcaption>
+              </figure>
               <section id="section-web-midi-api-midi-message-note-on-and-note-off-note-number">
                 <h6>ノートナンバー</h6>
                 <p>
@@ -23649,7 +23668,10 @@ oscillator.onended = () =&gt; {
                 <code>128</code> 種類の番号は, <b>プログラムナンバー</b>と呼ばれ, 慣例として, <code>1</code> - <code>128</code> の値に対する楽器 (音色)
                 が定義されています.
               </p>
-              <img src="images/midi-message-program-change.svg" alt="" width="720" height="180" loading="lazy" />
+              <figure>
+                <svg id="svg-figure-midi-message-program-change" width="720" height="240" />
+                <figcaption>プログラムチェンジのメッセージ構造</figcaption>
+              </figure>
               <section id="section-web-midi-api-midi-message-program-change-program-number">
                 <h6>プログラムナンバー</h6>
                 <p>
@@ -24344,7 +24366,10 @@ oscillator.onended = () =&gt; {
                 <code>1</code> から割り当てられるので, ステータスバイトは <code>....1001</code>) を利用して発音します. ノートナンバーを利用するので,
                 ステータスバイトの上位 4 ビットはノートオンかノートオフを指定します (ノートナンバーのあとに, ベロシティを指定します).
               </p>
-              <img src="images/midi-message-percussion-map.svg" alt="" width="800" height="240" loading="lazy" />
+              <figure>
+                <svg id="svg-figure-midi-message-percussion-map" width="720" height="240" />
+                <figcaption>パーカッションマップメッセージのメッセージ構造 (ノートオンの場合)</figcaption>
+              </figure>
               <p>それぞれの打楽器とノートナンバーを対応づけているのが, <b>パーカッションマップ</b>です (これは, ドラム譜の表現と考え方は同じです).</p>
               <figure>
                 <img src="images/drums-score.svg" alt="" width="700" height="220" loading="lazy" />
@@ -24584,7 +24609,10 @@ oscillator.onended = () =&gt; {
                 <code>11110111</code> までのデータバイトは, ベンダーの仕様によって異なります (ただし, データバイトではあるので, 最上位ビットは
                 <code>0</code> で定義されています). したがって, <b>可変長の MIDI メッセージとなります</b>.
               </p>
-              <img src="images/midi-message-system-exclusive.svg" alt="" width="800" height="260" loading="lazy" />
+              <figure>
+                <svg id="svg-figure-midi-message-system-exclusive" width="860" height="240" />
+                <figcaption>システムエクスクルーシブメッセージのメッセージ構造</figcaption>
+              </figure>
             </section>
             <p>
               MIDI メッセージは他にもありますが, ノートオンとノートオフが必須で,
@@ -24690,7 +24718,10 @@ oscillator.onended = () =&gt; {
                   フォーマット 0 は, 1 つのトラックにすべての音楽データが含まれています. ノートオン・ノートオフなどの MIDI メッセージだけでなく,
                   テンポなどの属性情報も合わせて 1 つのトラックに含まれます. したがって, 後述するフォーマット 1 よりシンプルなファイル構造となります.
                 </p>
-                <img src="images/standard-midi-file-format-0.svg" alt="" width="700" height="240" loading="lazy" />
+                <figure>
+                  <svg id="svg-figure-standard-midi-file-format-0" width="700" height="240" />
+                  <figcaption>フォーマット 0</figcaption>
+                </figure>
               </section>
               <section id="section-web-midi-api-standard-midi-file-header-chunk-format1">
                 <h6>フォーマット 1</h6>
@@ -24700,7 +24731,10 @@ oscillator.onended = () =&gt; {
                   音楽制作のプロセスに合っているフォーマットと言えます 1 は, 音楽制作のプロセスに合っているフォーマットと言えます. また, フォーマット 1 では,
                   先頭のトラックにテンポなどの属性情報が含まれており, <b>コンダクタートラック</b>と呼ばれています.
                 </p>
-                <img src="images/standard-midi-file-format-1.svg" alt="" width="700" height="380" loading="lazy" />
+                <figure>
+                  <svg id="svg-figure-standard-midi-file-format-1" width="700" height="480" />
+                  <figcaption>フォーマット 1</figcaption>
+                </figure>
               </section>
               <p>
                 MIDI ファイルにおける時間の単位は, <b>マイクロ秒</b> (μsec) です. 4 分音符 1 拍の時間 (音長) を
@@ -24743,7 +24777,10 @@ oscillator.onended = () =&gt; {
                 $
               </div>
               <p>例えば, ノートオンとノートオフのデルタタイムを読み込むと, 音長を算出することができます.</p>
-              <img src="images/midi-message-delta-time.svg" alt="" width="800" height="260" loading="lazy" />
+              <figure>
+                <svg id="svg-figure-midi-message-delta-time" width="800" height="400" />
+                <figcaption>デルタタイムと音長</figcaption>
+              </figure>
             </section>
           </section>
         </section>

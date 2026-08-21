@@ -23527,6 +23527,1183 @@ const createWaveByOfflineAudioContext = () => {
     .catch(console.error);
 };
 
+const createMIDIMessage = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const render = (offset, msb) => {
+    const width = innerWidth / 3 + 48;
+
+    const g = document.createElementNS(xmlns, 'g');
+
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (offset + padding).toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', width.toString(10));
+    rect.setAttribute('height', '48');
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+    rect.setAttribute('stroke-linecap', lineCap);
+    rect.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(rect);
+
+    for (let n = 1; n <= 7; n++) {
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', (offset + padding + (width / 8) * n).toString(10));
+      rect.setAttribute('y', padding.toString(10));
+      rect.setAttribute('width', '2');
+      rect.setAttribute('height', '48');
+      rect.setAttribute('fill', baseColor);
+      rect.setAttribute('stroke', 'none');
+
+      g.appendChild(rect);
+    }
+
+    for (let n = 1; n <= 8; n++) {
+      const bitText = document.createElementNS(xmlns, 'text');
+
+      if (n === 1) {
+        bitText.textContent = msb.toString(10);
+      } else {
+        bitText.textContent = 'b';
+      }
+
+      bitText.setAttribute('x', (offset + padding + (width / 8) * n - 15).toString(10));
+      bitText.setAttribute('y', (padding + 32).toString(10));
+      bitText.setAttribute('text-anchor', 'middle');
+      bitText.setAttribute('stroke', 'none');
+      bitText.setAttribute('fill', n === 1 ? black : baseColor);
+      bitText.setAttribute('font-size', '24px');
+
+      g.appendChild(bitText);
+    }
+
+    const typeText = document.createElementNS(xmlns, 'text');
+
+    typeText.textContent = msb === 1 ? 'Status Byte' : 'Data Byte';
+
+    typeText.setAttribute('x', (offset + padding + width / 2).toString(10));
+    typeText.setAttribute('y', (padding + 72).toString(10));
+    typeText.setAttribute('text-anchor', 'middle');
+    typeText.setAttribute('stroke', 'none');
+    typeText.setAttribute('fill', baseColor);
+    typeText.setAttribute('font-size', '16px');
+
+    g.appendChild(typeText);
+
+    const msbText = document.createElementNS(xmlns, 'text');
+
+    msbText.textContent = 'MSB';
+
+    msbText.setAttribute('x', (offset + padding + width / 8).toString(10));
+    msbText.setAttribute('y', (padding + 72).toString(10));
+    msbText.setAttribute('text-anchor', 'end');
+    msbText.setAttribute('stroke', 'none');
+    msbText.setAttribute('fill', baseColor);
+    msbText.setAttribute('font-size', '12px');
+
+    g.appendChild(msbText);
+
+    svg.appendChild(g);
+  };
+
+  render(0, 1);
+  render(innerWidth / 2, 0);
+};
+
+const createMIDIMessageBetweenNoteOnAndNoteOff = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const renderTime = () => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', padding.toString(10));
+    rect.setAttribute('y', (padding + innerHeight / 2).toString(10));
+    rect.setAttribute('width', (innerWidth - 12).toString(10));
+    rect.setAttribute('height', lineWidth.toString(10));
+    rect.setAttribute('fill', baseColor);
+    rect.setAttribute('stroke', 'none');
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding + innerWidth - 12} ${padding + innerHeight / 2 + 1} L${padding + innerWidth - 12} ${padding + innerHeight / 2 + 1 - 4} L${padding + innerWidth} ${padding + innerHeight / 2 + 1} L${padding + innerWidth - 12} ${padding + innerHeight / 2 + 1 + 4}`
+    );
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', 'none');
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Time';
+
+    text.setAttribute('x', (padding + innerWidth - 12).toString(10));
+    text.setAttribute('y', (padding + innerHeight / 2 - 12).toString(10));
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(rect);
+    g.appendChild(arrow);
+    g.appendChild(text);
+  };
+
+  const renderAmplitude = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight / 2} L${padding + 48} ${padding + innerHeight / 2} L${padding + 120} ${padding} L${padding + 160} ${padding + innerHeight / 4} L${padding + innerWidth - 240} ${padding + innerHeight / 4} L${padding + innerWidth - 120} ${padding + innerHeight / 2} L${padding + innerWidth - 12} ${padding + innerHeight / 2}`
+    );
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', waveColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(path);
+  };
+
+  const renderNoteOnAndNoteOff = () => {
+    const noteOn = document.createElementNS(xmlns, 'path');
+
+    noteOn.setAttribute('d', `M${padding + 48} ${padding} L${padding + 48} ${padding + innerHeight}`);
+    noteOn.setAttribute('fill', 'none');
+    noteOn.setAttribute('stroke', alphaBaseColor);
+    noteOn.setAttribute('stroke-width', lineWidth.toString(10));
+    noteOn.setAttribute('stroke-linecap', lineCap);
+    noteOn.setAttribute('stroke-linejoin', lineJoin);
+    noteOn.setAttribute('stroke-dasharray', '5,5');
+
+    const noteOff = document.createElementNS(xmlns, 'path');
+
+    noteOff.setAttribute('d', `M${padding + innerWidth - 240} ${padding} L${padding + innerWidth - 240} ${padding + innerHeight / 2}`);
+    noteOff.setAttribute('fill', 'none');
+    noteOff.setAttribute('stroke', alphaBaseColor);
+    noteOff.setAttribute('stroke-width', lineWidth.toString(10));
+    noteOff.setAttribute('stroke-linecap', lineCap);
+    noteOff.setAttribute('stroke-linejoin', lineJoin);
+    noteOff.setAttribute('stroke-dasharray', '5,5');
+
+    const release = document.createElementNS(xmlns, 'path');
+
+    release.setAttribute('d', `M${padding + innerWidth - 120} ${padding} L${padding + innerWidth - 120} ${padding + innerHeight}`);
+    release.setAttribute('fill', 'none');
+    release.setAttribute('stroke', alphaBaseColor);
+    release.setAttribute('stroke-width', lineWidth.toString(10));
+    release.setAttribute('stroke-linecap', lineCap);
+    release.setAttribute('stroke-linejoin', lineJoin);
+    release.setAttribute('stroke-dasharray', '5,5');
+
+    const noteOnText = document.createElementNS(xmlns, 'text');
+
+    noteOnText.textContent = 'Note On';
+
+    noteOnText.setAttribute('x', (padding + 48).toString(10));
+    noteOnText.setAttribute('y', (padding + innerHeight / 2 + 24).toString(10));
+    noteOnText.setAttribute('text-anchor', 'middle');
+    noteOnText.setAttribute('stroke', 'none');
+    noteOnText.setAttribute('fill', baseColor);
+    noteOnText.setAttribute('font-size', '16px');
+
+    const noteOffText = document.createElementNS(xmlns, 'text');
+
+    noteOffText.textContent = 'Note Off';
+
+    noteOffText.setAttribute('x', (padding + innerWidth - 240).toString(10));
+    noteOffText.setAttribute('y', (padding + innerHeight / 2 + 24).toString(10));
+    noteOffText.setAttribute('text-anchor', 'middle');
+    noteOffText.setAttribute('stroke', 'none');
+    noteOffText.setAttribute('fill', baseColor);
+    noteOffText.setAttribute('font-size', '16px');
+
+    g.appendChild(noteOn);
+    g.appendChild(noteOff);
+    g.appendChild(release);
+    g.appendChild(noteOnText);
+    g.appendChild(noteOffText);
+  };
+
+  const renderGateTime = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding + 48} ${padding + innerHeight / 2} L${padding + 48 + 12} ${padding + innerHeight / 2 - 4} L${padding + 48 + 12} ${padding + innerHeight / 2 + 4} L${padding + 48} ${padding + innerHeight / 2} L${padding + innerWidth - 240} ${padding + innerHeight / 2} L${padding + innerWidth - 240 - 12} ${padding + innerHeight / 2 - 4} L${padding + innerWidth - 240 - 12} ${padding + innerHeight / 2 + 4} L${padding + innerWidth - 240} ${padding + innerHeight / 2}`
+    );
+    path.setAttribute('fill', lightWaveColor);
+    path.setAttribute('stroke', lightWaveColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Gate Time';
+
+    text.setAttribute('x', (padding + (innerWidth - 240) / 2).toString(10));
+    text.setAttribute('y', (padding + innerHeight / 2 + 24).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '18px');
+
+    g.appendChild(path);
+    g.appendChild(text);
+  };
+
+  const renderDuration = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding + 48} ${padding + innerHeight} L${padding + 48 + 12} ${padding + innerHeight - 4} L${padding + 48 + 12} ${padding + innerHeight + 4} L${padding + 48} ${padding + innerHeight} L${padding + innerWidth - 120} ${padding + innerHeight} L${padding + innerWidth - 120 - 12} ${padding + innerHeight - 4} L${padding + innerWidth - 120 - 12} ${padding + innerHeight + 4} L${padding + innerWidth - 120} ${padding + innerHeight}`
+    );
+    path.setAttribute('fill', lightWaveColor);
+    path.setAttribute('stroke', lightWaveColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Duration';
+
+    text.setAttribute('x', (padding + innerWidth / 2).toString(10));
+    text.setAttribute('y', (padding + innerHeight + 24).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '18px');
+
+    g.appendChild(path);
+    g.appendChild(text);
+  };
+
+  renderTime();
+  renderAmplitude();
+  renderNoteOnAndNoteOff();
+  renderGateTime();
+  renderDuration();
+
+  svg.appendChild(g);
+};
+
+const createMIDIMessageNoteOn = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const render = (offset, heading, byte, sub) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (offset + padding).toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', (innerWidth / 3).toString(10));
+    rect.setAttribute('height', innerHeight.toString(10));
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+
+    const headingText = document.createElementNS(xmlns, 'text');
+
+    headingText.textContent = heading;
+
+    headingText.setAttribute('x', (offset + padding + innerWidth / 6).toString(10));
+    headingText.setAttribute('y', (padding + innerHeight / 2 - 12).toString(10));
+    headingText.setAttribute('text-anchor', 'middle');
+    headingText.setAttribute('stroke', 'none');
+    headingText.setAttribute('fill', black);
+    headingText.setAttribute('font-size', '18px');
+
+    const byteText = document.createElementNS(xmlns, 'text');
+
+    byteText.textContent = byte;
+
+    byteText.setAttribute('x', (offset + padding + innerWidth / 6).toString(10));
+    byteText.setAttribute('y', (padding + innerHeight / 2 + 8).toString(10));
+    byteText.setAttribute('text-anchor', 'middle');
+    byteText.setAttribute('stroke', 'none');
+    byteText.setAttribute('fill', baseColor);
+    byteText.setAttribute('font-size', '14px');
+
+    const subText = document.createElementNS(xmlns, 'text');
+
+    subText.textContent = sub;
+
+    subText.setAttribute('x', (offset + padding + innerWidth / 6).toString(10));
+    subText.setAttribute('y', (padding + innerHeight / 2 + 28).toString(10));
+    subText.setAttribute('text-anchor', 'middle');
+    subText.setAttribute('stroke', 'none');
+    subText.setAttribute('fill', baseColor);
+    subText.setAttribute('font-size', '16px');
+
+    g.appendChild(rect);
+    g.appendChild(headingText);
+    g.appendChild(byteText);
+    g.appendChild(subText);
+  };
+
+  const renderArrow = () => {
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight + 24} L${padding + 12} ${padding + innerHeight + 24 - 4} L${padding + 12} ${padding + innerHeight + 24 + 4} L${padding} ${padding + innerHeight + 24} L${padding + innerWidth} ${padding + innerHeight + 24}`
+    );
+
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', baseColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(arrow);
+  };
+
+  render(0, 'Status Byte', '1001 nnnn', '(9n h)');
+  render(innerWidth / 3, 'Data Byte', '0nnn nnnn', 'Note Number');
+  render((innerWidth / 3) * 2, 'Data Byte', '0vvv vvvv', 'Velocity');
+  renderArrow();
+
+  svg.appendChild(g);
+};
+
+const createMIDIMessageNoteOff = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const render = (offset, heading, byte, sub) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (offset + padding).toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', (innerWidth / 3).toString(10));
+    rect.setAttribute('height', innerHeight.toString(10));
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+
+    const headingText = document.createElementNS(xmlns, 'text');
+
+    headingText.textContent = heading;
+
+    headingText.setAttribute('x', (offset + padding + innerWidth / 6).toString(10));
+    headingText.setAttribute('y', (padding + innerHeight / 2 - 12).toString(10));
+    headingText.setAttribute('text-anchor', 'middle');
+    headingText.setAttribute('stroke', 'none');
+    headingText.setAttribute('fill', black);
+    headingText.setAttribute('font-size', '18px');
+
+    const byteText = document.createElementNS(xmlns, 'text');
+
+    byteText.textContent = byte;
+
+    byteText.setAttribute('x', (offset + padding + innerWidth / 6).toString(10));
+    byteText.setAttribute('y', (padding + innerHeight / 2 + 8).toString(10));
+    byteText.setAttribute('text-anchor', 'middle');
+    byteText.setAttribute('stroke', 'none');
+    byteText.setAttribute('fill', baseColor);
+    byteText.setAttribute('font-size', '14px');
+
+    const subText = document.createElementNS(xmlns, 'text');
+
+    subText.textContent = sub;
+
+    subText.setAttribute('x', (offset + padding + innerWidth / 6).toString(10));
+    subText.setAttribute('y', (padding + innerHeight / 2 + 28).toString(10));
+    subText.setAttribute('text-anchor', 'middle');
+    subText.setAttribute('stroke', 'none');
+    subText.setAttribute('fill', baseColor);
+    subText.setAttribute('font-size', '16px');
+
+    g.appendChild(rect);
+    g.appendChild(headingText);
+    g.appendChild(byteText);
+    g.appendChild(subText);
+  };
+
+  const renderArrow = () => {
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight + 24} L${padding + 12} ${padding + innerHeight + 24 - 4} L${padding + 12} ${padding + innerHeight + 24 + 4} L${padding} ${padding + innerHeight + 24} L${padding + innerWidth} ${padding + innerHeight + 24}`
+    );
+
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', baseColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(arrow);
+  };
+
+  render(0, 'Status Byte', '1000 nnnn', '(8n h)');
+  render(innerWidth / 3, 'Data Byte', '0nnn nnnn', 'Note Number');
+  render((innerWidth / 3) * 2, 'Data Byte', '0vvv vvvv', 'Velocity');
+  renderArrow();
+
+  svg.appendChild(g);
+};
+
+const createMIDIMessageProgramChange = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const render = (offset, heading, byte, sub) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (offset + padding).toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', (innerWidth / 2).toString(10));
+    rect.setAttribute('height', innerHeight.toString(10));
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+
+    const headingText = document.createElementNS(xmlns, 'text');
+
+    headingText.textContent = heading;
+
+    headingText.setAttribute('x', (offset + padding + innerWidth / 4).toString(10));
+    headingText.setAttribute('y', (padding + innerHeight / 2 - 12).toString(10));
+    headingText.setAttribute('text-anchor', 'middle');
+    headingText.setAttribute('stroke', 'none');
+    headingText.setAttribute('fill', black);
+    headingText.setAttribute('font-size', '18px');
+
+    const byteText = document.createElementNS(xmlns, 'text');
+
+    byteText.textContent = byte;
+
+    byteText.setAttribute('x', (offset + padding + innerWidth / 4).toString(10));
+    byteText.setAttribute('y', (padding + innerHeight / 2 + 8).toString(10));
+    byteText.setAttribute('text-anchor', 'middle');
+    byteText.setAttribute('stroke', 'none');
+    byteText.setAttribute('fill', baseColor);
+    byteText.setAttribute('font-size', '14px');
+
+    const subText = document.createElementNS(xmlns, 'text');
+
+    subText.textContent = sub;
+
+    subText.setAttribute('x', (offset + padding + innerWidth / 4).toString(10));
+    subText.setAttribute('y', (padding + innerHeight / 2 + 28).toString(10));
+    subText.setAttribute('text-anchor', 'middle');
+    subText.setAttribute('stroke', 'none');
+    subText.setAttribute('fill', baseColor);
+    subText.setAttribute('font-size', '16px');
+
+    g.appendChild(rect);
+    g.appendChild(headingText);
+    g.appendChild(byteText);
+    g.appendChild(subText);
+  };
+
+  const renderArrow = () => {
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight + 24} L${padding + 12} ${padding + innerHeight + 24 - 4} L${padding + 12} ${padding + innerHeight + 24 + 4} L${padding} ${padding + innerHeight + 24} L${padding + innerWidth} ${padding + innerHeight + 24}`
+    );
+
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', baseColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(arrow);
+  };
+
+  render(0, 'Status Byte', '1100 nnnn', '(Cn h)');
+  render(innerWidth / 2, 'Data Byte', '0ppp pppp', 'Program Number (Patch)');
+  renderArrow();
+
+  svg.appendChild(g);
+};
+
+const createMIDIMessagePercussionMap = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const render = (offset, heading, byte, sub) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (offset + padding).toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', (innerWidth / 3).toString(10));
+    rect.setAttribute('height', innerHeight.toString(10));
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+
+    const headingText = document.createElementNS(xmlns, 'text');
+
+    headingText.textContent = heading;
+
+    headingText.setAttribute('x', (offset + padding + innerWidth / 6).toString(10));
+    headingText.setAttribute('y', (padding + innerHeight / 2 - 12).toString(10));
+    headingText.setAttribute('text-anchor', 'middle');
+    headingText.setAttribute('stroke', 'none');
+    headingText.setAttribute('fill', black);
+    headingText.setAttribute('font-size', '18px');
+
+    const byteText = document.createElementNS(xmlns, 'text');
+
+    byteText.textContent = byte;
+
+    byteText.setAttribute('x', (offset + padding + innerWidth / 6).toString(10));
+    byteText.setAttribute('y', (padding + innerHeight / 2 + 8).toString(10));
+    byteText.setAttribute('text-anchor', 'middle');
+    byteText.setAttribute('stroke', 'none');
+    byteText.setAttribute('fill', baseColor);
+    byteText.setAttribute('font-size', '14px');
+
+    const subText = document.createElementNS(xmlns, 'text');
+
+    subText.textContent = sub;
+
+    subText.setAttribute('x', (offset + padding + innerWidth / 6).toString(10));
+    subText.setAttribute('y', (padding + innerHeight / 2 + 28).toString(10));
+    subText.setAttribute('text-anchor', 'middle');
+    subText.setAttribute('stroke', 'none');
+    subText.setAttribute('fill', baseColor);
+    subText.setAttribute('font-size', '16px');
+
+    g.appendChild(rect);
+    g.appendChild(headingText);
+    g.appendChild(byteText);
+    g.appendChild(subText);
+  };
+
+  const renderArrow = () => {
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight + 24} L${padding + 12} ${padding + innerHeight + 24 - 4} L${padding + 12} ${padding + innerHeight + 24 + 4} L${padding} ${padding + innerHeight + 24} L${padding + innerWidth} ${padding + innerHeight + 24}`
+    );
+
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', baseColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(arrow);
+  };
+
+  render(0, 'Status Byte', '1001 1001', '(99 h)');
+  render(innerWidth / 3, 'Data Byte', '0nnn nnnn', 'Note Number');
+  render((innerWidth / 3) * 2, 'Data Byte', '0vvv vvvv', 'Velocity');
+  renderArrow();
+
+  svg.appendChild(g);
+};
+
+const createMIDIMessageSystemExclusive = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const render = (offset, heading, byte, sub) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (offset + padding).toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', (innerWidth / 5).toString(10));
+    rect.setAttribute('height', innerHeight.toString(10));
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+
+    const headingText = document.createElementNS(xmlns, 'text');
+
+    headingText.textContent = heading;
+
+    headingText.setAttribute('x', (offset + padding + innerWidth / 10).toString(10));
+    headingText.setAttribute('y', (padding + innerHeight / 2 - 12).toString(10));
+    headingText.setAttribute('text-anchor', 'middle');
+    headingText.setAttribute('stroke', 'none');
+    headingText.setAttribute('fill', black);
+    headingText.setAttribute('font-size', '18px');
+
+    const byteText = document.createElementNS(xmlns, 'text');
+
+    byteText.textContent = byte;
+
+    byteText.setAttribute('x', (offset + padding + innerWidth / 10).toString(10));
+    byteText.setAttribute('y', (padding + innerHeight / 2 + 8).toString(10));
+    byteText.setAttribute('text-anchor', 'middle');
+    byteText.setAttribute('stroke', 'none');
+    byteText.setAttribute('fill', baseColor);
+    byteText.setAttribute('font-size', '14px');
+
+    const subText = document.createElementNS(xmlns, 'text');
+
+    subText.textContent = sub;
+
+    subText.setAttribute('x', (offset + padding + innerWidth / 10).toString(10));
+    subText.setAttribute('y', (padding + innerHeight / 2 + 28).toString(10));
+    subText.setAttribute('text-anchor', 'middle');
+    subText.setAttribute('stroke', 'none');
+    subText.setAttribute('fill', baseColor);
+    subText.setAttribute('font-size', '16px');
+
+    g.appendChild(rect);
+    g.appendChild(headingText);
+    g.appendChild(byteText);
+    g.appendChild(subText);
+  };
+
+  const renderCircles = () => {
+    for (let n = 0; n < 3; n++) {
+      const circle = document.createElementNS(xmlns, 'circle');
+
+      circle.setAttribute('cx', (padding + (innerWidth / 5) * 3 + innerWidth / 10 + 24 * n - 24).toString(10));
+      circle.setAttribute('cy', (padding + innerHeight / 2).toString(10));
+      circle.setAttribute('r', '4');
+      circle.setAttribute('fill', baseColor);
+      circle.setAttribute('stroke', 'none');
+
+      g.appendChild(circle);
+    }
+  };
+
+  const renderArrow = () => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Variable Length';
+
+    text.setAttribute('x', (padding + innerWidth / 2).toString(10));
+    text.setAttribute('y', (padding + innerHeight + 44).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight + 24} L${padding + 12} ${padding + innerHeight + 24 - 4} L${padding + 12} ${padding + innerHeight + 24 + 4} L${padding} ${padding + innerHeight + 24} L${padding + innerWidth} ${padding + innerHeight + 24}`
+    );
+
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', baseColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(text);
+    g.appendChild(arrow);
+  };
+
+  render(0, 'SysEx', '1111 0000', '(F0 h)');
+  render((innerWidth / 5) * 1, 'Mfr ID', '0iii iiii', 'ID Number');
+  render((innerWidth / 5) * 2, 'Data / Device ID', '0ddd dddd', 'Vender Specific');
+  render((innerWidth / 5) * 4, 'EOX', '1111 0111', '(F7 h)');
+  renderCircles();
+  renderArrow();
+
+  svg.appendChild(g);
+};
+
+const createSMFFormat0 = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const renderTrack = (track) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', padding.toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', innerWidth.toString(10));
+    rect.setAttribute('height', innerHeight.toString(10));
+    rect.setAttribute('fill', 'none'.toString(10));
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+    rect.setAttribute('stroke-linecap', lineCap);
+    rect.setAttribute('stroke-linejoin', lineJoin);
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding + 12} ${padding + innerHeight / 2} L${padding + innerWidth - 12} ${padding + innerHeight / 2} L${padding + innerWidth - 12 - 12} ${padding + innerHeight / 2 - 4} L${padding + innerWidth - 12 - 12} ${padding + innerHeight / 2 + 4} L${padding + innerWidth - 12} ${padding + innerHeight / 2}`
+    );
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', baseColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = track;
+
+    text.setAttribute('x', (padding + 12).toString(10));
+    text.setAttribute('y', (padding + 24).toString(10));
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '18px');
+
+    g.appendChild(rect);
+    g.appendChild(arrow);
+    g.appendChild(text);
+  };
+
+  const renderInstrument1 = () => {
+    for (let n = 0; n < 3; n++) {
+      const circle = document.createElementNS(xmlns, 'circle');
+
+      circle.setAttribute('cx', (padding + (innerWidth / 3) * n + 40).toString(10));
+      circle.setAttribute('cy', (padding + innerHeight / 2).toString(10));
+      circle.setAttribute('r', '8');
+      circle.setAttribute('fill', black);
+      circle.setAttribute('stroke', 'none');
+
+      g.appendChild(circle);
+    }
+  };
+
+  const renderInstrument2 = () => {
+    for (let n = 0; n < 3; n++) {
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', (padding + (innerWidth / 3) * n + 80 - 8).toString(10));
+      rect.setAttribute('y', (padding + innerHeight / 2 - 8).toString(10));
+      rect.setAttribute('width', '16');
+      rect.setAttribute('height', '16');
+      rect.setAttribute('fill', white);
+      rect.setAttribute('stroke', baseColor);
+      rect.setAttribute('stroke-width', lineWidth.toString(10));
+      rect.setAttribute('stroke-linecap', lineCap);
+      rect.setAttribute('stroke-linejoin', lineJoin);
+
+      g.appendChild(rect);
+    }
+  };
+
+  const renderInstrument3 = () => {
+    for (let n = 0; n < 3; n++) {
+      const circle = document.createElementNS(xmlns, 'circle');
+
+      circle.setAttribute('cx', (padding + (innerWidth / 3) * n + 120).toString(10));
+      circle.setAttribute('cy', (padding + innerHeight / 2).toString(10));
+      circle.setAttribute('r', '8');
+      circle.setAttribute('fill', baseColor);
+      circle.setAttribute('stroke', 'none');
+
+      g.appendChild(circle);
+    }
+  };
+
+  renderTrack('MTrk (1 Track)');
+  renderInstrument1();
+  renderInstrument2();
+  renderInstrument3();
+
+  svg.appendChild(g);
+};
+
+const createSMFFormat1 = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const renderTrack = (offset, track) => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', padding.toString(10));
+    rect.setAttribute('y', (offset + padding).toString(10));
+    rect.setAttribute('width', innerWidth.toString(10));
+    rect.setAttribute('height', (innerHeight / 4 - 12).toString(10));
+    rect.setAttribute('fill', 'none'.toString(10));
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+    rect.setAttribute('stroke-linecap', lineCap);
+    rect.setAttribute('stroke-linejoin', lineJoin);
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding + 12} ${offset + padding + innerHeight / 8} L${padding + innerWidth - 12} ${offset + padding + innerHeight / 8} L${padding + innerWidth - 12 - 12} ${offset + padding + innerHeight / 8 - 4} L${padding + innerWidth - 12 - 12} ${offset + padding + innerHeight / 8 + 4} L${padding + innerWidth - 12} ${offset + padding + innerHeight / 8}`
+    );
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', baseColor);
+    arrow.setAttribute('stroke-width', lineWidth.toString(10));
+    arrow.setAttribute('stroke-linecap', lineCap);
+    arrow.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = track;
+
+    text.setAttribute('x', (padding + 12).toString(10));
+    text.setAttribute('y', (offset + padding + 24).toString(10));
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '18px');
+
+    g.appendChild(rect);
+    g.appendChild(arrow);
+    g.appendChild(text);
+  };
+
+  const renderConductor = () => {
+    for (let n = 0; n < 3; n++) {
+      const path = document.createElementNS(xmlns, 'path');
+
+      path.setAttribute(
+        'd',
+        `M${padding + (innerWidth / 3) * n + 40} ${padding + innerHeight / 8 - 12} L${padding + (innerWidth / 3) * n + 40 + 8} ${padding + innerHeight / 8 + 12} L${padding + (innerWidth / 3) * n + 40 + 16} ${padding + innerHeight / 8 - 12}`
+      );
+      path.setAttribute('fill', baseColor);
+      path.setAttribute('stroke', 'none');
+
+      g.appendChild(path);
+    }
+  };
+
+  const renderInstrument1 = (offset) => {
+    for (let n = 0; n < 3; n++) {
+      const circle = document.createElementNS(xmlns, 'circle');
+
+      circle.setAttribute('cx', (padding + (innerWidth / 3) * n + 40).toString(10));
+      circle.setAttribute('cy', (offset + padding + innerHeight / 8).toString(10));
+      circle.setAttribute('r', '8');
+      circle.setAttribute('fill', black);
+      circle.setAttribute('stroke', 'none');
+
+      g.appendChild(circle);
+    }
+  };
+
+  const renderInstrument2 = (offset) => {
+    for (let n = 0; n < 3; n++) {
+      const circle = document.createElementNS(xmlns, 'circle');
+
+      circle.setAttribute('cx', (padding + (innerWidth / 3) * n + 120).toString(10));
+      circle.setAttribute('cy', (offset + padding + innerHeight / 8).toString(10));
+      circle.setAttribute('r', '8');
+      circle.setAttribute('fill', baseColor);
+      circle.setAttribute('stroke', 'none');
+
+      g.appendChild(circle);
+    }
+  };
+
+  const renderInstrument3 = (offset) => {
+    for (let n = 0; n < 3; n++) {
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      rect.setAttribute('x', (padding + (innerWidth / 3) * n + 80 - 8).toString(10));
+      rect.setAttribute('y', (offset + padding + innerHeight / 8 - 8).toString(10));
+      rect.setAttribute('width', '16');
+      rect.setAttribute('height', '16');
+      rect.setAttribute('fill', white);
+      rect.setAttribute('stroke', baseColor);
+      rect.setAttribute('stroke-width', lineWidth.toString(10));
+      rect.setAttribute('stroke-linecap', lineCap);
+      rect.setAttribute('stroke-linejoin', lineJoin);
+
+      g.appendChild(rect);
+    }
+  };
+
+  renderTrack((innerHeight / 4) * 0, 'MTrk (Conductor Track / Tempo, Time Signature)');
+  renderTrack((innerHeight / 4) * 1, 'MTrk (Track 1 / e.g. Guitar)');
+  renderTrack((innerHeight / 4) * 2, 'MTrk (Track 2 / e.g. Bass)');
+  renderTrack((innerHeight / 4) * 3, 'MTrk (Track 3 / e.g. Drums)');
+
+  renderConductor();
+  renderInstrument1((innerHeight / 4) * 1);
+  renderInstrument2((innerHeight / 4) * 2);
+  renderInstrument3((innerHeight / 4) * 3);
+
+  svg.appendChild(g);
+};
+
+const createDeltaTime = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const renderTime = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding} ${padding + innerHeight / 3} L${padding + innerWidth} ${padding + innerHeight / 3} L${padding + innerWidth - 12} ${padding + innerHeight / 3 - 4} L${padding + innerWidth - 12} ${padding + innerHeight / 3 + 4} L${padding + innerWidth} ${padding + innerHeight / 3}`
+    );
+    path.setAttribute('fill', baseColor);
+    path.setAttribute('stroke', baseColor);
+    path.setAttribute('stroke-width', '1');
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    g.appendChild(path);
+  };
+
+  const renderStream = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding} ${padding + (innerHeight / 3) * 2} L${padding + innerWidth} ${padding + (innerHeight / 3) * 2}`);
+    path.setAttribute('fill', baseColor);
+    path.setAttribute('stroke', baseColor);
+    path.setAttribute('stroke-width', '1');
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+    path.setAttribute('stroke-dasharray', '5,5');
+
+    g.appendChild(path);
+
+    for (let n = 0; n <= 3; n++) {
+      const rect = document.createElementNS(xmlns, 'rect');
+
+      if (n <= 1) {
+        rect.setAttribute('x', (padding + (innerWidth / 5) * n).toString(10));
+      } else {
+        rect.setAttribute('x', (padding + (innerWidth / 5) * (n + 1)).toString(10));
+      }
+
+      rect.setAttribute('y', (padding + (innerHeight / 3) * 2 + 24).toString(10));
+      rect.setAttribute('width', (innerWidth / 5).toString(10));
+      rect.setAttribute('height', '48');
+      rect.setAttribute('fill', 'none');
+      rect.setAttribute('stroke', baseColor);
+      rect.setAttribute('stroke-width', lineWidth.toString(10));
+      rect.setAttribute('stroke-linecap', lineCap);
+      rect.setAttribute('stroke-linejoin', lineJoin);
+
+      const text = document.createElementNS(xmlns, 'text');
+
+      if (n <= 1) {
+        text.setAttribute('x', (padding + (innerWidth / 5) * n + innerWidth / 10).toString(10));
+      } else {
+        text.setAttribute('x', (padding + (innerWidth / 5) * (n + 1) + innerWidth / 10).toString(10));
+      }
+
+      text.setAttribute('y', (padding + (innerHeight / 3) * 2 + 52).toString(10));
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('stroke', 'none');
+      text.setAttribute('fill', black);
+      text.setAttribute('font-size', '18px');
+
+      switch (n) {
+        case 0: {
+          text.textContent = 'Δt';
+          break;
+        }
+
+        case 1: {
+          text.textContent = 'Note On';
+          break;
+        }
+
+        case 2: {
+          text.textContent = 'Sum of Δt';
+          break;
+        }
+
+        case 3: {
+          text.textContent = 'Note Off';
+          break;
+        }
+      }
+
+      g.appendChild(rect);
+      g.appendChild(text);
+    }
+
+    for (let n = 0; n < 3; n++) {
+      const circle = document.createElementNS(xmlns, 'circle');
+
+      circle.setAttribute('cx', (padding + (innerWidth / 5) * 2 + innerWidth / 10 + 24 * n - 24).toString(10));
+      circle.setAttribute('cy', (padding + (innerHeight / 3) * 2 + 48).toString(10));
+      circle.setAttribute('r', '4');
+      circle.setAttribute('fill', baseColor);
+      circle.setAttribute('stroke', 'none');
+
+      g.appendChild(circle);
+    }
+  };
+
+  const renderNoteOnAndNoteOff = () => {
+    const noteOn = document.createElementNS(xmlns, 'path');
+
+    noteOn.setAttribute(
+      'd',
+      `M${padding + innerWidth / 3} ${padding} L${padding + innerWidth / 3} ${padding + innerHeight / 3} L${padding + innerWidth / 3} ${padding + (innerHeight / 3) * 2 + 24}`
+    );
+    noteOn.setAttribute('fill', 'none');
+    noteOn.setAttribute('stroke', baseColor);
+    noteOn.setAttribute('stroke-width', lineWidth.toString(10));
+    noteOn.setAttribute('stroke-linecap', lineCap);
+    noteOn.setAttribute('stroke-linejoin', lineJoin);
+    noteOn.setAttribute('stroke-dasharray', '5,5');
+
+    const noteOff = document.createElementNS(xmlns, 'path');
+
+    noteOff.setAttribute(
+      'd',
+      `M${padding + innerWidth - 40} ${padding} L${padding + innerWidth - 40} ${padding + innerHeight / 3} L${padding + (innerWidth / 5) * 3 + innerWidth / 10} ${padding + (innerHeight / 3) * 2 + 24}`
+    );
+    noteOff.setAttribute('fill', 'none');
+    noteOff.setAttribute('stroke', baseColor);
+    noteOff.setAttribute('stroke-width', lineWidth.toString(10));
+    noteOff.setAttribute('stroke-linecap', lineCap);
+    noteOff.setAttribute('stroke-linejoin', lineJoin);
+    noteOff.setAttribute('stroke-dasharray', '5,5');
+
+    const noteOnText = document.createElementNS(xmlns, 'text');
+
+    noteOnText.textContent = 'Note On';
+
+    noteOnText.setAttribute('x', (padding + innerWidth / 3).toString(10));
+    noteOnText.setAttribute('y', (padding + innerHeight / 3 + 24).toString(10));
+    noteOnText.setAttribute('text-anchor', 'middle');
+    noteOnText.setAttribute('stroke', 'none');
+    noteOnText.setAttribute('fill', black);
+    noteOnText.setAttribute('font-size', '16px');
+
+    const noteOffText = document.createElementNS(xmlns, 'text');
+
+    noteOffText.textContent = 'Note Off';
+
+    noteOffText.setAttribute('x', (padding + innerWidth - 40).toString(10));
+    noteOffText.setAttribute('y', (padding + innerHeight / 3 + 24).toString(10));
+    noteOffText.setAttribute('text-anchor', 'middle');
+    noteOffText.setAttribute('stroke', 'none');
+    noteOffText.setAttribute('fill', black);
+    noteOffText.setAttribute('font-size', '16px');
+
+    g.appendChild(noteOn);
+    g.appendChild(noteOff);
+    g.appendChild(noteOnText);
+    g.appendChild(noteOffText);
+  };
+
+  const renderNoteLength = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding + innerWidth / 3} ${padding} L${padding + innerWidth / 3 + 12} ${padding - 4} L${padding + innerWidth / 3 + 12} ${padding + 4} L${padding + innerWidth / 3} ${padding} L${padding + innerWidth - 40} ${padding}  L${padding + innerWidth - 40 - 12} ${padding - 4} L${padding + innerWidth - 40 - 12} ${padding + 4} L${padding + innerWidth - 40} ${padding}`
+    );
+    path.setAttribute('fill', lightWaveColor);
+    path.setAttribute('stroke', lightWaveColor);
+    path.setAttribute('stroke-width', '1');
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Note Length';
+
+    text.setAttribute('x', (padding + (innerWidth / 3) * 2).toString(10));
+    text.setAttribute('y', (padding - 12).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '16px');
+
+    g.appendChild(text);
+    g.appendChild(path);
+  };
+
+  const renderPreviousEvent = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding} ${padding} L${padding} ${padding + innerHeight / 3}`);
+    path.setAttribute('fill', alphaBaseColor);
+    path.setAttribute('stroke', alphaBaseColor);
+    path.setAttribute('stroke-width', '1');
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+    path.setAttribute('stroke-dasharray', '5,5');
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Previous Event';
+
+    text.setAttribute('x', padding.toString(10));
+    text.setAttribute('y', (padding + innerHeight / 3 + 24).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+
+    g.appendChild(text);
+    g.appendChild(path);
+  };
+
+  const renderDeltaTime = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding} ${padding} L${padding + 12} ${padding - 4} L${padding + 12} ${padding + 4} L${padding} ${padding} L${padding + innerWidth / 3} ${padding}  L${padding + innerWidth / 3 - 12} ${padding - 4} L${padding + innerWidth / 3 - 12} ${padding + 4} L${padding + innerWidth / 3} ${padding}`
+    );
+    path.setAttribute('fill', alphaBaseColor);
+    path.setAttribute('stroke', alphaBaseColor);
+    path.setAttribute('stroke-width', '1');
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Delta Time';
+
+    text.setAttribute('x', (padding + innerWidth / 6).toString(10));
+    text.setAttribute('y', (padding - 12).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '16px');
+
+    g.appendChild(text);
+    g.appendChild(path);
+  };
+
+  renderTime();
+  renderStream();
+  renderNoteOnAndNoteOff();
+  renderNoteLength();
+  renderPreviousEvent();
+  renderDeltaTime();
+
+  svg.appendChild(g);
+};
+
 const requestMIDIAccess = () => {
   const buttonElement = document.getElementById('button-request-midi-access');
   const checkboxElementForSysex = document.getElementById('checkbox-request-midi-access-sysex');
@@ -24277,6 +25454,19 @@ mediaRecorder();
 selectOutputDeviceBySinkId();
 
 createWaveByOfflineAudioContext();
+
+createMIDIMessage(document.getElementById('svg-figure-midi-message-structure'));
+createMIDIMessageBetweenNoteOnAndNoteOff(document.getElementById('svg-figure-midi-message-between-note-on-and-note-off'));
+createMIDIMessageNoteOn(document.getElementById('svg-figure-midi-message-note-on'));
+createMIDIMessageNoteOff(document.getElementById('svg-figure-midi-message-note-off'));
+createMIDIMessageProgramChange(document.getElementById('svg-figure-midi-message-program-change'));
+createMIDIMessagePercussionMap(document.getElementById('svg-figure-midi-message-percussion-map'));
+createMIDIMessageSystemExclusive(document.getElementById('svg-figure-midi-message-system-exclusive'));
+
+createSMFFormat0(document.getElementById('svg-figure-standard-midi-file-format-0'));
+createSMFFormat1(document.getElementById('svg-figure-standard-midi-file-format-1'));
+
+createDeltaTime(document.getElementById('svg-figure-midi-message-delta-time'));
 
 requestMIDIAccess();
 midiDevices();
