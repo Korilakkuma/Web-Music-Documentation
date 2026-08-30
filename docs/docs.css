@@ -437,19 +437,6 @@ select {
   opacity: 0.6;
 }
 
-.checkbox-container {
-  display: grid;
-  grid-template-columns: repeat(2, auto);
-  gap: 8px;
-  align-items: center;
-  width: fit-content;
-}
-
-.checkbox-container label {
-  display: inline-block;
-  cursor: pointer;
-}
-
 .label-checkbox,
 .label-radio {
   display: flex;

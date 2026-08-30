@@ -24858,15 +24858,15 @@ oscillator.onended = () =&gt; {
                 </dd>
               </dl>
             </section>
-            <div class="app-container flexbox flexbox-align-items-center">
-              <ul class="flexbox">
-                <li class="checkbox-container">
-                  <input type="checkbox" id="checkbox-request-midi-access-sysex" /><label for="checkbox-request-midi-access-sysex">sysex</label>
-                </li>
-                <li class="checkbox-container">
-                  <input type="checkbox" id="checkbox-request-midi-access-software" /><label for="checkbox-request-midi-access-software">software</label>
-                </li>
-              </ul>
+            <div class="app-container flexbox">
+              <label class="label-checkbox">
+                <input type="checkbox" id="checkbox-request-midi-access-sysex" />
+                <span>sysex</span>
+              </label>
+              <label class="label-checkbox">
+                <input type="checkbox" id="checkbox-request-midi-access-software" />
+                <span>software</span>
+              </label>
               <div>
                 <button type="button" id="button-request-midi-access">requestMIDIAccess</button>
               </div>
@@ -24893,7 +24893,9 @@ oscillator.onended = () =&gt; {
             <pre
               data-prismjs-copy="クリップボードにコピー"
               data-prismjs-copy-success="コピーしました"
-            ><code class="language-html line-numbers">&lt;select id=&quot;select-input-midi-devices&quot;&gt;&lt;/select&gt;
+            ><code class="language-html line-numbers">&lt;label for=&quot;select-input-midi-devices&quot;&gt;Select Input MIDI Device&lt;/label&gt;
+&lt;select id=&quot;select-input-midi-devices&quot;&gt;&lt;/select&gt;
+&lt;label for=&quot;select-output-midi-devices&quot;&gt;Select Output MIDI Device&lt;/label&gt;
 &lt;select id=&quot;select-output-midi-devices&quot;&gt;&lt;/select&gt;</code></pre>
             <pre
               data-prismjs-copy="クリップボードにコピー"
@@ -24947,22 +24949,18 @@ navigator.requestMIDIAccess(midiOptions)
     // error handling
   });</code></pre>
             <div class="app-container flexbox flexbox-align-items-center">
-              <ul class="flexbox">
-                <li>
-                  <label>
-                    <select id="select-input-midi-devices" aria-label="入力 MIDI デバイスを選択">
-                      <option value="">--- SELECT Input MIDI Device ---</option>
-                    </select>
-                  </label>
-                </li>
-                <li>
-                  <label>
-                    <select id="select-output-midi-devices" aria-label="出力 MIDI デバイスを選択">
-                      <option value="">--- SELECT Output MIDI Device ---</option>
-                    </select>
-                  </label>
-                </li>
-              </ul>
+              <div>
+                <label for="select-input-midi-devices">Select Input MIDI Device</label>
+                <select id="select-input-midi-devices">
+                  <option value="">--- SELECT Input MIDI Device ---</option>
+                </select>
+              </div>
+              <div>
+                <label for="select-output-midi-devices">Select Output MIDI Device</label>
+                <select id="select-output-midi-devices">
+                  <option value="">--- SELECT Output MIDI Device ---</option>
+                </select>
+              </div>
               <div>
                 <button type="button" id="button-midi-devices">requestMIDIAccess</button>
               </div>
@@ -25048,7 +25046,10 @@ navigator.requestMIDIAccess(midiOptions)
               <dt><code>&apos;pending&apos;</code></dt>
               <dd>物理的に, MIDI デバイスの接続を切断した場合に遷移します.</dd>
             </dl>
-            <img src="images/midi-port-connection-state.svg" alt="MIDIPortConnectionState の状態遷移" width="800" height="280" loading="lazy" />
+            <figure>
+              <svg id="svg-figure-midi-port-connection-state" width="800" height="360" />
+              <figcaption><code>MIDIPortConnectionState</code> の状態遷移</figcaption>
+            </figure>
           </section>
           <section id="section-web-midi-api-midi-port-statechange">
             <h4>onstatechange イベント</h4>
@@ -25382,11 +25383,12 @@ navigator.requestMIDIAccess({ sysex: false, software: false })
     // error handling
   });</code></pre>
             <div class="app-container flexbox flexbox-align-items-center">
-              <label>
-                <select id="select-midi-input-midimessage" aria-label="入力 MIDI デバイスを選択">
+              <div>
+                <label for="select-midi-input-midimessage">Select Input MIDI Device</label>
+                <select id="select-midi-input-midimessage">
                   <option value="">--- SELECT Input MIDI Device ---</option>
                 </select>
-              </label>
+              </div>
               <div>
                 <button type="button" id="button-midi-input-midimessage">requestMIDIAccess</button>
               </div>
@@ -25492,6 +25494,7 @@ navigator.requestMIDIAccess({ sysex: false, software: false })
           ><code class="language-html line-numbers">&lt;button type=&quot;button&quot; id=&quot;button-midi-output-note-on&quot;&gt;Note On&lt;/button&gt;
 &lt;button type=&quot;button&quot; id=&quot;button-midi-output-note-off&quot;&gt;Note Off&lt;/button&gt;
 &lt;button type=&quot;button&quot; id=&quot;button-midi-output-clear&quot;&gt;clear&lt;/button&gt;
+&lt;label for=&quot;select-midi-output-program-number&quot;&gt;Select Output Program Number&lt;/label&gt;
 &lt;select id=&quot;select-midi-output-program-number&quot;&gt;
   &lt;option value=&quot;0&quot;&gt;Acoustic Grand Piano&lt;/option&gt;
   &lt;!-- Program Number --&gt;
@@ -25558,169 +25561,169 @@ navigator.requestMIDIAccess({ sysex: false, software: false })
   .catch((error) =&gt; {
     // error handling
   });</code></pre>
-          <div class="app-container">
-            <ul class="flexbox flexbox-align-items-center">
-              <li>
-                <label>
-                  <select id="select-midi-output-send-and-clear" aria-label="出力 MIDI デバイスを選択">
-                    <option value="">--- SELECT Output MIDI Device ---</option>
-                  </select>
-                </label>
-              </li>
-              <li>
-                <label>
-                  <select id="select-midi-output-program-number" aria-label="プログラムナンバーを選択">
-                    <option value="0">Acoustic Grand Piano</option>
-                    <option value="1">Bright Acoustic Piano</option>
-                    <option value="2">Electric Grand Piano</option>
-                    <option value="3">Honky-tonk Piano</option>
-                    <option value="4">Electric Piano 1</option>
-                    <option value="5">Electric Piano 2</option>
-                    <option value="6">Harpsichord</option>
-                    <option value="7">Clavi</option>
+          <div class="app-container flexbox-column">
+            <div class="flexbox">
+              <div class="flexbox flexbox-align-items-center">
+                <label for="select-midi-output-send-and-clear">Select Output MIDI Device</label>
+                <select id="select-midi-output-send-and-clear">
+                  <option value="">--- SELECT Output MIDI Device ---</option>
+                </select>
+              </div>
+              <div class="flexbox flexbox-align-items-center">
+                <label for="select-midi-output-program-number">Select Output Program Number</label>
+                <select id="select-midi-output-program-number">
+                  <option value="0">Acoustic Grand Piano</option>
+                  <option value="1">Bright Acoustic Piano</option>
+                  <option value="2">Electric Grand Piano</option>
+                  <option value="3">Honky-tonk Piano</option>
+                  <option value="4">Electric Piano 1</option>
+                  <option value="5">Electric Piano 2</option>
+                  <option value="6">Harpsichord</option>
+                  <option value="7">Clavi</option>
 
-                    <option value="8">Celesta</option>
-                    <option value="9">Glockenspiel</option>
-                    <option value="10">Music Box</option>
-                    <option value="11">Vibraphone</option>
-                    <option value="12">Marimba</option>
-                    <option value="13">Xylophone</option>
-                    <option value="14">Tubular Bells</option>
-                    <option value="15">Dulcimer</option>
+                  <option value="8">Celesta</option>
+                  <option value="9">Glockenspiel</option>
+                  <option value="10">Music Box</option>
+                  <option value="11">Vibraphone</option>
+                  <option value="12">Marimba</option>
+                  <option value="13">Xylophone</option>
+                  <option value="14">Tubular Bells</option>
+                  <option value="15">Dulcimer</option>
 
-                    <option value="16">Drawbar Organ</option>
-                    <option value="17">Percussive Organ</option>
-                    <option value="18">Rock Organ</option>
-                    <option value="19">Church Organ</option>
-                    <option value="20">Reed Organ</option>
-                    <option value="21">Accordion</option>
-                    <option value="22">Harmonica</option>
-                    <option value="23">Tango Accordion</option>
+                  <option value="16">Drawbar Organ</option>
+                  <option value="17">Percussive Organ</option>
+                  <option value="18">Rock Organ</option>
+                  <option value="19">Church Organ</option>
+                  <option value="20">Reed Organ</option>
+                  <option value="21">Accordion</option>
+                  <option value="22">Harmonica</option>
+                  <option value="23">Tango Accordion</option>
 
-                    <option value="24">Acoustic Guitar (nylon)</option>
-                    <option value="25">Acoustic Guitar (steel)</option>
-                    <option value="26">Electric Guitar (jazz)</option>
-                    <option value="27">Electric Guitar (clean)</option>
-                    <option value="28">Electric Guitar (muted)</option>
-                    <option value="29">Overdriven Guitar</option>
-                    <option value="30">Distortion Guitar</option>
-                    <option value="31">Guitar harmonics</option>
+                  <option value="24">Acoustic Guitar (nylon)</option>
+                  <option value="25">Acoustic Guitar (steel)</option>
+                  <option value="26">Electric Guitar (jazz)</option>
+                  <option value="27">Electric Guitar (clean)</option>
+                  <option value="28">Electric Guitar (muted)</option>
+                  <option value="29">Overdriven Guitar</option>
+                  <option value="30">Distortion Guitar</option>
+                  <option value="31">Guitar harmonics</option>
 
-                    <option value="32">Acoustic Bass</option>
-                    <option value="33">Electric Bass (finger)</option>
-                    <option value="34">Electric Bass (pick)</option>
-                    <option value="35">Fretless Bass</option>
-                    <option value="36">Slap Bass 1</option>
-                    <option value="37">Slap Bass 2</option>
-                    <option value="38">Synth Bass 1</option>
-                    <option value="39">Synth Bass 2</option>
+                  <option value="32">Acoustic Bass</option>
+                  <option value="33">Electric Bass (finger)</option>
+                  <option value="34">Electric Bass (pick)</option>
+                  <option value="35">Fretless Bass</option>
+                  <option value="36">Slap Bass 1</option>
+                  <option value="37">Slap Bass 2</option>
+                  <option value="38">Synth Bass 1</option>
+                  <option value="39">Synth Bass 2</option>
 
-                    <option value="40">Violin</option>
-                    <option value="41">Viola</option>
-                    <option value="42">Cello</option>
-                    <option value="43">Contrabass</option>
-                    <option value="44">Tremolo Strings</option>
-                    <option value="45">Pizzicato Strings</option>
-                    <option value="46">Orchestral Harp</option>
-                    <option value="47">Timpani</option>
+                  <option value="40">Violin</option>
+                  <option value="41">Viola</option>
+                  <option value="42">Cello</option>
+                  <option value="43">Contrabass</option>
+                  <option value="44">Tremolo Strings</option>
+                  <option value="45">Pizzicato Strings</option>
+                  <option value="46">Orchestral Harp</option>
+                  <option value="47">Timpani</option>
 
-                    <option value="48">String Ensemble 1</option>
-                    <option value="49">String Ensemble 2</option>
-                    <option value="50">SynthStrings 1</option>
-                    <option value="51">SynthStrings 2</option>
-                    <option value="52">Choir Aahs</option>
-                    <option value="53">Voice Oohs</option>
-                    <option value="54">Synth Voice</option>
-                    <option value="55">Orchestra Hit</option>
+                  <option value="48">String Ensemble 1</option>
+                  <option value="49">String Ensemble 2</option>
+                  <option value="50">SynthStrings 1</option>
+                  <option value="51">SynthStrings 2</option>
+                  <option value="52">Choir Aahs</option>
+                  <option value="53">Voice Oohs</option>
+                  <option value="54">Synth Voice</option>
+                  <option value="55">Orchestra Hit</option>
 
-                    <option value="56">Trumpet</option>
-                    <option value="57">Trombone</option>
-                    <option value="58">Tuba</option>
-                    <option value="59">Muted Trumpet</option>
-                    <option value="60">French Horn</option>
-                    <option value="61">Brass Section</option>
-                    <option value="62">SynthBrass 1</option>
-                    <option value="63">SynthBrass 2</option>
+                  <option value="56">Trumpet</option>
+                  <option value="57">Trombone</option>
+                  <option value="58">Tuba</option>
+                  <option value="59">Muted Trumpet</option>
+                  <option value="60">French Horn</option>
+                  <option value="61">Brass Section</option>
+                  <option value="62">SynthBrass 1</option>
+                  <option value="63">SynthBrass 2</option>
 
-                    <option value="64">Soprano Sax</option>
-                    <option value="65">Alto Sax</option>
-                    <option value="66">Tenor Sax</option>
-                    <option value="67">Baritone Sax</option>
-                    <option value="68">Oboe</option>
-                    <option value="69">English Horn</option>
-                    <option value="70">Bassoon</option>
-                    <option value="71">Clarinet</option>
+                  <option value="64">Soprano Sax</option>
+                  <option value="65">Alto Sax</option>
+                  <option value="66">Tenor Sax</option>
+                  <option value="67">Baritone Sax</option>
+                  <option value="68">Oboe</option>
+                  <option value="69">English Horn</option>
+                  <option value="70">Bassoon</option>
+                  <option value="71">Clarinet</option>
 
-                    <option value="72">Piccolo</option>
-                    <option value="73">Flute</option>
-                    <option value="74">Recorder</option>
-                    <option value="75">Pan Flute</option>
-                    <option value="76">Blown Bottle</option>
-                    <option value="77">Shakuhachi</option>
-                    <option value="78">Whistle</option>
-                    <option value="79">Ocarina</option>
+                  <option value="72">Piccolo</option>
+                  <option value="73">Flute</option>
+                  <option value="74">Recorder</option>
+                  <option value="75">Pan Flute</option>
+                  <option value="76">Blown Bottle</option>
+                  <option value="77">Shakuhachi</option>
+                  <option value="78">Whistle</option>
+                  <option value="79">Ocarina</option>
 
-                    <option value="80">Lead 1 (square)</option>
-                    <option value="81">Lead 2 (sawtooth)</option>
-                    <option value="82">Lead 3 (calliope)</option>
-                    <option value="83">Lead 4 (chiff)</option>
-                    <option value="84">Lead 5 (charang)</option>
-                    <option value="85">Lead 6 (voice)</option>
-                    <option value="86">Lead 7 (fifths)</option>
-                    <option value="87">Lead 8 (bass + lead)</option>
+                  <option value="80">Lead 1 (square)</option>
+                  <option value="81">Lead 2 (sawtooth)</option>
+                  <option value="82">Lead 3 (calliope)</option>
+                  <option value="83">Lead 4 (chiff)</option>
+                  <option value="84">Lead 5 (charang)</option>
+                  <option value="85">Lead 6 (voice)</option>
+                  <option value="86">Lead 7 (fifths)</option>
+                  <option value="87">Lead 8 (bass + lead)</option>
 
-                    <option value="88">Pad 1 (new age)</option>
-                    <option value="89">Pad 2 (warm)</option>
-                    <option value="90">Pad 3 (polysynth)</option>
-                    <option value="91">Pad 4 (choir)</option>
-                    <option value="92">Pad 5 (bowed)</option>
-                    <option value="93">Pad 6 (metallic)</option>
-                    <option value="94">Pad 7 (halo)</option>
-                    <option value="95">Pad 8 (sweep)</option>
+                  <option value="88">Pad 1 (new age)</option>
+                  <option value="89">Pad 2 (warm)</option>
+                  <option value="90">Pad 3 (polysynth)</option>
+                  <option value="91">Pad 4 (choir)</option>
+                  <option value="92">Pad 5 (bowed)</option>
+                  <option value="93">Pad 6 (metallic)</option>
+                  <option value="94">Pad 7 (halo)</option>
+                  <option value="95">Pad 8 (sweep)</option>
 
-                    <option value="96">FX 1 (rain)</option>
-                    <option value="97">FX 2 (soundtrack)</option>
-                    <option value="98">FX 3 (crystal)</option>
-                    <option value="99">FX 4 (atmosphere)</option>
-                    <option value="100">FX 5 (brightness)</option>
-                    <option value="101">FX 6 (goblins)</option>
-                    <option value="102">FX 7 (echoes)</option>
-                    <option value="103">FX 8 (sci-fi)</option>
+                  <option value="96">FX 1 (rain)</option>
+                  <option value="97">FX 2 (soundtrack)</option>
+                  <option value="98">FX 3 (crystal)</option>
+                  <option value="99">FX 4 (atmosphere)</option>
+                  <option value="100">FX 5 (brightness)</option>
+                  <option value="101">FX 6 (goblins)</option>
+                  <option value="102">FX 7 (echoes)</option>
+                  <option value="103">FX 8 (sci-fi)</option>
 
-                    <option value="104">Sitar</option>
-                    <option value="105">Banjo</option>
-                    <option value="106">Shamisen</option>
-                    <option value="107">Koto</option>
-                    <option value="108">Kalimba</option>
-                    <option value="109">Bag pipe</option>
-                    <option value="110">Fiddle</option>
-                    <option value="111">Shanai</option>
+                  <option value="104">Sitar</option>
+                  <option value="105">Banjo</option>
+                  <option value="106">Shamisen</option>
+                  <option value="107">Koto</option>
+                  <option value="108">Kalimba</option>
+                  <option value="109">Bag pipe</option>
+                  <option value="110">Fiddle</option>
+                  <option value="111">Shanai</option>
 
-                    <option value="112">Tinkle Bell</option>
-                    <option value="113">Agogo</option>
-                    <option value="114">Steel Drums</option>
-                    <option value="115">Woodblock</option>
-                    <option value="116">Taiko Drum</option>
-                    <option value="117">Melodic Tom</option>
-                    <option value="118">Synth Drum</option>
-                    <option value="119">Reverse Cymbal</option>
+                  <option value="112">Tinkle Bell</option>
+                  <option value="113">Agogo</option>
+                  <option value="114">Steel Drums</option>
+                  <option value="115">Woodblock</option>
+                  <option value="116">Taiko Drum</option>
+                  <option value="117">Melodic Tom</option>
+                  <option value="118">Synth Drum</option>
+                  <option value="119">Reverse Cymbal</option>
 
-                    <option value="120">Guitar Fret Noise</option>
-                    <option value="121">Breath Noise</option>
-                    <option value="122">Seashore</option>
-                    <option value="123">Bird Tweet</option>
-                    <option value="124">Telephone Ring</option>
-                    <option value="125">Helicopter</option>
-                    <option value="126">Applause</option>
-                    <option value="127">Gunshot</option>
-                  </select>
-                </label>
-              </li>
-              <li><button type="button" id="button-midi-output-send-and-clear">requestMIDIAccess</button></li>
-              <li><button type="button" id="button-midi-output-note-on">Note On</button></li>
-              <li><button type="button" id="button-midi-output-note-off">Note Off</button></li>
-              <li><button type="button" id="button-midi-output-clear">clear</button></li>
-            </ul>
+                  <option value="120">Guitar Fret Noise</option>
+                  <option value="121">Breath Noise</option>
+                  <option value="122">Seashore</option>
+                  <option value="123">Bird Tweet</option>
+                  <option value="124">Telephone Ring</option>
+                  <option value="125">Helicopter</option>
+                  <option value="126">Applause</option>
+                  <option value="127">Gunshot</option>
+                </select>
+              </div>
+            </div>
+            <div class="flexbox">
+              <button type="button" id="button-midi-output-send-and-clear">requestMIDIAccess</button>
+              <button type="button" id="button-midi-output-note-on">Note On</button>
+              <button type="button" id="button-midi-output-note-off">Note Off</button>
+              <button type="button" id="button-midi-output-clear">clear</button>
+            </div>
           </div>
         </section>
       </section>

@@ -24704,6 +24704,289 @@ const createDeltaTime = (svg) => {
   svg.appendChild(g);
 };
 
+const createMIDIPortConnectionState = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  const renderClosed = () => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', padding.toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', '160');
+    rect.setAttribute('height', '80');
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+    rect.setAttribute('stroke-linecap', lineCap);
+    rect.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = "'closed'";
+
+    text.setAttribute('x', (padding + 160 / 2).toString(10));
+    text.setAttribute('y', (padding + 40).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '18px');
+
+    const subText = document.createElementNS(xmlns, 'text');
+
+    subText.textContent = '(Default State)';
+
+    subText.setAttribute('x', (padding + 160 / 2).toString(10));
+    subText.setAttribute('y', (padding + 60).toString(10));
+    subText.setAttribute('text-anchor', 'middle');
+    subText.setAttribute('stroke', 'none');
+    subText.setAttribute('fill', baseColor);
+    subText.setAttribute('font-size', '14px');
+
+    g.appendChild(rect);
+    g.appendChild(text);
+    g.appendChild(subText);
+  };
+
+  const renderOpen = () => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (padding + innerWidth - 160).toString(10));
+    rect.setAttribute('y', padding.toString(10));
+    rect.setAttribute('width', '160');
+    rect.setAttribute('height', '80');
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+    rect.setAttribute('stroke-linecap', lineCap);
+    rect.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = "'open'";
+
+    text.setAttribute('x', (padding + innerWidth - 160 + 160 / 2).toString(10));
+    text.setAttribute('y', (padding + 40).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '18px');
+
+    const subText = document.createElementNS(xmlns, 'text');
+
+    subText.textContent = '(Available for use)';
+
+    subText.setAttribute('x', (padding + innerWidth - 160 + 160 / 2).toString(10));
+    subText.setAttribute('y', (padding + 60).toString(10));
+    subText.setAttribute('text-anchor', 'middle');
+    subText.setAttribute('stroke', 'none');
+    subText.setAttribute('fill', baseColor);
+    subText.setAttribute('font-size', '14px');
+
+    g.appendChild(rect);
+    g.appendChild(text);
+    g.appendChild(subText);
+  };
+
+  const renderPending = () => {
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (padding + innerWidth - 160).toString(10));
+    rect.setAttribute('y', (padding + 160).toString(10));
+    rect.setAttribute('width', '160');
+    rect.setAttribute('height', '80');
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+    rect.setAttribute('stroke-linecap', lineCap);
+    rect.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = "'pending'";
+
+    text.setAttribute('x', (padding + innerWidth - 160 + 160 / 2).toString(10));
+    text.setAttribute('y', (padding + 160 + 40).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '18px');
+
+    const subText = document.createElementNS(xmlns, 'text');
+
+    subText.textContent = '(Disconnected)';
+
+    subText.setAttribute('x', (padding + innerWidth - 160 + 160 / 2).toString(10));
+    subText.setAttribute('y', (padding + 160 + 60).toString(10));
+    subText.setAttribute('text-anchor', 'middle');
+    subText.setAttribute('stroke', 'none');
+    subText.setAttribute('fill', baseColor);
+    subText.setAttribute('font-size', '14px');
+
+    g.appendChild(rect);
+    g.appendChild(text);
+    g.appendChild(subText);
+  };
+
+  const renderToOpen = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding + 160} ${padding + 20} L${padding + innerWidth - 160} ${padding + 20} L${padding + innerWidth - 160 - 12} ${padding + 20 - 4}  L${padding + innerWidth - 160 - 12} ${padding + 20 + 4} L${padding + innerWidth - 160} ${padding + 20} L${padding + innerWidth - 160} ${padding + 20}`
+    );
+    path.setAttribute('fill', baseColor);
+    path.setAttribute('stroke', baseColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'open() or implicit open (Add event handler, send())';
+
+    text.setAttribute('x', (padding + innerWidth / 2).toString(10));
+    text.setAttribute('y', (padding + 8).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(path);
+    g.appendChild(text);
+  };
+
+  const renderToClosed = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding + 160} ${padding + 60} L${padding + innerWidth - 160} ${padding + 60}`);
+    path.setAttribute('fill', baseColor);
+    path.setAttribute('stroke', baseColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'close() (Explicit)';
+
+    text.setAttribute('x', (padding + innerWidth / 2).toString(10));
+    text.setAttribute('y', (padding + 80).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(path);
+    g.appendChild(text);
+  };
+
+  const renderReopenSuccess = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding + innerWidth - 120} ${padding + 80} L${padding + innerWidth - 120 - 4} ${padding + 80 + 12} L${padding + innerWidth - 120 + 4} ${padding + 80 + 12}  L${padding + innerWidth - 120} ${padding + 80} L${padding + innerWidth - 120} ${padding + 160}`
+    );
+    path.setAttribute('fill', baseColor);
+    path.setAttribute('stroke', baseColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Reconnected (Reopen Success)';
+
+    text.setAttribute('x', (padding + innerWidth - 128).toString(10));
+    text.setAttribute('y', (padding + 120).toString(10));
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(path);
+    g.appendChild(text);
+  };
+
+  const renderDeviceDisconnected = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute(
+      'd',
+      `M${padding + innerWidth - 80} ${padding + 80} L${padding + innerWidth - 80} ${padding + 160} L${padding + innerWidth - 80 - 4} ${padding + 160 - 12} L${padding + innerWidth - 80 + 4} ${padding + 160 - 12} L${padding + innerWidth - 80} ${padding + 160}`
+    );
+    path.setAttribute('fill', baseColor);
+    path.setAttribute('stroke', baseColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Device Disconnected';
+
+    text.setAttribute('x', (padding + innerWidth - 72).toString(10));
+    text.setAttribute('y', (padding + 120).toString(10));
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(path);
+    g.appendChild(text);
+  };
+
+  const renderReopenFailed = () => {
+    const path = document.createElementNS(xmlns, 'path');
+
+    path.setAttribute('d', `M${padding + innerWidth - 160} ${padding + 160 + 40} L${padding + 80} ${padding + 160 + 40} L${padding + 80} ${padding + 80}`);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', baseColor);
+    path.setAttribute('stroke-width', lineWidth.toString(10));
+    path.setAttribute('stroke-linecap', lineCap);
+    path.setAttribute('stroke-linejoin', lineJoin);
+    path.setAttribute('stroke-dasharray', '5,5');
+
+    const arrow = document.createElementNS(xmlns, 'path');
+
+    arrow.setAttribute(
+      'd',
+      `M${padding + 80} ${padding + 80} L${padding + 80 - 4} ${padding + 80 + 12} L${padding + 80 + 4} ${padding + 80 + 12} L${padding + 80} ${padding + 80}`
+    );
+    arrow.setAttribute('fill', baseColor);
+    arrow.setAttribute('stroke', 'none');
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = 'Reconnected (Reopen Failed)';
+
+    text.setAttribute('x', (padding + innerWidth / 2).toString(10));
+    text.setAttribute('y', (padding + 160 + 40 - 12).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', black);
+    text.setAttribute('font-size', '14px');
+
+    g.appendChild(path);
+    g.appendChild(arrow);
+    g.appendChild(text);
+  };
+
+  renderClosed();
+  renderOpen();
+  renderPending();
+  renderToOpen();
+  renderToClosed();
+  renderReopenSuccess();
+  renderDeviceDisconnected();
+  renderReopenFailed();
+
+  svg.appendChild(g);
+};
+
 const requestMIDIAccess = () => {
   const buttonElement = document.getElementById('button-request-midi-access');
   const checkboxElementForSysex = document.getElementById('checkbox-request-midi-access-sysex');
@@ -25467,6 +25750,8 @@ createSMFFormat0(document.getElementById('svg-figure-standard-midi-file-format-0
 createSMFFormat1(document.getElementById('svg-figure-standard-midi-file-format-1'));
 
 createDeltaTime(document.getElementById('svg-figure-midi-message-delta-time'));
+
+createMIDIPortConnectionState(document.getElementById('svg-figure-midi-port-connection-state'));
 
 requestMIDIAccess();
 midiDevices();
