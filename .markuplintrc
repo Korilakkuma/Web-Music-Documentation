@@ -6,7 +6,7 @@
     {
       "selector": "html",
       "rules": {
-        "invalid-attr": {
+        "no-unknown-attr": {
           "options": {
             "allowAttrs": ["prefix"]
           }
@@ -16,13 +16,19 @@
     {
       "selector": "audio",
       "rules": {
-        "required-element": false
+        "require-element": false
       }
     },
     {
       "selector": "#MathJax-script",
       "rules": {
-        "required-attr": ["async"]
+        "require-attr": ["async"]
+      }
+    },
+    {
+      "selector": "td",
+      "rules": {
+        "a11y/no-merge-cells": false
       }
     }
   ]
