@@ -2,19 +2,19 @@
 <html lang="ja" prefix="og: http://ogp.me/ns#">
   <head>
     <meta charset="UTF-8" />
-    <title>Web Music Documentation</title>
-    <meta name="description" content="Web Music Documentation for Web Audio API, Web MIDI API ... etc" />
-    <meta name="keywords" content="Web Music, Music, Web Audio API, Web Audio, Audio Signal Processing, Web MIDI API, Web MIDI, MIDI" />
-    <meta name="author" content="Korilakkuma (Tomohiro IKEDA)" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover" />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="theme-color" content="#fafafa" />
+    <title>Web Music Documentation</title>
     <meta property="og:description" content="Web Music Documentation for Web Audio API, Web MIDI API ... etc" />
     <meta property="og:image" content="https://korilakkuma.github.io/Web-Music-Documentation/images/icon.png" />
     <meta property="og:site_name" content="Web Music Documentation" />
     <meta property="og:title" content="Web Music Documentation" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://korilakkuma.github.io/Web-Music-Documentation/" />
+    <meta name="author" content="Korilakkuma (Tomohiro IKEDA)" />
+    <meta name="description" content="Web Music Documentation for Web Audio API, Web MIDI API ... etc" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="keywords" content="Web Music, Music, Web Audio API, Web Audio, Audio Signal Processing, Web MIDI API, Web MIDI, MIDI" />
+    <meta name="theme-color" content="#fafafa" />
     <meta name="twitter:card" content="summary" />
     <link rel="canonical" href="https://korilakkuma.github.io/Web-Music-Documentation/" />
     <link rel="icon" href="images/icon.png" type="image/png" />
@@ -88,7 +88,8 @@
             href="https://egonelbre.com/project/jsfx/"
             target="_blank"
             rel="noopener noreferrer"
-            >jsfx</a>
+            >jsfx</a
+          >
           のようにハッキーな実装をすることでエフェクトをかけるぐらいは可能ですが, 仕様のユースケースとして想定されている使い方ではありません),
           リアルタイム性やインタラクティブ性も考慮された API ではないからです (厳密には, 考慮された経緯もあって,
           <code>Audio</code> コンストラクタが定義されています). また, Web Music として, Web MIDI API や WebRTC を使う場合, 実際のオーディオ処理は Web Audio API
@@ -178,10 +179,12 @@
           <h3>推奨ブラウザ</h3>
           <p>
             閲覧自体は, モダンブラウザであれば特に問題ありませんが, 実際のサンプルコードを動作させることを考慮すると, デスクトップブラウザ, 特に, Web Audio API
-            の仕様に準拠している <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer">Google Chrome</a> もしくは
+            の仕様に準拠している
+            <a href="https://www.google.com/chrome/" target="_blank" rel="noopener noreferrer">Google Chrome</a> もしくは
             <a href="https://www.mozilla.org/ja/firefox/" target="_blank" rel="noopener noreferrer">Mozilla Firefox</a> (いずれも最新バージョン) を推奨します
             (Google Chrome の場合, より高度な
-            <a href="https://web.dev/articles/profiling-web-audio-apps-in-chrome" target="_blank" rel="noopener noreferrer">Web Audio API 専用のプロファイラ</a>があるのでおすすめです).
+            <a href="https://web.dev/articles/profiling-web-audio-apps-in-chrome" target="_blank" rel="noopener noreferrer">Web Audio API 専用のプロファイラ</a
+            >があるのでおすすめです).
           </p>
         </section>
         <section id="section-prerequisite">
@@ -275,8 +278,7 @@ console.dir(context);</code></pre>
             <p>
               Web Audio API に限ったことではないですが, ページにアクセスしたときに, ユーザーに意図しない音を聞かせるのはよくないという観点から (すなわち, UX
               としてよくないという理由から), ブラウザでオーディオを再生する場合,
-              <a href="https://developer.chrome.com/blog/autoplay#web_audio" target="_blank" rel="noopener noreferrer" aria-label="Autoplay policy in Chrome"
-                >Autoplay Policy</a>
+              <a href="https://developer.chrome.com/blog/autoplay#web_audio" target="_blank" rel="noopener noreferrer">Autoplay Policy</a>
               という制限がかかります. これを解除するためには, <b>ユーザーインタラクティブなイベント発火後</b>に
               <code>AudioContext</code> インスタンスを生成するか, もしくは, <code>AudioContext</code> インスタンスの <code>resume</code> メソッドを実行して
               <code>AudioContextState</code> を <code>&apos;running&apos;</code> に変更する必要があります. これをしないと, 発音することができません. また,
@@ -320,7 +322,9 @@ document.addEventListener(&apos;click&apos;, async () =&gt; {
             <dl>
               <dt><code>latencyHint</code> プロパティ</dt>
               <dd>
-                <b><code>AudioContextLatencyCategory</code></b> 列挙型で, <b><code>&apos;balanced&apos;</code></b>, <b><code>&apos;interactive&apos;</code></b>, <b><code>&apos;playback&apos;</code></b> のいずれかの文字列です (もしくは, <code>number</code> 型で直接遅延時間を秒単位で指定します).
+                <b><code>AudioContextLatencyCategory</code></b> 列挙型で, <b><code>&apos;balanced&apos;</code></b
+                >, <b><code>&apos;interactive&apos;</code></b
+                >, <b><code>&apos;playback&apos;</code></b> のいずれかの文字列です (もしくは, <code>number</code> 型で直接遅延時間を秒単位で指定します).
                 デフォルト値は, <code>&apos;interactive&apos;</code> です.
               </dd>
               <dt><code>sampleRate</code> プロパティ</dt>
@@ -437,8 +441,8 @@ oscillator.connect(context.destination);</code></pre>
             <p>
               サウンドの入力点と出力点を接続し, 最小の構成を実装できました. しかし, まだ音は出せません. なぜなら,
               サウンドを開始するための音源スイッチをオンにしていないからです. 現実世界の音響機器も同じです. 現実世界がそうであるように, Web Audio API
-              においても, 音源のスイッチをオン, オフする必要があります. そのためには, <code>OscillatorNode</code> クラスがもつ
-              <b><code>start</code> メソッド</b>, <b><code>stop</code> メソッド</b> を呼び出します.
+              においても, 音源のスイッチをオン, オフする必要があります. そのためには,
+              <code>OscillatorNode</code> クラスがもつ <b><code>start</code> メソッド</b>, <b><code>stop</code> メソッド</b> を呼び出します.
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
@@ -876,7 +880,8 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
             <p>
               もっとも, 音楽アプリケーションなどで出力する音としてはそこまで設定できてもあまり意味はないでしょう. その理由は,
               <b>人間が聴きとることが可能な音の周波数の範囲は <code>20 Hz</code> ~ <code>20000 Hz</code> (<code>20 kHz</code>) 程度だからです</b> (<code
-                >20 Hz</code>
+                >20 Hz</code
+              >
               未満の周波数は, 音楽用途ではパラメータを周期的に変化させるために利用されます. <code>20000 Hz</code> (<code>20 kHz</code>) より高い周波数は,
               現実的なユースケースがあるかわかりませんが, ブラウザで超音波を発生させたい場合でしょうか).
             </p>
@@ -899,7 +904,7 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
               サウンドを合成する場合において厚みをもたせることが可能になったりします. シンセサイザーのファインチューン機能や, エフェクターの 1
               種であるオクターバーを実現するためにあると言えるでしょう.
             </p>
-            <img src="images/oscillator-detune.png" alt="OscillatorNode detune" width="1196" height="770" loading="lazy" />
+            <img src="images/oscillator-detune.png" alt="OscillatorNode detune" width="2880" height="1800" loading="lazy" />
             <p>
               <code>frequency</code> プロパティの単位は Hz (ヘルツ) で, 波が 1 sec の間に何回発生するのかを意味していました. 一方で,
               <code>detune</code> プロパティの単位は <b>cent</b> (セント) です. これは, 音楽の視点から音の高さをとらえた単位で,
@@ -999,8 +1004,9 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
         </p>
         <p>
           シンセサイザーの基本波形の生成・合成, モジュレーション系エフェクターで必須となる LFO (Low Frequency Oscillator) など, Web Audio API
-          において用途の広い, コアとなる <code>AudioNode</code> です. LFO に関しては,
-          <a href="#section-effectors-lfo">エフェクターのセクション</a>で解説するので, このセクションでは基本波形の生成・合成に関して解説します.
+          において用途の広い, コアとなる
+          <code>AudioNode</code> です. LFO に関しては, <a href="#section-effectors-lfo">エフェクターのセクション</a>で解説するので,
+          このセクションでは基本波形の生成・合成に関して解説します.
         </p>
         <section id="section-oscillator-node-type">
           <h3>type プロパティ (OscillatorOptions)</h3>
@@ -1016,7 +1022,8 @@ rangeElement.addEventListener(&apos;input&apos;, (event) =&gt; {
           <p>
             周波数を制御して音の高さを変更します. <code>frequency</code> プロパティと <code>detune</code> プロパティを合わせて算出される周波数 (<span
               class="math-inline"
-              >$\mathrm{computedFrequency}\left(t\right)$</span>) は, 仕様では以下のように決定されます.
+              >$\mathrm{computedFrequency}\left(t\right)$</span
+            >) は, 仕様では以下のように決定されます.
           </p>
           <div class="math-block">
             <!-- prettier-ignore -->
@@ -1233,7 +1240,8 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
           ところで, ワンショットオーディオの再生であれば, 同じことは <code>HTMLAudioElement</code> (<code>audio</code> タグ) でも可能な場合もあります. 事実, Web
           Audio API が仕様策定される以前は, そのようなユースケースも想定して,
           <a href="https://developer.mozilla.org/ja/docs/Web/API/HTMLAudioElement/Audio" target="_blank" rel="noopener noreferrer"
-            ><code>Audio</code> コンストラクタ</a>が定義されています. しかし, <code>HTMLAudioElement</code> (<code>Audio</code> コンストラクタ)
+            ><code>Audio</code> コンストラクタ</a
+          >が定義されています. しかし, <code>HTMLAudioElement</code> (<code>Audio</code> コンストラクタ)
           によるワンショットオーディオの再生は以下のような問題があります.
         </p>
         <ul>
@@ -1342,7 +1350,8 @@ buttonElement.addEventListener(&apos;mouseup&apos;, (event) =&gt; {
               </p>
               <p>
                 ワンショットオーディオ再生の場合, アプリケーション側であらかじめオーディオデータを Web にアップロードしているケースがほとんどなので,
-                このセクションでは, <code>Fetch API</code> で <code>ArrayBuffer</code> を取得する実装を解説します.
+                このセクションでは,
+                <code>Fetch API</code> で <code>ArrayBuffer</code> を取得する実装を解説します.
               </p>
               <p>
                 <code>Fetch API</code> は, <code>fetch</code> 関数, <code>Headers</code> オブジェクト, <code>Request</code> オブジェクト,
@@ -1453,7 +1462,8 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
           <h3>playbackRate プロパティ / detune プロパティ</h3>
           <p>
             音楽用途でワンショットオーディオを使う場合, 対応するピッチの数だけ, ワンショットオーディオデータを作成するのは大変です. また, HTTP
-            リクエストの送受信や <code>decodeAudioData</code> メソッドの実行も多くなってしまうのでパフォーマンス的にもよくありません.
+            リクエストの送受信や
+            <code>decodeAudioData</code> メソッドの実行も多くなってしまうのでパフォーマンス的にもよくありません.
           </p>
           <p>
             それを解決するのが, <code>playbackRate</code> プロパティと <code>detune</code> プロパティです. これらは, 音の物理的な性質, つまり,
@@ -1766,7 +1776,8 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
         <img src="images/media-element-audio-source-node.png" alt="MediaElementAudioSourceNode" width="1232" height="770" loading="lazy" />
         <p>
           <code>HTMLMediaElement</code> を音源にするので, <code>MediaElementAudioSourceNode</code> コンストラクタの第 2 引数 (<b
-            ><code>MediaElementAudioSourceOptions</code></b>
+            ><code>MediaElementAudioSourceOptions</code></b
+          >
           型) の <b><code>mediaElement</code></b> プロパティ (もしくは, ファクトリメソッドの <code>createMediaElementSource</code> の引数) に,
           <code>HTMLMediaElement</code> を指定します.
         </p>
@@ -1775,7 +1786,8 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
           <code>src</code> 属性に指定しているメディアファイルが同一オリジンでない場合, クロスオリジン制限にかかってしまうので,
           <b><code>crossorigin</code> 属性に <code>&apos;anonymous&apos;</code> を設定</b>しておく必要あります. この属性と値の設定によって,
           <b>オリジン間リソース共有</b> (<b>CORS</b>: <b>Cross-Origin Resources Sharing</b>) が可能となります (<b
-            ><code>HTMLMediaElement</code> のみで再生する場合は不要です</b>).
+            ><code>HTMLMediaElement</code> のみで再生する場合は不要です</b
+          >).
         </p>
         <pre
           data-prismjs-copy="クリップボードにコピー"
@@ -1865,7 +1877,8 @@ audioElement.addEventListener(&apos;loadstart&apos;, () =&gt; {
         </p>
         <p>
           <code>File API</code> から選択した楽曲データを, <code>HTMLMediaElement</code> の <code>src</code> 属性に指定する場合, Object URL を利用します (<code
-            >FileReader API</code>
+            >FileReader API</code
+          >
           を使って Data URL を利用してもよいですが, やや実装が増えるので, なんらかの理由がなければ <code>createObjectURL</code> を利用して Object URL
           を設定するのがよいでしょう).
         </p>
@@ -2124,8 +2137,9 @@ buttonElement.addEventListener(&apos;click&apos;, async () =&gt; {
         <h2>MediaStreamAudioSourceNode</h2>
         <p>
           Web Audio API において, マイクロフォンやオーディオインターフェースに入力されたサウンドデータに対して,
-          なんらかのオーディオ信号処理を適用したい場合に利用するのが <b><code>MediaStreamAudioSourceNode</code></b> です. もっと言ってしまえば,
-          <b>WebRTC</b> (<b><code>MediaDevices</code></b> の <b><code>getUserMedia</code></b> メソッドで取得できる <b><code>MediaStream</code></b> インスタンス)
+          なんらかのオーディオ信号処理を適用したい場合に利用するのが
+          <b><code>MediaStreamAudioSourceNode</code></b> です. もっと言ってしまえば, <b>WebRTC</b> (<b><code>MediaDevices</code></b> の
+          <b><code>getUserMedia</code></b> メソッドで取得できる <b><code>MediaStream</code></b> インスタンス)
           で取得したサウンドデータに対するオーディオ信号処理を適用する場合に利用します.
         </p>
         <img src="images/media-stream-audio-source-node.png" alt="MediaStreamAudioSourceNode" width="1232" height="770" loading="lazy" />
@@ -2271,7 +2285,9 @@ navigator.mediaDevices.getUserMedia(constraints)
             利用可能な入出力オーディオデバイスや映像デバイスの情報を取得できます.
           </p>
           <p>
-            <b><code>MediaDeviceKind</code></b> 列挙型は, <b><code>&apos;audioinput&apos;</code></b>, <b><code>&apos;audiooutput&apos;</code></b>, <b><code>&apos;videoinput&apos;</code></b> のいずれかの文字列になります. したがって, 例えば, 入力オーディオデバイスの情報のみ必要であれば,
+            <b><code>MediaDeviceKind</code></b> 列挙型は, <b><code>&apos;audioinput&apos;</code></b
+            >, <b><code>&apos;audiooutput&apos;</code></b
+            >, <b><code>&apos;videoinput&apos;</code></b> のいずれかの文字列になります. したがって, 例えば, 入力オーディオデバイスの情報のみ必要であれば,
             <code>MediaDeviceInfo</code> の <code>kind</code> プロパティが, <code>audioinput</code> のインスタンスだけフィルタリングすればよいでしょう.
           </p>
           <p>
@@ -2358,7 +2374,8 @@ navigator.mediaDevices.getUserMedia(constraints)
             <code>MediaDeviceInfo</code> インスタンスのうち, <code>kind</code> プロパティが <code>&apos;audioinput&apos;</code> のインスタンスの,
             <b
               ><code>deviceId</code> プロパティを <code>MediaStreamConstraints</code> の <code>audio</code> プロパティの
-              <code>deviceId</code> プロパティに指定します</b>. そして, <code>MediaStreamConstraints</code> が更新されるので, 再度, <code>MediaDeviceInfo</code> の
+              <code>deviceId</code> プロパティに指定します</b
+            >. そして, <code>MediaStreamConstraints</code> が更新されるので, 再度, <code>MediaDeviceInfo</code> の
             <code>getUserMedia</code> メソッドを呼び出すことで, 指定した入力オーディオデバイスの <code>MediaStream</code> インスタンスを取得することができます.
             1 つ注意点としては, オーディオデバイスを切り替えるたびに, 次のセクションで解説する<b>デバイスの破棄を実行する必要があります</b> (これを実行しないと,
             デバイスが接続されたままになるので, 多くの場合, それは意図する動作ではないと考えられるので).
@@ -2538,7 +2555,10 @@ navigator.mediaDevices.getUserMedia(constraints)
         <p>
           直接サウンドデータにアクセスすることを可能にするのが, (広義の) <b><code>AudioWorklet</code></b> です (狭義には
           <code>AudioWorklet</code> クラスを意味するので). <code>AudioWorklet</code> は複数の API で構成されており, メインスレッドで
-          <code>AudioNode</code> を継承する <b><code>AudioWorkletNode</code></b>, オーディオスレッド (<b><code>AudioWorkletGlobalScope</code></b>) で直接サウンドデータにアクセスすることを可能にする <b><code>audioworkletprocessor</code></b>, メインスレッドからオーディオスレッドのファイルをロードする <code>AudioContext</code> インスタンスがもつ
+          <code>AudioNode</code> を継承する <b><code>AudioWorkletNode</code></b
+          >, オーディオスレッド (<b><code>AudioWorkletGlobalScope</code></b
+          >) で直接サウンドデータにアクセスすることを可能にする <b><code>audioworkletprocessor</code></b
+          >, メインスレッドからオーディオスレッドのファイルをロードする <code>AudioContext</code> インスタンスがもつ
           <b><code>AudioWorklet</code></b> インスタンスです.
         </p>
         <dl>
@@ -2588,9 +2608,9 @@ context.audioWorklet.addModule(&apos;./audio-worklets/processor.js&apos;)
           <h3>AudioWorkletGlobalScope</h3>
           <p>
             AudioWorklet はその API の仕様設計上, メインスレッドとは別のオーディオスレッドを専用に生成することになります.
-            このオーディオスレッドのグローバルスコープが <b><code>AudioWorkletGlobalScope</code></b> です. つまり, メインスレッドにおける
-            <code>Window</code> に相当します. メインスレッドとは別の世界なので, 直接 DOM にはアクセスできなかったり,
-            メインスレッドで使えるようなクライアントサイド JavaScript API (ブラウザ API) が利用できなかったりします.
+            このオーディオスレッドのグローバルスコープが
+            <b><code>AudioWorkletGlobalScope</code></b> です. つまり, メインスレッドにおける <code>Window</code> に相当します. メインスレッドとは別の世界なので,
+            直接 DOM にはアクセスできなかったり, メインスレッドで使えるようなクライアントサイド JavaScript API (ブラウザ API) が利用できなかったりします.
           </p>
           <p>
             <code>AudioWorkletGlobalScope</code> には, <code>sampleRate</code> プロパティや <code>currentTime</code> プロパティが定義されていますが,
@@ -2641,7 +2661,8 @@ registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);
               <code>AudioWorkletGlobalScope</code> に定義されている <code>AudioWorkletProcessor</code> (を継承したサブクラス) は, メインスレッドで設定された値
               (例えば, <code>input[type=&quot;range&quot;]</code> で設定された値) を直接的には取得できません. そこで, <code>MessagePort</code> インスタンスの
               <b><code>messssage</code></b> イベントハンドラや <b><code>postMessage</code></b> メソッドを利用して, <b>メッセージパッシング</b> (<b
-                >Message Passing</b>) でメインスレッドとデータを送受信する必要があります.
+                >Message Passing</b
+              >) でメインスレッドとデータを送受信する必要があります.
             </p>
             <section id="section-audio-worklet-processor-process">
               <h5>process メソッド (AudioWorkletProcessCallback)</h5>
@@ -2651,7 +2672,8 @@ registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);
                 <code>Float32Array</code> がそれぞれ渡されます. これらの <code>Float32Array</code> のサイズは, すべて <b><code>128</code></b> (サンプル) です
                 (しかしながら,
                 <a href="#section-audio-worklet-processor-render-quantum-size"
-                  ><b>Web Audio API 1.1 以降では必ずしも <code>128</code> サンプルではなくなる可能性があります</b></a>). また, 第 1 引数と第 2 引数 (入力サウンドデータと出力サウンドデータ) は, 実際には,
+                  ><b>Web Audio API 1.1 以降では必ずしも <code>128</code> サンプルではなくなる可能性があります</b></a
+                >). また, 第 1 引数と第 2 引数 (入力サウンドデータと出力サウンドデータ) は, 実際には,
                 <code>FrozenArray&lt;FrozenArray&lt;Float32Array&gt;&gt;</code> と配列の入れ子になっています (仕様上の定義として
                 <code>FrozenArray</code> ですが, 実装上は <code>Array</code> です. 1 つ内側の <code>Array</code> がチャンネルごとの
                 <code>Float32Array</code> を格納するためです).
@@ -2710,7 +2732,8 @@ registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);
               <p>
                 Web Audio API 1.0 まで render quantum size は <code>128</code> サンプルの固定値でしたが, Web Audio API 1.1 の仕様では,
                 <a href="https://www.w3.org/TR/webaudio/#enumdef-audiocontextrendersizecategory" target="_blank" rel="noopener noreferrer"
-                  ><b><code>AudioContextRenderSizeCategory</code></b> 列挙型の値</a>
+                  ><b><code>AudioContextRenderSizeCategory</code></b> 列挙型の値</a
+                >
                 (<code>AudioContextOptions</code> の <b><code>renderSizeHint</code></b> オプションの値) を,
                 <b><code>&apos;hardware&apos;</code></b> に設定した場合, ユーザーの環境によって最適な render quantum size が選択されて, 必ずしも
                 <code>128</code> サンプルでなくなる可能性があります. したがって, 実装においても,
@@ -2724,7 +2747,8 @@ registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);
                 (ライブラリやフレームワークのような汎用的なコードの場合は, render quantum size は, チャンネルごとの <code>Float32Array</code> の
                 <code>length</code> プロパティから render quantum size を取得するか, <code>AudioContext</code> インスタンスの
                 <a href="https://www.w3.org/TR/webaudio/#dom-baseaudiocontext-renderquantumsize" target="_blank" rel="noopener noreferrer"
-                  ><b><code>renderQuantumSize</code></b></a>
+                  ><b><code>renderQuantumSize</code></b></a
+                >
                 (ただし, <b>Web Audio API 1.1 公開日時点で実装されているブラウザはありません</b>) を参照するのが安全と言えます).
               </p>
               <p>このあたりは, 制作するプロダクトの仕様に応じた<b>判断の問題</b>と言えそうです.</p>
@@ -2736,7 +2760,8 @@ registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);
                   href="https://html.spec.whatwg.org/multipage/web-messaging.html"
                   target="_blank"
                   rel="noopener noreferrer"
-                  >MessagePort の仕様 (WHATWG) </a>).
+                  >MessagePort の仕様 (WHATWG) </a
+                >).
               </p>
               <p>
                 メインスレッドから対応する <code>AudioWorkletProcessor</code> のサブクラスにデータを送信するには, <code>AudioWorkletNode</code> の
@@ -2882,7 +2907,8 @@ class NoiseGeneratorProcessor extends AudioWorkletProcessor {
 registerProcessor(&apos;NoiseGeneratorProcessor&apos;, NoiseGeneratorProcessor);</code></pre>
               <p>
                 また, <code>MessagePort</code> は相互に送受信することができます. <code>messssage</code> イベントハンドラをメインスレッド (<code
-                  >AudioWorkletNode</code>
+                  >AudioWorkletNode</code
+                >
                 の <code>MessagePort</code>) で実装して, <code>AudioWorkletProcessor</code> のサブクラスの <code>MessagePort</code> で送信するデータを第 1
                 引数に指定して <code>postMessage</code> メソッドを呼び出すことによって,
                 オーディオスレッドからメインスレッドにデータを送信することが可能になります.
@@ -3155,7 +3181,8 @@ context.audioWorklet.addModule(&apos;./audio-worklets/a-rate.js&apos;)
               ノイズの生成は, 乱数生成がベースになっています. 特に, ホワイトノイズは乱数そのままであり (振幅の調整だけしている),
               その振幅スペクトルはすべての周波数成分を一様に含んでいます (ノイズ生成の詳細に関しては,
               <a href="https://noisehack.com/generate-noise-web-audio-api/" target="_blank" rel="noopener noreferrer"
-                >How to Generate Noise with the Web Audio API</a>
+                >How to Generate Noise with the Web Audio API</a
+              >
               を参考にしてください).
             </p>
             <p>
@@ -3856,7 +3883,8 @@ processor.onaudioprocess = (event) =&gt; {
                 詳細な仕様は他のドキュメントを参考にするほうがよいですが (実行コンテキストによって計測時刻が異なるので), ざっくり言うと, 対象の Web
                 ページにアクセスしてからの経過時間をミリ秒単位で表します. hls.js など動画ストリーミングライブラリでは使われているなど (例
                 <a href="https://github.com/video-dev/hls.js/blob/master/src/controller/abr-controller.ts#L179" target="_blank" rel="noopener noreferrer"
-                  >ABR: Adaptive BitRate streaming</a>), <code>Date.now</code> と比較すると, 精度の高い時間と言えます.
+                  >ABR: Adaptive BitRate streaming</a
+                >), <code>Date.now</code> と比較すると, 精度の高い時間と言えます.
               </dd>
             </dl>
           </article>
@@ -3945,7 +3973,9 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
             1 点異なるのは, <b><code>AudioBufferSourceNode</code> の <code>start</code> メソッドはオーバライドされています</b>. もし,
             オーディオデータの再生開始位置を指定したい場合は, 第 2 引数に再生開始位置を秒単位で指定, 再生時間を指定する場合は, 第 3 引数に秒単位で指定します.
             <b
-              ><a href="#section-audio-buffer-source-node-playback-rate-and-detune">再生速度</a>を変更している場合でも再生時刻・再生時間の指定は影響を受けない</b>ので, 第 2 引数, 第 3 引数は再生速度を <code>1</code> とした場合の値を指定します. どちらも, 任意の引数なので不要であれば省略可能です.
+              ><a href="#section-audio-buffer-source-node-playback-rate-and-detune">再生速度</a
+              >を変更している場合でも再生時刻・再生時間の指定は影響を受けない</b
+            >ので, 第 2 引数, 第 3 引数は再生速度を <code>1</code> とした場合の値を指定します. どちらも, 任意の引数なので不要であれば省略可能です.
           </p>
           <pre
             data-prismjs-copy="クリップボードにコピー"
@@ -4057,7 +4087,8 @@ fetch(&apos;./assets/one-shots/piano-C.mp3&apos;)
             <p>
               <code>startTime</code> になったら, パラメータを <code>target</code> の値に向けて, <code>timeConstant</code> の時間をかけて変化させる
               (より正確には, パラメータの現在の値と <code>target</code> の値の差分の約 <code>63.2%</code> (<span class="math-inline"
-                >$1 - \frac{1}{\mathrm{exp}} = 0.632120 \cdots$</span>) まで変化するのに, <code>timeConstant</code>の時間を要する)
+                >$1 - \frac{1}{\mathrm{exp}} = 0.632120 \cdots$</span
+              >) まで変化するのに, <code>timeConstant</code>の時間を要する)
             </p>
           </section>
           <section id="section-audio-param-set-value-curve-at-time">
@@ -4505,7 +4536,8 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
               以前に設定されたスケジューリングをすべて解除します.
             </p>
             <p>
-              スケジューリングの解除には, <a href="#section-audio-param-cancel-scheduled-values"><b>cancelScheduledValues</b></a>メソッド, もしくは, 値をそのまま保持しておきたい場合は,
+              スケジューリングの解除には, <a href="#section-audio-param-cancel-scheduled-values"><b>cancelScheduledValues</b></a
+              >メソッド, もしくは, 値をそのまま保持しておきたい場合は,
               <a href="#section-audio-param-cancel-and-hold-at-time"><b>cancelAndHoldAtTime</b></a> メソッドを利用します.
             </p>
             <p>具体的には, <code>mouseup</code> 時は, 値を保持しておきたいので, <code>cancelAndHoldAtTime</code> メソッドでスケジューリングを解除します.</p>
@@ -4675,7 +4707,8 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
               href="https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletProcessor/process#examples"
               target="_blank"
               rel="noopener noreferrer"
-              >実装イメージ</a>. <code>&apos;k-rate&apos;</code> の場合は, <code>128</code> サンプルのパラメータの <code>0</code> 番目だけ適用すればよいので最適化しやすい).
+              >実装イメージ</a
+            >. <code>&apos;k-rate&apos;</code> の場合は, <code>128</code> サンプルのパラメータの <code>0</code> 番目だけ適用すればよいので最適化しやすい).
             <code>AudioWorkletProcessor</code> クラスで, <code>AudioParam</code> を定義する場合 (<code>parameterDescriptors</code> プロパティ),
             適切に選択する必要があります (デフォルトは, <code>&apos;a-rate&apos;</code>).
           </p>
@@ -4697,7 +4730,8 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
             (必要があれば, オーディオ処理を適用して), <code>128</code> サンプル出力します. リアルタイム性が要求されるようなオーディオ API では, 多くは,
             このような, 仕様で定義されているバッファサイズごとにオーディオ処理を適用する (そして, それを繰り返す) という API になっています (<a
               href="#section-audio-worklet-processor-render-quantum-size"
-              ><b>Web Audio API 1.1 以降では, 必ずしも <code>128</code> サンプルではないことに注意してください</b></a>).
+              ><b>Web Audio API 1.1 以降では, 必ずしも <code>128</code> サンプルではないことに注意してください</b></a
+            >).
           </p>
         </article>
       </section>
@@ -4818,7 +4852,8 @@ window.setInterval(() =&gt; {
             アナログ信号である音 (媒体の振動) をコンピュータで処理するためには, <code>0</code> と <code>1</code> のみの情報, つまり,
             デジタル信号に変換する必要があります. この変換処理を, <b>A/D変換</b> (<b>Analog to Digital Conversion</b>) と呼びます. A/D 変換は, 大きく 3
             つの処理があります (逆に, コンピュータで処理したデジタル信号を, スピーカーなどからアナログ信号で出力するには, <b>D/A変換</b> (<b
-              >Digital to Analog Conversion</b>) を適用します).
+              >Digital to Analog Conversion</b
+            >) を適用します).
           </p>
           <ol>
             <li>サンプリング (標本化)</li>
@@ -4931,7 +4966,8 @@ window.setInterval(() =&gt; {
               量子化ビットで指定された精度にしたがって, 振幅を整数値に丸める処理を実行します. 例えば, 量子化ビットが <code>2 bit</code> の場合は, 4
               つのステップの値 (<span class="math-inline">$2^{2} = 4$</span>) のいずれかに, <code>3 bit</code> の場合は, 8 つのステップの値 (<span
                 class="math-inline"
-                >$2^{3} = 8$</span>) のいずれかに振幅が丸められます.
+                >$2^{3} = 8$</span
+              >) のいずれかに振幅が丸められます.
             </p>
             <figure>
               <svg id="svg-figure-quantization" width="720" height="405" data-parameters="true" data-a="1" data-f="1" data-t="0.0,0.5,1.0" />
@@ -5060,7 +5096,8 @@ window.setInterval(() =&gt; {
                 <span class="math-inline"
                   >$\left\{\mathrm{u}_{k}\left(t\right)\right\} = \left\{\frac{1}{\sqrt{2\pi}}, \frac{\cos\left(t\right)}{\sqrt{2\pi}},
                   \frac{\sin\left(t\right)}{\sqrt{2\pi}}, \frac{\cos\left(2t\right)}{\sqrt{2\pi}}, \frac{\sin\left(2t\right)}{\sqrt{2\pi}} \cdots \right\}$
-                  の一例と言えます (この正規直交関数系からなんとなく, フーリエ級数の形が見えるのではないでしょうか).</span>
+                  の一例と言えます (この正規直交関数系からなんとなく, フーリエ級数の形が見えるのではないでしょうか).</span
+                >
               </p>
               <p>実は, パーセバルの等式は中学数学で習う, ピタゴラスの定理の一般化 (内積空間におけるピタゴラスの定理) でもあります.</p>
             </article>
@@ -5155,7 +5192,8 @@ window.setInterval(() =&gt; {
             </div>
             <p>
               フーリエ変換では, ディリクレの条件に追加して, <b>絶対可積分</b> (<span class="math-inline"
-                >$\int_{-\infty}^{\infty}\left|f\left(t\right)\right|dt \lt \infty$</span>) が必要条件となります. フーリエ変換をより理解するには, <b>デルタ関数</b>や<b>単位階段関数</b>の理解もあるとよいかもしれません.
+                >$\int_{-\infty}^{\infty}\left|f\left(t\right)\right|dt \lt \infty$</span
+              >) が必要条件となります. フーリエ変換をより理解するには, <b>デルタ関数</b>や<b>単位階段関数</b>の理解もあるとよいかもしれません.
             </p>
             <section id="section-spectrum">
               <h5>スペクトル</h5>
@@ -5264,10 +5302,12 @@ window.setInterval(() =&gt; {
             <p>
               実装する場合, 信号を実部と虚部の配列に分割する必要があるので (複素数型があるプログラミング言語でも考え方は同じです), オイラーの公式 (<span
                 class="math-inline"
-                >$e^{j\theta} = \cos\left(\theta\right) + j\sin\left(\theta\right)$ </span>) を利用して, ネイピア数を実部と虚部に分解すると実装しやすいでしょう. また, 時間領域の信号は実部しかありませんが, 逆離散フーリエ変換も考慮して,
+                >$e^{j\theta} = \cos\left(\theta\right) + j\sin\left(\theta\right)$ </span
+              >) を利用して, ネイピア数を実部と虚部に分解すると実装しやすいでしょう. また, 時間領域の信号は実部しかありませんが, 逆離散フーリエ変換も考慮して,
               信号も実部と虚部に分解して実装します (<span class="math-inline"
                 >$x\left(n\right) = x_{\mathrm{real}}\left(n\right) + jx_{\mathrm{imag}}\left(n\right), X\left(k\right) = X_{\mathrm{real}}\left(k\right) +
-                jX_{\mathrm{imag}}\left(k\right)$</span>).
+                jX_{\mathrm{imag}}\left(k\right)$</span
+              >).
             </p>
             <p>実装のために, 離散フーリエ変換の式を変形すると以下のようになります.</p>
             <div class="math-block">
@@ -5429,7 +5469,8 @@ function IDFT(inputReals, inputImags, reals, imags, size) {
               <p>ここまでで, 離散フーリエ変換の演算を行列演算に変換することができました.</p>
               <p>
                 行列演算に変換できたら, 行を偶奇で分割します. 偶数行を行列の上部に入れ替えて, 奇数行を行列の下部に入れ替えます. 変換行列の行を入れ替えるので,
-                出力となる <span class="math-inline">$X_{k}$</span> も行が入れ替わることに注意してください.
+                出力となる
+                <span class="math-inline">$X_{k}$</span> も行が入れ替わることに注意してください.
               </p>
               <div class="math-block">
                 <!-- prettier-ignore -->
@@ -5541,7 +5582,8 @@ function IDFT(inputReals, inputImags, reals, imags, size) {
               </p>
               <table>
                 <caption>
-                  ビットリバースの対応表 2 ビット (<span class="math-inline">$N = 4$</span>)
+                  ビットリバースの対応表 2 ビット (<span class="math-inline">$N = 4$</span
+                  >)
                 </caption>
                 <thead>
                   <tr>
@@ -5649,7 +5691,8 @@ function IDFT(inputReals, inputImags, reals, imags, size) {
               </div>
               <p>
                 行列演算に変換できたら, 行を偶奇で分割します. 偶数行を行列の上部に入れ替えて, 奇数教を行列の下部に入れ替えます. 変換行列の行を入れ替えるので,
-                出力となる <span class="math-inline">$X_{k}$</span> も行が入れ替わることに注意してください.
+                出力となる
+                <span class="math-inline">$X_{k}$</span> も行が入れ替わることに注意してください.
               </p>
               <div class="math-block">
                 <!-- prettier-ignore -->
@@ -5955,7 +5998,8 @@ function IDFT(inputReals, inputImags, reals, imags, size) {
               </p>
               <table>
                 <caption>
-                  ビットリバースの対応表 3 ビット (<span class="math-inline">$N = 8$</span>)
+                  ビットリバースの対応表 3 ビット (<span class="math-inline">$N = 8$</span
+                  >)
                 </caption>
                 <thead>
                   <tr>
@@ -6206,7 +6250,8 @@ function IFFT(reals, imags, size) {
                   高速フーリエ変換のアルゴリズム・実装は 1 つではなく, さらに高速化するために基数を利用した実装 (<b>Radix-4 FFT</b>, <b>Radix-8 FFT</b>, さらに,
                   それらを組み合わせた <b>Split-Radix FFT</b> (加算と乗算のトータルの演算回数が最小となる FFT アルゴリズムです) などがあります) や,
                   <a href="https://qiita.com/habuyoshiaki/items/68d502c7bc0c35c168ef" target="_blank" rel="noopener noreferrer"
-                    >2 の冪乗でなくても高速フーリエ変換を適用できるアルゴリズム (任意要素数の高速フーリエ変換)</a>
+                    >2 の冪乗でなくても高速フーリエ変換を適用できるアルゴリズム (任意要素数の高速フーリエ変換)</a
+                  >
                   が知られています. アプリケーションの要件では, 上記で記載した FFT / IFFT, あるいは, それらを WebAssembly
                   で高速化した実装でも十分かもしれませんが, それ以上のパフォーマンスを必要とする場合は, ぜひ適切な FFT / IFFT
                   のアルゴリズムを調べて実装してみてください.
@@ -6340,9 +6385,11 @@ function IFFT(reals, imags, size) {
             <h4>LFO (Low Frequency Oscillator)</h4>
             <p>
               エフェクターにはいくつかの種類があり, モジュレーション系と呼ばれるエフェクター (コーラス, フランジャー, フェイザー, トレモロ, ワウなど)
-              を実装するためには, <b>特定のパラメータを時間経過とともに周期的に変化させる必要があります</b>. 具体的には, コーラス / フランジャーは,
-              ディレイタイム (遅延時間) を時間経過とともに周期的に変化させることによって実装可能です. そして,
-              特定のパラメータを時間経過とともに周期的に変化させる機能が <b>LFO</b> (<b>Low Frequency Oscillator</b>) です.
+              を実装するためには,
+              <b>特定のパラメータを時間経過とともに周期的に変化させる必要があります</b>. 具体的には, コーラス / フランジャーは, ディレイタイム (遅延時間)
+              を時間経過とともに周期的に変化させることによって実装可能です. そして, 特定のパラメータを時間経過とともに周期的に変化させる機能が <b>LFO</b> (<b
+                >Low Frequency Oscillator</b
+              >) です.
             </p>
             <p>
               LFO の実装は Web Audio API に限ったことではないのですが, <code>OscillatorNode</code> を利用して LFO を実装する場合には, Web Audio API
@@ -6371,7 +6418,8 @@ function IFFT(reals, imags, size) {
             <h4>LFO の実装例 (ビブラート)</h4>
             <p>
               LFO と <code>AudioParam</code> への接続, Depth / Rate の制御を具体的に理解するために, 簡易的なビブラートを実装を記載します. (<code
-                >OscillatorNode</code>
+                >OscillatorNode</code
+              >
               の <code>frequency</code> プロパティのデフォルト値である) <code>440 Hz</code> を基準に, Depth で設定した値が Rate の周期で変化することになります.
               初期値で言うと, <code>440 Hz</code> &plusmn; <code>10 Hz</code> の範囲で, <code>frequency</code> プロパティの値が,
               <code>1 sec</code> の間に変化することになります.
@@ -6479,12 +6527,12 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
             <h4>汎用的な LFO と Depth の制御</h4>
             <p>
               基準値と Depth の関係から, パラメータ変化の最小値を考慮しておく必要があるのは, LFO の実装として汎用性に欠けます (上記のビブラートの実装だと,
-              基準値を <code>27.5 Hz</code> にした場合, Depth の値によっては, 負数の周波数になってしまいます). より汎用的な LFO にするために,
-              パラメータの変化量を直接 Depth に設定するのではなく, 基準値に対する変化割合を格納する変数を追加して, その比率と基準値から実際の Depth
-              を算出します. このような実装にすることで, 基準値に関わらず, Depth の値は <code>0</code> から <code>1</code> (<code>0 %</code> から
-              <code>100 %</code>) になるのでより汎用的な実装になります, また, <code>AudioParam</code> のパラメータの値の範囲 (<code>AudioParam</code> の
-              <code>minValue</code> / <code>maxValue</code> プロパティにそれぞれ, 最小値と最大値が設定されています)
-              を意図せずに超えてしまうバグも防ぐことができます.
+              基準値を
+              <code>27.5 Hz</code> にした場合, Depth の値によっては, 負数の周波数になってしまいます). より汎用的な LFO にするために, パラメータの変化量を直接
+              Depth に設定するのではなく, 基準値に対する変化割合を格納する変数を追加して, その比率と基準値から実際の Depth を算出します.
+              このような実装にすることで, 基準値に関わらず, Depth の値は <code>0</code> から <code>1</code> (<code>0 %</code> から <code>100 %</code>)
+              になるのでより汎用的な実装になります, また, <code>AudioParam</code> のパラメータの値の範囲 (<code>AudioParam</code> の <code>minValue</code> /
+              <code>maxValue</code> プロパティにそれぞれ, 最小値と最大値が設定されています) を意図せずに超えてしまうバグも防ぐことができます.
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
@@ -6649,7 +6697,8 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
               <h5>DelayNode</h5>
               <p>
                 遅延処理を (抽象化して) 実装するために定義されているのが, <b><code>DelayNode</code></b> クラスです. コンストラクタの第 2 引数 (<b
-                  ><code>DelayOptions</code></b>
+                  ><code>DelayOptions</code></b
+                >
                 型の <b><code>maxDelayTime</code></b> プロパティ) には (ファクトリメソッドの場合, 第 1 引数), 遅延時間 (ディレイタイム)
                 の最大値を秒単位で指定します. 省略した場合のデフォルト値は <code>1 sec</code> です.
               </p>
@@ -6987,7 +7036,8 @@ rangeFeedbackElement.addEventListener(&apos;input&apos;, () =&gt; {
                 遅延音はどのようにして実装するのでしょうか ? (Web Audio API では,
                 <code>DelayNode</code> がそれを抽象化しているので気にすることはほとんどないと思いますが). 結論的には,
                 <b>リングバッファ</b>に入力された音を格納する (enqueue) ことで, 過去の入力音をリングバッファのサイズだけ蓄積する事が可能です (<code
-                  >DelayNode</code>
+                  >DelayNode</code
+                >
                 コンストラクタで指定する遅延時間の最大値は, このリングバッファのサイズを決定するためにあります). 指定した
                 <code>delayTime</code> の値が経過したら, リングバッファに格納している過去の入力音を出力します.
               </p>
@@ -7279,7 +7329,8 @@ registerProcessor(&apos;DelayNodeProcessor&apos;, DelayNodeProcessor);</code></p
               </div>
               <p>
                 チャレンジングな実装として, AudioWorklet でエフェクターとしてのディレイを実装したい場合, 実装言語は C++ になりますが,
-                <a href="https://www.utsbox.com/?p=1517" target="_blank" rel="noopener noreferrer">ディレイの実装例 | C++でVST作り</a>などを参考にするとよいと思います.
+                <a href="https://www.utsbox.com/?p=1517" target="_blank" rel="noopener noreferrer">ディレイの実装例 | C++でVST作り</a
+                >などを参考にするとよいと思います.
               </p>
             </article>
           </section>
@@ -7415,10 +7466,12 @@ fetch(&apos;./assets/rirs/rir.mp3&apos;)
                 上で公開されているファイルを利用することになるのですが, 利用条件や著作権の関係から無償で自由に利用できるのは意外とありません. とりあえず, 1
                 つ紹介するのは,
                 <a href="http://legacy.spa.aalto.fi/projects/poririrs/" target="_blank" rel="noopener noreferrer"
-                  >Concert Hall Impulse Responses - Pori, Finland</a>
+                  >Concert Hall Impulse Responses - Pori, Finland</a
+                >
                 です. <a href="http://legacy.spa.aalto.fi/projects/poririrs/docs/readme.txt" target="_blank" rel="noopener noreferrer">readme.txt</a> の 5.
                 Copyright のセクションに, 「<b
-                  >The data are provided free for noncommercial purposes, provided the authors are cited when the data are used in any research application.</b>」と記載されているので, 非商用利用であれば, 自身が開発されている Web アプリケーションに利用しても問題なさそうです.
+                  >The data are provided free for noncommercial purposes, provided the authors are cited when the data are used in any research application.</b
+                >」と記載されているので, 非商用利用であれば, 自身が開発されている Web アプリケーションに利用しても問題なさそうです.
               </p>
               <p>以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, リバーブに関わるパラメータを制御できるようにしたコード例です.</p>
               <pre
@@ -7601,7 +7654,8 @@ rangeWetElement.addEventListener(&apos;input&apos;, () =&gt; {
               </figure>
               <p>
                 これが, <b>インパルス応答</b>です. つまり, <b>インパルス音を音響空間に対する入力としたときの出力 (応答) </b>ということです. そして, その出力が<b
-                  >音響空間における, 残響特性を表すことになるので</b>, インパルス応答を利用することによって,
+                  >音響空間における, 残響特性を表すことになるので</b
+                >, インパルス応答を利用することによって,
                 コンサートホールなどの音響空間の音の響きをシミュレートするエフェクターであるリバーブが実現できるというわけです. ちなみに,
                 室内でのインパルス応答をシミュレートする事が多いので, <b>RIR</b> (Room Impulse Response) と表現されることもあります.
               </p>
@@ -7684,7 +7738,8 @@ rangeWetElement.addEventListener(&apos;input&apos;, () =&gt; {
             </figure>
             <p>
               上部が入力信号のパルス列 (<span class="math-inline">$x\left(n\right)$</span>), 中央がインパルス応答 (<span class="math-inline"
-                >$h\left(m\right)$</span>), 下部がコンボリューション積分結果の出力信号 (<span class="math-inline">$y\left(n\right)$</span>) となります.
+                >$h\left(m\right)$</span
+              >), 下部がコンボリューション積分結果の出力信号 (<span class="math-inline">$y\left(n\right)$</span>) となります.
               出力信号の振幅のみスケールが異なることに注意してください. ここで, <span class="math-inline">$n = 3$</span> に相当する時刻までの値を,
               先ほどの展開したコンボリューション積分に適用して実際の値を算出すると,
             </p>
@@ -7740,7 +7795,8 @@ rangeWetElement.addEventListener(&apos;input&apos;, () =&gt; {
             </div>
             <p>
               (目視レベルですが) グラフで表示されている出力信号と (大きく) 相違がないことが確認できます. 計算結果を抽象化すると,
-              コンボリューション積分で生成された出力信号は, <b>現在の時刻の信号だけではなく, 過去の信号の影響も受ける</b>ということですということです (それを,
+              コンボリューション積分で生成された出力信号は,
+              <b>現在の時刻の信号だけではなく, 過去の信号の影響も受ける</b>ということですということです (それを,
               厳密に数式で定義したのがコンボリューション積分と言えます).
             </p>
             <figure>
@@ -7983,13 +8039,15 @@ for (let n = 0; n &lt; Y_L; n++) {
               </p>
               <p>
                 遅延時間やフィードバックゲインの設定の自由度は高くなく, 前段のコムフィルタの遅延時間は, 互いに素の関係となるように設定したり,
-                後段のオールパスフィルタの遅延時間は <code>0.005 sec</code> と <code>0.0017 sec</code>, フィードバック・フィードフォワードゲインは
-                <code>0.7</code>・<code>-0.7</code> と厳密に定められていたりします.
+                後段のオールパスフィルタの遅延時間は
+                <code>0.005 sec</code> と <code>0.0017 sec</code>, フィードバック・フィードフォワードゲインは <code>0.7</code>・<code>-0.7</code>
+                と厳密に定められていたりします.
               </p>
               <p>
                 詳細は,
                 <a href="https://ccrma.stanford.edu/~jos/pasp/Schroeder_Reverberators.html" target="_blank" rel="noopener noreferrer"
-                  >Schroeder Reverberators</a>
+                  >Schroeder Reverberators</a
+                >
                 を参考にしてください.
               </p>
               <pre
@@ -8060,7 +8118,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               <p>
                 また, 実装言語は Python になりますが,
                 <a href="https://www.wizard-notes.com/entry/asp/schroeder-reverberator" target="_blank" rel="noopener noreferrer"
-                  >シュレーダーリバーブ（人工残響エフェクタ）のPython実装と試聴デモ</a>による実験も興味深いです.
+                  >シュレーダーリバーブ（人工残響エフェクタ）のPython実装と試聴デモ</a
+                >による実験も興味深いです.
               </p>
             </article>
           </section>
@@ -8165,8 +8224,8 @@ lfo.stop(context.currentTime + 5);</code></pre>
             <p>
               コーラスの原理的な実装としてはこれで完了ですが, エフェクターとしてはまだコーラスっぽくありません.
               原音とエフェクト音が同じゲインで合成されているので, 原音とエフェクト音が別々に出力されているように聴こえると思います.
-              原音が少し揺れているぐらいにエフェクト音を合成するとコーラスらしくなるので, Dry / Wet のための <code>GainNode</code> を接続して,
-              原音とエフェクト音のゲインを調整します.
+              原音が少し揺れているぐらいにエフェクト音を合成するとコーラスらしくなるので, Dry / Wet のための
+              <code>GainNode</code> を接続して, 原音とエフェクト音のゲインを調整します.
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
@@ -8585,10 +8644,11 @@ rangeFeedbackElement.addEventListener(&apos;input&apos;, () =&gt; {
             <p>
               コーラス・フランジャーは, 結果的に FM 変調を発生させていると解説しましたが, これに対して疑問に思うことがあるかもしれません.
               周波数を周期的に変化させるために, なぜ, ディレイタイムを周期的に変化させているのかということです
-              (ディレイタイムの周期的な変化が原理となっているかということです). <a href="section-effectors-vibrato">LFO の実装例</a>で解説したように,
-              直接的に周波数を周期的に変化させればよいはずです. しかしながら, 基本波形のように, 基本周波数が明確な場合はそれで問題ないのですが, アンサンブル
-              (楽曲) や音声において, 一般的に, 基本周波数を (精度高く) 推定するアルゴリズム (<span class="math-inline">$f_{0}$</span> 推定)
-              は複雑になってしまい, 計算量も多くなります. したがって, 汎用的なコーラス・フランジャーを実装するとなると,
+              (ディレイタイムの周期的な変化が原理となっているかということです).
+              <a href="section-effectors-vibrato">LFO の実装例</a>で解説したように, 直接的に周波数を周期的に変化させればよいはずです. しかしながら,
+              基本波形のように, 基本周波数が明確な場合はそれで問題ないのですが, アンサンブル (楽曲) や音声において, 一般的に, 基本周波数を (精度高く)
+              推定するアルゴリズム (<span class="math-inline">$f_{0}$</span>
+              推定) は複雑になってしまい, 計算量も多くなります. したがって, 汎用的なコーラス・フランジャーを実装するとなると,
               直接的に周波数を変化させることは難しくなります.
             </p>
             <p>
@@ -8622,7 +8682,8 @@ rangeFeedbackElement.addEventListener(&apos;input&apos;, () =&gt; {
               <b>位相</b>とは, 時間領域における波の位置のことです (数学的には, ある時刻の複素数平面における偏角と考えることもできます). したがって,
               周期性をもつ波の場合, 位相はその周期内の値だけを考慮すれば事足ります (正弦波の場合,
               <span class="math-inline"
-                >$\sin\theta = \sin\left(\theta + 2\pi\right) = \sin\left(\theta + 4\pi\right) = \cdots = \sin\left(\theta + 2n\pi\right)$</span>
+                >$\sin\theta = \sin\left(\theta + 2\pi\right) = \sin\left(\theta + 4\pi\right) = \cdots = \sin\left(\theta + 2n\pi\right)$</span
+              >
               となるので, <span class="math-inline">$2\pi$</span> の区間の位相を考慮すればよいことになります). また, 正弦波と余弦波は位相の違いでしかありません
               (<span class="math-inline">$\sin\theta = \cos\left(\theta - \frac{\pi}{2}\right)$</span>. これは, 位相で考えなくても,
               加法定理で数式から導出できることでもあります).
@@ -8638,7 +8699,7 @@ rangeFeedbackElement.addEventListener(&apos;input&apos;, () =&gt; {
                 <span>位相変化のイメージ</span>
                 <div class="flexbox">
                   <button type="button" id="button-phase-shift-animation">start</button>
-                  <button type="button" id="button-phase-shift-half-pi" aria-label="+ π/2"><span class="math-inline">$+\frac{\pi}{2}$</span></button>
+                  <button type="button" id="button-phase-shift-half-pi"><span class="math-inline">$+\frac{\pi}{2}$</span></button>
                 </div>
               </figcaption>
             </figure>
@@ -8692,7 +8753,7 @@ oscillator.stop(context.currentTime + 2);</code></pre>
               <figcaption>
                 <span>位相変化と干渉のイメージ</span>
                 <button type="button" id="button-interference-animation">start</button>
-                <button type="button" id="button-interference-half-pi" aria-label="+ π/2"><span class="math-inline">$+\frac{\pi}{2}$</span></button>
+                <button type="button" id="button-interference-half-pi"><span class="math-inline">$+\frac{\pi}{2}$</span></button>
               </figcaption>
             </figure>
             <p>
@@ -8903,7 +8964,8 @@ lfo.stop(context.currentTime + 5);</code></pre>
             (<code>AudioParam</code>)) を変更可能にすると, フェイザーによりバリエーションを付加することができます (<code>BiquadFilterNode</code> の
             <code>Q</code> プロパティは, <code>type</code> プロパティ (フィルタの種類) によって制御しているフィルタの特性が異なるので, 詳細は<a
               href="#section-effectors-filter-biquad-filter-node"
-              >フィルタのセクション</a>で解説します).
+              >フィルタのセクション</a
+            >で解説します).
           </p>
           <p>
             以下は, 実際のアプリケーションを想定して, ユーザーインタラクティブに, All-Pass Filter の接続数や,
@@ -9582,7 +9644,8 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
             </figure>
             <p>
               変調の周期を短くしていくと (LFO の Rate を高くしていくと), 原音の周波数成分だけではなく, LFO の周波数も周波数成分として発生します. これは,
-              原音の波形が<b>キャリア</b> (<b>搬送波</b>) となって, LFO の正弦波が<b>モジュレーター</b>となってエンベロープを形成して周波数成分となるからです
+              原音の波形が<b>キャリア</b>
+              (<b>搬送波</b>) となって, LFO の正弦波が<b>モジュレーター</b>となってエンベロープを形成して周波数成分となるからです
               (出力音のエンベロープが正弦波になっていることに着目してください).
             </p>
             <p>
@@ -9653,7 +9716,8 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
               (以下の表を参考にして) <code>6 dB</code> 音圧レベルが大きくなれば音圧は約 2 倍 (<span class="math-inline">$20\log_{10}2$</span>) になります.
               <code>20 dB</code> が大きくなれば 10 倍 (<span class="math-inline">$20\log_{10}10$</span>), <code>40 dB</code> 大きくなれば 100 倍 (<span
                 class="math-inline"
-                >$20\log_{10}100$</span>) ... という関係で, 本来であれば広範囲におよぶ値を対数をとることによって解決しています.
+                >$20\log_{10}100$</span
+              >) ... という関係で, 本来であれば広範囲におよぶ値を対数をとることによって解決しています.
             </p>
             <table class="auto-table">
               <caption>
@@ -9717,7 +9781,8 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
             <p>
               フィルタの特性を表すグラフでは, <code>0 dB</code> を基準に見ていただくのがよいのですが, これは,
               <b><code>0 dB</code> が入力音と出力音の振幅比が変わらない (つまり, そのまま通過させる) ことを意味しているからです</b> (<span class="math-inline"
-                >$20\log_{10}1 = 0$</span>). これを理解しておくと, <code>BiquadFilterNode</code> の <code>gain</code> プロパティが (特定のフィルタの種類において)
+                >$20\log_{10}1 = 0$</span
+              >). これを理解しておくと, <code>BiquadFilterNode</code> の <code>gain</code> プロパティが (特定のフィルタの種類において)
               ある周波数成分を増幅させたり, 減衰させたりすることも理解できると思います.
             </p>
           </article>
@@ -9726,14 +9791,17 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
             <p>
               Web Audio API において, 様々なフィルタを簡単に利用するには <code>BiquadFilterNode</code> を使うのが最適です. <b>Biquad</b> とは,
               <b>双 2 次</b>という意味で, <code>BiquadFilterNode</code> の次数は 2 次となります (<a href="#section-biquad-filter-node-definition"
-                >以下の伝達関数で定義されています</a>). したがって, <code>BiquadFilterNode</code> では実装できないフィルタ, 具体的には, <code>奇数次</code>のフィルタを使いたい場合,
+                >以下の伝達関数で定義されています</a
+              >). したがって, <code>BiquadFilterNode</code> では実装できないフィルタ, 具体的には, <code>奇数次</code>のフィルタを使いたい場合,
               あとのセクションで解説する <a href="#section-effectors-iir-filter-node"><code>IIRFilterNode</code></a> を使う必要があります (<code
-                >BiquadFilterNode</code>
+                >BiquadFilterNode</code
+              >
               は 2 次の IIR フィルタです).
             </p>
             <p>
               <code>BiquadFilterNode</code> では, フィルタの特性に関わるプロパティとして, <b><code>type</code></b> プロパティ (<b
-                ><code>BiquadFilterType</code></b>), <b><code>frequency</code></b> / <b><code>detune</code></b> プロパティ (どちらも <code>AudioParam</code>), <b><code>Q</code></b> プロパティ
+                ><code>BiquadFilterType</code></b
+              >), <b><code>frequency</code></b> / <b><code>detune</code></b> プロパティ (どちらも <code>AudioParam</code>), <b><code>Q</code></b> プロパティ
               (<code>AudioParam</code>), <b><code>gain</code></b> プロパティ (<code>AudioParam</code>) が定義されています. <code>type</code> プロパティ以外は,
               <code>type</code> プロパティ (すなわち, フィルタの種類) によって, 制御するフィルタの特性が異なったり, あるいは, そもそも無効だったりするので,
               <code>BiquadFilterNode</code> で使える 8 つのフィルタの種類ごとに解説を進めます.
@@ -9815,7 +9883,8 @@ oscillator.stop(context.currentTime + 2);</code></pre>
                   href="https://www.w3.org/TR/webaudio-1.1/#filters-characteristics"
                   target="_blank"
                   rel="noopener noreferrer"
-                  >フィルタの係数が記載されている</a>ので詳細を知りたい場合は参考にしてください.
+                  >フィルタの係数が記載されている</a
+                >ので詳細を知りたい場合は参考にしてください.
               </p>
               <p><a href="#section-effectors-iir-filter-node">IIR フィルタに関してはあとのセクションで解説します</a>.</p>
             </article>
@@ -9855,7 +9924,8 @@ oscillator.stop(context.currentTime + 2);</code></pre>
               <h5>High-Pass Filter</h5>
               <p>
                 <b>High-Pass Filter</b> (<b>高域通過フィルタ</b>) とは, Low-Pass Filter と逆で, カットオフ周波数 (<span class="math-inline"
-                  >$f_{\mathrm{computed}}$</span>) 付近までの周波数成分を遮断して, それより大きい周波数成分を通過させるフィルタです. Low-Pass Filter と比較すると, 使用頻度は低いですが,
+                  >$f_{\mathrm{computed}}$</span
+                >) 付近までの周波数成分を遮断して, それより大きい周波数成分を通過させるフィルタです. Low-Pass Filter と比較すると, 使用頻度は低いですが,
                 プリアンプ (アンプシミュレーター) や歪み系のエフェクターの実装では重要なフィルタとなります.
               </p>
               <p>
@@ -10034,7 +10104,8 @@ oscillator.stop(context.currentTime + 2);</code></pre>
               <h5>All-Pass Filter</h5>
               <p>
                 <b>All-Pass Filter</b> (<b>全域通過フィルタ</b>) とは, 振幅特性は変化させずに, <b>中心周波数</b> (<span class="math-inline"
-                  >$f_{\mathrm{computed}}$</span>) 付近の周波数成分の<b>位相特性を変化させるフィルタです</b>. したがって, フィルタ特性のグラフも, All-Pass Filter のみは,
+                  >$f_{\mathrm{computed}}$</span
+                >) 付近の周波数成分の<b>位相特性を変化させるフィルタです</b>. したがって, フィルタ特性のグラフも, All-Pass Filter のみは,
                 <b>位相スペクトル</b> (縦軸が, 位相で単位は <code>radian</code>) となっています (振幅特性が変わらないので, 振幅スペクトルで表示すると,
                 パラメータを変化させてもフィルタ特性は変わりません).
               </p>
@@ -10072,9 +10143,11 @@ oscillator.stop(context.currentTime + 2);</code></pre>
                   All-Pass Filter は, 直列接続では, フェイザーや Schroeder Reverberator (シュレーダーリバーブ) などのユースケースがありますが, 実は,
                   並列接続することで, さまざまなフィルタを実装することが可能です. 例えば, 高音域の位相を <span class="math-inline">$\pi$</span> (<span
                     class="math-inline"
-                    >$-\pi$</span>) 変化させる All-Pass Filter を並列接続することで, 高音域を遮断する, すなわち, Low-Pass Filter を実装することが可能です. 詳細は,
+                    >$-\pi$</span
+                  >) 変化させる All-Pass Filter を並列接続することで, 高音域を遮断する, すなわち, Low-Pass Filter を実装することが可能です. 詳細は,
                   <a href="https://www.wizard-notes.com/entry/asp/allpass-filter" target="_blank" rel="noopener noreferrer"
-                    >信号処理に欠かせないオールパスフィルタ―の概要・使い方・利用例</a>などを参考にしてください.
+                    >信号処理に欠かせないオールパスフィルタ―の概要・使い方・利用例</a
+                  >などを参考にしてください.
                 </p>
                 <pre
                   data-prismjs-copy="クリップボードにコピー"
@@ -11008,7 +11081,8 @@ rangeOscillatorFrequencyElement.addEventListener(&apos;input&apos;, () =&gt; {
               イコライザーをやみくもに操作するだけでは, 創造した音質にするのは難しいでしょう. そこで, どの周波数帯域が,
               音楽的にどのような影響を与えるのかを知っておくことで, より適切なイコライザーの設定が可能になります (参考:
               <a href="https://effector-life.com/helix/" target="_blank" rel="noopener noreferrer"
-                >Line 6 Helix 完全攻略レビュー：モデリングアンプの究極進化系！</a>).
+                >Line 6 Helix 完全攻略レビュー：モデリングアンプの究極進化系！</a
+              >).
             </p>
             <dl>
               <dt>低音域</dt>
@@ -11657,7 +11731,8 @@ lfo.stop(context.currentTime + 5);</code></pre>
               ノード接続は, 大きく 2 つで構成されています. 1 つは, 音源と振幅に対する感度のための Low-Pass Filter, そして
               <code>AudioDestinationNode</code> の接続と, もう 1 つは, 音源の振幅を<b>エンベロープフォロワー</b>に接続することによって,
               <b>全波整流</b> (端的には, 振幅の絶対値に波形を整形する処理) を施し, それをもとに, 感度の Low-Pass Filter の
-              <code>frequency</code> プロパティを振幅に応じて変化させるための (<code>AudioParam</code> への) 接続です.
+              <code>frequency</code> プロパティを振幅に応じて変化させるための (<code>AudioParam</code>
+              への) 接続です.
             </p>
             <figure>
               <svg id="svg-figure-node-connections-for-auto-wah" width="1200" height="720" />
@@ -11871,7 +11946,8 @@ rangeResonanceElement.addEventListener(&apos;input&apos;, () =&gt; {
           <p>
             楽器に限らず, オーディオ機器において<b>歪み</b>というのは本来避けるべき現象であり, そのため, 音割れが発生しないように, 振幅の調整 (<a
               href="#section-oscillator-node-synthesize"
-              >基本波形の合成</a>セクションのデモなどを参照してください) をしたり, コンプレッサーなどを使って歪みが発生しないようにします. 現在では,
+              >基本波形の合成</a
+            >セクションのデモなどを参照してください) をしたり, コンプレッサーなどを使って歪みが発生しないようにします. 現在では,
             歪みを積極的に使うエレキギターでも, 元々のアンプはあくまで振幅 (ゲイン) を増幅させる機器であり, クリーンサウンドを使っていたと言われています.
             しかし, あるギタリストが真空管アンプのボリュームを最大にして演奏した歪みが偶然にもよかったことから, 歪み系の音である (広義の)
             <b>ディストーションサウンド</b> (広義というのは, 歪み系のサウンドの総称というニュアンスです) が使われるようになったと言われています
@@ -11926,8 +12002,10 @@ rangeResonanceElement.addEventListener(&apos;input&apos;, () =&gt; {
                 もっとも, 手動的にクリッピングカーブとなる <code>Float32Array</code> の値を設定することはあまりなく (エンベロープフォロワーなどを除いて),
                 ディストーションサウンドとしてのクリッピングカーブを指定する場合, 定石となるようなクリッピングカーブが知られているので,
                 それを利用してクリッピングカーブを生成するのがよいでしょう (例えば, シグモイド関数 (<span class="math-inline"
-                  >$\sigma_{a}\left(x\right) = \frac{1}{1 + e^{-ax}}$</span>) や<a href="https://stackoverflow.com/questions/7840347/web-audio-api-waveshapernode" target="_blank" rel="noopener noreferrer"
-                  >オーバードライブカーブ</a>など).
+                  >$\sigma_{a}\left(x\right) = \frac{1}{1 + e^{-ax}}$</span
+                >) や<a href="https://stackoverflow.com/questions/7840347/web-audio-api-waveshapernode" target="_blank" rel="noopener noreferrer"
+                  >オーバードライブカーブ</a
+                >など).
               </p>
               <p>
                 <code>curve</code> プロパティに指定されたクリッピングカーブによって, <b>非線形処理</b>が適用されて, 入出力の振幅比が<b>歪み</b>,
@@ -11981,13 +12059,15 @@ rangeResonanceElement.addEventListener(&apos;input&apos;, () =&gt; {
                 ノイズとなって知覚されてしまうので, それを防ぐために,
                 <b
                   >プリプロセス処理 (クリッピング前の処理) として, アップサンプリングによってクリッピング対象の信号のサンプル数を増やし, ポストプロセス処理
-                  (クリッピング後の処理) として, ダウンサンプリングによって元のサンプル数に戻すという処理</b>
+                  (クリッピング後の処理) として, ダウンサンプリングによって元のサンプル数に戻すという処理</b
+                >
                 (<b>オーバーサンプル処理</b>) が知られています.
               </p>
               <p>
                 オーバーサンプル処理の, アップサンプリングのサンプリング周波数を設定するのが, <code>oversample</code> プロパティです. もっとも,
                 直接アップサンプリング周波数を設定するのではなく, <code>&apos;2x&apos;</code>, または, <code>&apos;4x&apos;</code> の文字列 (<b
-                  ><code>OverSampleType</code></b>
+                  ><code>OverSampleType</code></b
+                >
                 列挙型. デフォルト値は, オーバーサンプル処理をしない <code>&apos;none&apos;</code> です) を指定することによって, サンプリング周波数の 2 倍,
                 または, 4 倍にアップサンプリングします. ディストーションサウンドの音質だけを考えるなら, 常に
                 <code>&apos;4x&apos;</code> を指定しておくのがよいですが, オーバーサンプル処理によって,
@@ -12053,7 +12133,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
                 href="https://stackoverflow.com/questions/7840347/web-audio-api-waveshapernode"
                 target="_blank"
                 rel="noopener noreferrer"
-                >オーバードライブカーブ</a>でも Overdrive を実装することは可能ですが, Overdrive によっては,
+                >オーバードライブカーブ</a
+              >でも Overdrive を実装することは可能ですが, Overdrive によっては,
               <b>クリッピング後の波形が非対称となる非対称クリッピング</b>で実装されていることも多いのでこのセクションで解説します (ちなみに, BOSS
               <a href="https://www.boss.info/jp/promos/40th_anniversary_compact_pedals/" target="_blank" rel="noopener noreferrer">OD-1 Overdrive</a>
               も非対称クリッピング回路が利用されています).
@@ -12069,7 +12150,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             <p>
               したがって,
               <a href="https://stackoverflow.com/questions/7840347/web-audio-api-waveshapernode" target="_blank" rel="noopener noreferrer"
-                >オーバードライブカーブ</a>をもとに, 非対称のクリッピングになるように, 正負の判定を追加して非対称になるように設定します. 非対称クリッピングカーブの形状は,
+                >オーバードライブカーブ</a
+              >をもとに, 非対称のクリッピングになるように, 正負の判定を追加して非対称になるように設定します. 非対称クリッピングカーブの形状は,
               <a href="#svg-figure-wave-shaper-node-curve">クリッピングカーブ</a>で <code>Curve Type</code> を
               <code>Overdrive (Asymmetrical)</code> に選択すると確認できます.
             </p>
@@ -12202,7 +12284,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
           </section>
           <p>
             歪み系エフェクターによるディストーションサウンドのインタラクティブなコード例は, アンプミュレーターと合わせたいので,
-            <a href="#section-effectors-amp-simulator-and-effectors-distortion">アンプシミュレーターと歪み系エフェクターによるディストーションサウンド</a>のセクションで記載しています.
+            <a href="#section-effectors-amp-simulator-and-effectors-distortion">アンプシミュレーターと歪み系エフェクターによるディストーションサウンド</a
+            >のセクションで記載しています.
           </p>
         </section>
         <section id="section-effectors-amp-simulator">
@@ -12225,12 +12308,14 @@ oscillator.stop(context.currentTime + 5);</code></pre>
           <p>
             もっとも, モデリングするアンプの数だけ実装を解説することはできないので, このセクションでは,
             <a href="https://lazyecology.web.fc2.com/reverb/special/guitar_tone_process/web_guitar_amp_note.html" target="_blank" rel="noopener noreferrer"
-              >WEB AMP like Marshall</a>
+              >WEB AMP like Marshall</a
+            >
             を参考に, ほとんどのスタジオで設置されている Marshall (ライクな) アンプシミュレーターの実装を解説します (さらに, Marshall といっても,
             年代ごとに特色があり,
             <a href="https://www.marshallamps.jp/live_for_music/tips/history/50-years-in-the-making.html" target="_blank" rel="noopener noreferrer"
               >古くは, JTM45, JMP (主に, 1960 年代後半から 70 年代のモデル. 特に, 有名なのが Marshall 1959 Super Lead Plexi), JCM (800, 900, 2000), 最近だと DSL
-              や JVM など様々です</a>
+              や JVM など様々です</a
+            >
             (<a href="https://hookup.co.jp/blog/23844" target="_blank" rel="noopener noreferrer">Marshall 1959 Super Lead Plexi</a> の詳細).
             あくまでこのセクションでの実装は Marshall ライクな実装と捉えてください).
           </p>
@@ -12238,7 +12323,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             <h4>プリアンプ</h4>
             <p>
               Marshall ライクなプリアンプの特徴として, <b>2 つのクリッピング処理による歪み</b>と, クリッピングの<b
-                >プリプロセスとなる High-Pass Filter と Low-Pass Filter によるフィルタ処理</b>, また, 2 つのクリッピングの間にもフィルタ処理があること, そして, クリッピングのポストプロセスとして<b>ポストイコライザー</b>があることです.
+                >プリプロセスとなる High-Pass Filter と Low-Pass Filter によるフィルタ処理</b
+              >, また, 2 つのクリッピングの間にもフィルタ処理があること, そして, クリッピングのポストプロセスとして<b>ポストイコライザー</b>があることです.
               さらに, 中低域のゲインコントロールと, 高音域のゲインコントロールがあります.
             </p>
             <p>まずは, プリプロセスとなるフィルタ処理を実装します.</p>
@@ -12581,8 +12667,8 @@ const speakerSimulatorLowpass = new BiquadFilterNode(context, { type: &apos;lowp
 speakerSimulatorNotch.connect(speakerSimulatorLowpass);</code></pre>
             <p>
               スピーカーシミュレーターのノード接続を, プリアンプの次に接続します. (プリアンプとスピーカーシミュレーターの処理の後の音量を調整できるように,
-              Master Volume となる <code>GainNode</code> の接続は, スピーカーシミュレーターの後に変更します. つまり,
-              スピーカーシミュレーターの接続先となります).
+              Master Volume となる
+              <code>GainNode</code> の接続は, スピーカーシミュレーターの後に変更します. つまり, スピーカーシミュレーターの接続先となります).
             </p>
             <pre
               data-prismjs-copy="クリップボードにコピー"
@@ -13340,7 +13426,8 @@ Promise
             </p>
             <p>
               <a href="https://lazyecology.web.fc2.com/reverb/special/preamp_design/index.html" target="_blank" rel="noopener noreferrer"
-                >真空管ギタープリアンプの回路設計</a>で詳細は記載されていますが, 真空管ギターアンプのルーツは大きく分類すると, <b>Fender</b> (<b>フェンダー</b>)
+                >真空管ギタープリアンプの回路設計</a
+              >で詳細は記載されていますが, 真空管ギターアンプのルーツは大きく分類すると, <b>Fender</b> (<b>フェンダー</b>)
               をルーツとする真空管ギターアンプとそれ以外に分離できます. Marshall (マーシャル), Mesa/Boogie (メサ・ブギー), Soldano (ソルダーノ), Bogner
               (ボグナー) など, ハイゲインな真空管ギターアンプのルーツは, Fender にあるので, Fender のギターアンプ設計を理解することで,
               真空管ギターアンプの定石を知って, モデリングしたいアンプに近い実装が可能になるかもしれません (参考として, Marshall
@@ -13359,7 +13446,8 @@ Promise
           <h3>コンプレッサー</h3>
           <p>
             コンプレッサーは, 振幅の大きな音を (相対的に) 小さく, 振幅の小さな音を (相対的に) 大きくすることによって, 振幅値のオーバーフロー (例として,
-            量子化ビット <code>8 bit</code> で, 2 の補数表現の場合, <code>127</code> (<code>0111111</code>) が正の値の上限で, <code>1</code> 増えると,
+            量子化ビット
+            <code>8 bit</code> で, 2 の補数表現の場合, <code>127</code> (<code>0111111</code>) が正の値の上限で, <code>1</code> 増えると,
             <code>-128</code> (<code>1000000</code>) で負数となって, 波形が大きくゆがんでしまいます) や (振幅値のオーバーフローを防ぐための)
             クリッピング処理による意図しない歪みを防止しつつ, 迫力のある (客観的な指標だと, <b>ダイナミックレンジ</b>がより狭い)
             サウンドに変化させるエフェクターです. 音楽的な表現だと, <b>音の粒をそろえる</b>エフェクターと言えます.
@@ -13374,7 +13462,8 @@ Promise
             <p>
               Web Audio API でコンプレッサーを実装するのはおそらくもっとも簡単です.
               <b><code>DynamicsCompressorNode</code></b> インスタンスを生成して接続するだけです. これだけで, それなりのコンプレッサーとして機能します (<code
-                >DynamicsCompressorNode</code>
+                >DynamicsCompressorNode</code
+              >
               インスタンスの各 <code>AudioParam</code> のデフォルト値が機能するような値になっていますが, コンストラクタの第 2 引数の
               <b><code>DynamicsCompressorOptions</code></b> 型のオブジェクトでインスタンス生成時に値を設定したり,
               <code>AudioParam</code> のセッターで値を設定したりはできます).
@@ -13599,7 +13688,11 @@ rangeReleaseElement.addEventListener(&apos;input&apos;, () =&gt; {
           <section id="section-effectors-compressor-parameters">
             <h4>コンプレッサーの仕組み</h4>
             <p>
-              <code>DynamicsCompressorNode</code> で制御可能なパラメータ (<code>AudioParam</code> インスタンス) としては, <b><code>threshold</code></b>, <b><code>knee</code></b>, <b><code>ratio</code></b>, <b><code>attack</code></b>, <b><code>release</code></b> がありますが, コンプレッサーの効果に大きく影響するのは, <code>threshold</code> (<b>閾値</b>) と
+              <code>DynamicsCompressorNode</code> で制御可能なパラメータ (<code>AudioParam</code> インスタンス) としては, <b><code>threshold</code></b
+              >, <b><code>knee</code></b
+              >, <b><code>ratio</code></b
+              >, <b><code>attack</code></b
+              >, <b><code>release</code></b> がありますが, コンプレッサーの効果に大きく影響するのは, <code>threshold</code> (<b>閾値</b>) と
               <code>ratio</code> (<b>レシオ値</b>) です.
             </p>
             <p>
@@ -13696,7 +13789,8 @@ rangeReleaseElement.addEventListener(&apos;input&apos;, () =&gt; {
               Web Audio API では, <span class="math-inline">$x$</span> が
               <span class="math-inline"
                 >$\left(\left(\mathrm{threshold} - \frac{\mathrm{knee}}{2}\right) \le \left|x\right| \lt \left(\mathrm{threshold} +
-                \frac{\mathrm{knee}}{2}\right)\right)$</span>
+                \frac{\mathrm{knee}}{2}\right)\right)$</span
+              >
               の場合が単調増加関数と定義されているだけなので, ブラウザによって実装が異なるかもしれませんが (ちなみに, それ以外の条件の場合は,
               コンプレッサーの仕組みから必然的に定義できます), 前のセクションのコンプレッションカーブもこの数式定義にもとづいて描画しています.
             </p>
@@ -13717,7 +13811,8 @@ rangeReleaseElement.addEventListener(&apos;input&apos;, () =&gt; {
             <h4>音像</h4>
             <p>
               人間の聴覚は, 音を聴いただけで, 音源の位置や音源の (物理的な) 大きさや形などを知覚することができます. この感覚的に (実際の音源はどうであれ)
-              知覚した音を, <b>音像</b>と呼びます. すなわち, <b>聴覚上の音源</b>とも言えます. Web Audio API の音像に関しては,
+              知覚した音を,
+              <b>音像</b>と呼びます. すなわち, <b>聴覚上の音源</b>とも言えます. Web Audio API の音像に関しては,
               <code>StereoPannerNode</code> クラスもそうですが, あとのセクションで解説する <code>PannerNode</code> クラスも音像を変化させることが可能ですが,
               <b>音源の位置</b>のみの設定です (<code>AudioListener</code> クラスで, リスナーの位置も設定可能で, これによって音像を変化させることもできます).
               したがって, Web Audio API のスコープの中では, 音像, イコール, 音源の位置と理解しても問題ありません. また, 音像を知覚することを,
@@ -13736,7 +13831,8 @@ rangeReleaseElement.addEventListener(&apos;input&apos;, () =&gt; {
               クラスの <code>positionX</code> プロパティ (<code>AudioParam</code>) のみを設定可能なクラスで,
               <code>PannerNode</code> クラスのサブセット的なクラスと言えます). 音楽制作・音源編集などのユースケースでは,
               左右のチャンネルに音像を振ることができれば十分要件を満たすことができるので, オートパンも <code>StereoPannerNode</code> で実装可能です (<code
-                >PannerNode</code>
+                >PannerNode</code
+              >
               クラスはあくまで立体音響でのユースケースのために定義されています).
             </p>
             <p>
@@ -14103,10 +14199,12 @@ audioElement.addEventListener(&apos;play&apos;, async () =&gt; {
                 振幅変調させるための <code>GainNode</code> インスタンスも, それぞれのチャンネルに必要なので 2 つ生成します. また,
                 <b
                   >左右の <code>gain</code> プロパティの値を互いに逆, つまり, 絶対値を同じにして, 一方を負数にすることで,
-                  左右のチャンネルが逆位相となるトレモロが実装可能です</b>.
+                  左右のチャンネルが逆位相となるトレモロが実装可能です</b
+                >.
                 <b
                   ><code>GainNode</code> インスタンスの <code>gain</code> プロパティの値を負数 (<code>-1</code>) にして, 逆位相にする実装は Web Audio API
-                  におけるテクニックの 1 つです</b>
+                  におけるテクニックの 1 つです</b
+                >
                 (もっとも, このような Web Audio API 特有のテクニックが, 他のオーディオ API 経験者からすると, 奇怪な API に思われる一因かもしれません).
               </p>
               <div class="math-block">
@@ -14121,13 +14219,15 @@ audioElement.addEventListener(&apos;play&apos;, async () =&gt; {
               <p>
                 <code>ChannelSplitterNode</code> によって分割された出力は, <code>numberOfOutputs</code> で指定したチャンネル数と同じです.
                 それぞれのチャンネルを<b>接続先の <code>AudioNode</code>, または, <code>AudioParam</code> の入力チャンネル</b>として (<b
-                  ><code>ChannelSplitterNode</code> の出力チャンネル</b>として), <code>connect</code> メソッドの第 2 引数に, チャンネルナンバーを指定します (第 3 引数はデフォルトで <code>0</code> なので,
+                  ><code>ChannelSplitterNode</code> の出力チャンネル</b
+                >として), <code>connect</code> メソッドの第 2 引数に, チャンネルナンバーを指定します (第 3 引数はデフォルトで <code>0</code> なので,
                 不要であれば省略可能です)
               </p>
               <p>
                 <code>ChannelSplitterNode</code> でチャンネルを分割して, それぞれにオーディオ処理を適用したあと, 1 つのチャンネル (ストリーム) にまとめるために,
                 <code>ChannelMergerNode</code> へ接続します. <code>ChannelMergerNode</code> へまとめられるチャンネルの入力は,
-                <code>numberOfInputs</code> で指定したチャンネル数と同じです. それぞれのチャンネルを<b>接続元の <code>AudioNode</code> の出力チャンネル</b>として (<b><code>ChannelMergerNode</code> の入力チャンネル</b>として), <code>connect</code> メソッドの第 3 引数に,
+                <code>numberOfInputs</code> で指定したチャンネル数と同じです. それぞれのチャンネルを<b>接続元の <code>AudioNode</code> の出力チャンネル</b
+                >として (<b><code>ChannelMergerNode</code> の入力チャンネル</b>として), <code>connect</code> メソッドの第 3 引数に,
                 チャンネルナンバーを指定します (また, <code>AudioParam</code> の場合, 分割したチャンネル (ストリーム) をまとめる必要はないので,
                 <code>ChannelMergerNode</code> へ接続するのは, 分割された <code>AudioNode</code> のみです).
               </p>
@@ -14211,7 +14311,8 @@ oscillator.start(t0);
 oscillator.stop(t1 + 2.5);</code></pre>
             <p>
               以下は, シンセサイザーで利用することを想定して, 鍵盤の UI でインタラクティブに操作できるようにしたコード例です (グライドタイムとメソッド (<code
-                >linearRampToValueAtTime</code>
+                >linearRampToValueAtTime</code
+              >
               メソッド, または, <code>exponentialRampToValueAtTime</code> メソッド) もインタラクティブに制御できるようにしています).
             </p>
             <p>また, 鍵盤の UI の実装はいくつかアプローチ (SVG, Canvas ... etc) がありますが, ここではシンプルに HTML と CSS で実装しています).</p>
@@ -14349,7 +14450,8 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
             <p>
               また, グライドの実装とは関係ありませんが, このような鍵盤の UI を利用して発音する場合, 周波数の算出式として,
               <span class="math-inline">$27.5 \cdot \mathrm{pow}\left(\mathrm{pow}\left(2, \left(\frac{1}{12}\right)\right), \mathrm{index}\right)$</span>
-              を利用すると便利です. <span class="math-inline">$\mathrm{index}$</span> は, ピアノ 88 鍵を配列に見立てて, 最も左側にある鍵盤 (<code>27.5 Hz</code>) のインデックスを <code>0</code> とした場合の値です. また, そのインデックスは, それぞれの鍵盤を構成する HTML
+              を利用すると便利です. <span class="math-inline">$\mathrm{index}$</span> は, ピアノ 88 鍵を配列に見立てて, 最も左側にある鍵盤 (<code>27.5 Hz</code
+              >) のインデックスを <code>0</code> とした場合の値です. また, そのインデックスは, それぞれの鍵盤を構成する HTML
               のカスタムーデータ属性として定義しておくことで, イベントリスナーで簡単に取得することが可能です (もちろん, 他のよりよい実装があるかもしれませんが).
             </p>
             <div class="app-container flexbox-column">
@@ -14492,7 +14594,8 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
           </p>
           <p>
             もっとも,
-            <b>Web Audio API の仕様設計の思想に従うと, <code>AudioNode</code> や <code>AudioParam</code> の組み合わせで実装できないかを検討することが大事です</b>. すでに解説した, オートワウやアンプシミュレーターなどは比較的, 複雑な実装をしていますが, AudioWorklet を必要とすることなく実装できました.
+            <b>Web Audio API の仕様設計の思想に従うと, <code>AudioNode</code> や <code>AudioParam</code> の組み合わせで実装できないかを検討することが大事です</b
+            >. すでに解説した, オートワウやアンプシミュレーターなどは比較的, 複雑な実装をしていますが, AudioWorklet を必要とすることなく実装できました.
             <b>アルゴリズムの複雑性と AudioWorklet の必要性はあまり関係ありません</b> (研究目的であれば高い相関があるかもしれませんが, 研究用途の場合, そもそも
             Web Audio API を使うことが適さないと思われます (MATLAB や Python を使うのが一般的です). リアルタイム性自体が研究目的であっても,
             その場合はプラットフォーム (ハードウェアや OS) に依存するので, 研究対象のプラットフォームで研究することになるでしょう).
@@ -14535,8 +14638,9 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
             <div class="math-block">$f_{\mathrm{resolution}} = \frac{f_{s}}{N}$</div>
             <p>
               サンプリング周波数を一定, つまり, 定数とすると, 周波数分解能は, 離散フーリエ変換のサイズによって決まることになります. そして,
-              離散フーリエ変換のサイズである <span class="math-inline">$N$</span> の値を大きくしていくと, 周波数分解能 (<span class="math-inline"
-                >$f_{\mathrm{resolution}}$</span>) はより小さい値になっていきます. <b>周波数分解能の値が小さいほど, より精度の高い周波数演算ができるので周波数分解能が高くなります</b>.
+              離散フーリエ変換のサイズである
+              <span class="math-inline">$N$</span> の値を大きくしていくと, 周波数分解能 (<span class="math-inline">$f_{\mathrm{resolution}}$</span>)
+              はより小さい値になっていきます. <b>周波数分解能の値が小さいほど, より精度の高い周波数演算ができるので周波数分解能が高くなります</b>.
             </p>
             <p>
               具体的な値で算出すると, サンプリング周波数 <span class="math-inline">$f_{s}$</span> を <code>48000</code> で定数とします.
@@ -14641,7 +14745,9 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               オーバーラップアドをわざわざ実装する必要はないように思われます. しかしながら, 周波数領域で演算する場合,
               <b
                 >離散フーリエ変換後の信号は周期が <span class="math-inline">$N$</span> (離散フーリエ変換のサイズ. 実用上は, 高速フーリエ変換のサイズ)
-                であることを仮定しています</b>. 周期 <span class="math-inline">$N$</span> の周期信号と仮定することで, 周波数領域ではサンプリング周波数 (<span class="math-inline">$f_{s}$</span>) を <span class="math-inline">$N$</span> で等分割 (<span class="math-inline">$\frac{f_{s}}{N}$</span>) した周波数のみ値をもつ離散信号となります.
+                であることを仮定しています</b
+              >. 周期 <span class="math-inline">$N$</span> の周期信号と仮定することで, 周波数領域ではサンプリング周波数 (<span class="math-inline">$f_{s}$</span
+              >) を <span class="math-inline">$N$</span> で等分割 (<span class="math-inline">$\frac{f_{s}}{N}$</span>) した周波数のみ値をもつ離散信号となります.
             </p>
             <figure>
               <svg id="svg-figure-relationship-between-dft-and-period" width="1200" height="240" />
@@ -14685,7 +14791,8 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               窓関数の振幅スペクトルの形状は, <b>メインローブ</b>と<b>サイドローブ</b>に分類できます. <b>メインローブの幅が狭いほど周波数分解能が高くなり</b>,
               <b>サイドローブのピーク値が低いほど段差成分の周波数成分が発生するのを防ぐことができます</b>. 例えば, 矩形窓の場合,
               その振幅スペクトルの形状はシンク関数 (<span class="math-inline"
-                >$\left|H_{rect}\left({\omega}\right)\right| = \left|\frac{\sin\left(\omega\right)}{\omega}\right|$</span>) になります.
+                >$\left|H_{rect}\left({\omega}\right)\right| = \left|\frac{\sin\left(\omega\right)}{\omega}\right|$</span
+              >) になります.
             </p>
             <figure>
               <svg id="svg-figure-window-function-spectrum" width="720" height="405" />
@@ -14784,7 +14891,8 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
                     Web Audio API の
                     <a href="https://www.w3.org/TR/webaudio/#blackman-window" target="_blank" rel="noopener noreferrer"
                       ><code>AnalyserNode</code> インスタンスの <code>getByteFrequencyData</code> メソッドや
-                      <code>getFloatFrequencyData</code> メソッドで利用されている窓関数</a>. ハニング窓より周波数分解能は低くなりますが, そのぶん, サイドローブのピーク値も低くなります. したがって,
+                      <code>getFloatFrequencyData</code> メソッドで利用されている窓関数</a
+                    >. ハニング窓より周波数分解能は低くなりますが, そのぶん, サイドローブのピーク値も低くなります. したがって,
                     より正確なスペクトルを描画するために, 最適な窓関数と言えます.
                   </td>
                 </tr>
@@ -14844,7 +14952,8 @@ formGlideTypeElement.addEventListener(&apos;change&apos;, () =&gt; {
               </p>
               <p>
                 しかし, 非定常信号であっても, ごく短時間だけを観測すれば, ほとんどは, 時間経過とともに統計的性質が変化しない<b>定常信号</b> (<b
-                  >Stationary Signal</b>) (または, 平均や自己相関が時間推移に対して不変となる<b>弱定常信号</b> (<b>Wide Sense Stationary Signal</b>)) となり (あるいは,
+                  >Stationary Signal</b
+                >) (または, 平均や自己相関が時間推移に対して不変となる<b>弱定常信号</b> (<b>Wide Sense Stationary Signal</b>)) となり (あるいは,
                 システムとしてみた場合に, <b>時不変</b> (Time-Invariant) システムとなり), モデリングが容易となります. 窓関数は, 本来,
                 非定常信号であるオーディオ信号を, ごく短時間で区切って, 定常信号としてモデリングすることを可能にしています.
               </p>
@@ -15814,7 +15923,8 @@ rangeElement.addEventListener(&apos;input&apos;, () =&gt; {
               </p>
               <p>
                 さらに追加すると, タイムストレッチでは, 事前にオーディオデータすべてを取得する必要があるので (これがリアルタイム処理できない理由です),
-                楽曲データの再生でも <b><code>AudioBufferSourceNode</code> を利用する必要があります</b> (厳密には, オーディオデータの実体となる,
+                楽曲データの再生でも
+                <b><code>AudioBufferSourceNode</code> を利用する必要があります</b> (厳密には, オーディオデータの実体となる,
                 <code>AudioBuffer</code> インスタンスから, チャンネルごとのオーディオデータをすべて取得して演算します).
               </p>
               <p>
@@ -15826,8 +15936,8 @@ rangeElement.addEventListener(&apos;input&apos;, () =&gt; {
               </p>
               <p>
                 あとは, タイムストレッチが実装できれば, オフラインピッチシフターが実装できます. タイムストレッチのアルゴリズムの本質は,
-                再生速度に関わらず同じですが, 再生速度が <code>1</code> より大きい場合と, 小さい場合では, 実装が少し異なるので, まずは,
-                それぞれのケースに対してシンプルに解説します.
+                再生速度に関わらず同じですが, 再生速度が
+                <code>1</code> より大きい場合と, 小さい場合では, 実装が少し異なるので, まずは, それぞれのケースに対してシンプルに解説します.
               </p>
               <section id="section-effectors-by-audio-worklet-pitch-shifter-by-resampling-and-time-stretch-fast">
                 <h6>再生速度を速くする場合</h6>
@@ -15870,7 +15980,8 @@ rangeElement.addEventListener(&apos;input&apos;, () =&gt; {
                 </p>
                 <p>
                   この関係式と, (自己) 相関関数を利用すると, 逐次処理のために必要な <span class="math-inline">$\mathrm{offset}$</span> の値は,
-                  以下のように定義できます (<span class="math-inline">$\mathrm{period}$</span> は, 波形の周期です).
+                  以下のように定義できます (<span class="math-inline">$\mathrm{period}$</span>
+                  は, 波形の周期です).
                 </p>
                 <div class="math-block">
                   <!-- prettier-ignore -->
@@ -16033,7 +16144,8 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
                 </p>
                 <p>
                   この関係式と, (自己) 相関関数を利用すると, 逐次処理のために必要な <span class="math-inline">$\mathrm{offset}$</span> の値は,
-                  以下のように定義できます (<span class="math-inline">$\mathrm{period}$</span> は, 波形の周期です).
+                  以下のように定義できます (<span class="math-inline">$\mathrm{period}$</span>
+                  は, 波形の周期です).
                 </p>
                 <div class="math-block">
                   <!-- prettier-ignore -->
@@ -16256,7 +16368,8 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
                 <p>
                   もっとも, 線形補間は, リサンプル点を直線で補間するので, 実際の波形とは異なったオーディオデータとなってしまいます (ユースケースによっては,
                   線形補間で十分な場合もあると思いますが). サンプリング定理にしたがったアルゴリズムは, シンク関数によるリサンプリングの一択です. 以下は,
-                  シンク関数のサイズを <code>24</code> とした場合の, リサンプリングの実装例です.
+                  シンク関数のサイズを
+                  <code>24</code> とした場合の, リサンプリングの実装例です.
                 </p>
                 <pre
                   data-prismjs-copy="クリップボードにコピー"
@@ -16672,8 +16785,9 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
               </div>
               <p>
                 このセクションでは, 原音をピッチシフトしましたが, 原音とピッチシフトしたエフェクト音をミックスすることで,
-                オクターバーやハーモナイザーを実装できます. また, <code>pitch</code> を <code>AudioParamDescriptor</code> として実装して,
-                メインスレッド側でパラメータをオートメーションすれば, ピッチベンドも実装できるでしょう.
+                オクターバーやハーモナイザーを実装できます. また,
+                <code>pitch</code> を <code>AudioParamDescriptor</code> として実装して, メインスレッド側でパラメータをオートメーションすれば,
+                ピッチベンドも実装できるでしょう.
               </p>
             </section>
           </section>
@@ -17038,7 +17152,8 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
           <p>
             ここまでのセクションで様々なエフェクター (空間系, モジュレーション系, フィルタ系, 歪み系など) を解説してきました. 最後に解説しておくこととして,
             エフェクター 1 つだけを利用する場合は考慮する必要のない問題ですが, 多くの場合, 複数のエフェクターを同時に利用することになるでしょう.
-            <a href="#section-effectors-amp-simulator-and-effectors-distortion">アンプシミュレーターと歪み系エフェクターによるディストーションサウンド</a>のセクションでも記載しましたが, <b>エフェクターの接続順は出力されるサウンドに大きく影響を与えます</b>.
+            <a href="#section-effectors-amp-simulator-and-effectors-distortion">アンプシミュレーターと歪み系エフェクターによるディストーションサウンド</a
+            >のセクションでも記載しましたが, <b>エフェクターの接続順は出力されるサウンドに大きく影響を与えます</b>.
           </p>
           <p>
             もちろん, 仕様的に決まりがあるわけではないので, 利用するエフェクターの個数の階乗 (<span class="math-inline">$n!$</span>)
@@ -17067,7 +17182,8 @@ rangeThresholdElement.addEventListener(&apos;input&apos;, () =&gt; {
           <p>
             また, ME-70 と ME-80 にもとづいたエフェクターの接続順の定石を記載しましたが, ローランド社が公開している,
             <a href="https://articles.boss.info/ja/the-ultimate-guide-to-guitar-effects-pedal-order-and-signal-chain/" target="_blank" rel="noopener noreferrer"
-              >ギター用エフェクトの接続順ガイド</a>も非常に参考になると思います (もっとも, あくまで定石であって, 必ずしもこれらの接続順である必要はありません).
+              >ギター用エフェクトの接続順ガイド</a
+            >も非常に参考になると思います (もっとも, あくまで定石であって, 必ずしもこれらの接続順である必要はありません).
           </p>
           <table>
             <caption>
@@ -17334,7 +17450,8 @@ console.log(v.radian);  // 0.9272952180016122 ... ≒ acos(3/5) ≒ 53.13°</cod
               <code>0</code> による除算も防ぐように考慮する必要があります. もちろん, 地道にこの場合分けをして, 角度を求めてもよいのですが,
               ほとんどのプログラミング言語には, この場合分けを必要とせず, 座標から <span class="math-inline">$2\pi$</span> の範囲の角度 (<span
                 class="math-inline"
-                >$-\pi \le \mathrm{atan2}\left(y, x\right) \le \pi$</span>) をラジアン単位で取得できる <code>atan2</code> 関数が実装されているので, そちらを利用したほうが,
+                >$-\pi \le \mathrm{atan2}\left(y, x\right) \le \pi$</span
+              >) をラジアン単位で取得できる <code>atan2</code> 関数が実装されているので, そちらを利用したほうが,
               実装コストやレビューコストが圧倒的に少なくて済むというメリットが大きいからです (逆に, デメリットを見つけるほうが難しいかもしれません.
               強いて言えば, <code>atan2</code> 関数が利用できないプログラミング言語を使う場合でしょうか ...).
             </p>
@@ -17469,7 +17586,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             <p>
               <b><code>panningModel</code></b> プロパティは, 空間音響アルゴリズムを決定するプロパティです. もう少し平易なテキストで説明すると, どれぐらい忠実に
               3D オーディオ空間, つまり, 実際の音響空間をシミュレートするかを決定するプロパティです. 指定可能なアルゴリズム (<b
-                ><code>PanningModelType</code></b>
+                ><code>PanningModelType</code></b
+              >
               列挙型) は 2 種類です.
             </p>
             <table>
@@ -17503,12 +17621,13 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             <p>
               <b><code>distanceModel</code></b> プロパティは, 音がリスナーに伝達するまでの音量減衰のアルゴリズムを決定するプロパティです. 一般的な音響空間では,
               近くの音は大きく, 遠くの音は小さく知覚されるはずです. すなわち, その音量減衰現象を Web Audio API でシミュレートするためのアルゴリズムを決定します.
-              指定可能なアルゴリズム (<b><code>DistanceModelType</code></b> 列挙型) は 3 種類です. また, それぞれのアルゴリズにおいて,
-              減衰の算出式が定義されています.
+              指定可能なアルゴリズム (<b><code>DistanceModelType</code></b>
+              列挙型) は 3 種類です. また, それぞれのアルゴリズにおいて, 減衰の算出式が定義されています.
             </p>
             <p>
               <span class="math-inline">$f$</span> は, <code>rolloffFactor</code> プロパティ, <span class="math-inline">$d$</span> は, 音源からの距離 (<code
-                >positionX</code>
+                >positionX</code
+              >
               などから算出), <span class="math-inline">$d_{\mathrm{max}}$</span> は, <code>maxDistance</code> プロパティ,
               <span class="math-inline">$d_{\mathrm{ref}}$</span> は, <code>refDistance</code> プロパティです.
             </p>
@@ -17530,7 +17649,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
                   <td>
                     <span class="math-inline"
                       >$1 - f\frac{\mathrm{max}\left[\mathrm{min}\left(d, d_{\mathrm{max}}'\right), d_{\mathrm{ref}}'\right] -
-                      d_{\mathrm{ref}}'}{d_{\mathrm{max}}' - d_{\mathrm{ref}}'}$</span>
+                      d_{\mathrm{ref}}'}{d_{\mathrm{max}}' - d_{\mathrm{ref}}'}$</span
+                    >
                   </td>
                 </tr>
                 <tr>
@@ -17538,7 +17658,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
                   <td>逆数減衰 (デフォルト値)</td>
                   <td>
                     <span class="math-inline"
-                      >$\frac{d_{\mathrm{ref}}}{d_{\mathrm{ref}} + f\left[\mathrm{max}\left(d, d_{\mathrm{ref}}\right) - d_{\mathrm{ref}}\right]}$</span>
+                      >$\frac{d_{\mathrm{ref}}}{d_{\mathrm{ref}} + f\left[\mathrm{max}\left(d, d_{\mathrm{ref}}\right) - d_{\mathrm{ref}}\right]}$</span
+                    >
                   </td>
                 </tr>
                 <tr>
@@ -17553,7 +17674,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             <h4>positionX / positionY / positionZ プロパティ</h4>
             <p>
               音源 (パン) の位置を設定するプロパティで, <code>AudioParam</code> 型です. デフォルト値は, いずれも <code>0</code> なので, 原点 (<code
-                >(0, 0, 0)</code>) に音源が位置することになります.
+                >(0, 0, 0)</code
+              >) に音源が位置することになります.
             </p>
             <p>
               初期の仕様では, これらのプロパティは <code>AudioParam</code> 型ではなかったので,
@@ -17562,8 +17684,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             </p>
             <figure>
               <svg id="svg-figure-panner-node-position" width="800" height="400" />
-              <img src="images/pan.svg" alt="音源の位置 (デフォルト値)" width="32" height="32" loading="lazy" style="transform: translate(-590px, -188px)" />
-              <img src="images/pan.svg" alt="音源の位置 (-1, 1, 1)" width="32" height="32" loading="lazy" style="transform: translate(-320px, -230px)" />
+              <img src="images/pan.svg" alt="音源の位置 (デフォルト値)" width="32" height="26" loading="lazy" style="transform: translate(-590px, -188px)" />
+              <img src="images/pan.svg" alt="音源の位置 (-1, 1, 1)" width="32" height="26" loading="lazy" style="transform: translate(-320px, -230px)" />
               <figcaption>positionX / positionY / positionZ プロパティ (左は, デフォルト値である原点に位置しています)</figcaption>
             </figure>
             <article id="section-spatialization-audio-panner-node-position-xyz-vs-stereo-panner-node">
@@ -17591,12 +17713,12 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             </p>
             <figure>
               <svg id="svg-figure-panner-node-orientation" width="800" height="400" />
-              <img src="images/pan.svg" alt="音源の向き (デフォルト値)" width="32" height="32" loading="lazy" style="transform: translate(-590px, -188px)" />
+              <img src="images/pan.svg" alt="音源の向き (デフォルト値)" width="32" height="26" loading="lazy" style="transform: translate(-590px, -188px)" />
               <img
                 src="images/pan.svg"
                 alt="音源の向き (1, -√2, 1)"
                 width="32"
-                height="32"
+                height="26"
                 loading="lazy"
                 style="transform: translate(-260px, -188px) rotateZ(45deg)"
               />
@@ -17711,18 +17833,18 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               <img
                 src="images/listener-default.svg"
                 alt="リスナーの位置 (デフォルト値)"
-                width="32"
-                height="32"
+                width="64"
+                height="64"
                 loading="lazy"
-                style="opacity: 0.3; transform: translate(-590px, -188px)"
+                style="opacity: 0.3; transform: translate(-606px, -188px)"
               />
               <img
                 src="images/listener-default.svg"
                 alt="リスナーの位置 (-5, 0, 0)"
-                width="32"
-                height="32"
+                width="64"
+                height="64"
                 loading="lazy"
-                style="opacity: 0.3; transform: translate(-320px, -188px)"
+                style="opacity: 0.3; transform: translate(-368px, -188px)"
               />
               <figcaption>positionX / positionY / positionZ プロパティ (左は, デフォルト値である原点に位置しています)</figcaption>
             </figure>
@@ -17744,18 +17866,18 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               <img
                 src="images/listener-default.svg"
                 alt="リスナーの向き (デフォルト値)"
-                width="32"
-                height="32"
+                width="64"
+                height="64"
                 loading="lazy"
-                style="opacity: 0.3; transform: translate(-590px, -188px)"
+                style="opacity: 0.3; transform: translate(-606px, -188px)"
               />
               <img
                 src="images/listener-00-1.svg"
                 alt="リスナーの向き (0, 0, 1)"
                 width="32"
-                height="32"
+                height="64"
                 loading="lazy"
-                style="opacity: 0.3; transform: translate(-260px, -188px)"
+                style="opacity: 0.3; transform: translate(-292px, -188px)"
               />
               <figcaption>forwardX / forwardY / forwardZ プロパティ (左は, デフォルト値である z 軸の負の方向を向いています)</figcaption>
             </figure>
@@ -17776,18 +17898,18 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               <img
                 src="images/listener-default.svg"
                 alt="リスナーの頭部の向き (デフォルト値)"
-                width="32"
-                height="32"
+                width="64"
+                height="64"
                 loading="lazy"
-                style="opacity: 0.3; transform: translate(-590px, -188px)"
+                style="opacity: 0.3; transform: translate(-606px, -188px)"
               />
               <img
                 src="images/listener-default.svg"
                 alt="リスナーの頭部の向き (1, 1, 0)"
-                width="32"
-                height="32"
+                width="64"
+                height="64"
                 loading="lazy"
-                style="opacity: 0.3; transform: translate(-250px, -188px) rotate(45deg)"
+                style="opacity: 0.3; transform: translate(-282px, -188px) rotate(45deg)"
               />
               <figcaption>upX / upY / upZ プロパティ (左は, デフォルト値である y 軸の正の方向を向いています)</figcaption>
             </figure>
@@ -17851,7 +17973,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
               ビットマップで <code>1px</code> 単位で RGBA の値を設定して描画することが可能で, Canvas そのものは <code>HTMLElement</code> の 1 つで,
               画像コーデックではありませんが (実体 (描画データ) は, <code>ImageData</code> クラスの <code>data</code> プロパティである
               <code>Uint8ClampedArray</code> の数値データです), JPEG や PNG など様々な画像コーデックにエクスポートすることができます. ローレイヤーな描画 (<code
-                >ImageData</code>
+                >ImageData</code
+              >
               クラスを利用した描画) では <code>1px</code> 単位での描画が可能ですが, 抽象度の高い, 矩形やパス, 楕円, ベジェ曲線, テキストなど,
               オブジェクトの描画やスタイルの設定の API も定義されています. デメリットとしては, ビットマップ形式での描画なので, 鮮明に描画するためには,
               デバイスピクセルレシオ (<code>devicePixelRatio</code> プロパティ) を考慮して座標やサイズを計算する必要があります.
@@ -17862,7 +17985,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             <p>
               3D のグラフィックス API です. おそらく, 3D オーディオをメインに利用する Web アプリケーションでは必須になるでしょう. しかし,
               <a href="https://wgld.org/sitemap.html" target="_blank" rel="noopener noreferrer"
-                >WebGL は仕様が膨大で, さらに, その基礎として CG の学習コストも大きいので</a>, このドキュメントでは扱いません.
+                >WebGL は仕様が膨大で, さらに, その基礎として CG の学習コストも大きいので</a
+              >, このドキュメントでは扱いません.
             </p>
             <p>音の視覚化の本質的なロジックを理解するためには, Canvas や SVG などの 2D グラフィックス API で十分だからです.</p>
             <p>
@@ -17941,7 +18065,8 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             <code>AnalyserNode</code> インスタンスを接続している必要があります. <code>AnalyserNode</code> インスタンスの生成は,
             <code>AnalyserNode</code> コンストラクタ呼び出しか, ファクトリメソッド (<code>AudioContext</code> インスタンスの
             <b><code>createAnalyser</code></b> メソッド) を呼び出す必要があります. コンストラクタ呼び出しであれば, 第 2 引数 (<b
-              ><code>AnalyserOptions</code></b>
+              ><code>AnalyserOptions</code></b
+            >
             型) で初期値を設定することが可能です.
           </p>
           <pre
@@ -19569,7 +19694,8 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
             </p>
             <p>
               また, <code>getFloatFrequencyData</code> メソッド, <code>getByteFrequencyData</code> メソッドで利用される<b
-                >窓関数は<a href="#section-effectors-by-audio-worklet-overlap-add-window-function">ブラックマン窓</a></b>です.
+                >窓関数は<a href="#section-effectors-by-audio-worklet-overlap-add-window-function">ブラックマン窓</a></b
+              >です.
             </p>
             <section id="section-sound-visualization-analyser-node-render-frequency-domain-smoothing-time-constant">
               <h5>smoothingTimeConstant プロパティ</h5>
@@ -20182,7 +20308,8 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                   <span class="math-inline">$f_{k} = k \cdot \left(\frac{f_{s}}{N}\right)$</span> となります. 周波数軸も,
                   すべてのインデックスでテキストを描画してしまうと, テキストが重なって視認できないので, 実際には, ある程度間引いて描画したり,
                   <code>frequencyBinCount</code> の <code>1/2</code> や, <code>1/4</code> に対応するインデックスまで描画したりすればよいでしょう. あるいは,
-                  <a href="#section-sound-visualization-analyser-node-render-frequency-logarithmic-scale">周波数軸を対数スケールで描画</a>することで広範囲の周波数を描画することができます.
+                  <a href="#section-sound-visualization-analyser-node-render-frequency-logarithmic-scale">周波数軸を対数スケールで描画</a
+                  >することで広範囲の周波数を描画することができます.
                 </p>
                 <figure>
                   <svg id="svg-figure-frequency-resolution-to-frequency-text" width="720" height="360" />
@@ -20564,11 +20691,13 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
               <ul>
                 <li>
                   <code>255</code> の場合, 振幅が <b><code>maxDecibels</code> プロパティで指定されているデシベル</b> (デフォルト値は, <code>-30 dB</code>) で, y
-                  座標は <code>0</code>
+                  座標は
+                  <code>0</code>
                 </li>
                 <li>
                   <code>0</code> の場合, 振幅が <b><code>minDecibels</code> プロパティで指定されているデシベル</b> (デフォルト値は, <code>-100 dB</code>) で, y
-                  座標は <code>height</code>
+                  座標は
+                  <code>height</code>
                 </li>
               </ul>
               <p>
@@ -20952,13 +21081,15 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                 また, 位相スペクトルが必要なケースでも, <code>BiquadFilterNode</code> によるフィルタの位相特性を取得する場合は,
                 <code>BiquadFilterNode</code> インスタンスの <b><code>getFrequencyResponse</code></b> メソッドを利用することで可能です (<a
                   href="#section-effectors-filter-biquad-filter-node-allpass"
-                  >All-Pass Filter の周波数特性 (位相スペクトル)</a>
+                  >All-Pass Filter の周波数特性 (位相スペクトル)</a
+                >
                 は, FFT を実装することなく, <code>getFrequencyResponse</code> メソッドで位相スペクトルを取得することで視覚化しています).
               </p>
               <p>
                 位相スペクトルの視覚化の解説として,
                 <a href="#section-effectors-by-audio-worklet-overlap-add-audio-worklet-processor-and-window-function-overlap-add-processor"
-                  ><code>OverlapAddProcessor</code> クラス</a>を拡張子したクラスを利用して実装します (<code>AudioWorkletProcessor</code> クラスで実装すると, FFT サイズが
+                  ><code>OverlapAddProcessor</code> クラス</a
+                >を拡張子したクラスを利用して実装します (<code>AudioWorkletProcessor</code> クラスで実装すると, FFT サイズが
                 <code>renderQuantumSize</code> (<code>128</code> サンプル) で固定されてしまい, 十分な周波数分解能が確保できないからです).
                 <code>processOverlapAdd</code> メソッドで呼び出している, <code>FFT</code> 関数は,
                 <a href="#section-fast-fourier-transform-code">高速フーリエ変換の実装セクション</a>で記載している実装を
@@ -21296,7 +21427,8 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
               </p>
               <p>
                 周波数のテキストの座標は線形スケールと考え方は同じです. 10 帯域を描画対象の幅で, 等間隔に描画するので <code>width / 10</code> で算出できます
-                (<code>10</code> は帯域数です).
+                (<code>10</code>
+                は帯域数です).
               </p>
               <p>
                 線形スケールと異なるのは, 振幅スペクトルのパスの x 座標の算出です. 描画範囲の幅を <code>1</code> として, 対数スケールでプロットする最小周波数を
@@ -21316,7 +21448,8 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
                 プロット対象の周波数の描画対象の最小周波数からの x 軸のオフセット (分子) が, 描画範囲の周波数 (分母) に対して,
                 どの程度の割合かを常用対数で算出しているのが上記の式の意味です (この算出の本質的な考え方は,
                 <a href="#section-sound-visualization-analyser-node-render-frequency-domain-get-byte-frequency-data"
-                  ><code>getFloatFrequencyData</code> メソッドと <code>getByteFrequencyData</code> メソッドの関係式</a>でも同じです).
+                  ><code>getFloatFrequencyData</code> メソッドと <code>getByteFrequencyData</code> メソッドの関係式</a
+                >でも同じです).
               </p>
               <p>
                 算出したプロット対象の x 座標の値 (オフセット比) は, 描画範囲の幅を <code>1</code> としているので,
@@ -22066,7 +22199,8 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
   })</code></pre>
           <p>
             理想的には, 再生・停止時にも現在の再生位置をキープしたまま, 再生とオーバーレイの矩形の描画ができるとよいのですが, メインスレッドのみの実装では,
-            基準となる <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティと現在の
+            基準となる
+            <code>AudioContext</code> インスタンスの <code>currentTime</code> プロパティと現在の
             <code>currentTime</code> プロパティの減算から再生位置を算出するためのコールバック関数を, <code>requestAnimationFrame</code> メソッドや
             <code>setInterval</code> メソッドで呼び出すほど, 再生位置が少しずつずれてしまいます. この問題を解決するには, タイマー処理 (更新処理) を
             <code>Web Workers</code> でバックグラウンドのスレッドで実行するか,
@@ -22124,8 +22258,9 @@ fetch(&apos;./assets/medias/Schubert-Symphony-No8-Unfinished-1st-2020-VR.mp3&apo
           </ul>
           <p>
             上記の 2 つの制約は, フーリエ級数の制約から設定されています (最後の 1 つは実装上の制約でしかありません).
-            級数の部分から同じサイズである必要があること, また, <span class="math-inline">$\frac{a_{0}}{2}$</span> の項が存在することから, 虚部の
-            <code>0</code> 項目は使用されないので 2 つの制約があります (オイラーの公式からも導出できますが, 正弦波の項は虚部に対応します).
+            級数の部分から同じサイズである必要があること, また,
+            <span class="math-inline">$\frac{a_{0}}{2}$</span> の項が存在することから, 虚部の <code>0</code> 項目は使用されないので 2 つの制約があります
+            (オイラーの公式からも導出できますが, 正弦波の項は虚部に対応します).
           </p>
           <div class="math-block">
             <!-- prettier-ignore -->
@@ -22215,9 +22350,10 @@ oscillator.setPeriodicWave(periodicWave);</code></pre>
           </p>
           <p>
             1 つの実用的な利用例として, 電気オルガンのような音色を生成することができます. 具体的には, (オイラーの公式より) 虚部の項は, 正弦波の項であり,
-            インデックス <code>1</code> 番目が基本周波数となります. インデックス <code>2</code> 番目以降は, それぞれ, 2 倍音, 3 倍音, 4 倍音 ...
-            と設定することになります. 同様に, 実部の項は, 余弦波の項であり, インデックス <code>1</code> 番目から順に, 基本周波数, 2 倍音, 3 倍音, 4 倍音 ...
-            と設定することが可能です. 正弦波と余弦波は位相の違いでしかなく, 音色は (知覚できるようなレベルで) 変わりませんが,
+            インデックス
+            <code>1</code> 番目が基本周波数となります. インデックス <code>2</code> 番目以降は, それぞれ, 2 倍音, 3 倍音, 4 倍音 ... と設定することになります.
+            同様に, 実部の項は, 余弦波の項であり, インデックス <code>1</code> 番目から順に, 基本周波数, 2 倍音, 3 倍音, 4 倍音 ... と設定することが可能です.
+            正弦波と余弦波は位相の違いでしかなく, 音色は (知覚できるようなレベルで) 変わりませんが,
             倍音が多くなるほど時間領域の波形はかなり違った形になってきます). また, デフォルトでは, これらの値は正規化されるので,
             倍音成分の比率のみを考慮して設定すればよいです. 基本周波数は, <code>OscillatorNode</code> インスタンスの
             <code>frequency</code> プロパティで設定できます.
@@ -22389,28 +22525,32 @@ oscillator.stop(context.currentTime + 10);</code></pre>
                 <tr>
                   <td><code>&apos;sine&apos;</code></td>
                   <td>
-                    <span class="math-inline">$a\left[n\right] = 0 \quad \left(n \ge 0\right)$</span><br /><span class="math-inline">$b\left[1\right] = 1$</span><br /><span class="math-inline">$b\left[n\right] = 0 \quad \left(n \ge 2\right)$</span>
+                    <span class="math-inline">$a\left[n\right] = 0 \quad \left(n \ge 0\right)$</span><br /><span class="math-inline">$b\left[1\right] = 1$</span
+                    ><br /><span class="math-inline">$b\left[n\right] = 0 \quad \left(n \ge 2\right)$</span>
                   </td>
                 </tr>
                 <tr>
                   <td><code>&apos;square&apos;</code></td>
                   <td>
                     <span class="math-inline">$a\left[n\right] = 0 \quad \left(n \ge 0\right)$</span><br /><span class="math-inline"
-                      >$b\left[n\right] = \frac{2}{n \pi}\left(1 - \left(-1\right)^{n}\right) \quad \left(n \ge 1\right)$</span>
+                      >$b\left[n\right] = \frac{2}{n \pi}\left(1 - \left(-1\right)^{n}\right) \quad \left(n \ge 1\right)$</span
+                    >
                   </td>
                 </tr>
                 <tr>
                   <td><code>&apos;sawtooth&apos;</code></td>
                   <td>
                     <span class="math-inline">$a\left[n\right] = 0 \quad \left(n \ge 0\right)$</span><br /><span class="math-inline"
-                      >$b\left[n\right] = \left(-1\right)^{n + 1}\frac{2}{n \pi} \quad \left(n \ge 1\right)$</span>
+                      >$b\left[n\right] = \left(-1\right)^{n + 1}\frac{2}{n \pi} \quad \left(n \ge 1\right)$</span
+                    >
                   </td>
                 </tr>
                 <tr>
                   <td><code>&apos;triangle&apos;</code></td>
                   <td>
                     <span class="math-inline">$a\left[n\right] = 0 \quad \left(n \ge 0\right)$</span><br /><span class="math-inline"
-                      >$b\left[n\right] = \frac{8 \sin\left(\frac{n \pi}{2}\right)}{\left(n \pi\right)^{2}} \quad \left(n \ge 1\right)$</span>
+                      >$b\left[n\right] = \frac{8 \sin\left(\frac{n \pi}{2}\right)}{\left(n \pi\right)^{2}} \quad \left(n \ge 1\right)$</span
+                    >
                   </td>
                 </tr>
               </tbody>
@@ -22460,7 +22600,8 @@ oscillator.stop(context.currentTime + 10);</code></pre>
             <p>
               <abbr title="Band Limited Step Function">BLEP</abbr> にはいくつかの種類がありますが, その 1 つに,
               アナログ信号とデジタル信号の差分を多項式関数で近似する, <b>Poly <abbr title="Band Limited Step Function">BLEP</abbr></b> (<b
-                >Polynomial Band Limited Step Function</b>) があります. <abbr title="Polynomial Band Limited Step Function">Poly BLEP</abbr> では, アナログ信号のインパルス音を以下の 1
+                >Polynomial Band Limited Step Function</b
+              >) があります. <abbr title="Polynomial Band Limited Step Function">Poly BLEP</abbr> では, アナログ信号のインパルス音を以下の 1
               次方程式で近似しています.
             </p>
             <div class="math-block">
@@ -22520,7 +22661,8 @@ oscillator.stop(context.currentTime + 10);</code></pre>
             <p>
               上記の記載はあくまでごく簡潔に説明しただけなので, 詳細は,
               <a href="https://blog.landr.com/ja/types-of-synthesis-wavetable-fm-synthesis-and-others-explained/" target="_blank" rel="noopener noreferrer"
-                >合成の種類</a>などによくまとめられているので参考にしてください.
+                >合成の種類</a
+              >などによくまとめられているので参考にしてください.
             </p>
           </article>
         </section>
@@ -22570,7 +22712,8 @@ destination.stream.getTracks().forEach((track) =&gt; {
           <p>
             WebRTC を利用しない場合のよくあるユースケースとしては,
             <a href="https://www.w3.org/TR/mediastream-recording/" target="_blank" rel="noopener noreferrer"
-              ><b><code>MediaRecorder</code></b></a>
+              ><b><code>MediaRecorder</code></b></a
+            >
             クラスのコンストラクタの引数に, <code>MediaStream</code> インスタンスである <code>MediaStreamAudioDestinationNode</code> の
             <b><code>stream</code></b> プロパティを指定することで, <code>MediaStreamAudioDestinationNode</code> に出力される音を録音する機能の実装です.
           </p>
@@ -22835,7 +22978,8 @@ buttonElement.addEventListener(&apos;touchend&apos;,   onUp);</code></pre>
           <p>
             逆に, 利用できない API としては, <code>AudioContextState</code> を変更するメソッドや, <code>HTMLMediaElement</code> やオーディオデバイスと関連する,
             一部の <code>AudioNode</code> インスタンス生成のファクトリメソッド (<code>createMediaElementSource</code> メソッド (<code
-              >MediaElementAudioSourceNode</code>
+              >MediaElementAudioSourceNode</code
+            >
             インスタンス) や <code>createMediaStreamSource</code> メソッド (<code>MediaStreamAudioSourceNode</code> インスタンス) など) や
             <code>sinkId</code> プロパティなどです. これは, <code>OfflineAudioContext</code> クラスの役割からすれば当然の仕様と言えます (したがって,
             <code>HTMLMediaElement</code> やオーディオデバイスにアクセスする場合は, <code>AudioContext</code> クラスを利用する必要があります).
@@ -22908,7 +23052,8 @@ context.startRendering()
   });</code></pre>
             <p>
               <code>startRendering</code> メソッドは非同期処理なので, イベントインターフェースも定義されています. イベントオブジェクト (<b
-                ><code>OfflineAudioCompletionEvent</code></b>
+                ><code>OfflineAudioCompletionEvent</code></b
+              >
               オブジェクト) の <b><code>renderedBuffer</code></b> プロパティに, <code>AudioBuffer</code> インスタンスが格納されています. どちらの実装でも,
               取得できる <code>AudioBuffer</code> インスタンスは同じです.
             </p>
@@ -23179,7 +23324,8 @@ context.startRendering()
             </p>
             <p>
               このような特定のタイミングでの一時停止・再開を必要とするケース (例えば, Audio Worklet とのメッセージングなど) を除けば,
-              波形描画や録音といったユースケースにおいて <code>suspend</code> や <code>resume</code> メソッドを使用することはほとんどありません. 多くの場合,
+              波形描画や録音といったユースケースにおいて
+              <code>suspend</code> や <code>resume</code> メソッドを使用することはほとんどありません. 多くの場合,
               <code>startRendering</code> メソッドを呼び出して, <code>Promise</code> の完了を待機するだけで十分です.
             </p>
           </article>
@@ -23426,7 +23572,8 @@ oscillator.onended = () =&gt; {
                 href="https://www.native-instruments.com/jp/products/komplete/keyboards/komplete-kontrol-m32/specifications/"
                 target="_blank"
                 rel="noopener noreferrer"
-                >KOMPLETE KONTROL M32</a>
+                >KOMPLETE KONTROL M32</a
+              >
             </dt>
             <dd>
               MIDI キーボード以外にも, シンセサイザーやワンショットオーディオ (<abbr title="Pulse Code Modulation">PCM</abbr> 音源), エフェクターなど, Web MIDI
@@ -23438,7 +23585,8 @@ oscillator.onended = () =&gt; {
           <h3>MIDI</h3>
           <p>
             Web MIDI API は, ブラウザで MIDI メッセージを送受信するための API ですが, 抽象度は高くないので, <b>MIDI</b> (<b
-              >Musical Instrument Digital Interface</b>) についてもある程度の理解が必要です. もっとも, MIDI もその歴史とともに意味することが広くなりました. もともとは, シーケンス信号
+              >Musical Instrument Digital Interface</b
+            >) についてもある程度の理解が必要です. もっとも, MIDI もその歴史とともに意味することが広くなりました. もともとは, シーケンス信号
             (音源を制御する信号) の標準規格 (物理的にはケーブルの規格として策定された通信プロトコル) であったのが,
             シーケンスの機能がコンピュータに内蔵されていくにしたがって, <b>ハードウェア音源</b>を制御する仕組みとして認識され, さらに,
             音源の機能もコンピュータに内蔵されいくと, コンピュータ内部の<b>ソフトウェア音源</b>を制御する仕組みとして広義には認識されるようになりました.
@@ -23490,7 +23638,8 @@ oscillator.onended = () =&gt; {
                 </p>
                 <p>
                   MIDI メッセージのタイプによって, 後続のデータバイトの個数は変わります. 例えば, ノートオフやノートオンは, 後続のデータバイトは 2 つ
-                  (ステータスバイトと合わせて, <code>3 byte</code> のメッセージ) となります.
+                  (ステータスバイトと合わせて,
+                  <code>3 byte</code> のメッセージ) となります.
                 </p>
                 <table>
                   <caption>
@@ -23587,7 +23736,8 @@ oscillator.onended = () =&gt; {
                 <h6>ノートナンバー</h6>
                 <p>
                   <b>ノートナンバー</b>は, <b>音高</b> (音楽的な意味での音の高さ) を <code>0</code> - <code>127</code> の <code>128</code> 段階 (<code
-                    >7 bit</code>) で指定可能です. この音域は, ピアノ 88 鍵の音域をはるかに超える音域をカバーします. 具体的には, <code>8.18 Hz</code> (C-1) から
+                    >7 bit</code
+                  >) で指定可能です. この音域は, ピアノ 88 鍵の音域をはるかに超える音域をカバーします. 具体的には, <code>8.18 Hz</code> (C-1) から
                   <code>12543.85 Hz</code> (G9) で 11 オクターブもカバーしています.
                 </p>
                 <p>
@@ -23687,7 +23837,8 @@ oscillator.onended = () =&gt; {
                       <abbr title="General MIDI">GM</abbr>
                       のプログラムナンバー (<code>1</code>
                       -
-                      <code>64</code>)
+                      <code>64</code
+                      >)
                     </caption>
                     <thead>
                       <tr>
@@ -24024,7 +24175,8 @@ oscillator.onended = () =&gt; {
                       <abbr title="General MIDI">GM</abbr>
                       のプログラムナンバー (<code>65</code>
                       -
-                      <code>128</code>)
+                      <code>128</code
+                      >)
                     </caption>
                     <thead>
                       <tr>
@@ -24372,7 +24524,7 @@ oscillator.onended = () =&gt; {
               </figure>
               <p>それぞれの打楽器とノートナンバーを対応づけているのが, <b>パーカッションマップ</b>です (これは, ドラム譜の表現と考え方は同じです).</p>
               <figure>
-                <img src="images/drums-score.svg" alt="" width="700" height="220" loading="lazy" />
+                <img src="images/drums-score.svg" alt="" width="700" height="240" loading="lazy" />
                 <figcaption>ドラム譜</figcaption>
               </figure>
               <div class="flexbox flexbox-align-items-flex-start">
@@ -24381,7 +24533,8 @@ oscillator.onended = () =&gt; {
                     <abbr title="General MIDI">GM</abbr>
                     のパーカッションマップ (<code>35</code>
                     -
-                    <code>58</code>)
+                    <code>58</code
+                    >)
                   </caption>
                   <thead>
                     <tr>
@@ -24493,7 +24646,8 @@ oscillator.onended = () =&gt; {
                     <abbr title="General MIDI">GM</abbr>
                     のパーカッションマップ (<code>59</code>
                     -
-                    <code>81</code>)
+                    <code>81</code
+                    >)
                   </caption>
                   <thead>
                     <tr>
@@ -24604,7 +24758,8 @@ oscillator.onended = () =&gt; {
                 <b>システムエクスクルーシブメッセージ</b> (<b>System Exclusive Message</b>) は, <b>ベンダー固有の MIDI メッセージ</b>です.
                 <b
                   >先頭の 1 バイトが <code>11110000</code> (<code>0xF0</code>) で末尾の 1 バイトが <code>11110111</code> (<code>0xF7</code>)
-                  で送受信する必要があります</b>. また, 先頭の <code>11110000</code> に続いて, <b>ID Number</b> (<b>Manufacturer ID</b>), (MIDI の仕様上, このあとは任意のデータバイトですが,
+                  で送受信する必要があります</b
+                >. また, 先頭の <code>11110000</code> に続いて, <b>ID Number</b> (<b>Manufacturer ID</b>), (MIDI の仕様上, このあとは任意のデータバイトですが,
                 多くの場合) 続いて, <b>Device ID</b> を指定するデータバイトが続きます. そして, そのあとのデータバイトから末尾の
                 <code>11110111</code> までのデータバイトは, ベンダーの仕様によって異なります (ただし, データバイトではあるので, 最上位ビットは
                 <code>0</code> で定義されています). したがって, <b>可変長の MIDI メッセージとなります</b>.
@@ -24975,7 +25130,8 @@ navigator.requestMIDIAccess(midiOptions)
           </p>
           <p>
             例えば, 1 つの MIDI デバイスが入出力に対応している場合などがあるので, その場合, 入力 MIDI デバイスのポートと, 出力 MIDI
-            デバイスのポートは別々のポートとして認識され, <code>id</code> プロパティや <code>type</code> プロパティなどはそれぞれ別に割り当てられます.
+            デバイスのポートは別々のポートとして認識され,
+            <code>id</code> プロパティや <code>type</code> プロパティなどはそれぞれ別に割り当てられます.
           </p>
           <section id="section-web-midi-api-midi-port-id">
             <h4>id プロパティ</h4>
@@ -25080,7 +25236,8 @@ navigator.requestMIDIAccess(midiOptions)
           <p>
             <b><code>MIDIInput</code></b> クラスは, 入力 MIDI デバイス (入力 MIDI ポート) を抽象化するクラスで, <code>MIDIPort</code> クラスを拡張しています.
             <code>MIDIInput</code> クラスで重要になるのは, 入力 MIDI メッセージを受信するための <b><code>midimessage</code></b> イベントハンドラです (<code
-              >MIDIInput</code>
+              >MIDIInput</code
+            >
             サブクラスのみで定義されているインターフェースが <code>midimessage</code> イベントハンドラのみです).
           </p>
           <section id="section-web-midi-api-midi-input-midi-message">
@@ -25738,28 +25895,32 @@ navigator.requestMIDIAccess({ sysex: false, software: false })
             href="https://www.amazon.co.jp/C%E8%A8%80%E8%AA%9E%E3%81%A7%E3%81%AF%E3%81%98%E3%82%81%E3%82%8B%E9%9F%B3%E3%81%AE%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E2%80%95%E3%82%B5%E3%82%A6%E3%83%B3%E3%83%89%E3%82%A8%E3%83%95%E3%82%A7%E3%82%AF%E3%83%88%E3%81%AE%E4%BF%A1%E5%8F%B7%E5%87%A6%E7%90%86-%E9%9D%92%E6%9C%A8-%E7%9B%B4%E5%8F%B2/dp/4274206505"
             target="_blank"
             rel="noopener noreferrer"
-            >C言語ではじめる音のプログラミング: サウンドエフェクトの信号処理</a>
+            >C言語ではじめる音のプログラミング: サウンドエフェクトの信号処理</a
+          >
         </li>
         <li>
           <a
             href="https://www.amazon.co.jp/%E3%82%B5%E3%82%A6%E3%83%B3%E3%83%89%E3%82%A8%E3%83%95%E3%82%A7%E3%82%AF%E3%83%88%E3%81%AE%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E2%80%95C%E3%81%AB%E3%82%88%E3%82%8B%E9%9F%B3%E3%81%AE%E5%8A%A0%E5%B7%A5%E3%81%A8%E9%9F%B3%E6%BA%90%E5%90%88%E6%88%90-%E5%B0%8F%E5%9D%82-%E7%9B%B4%E6%95%8F/dp/4274068943"
             target="_blank"
             rel="noopener noreferrer"
-            >サウンドエフェクトのプログラミング: Cによる音の加工と音源合成</a>
+            >サウンドエフェクトのプログラミング: Cによる音の加工と音源合成</a
+          >
         </li>
         <li>
           <a
             href="https://www.amazon.co.jp/Python%E3%81%A7%E3%81%AF%E3%81%98%E3%82%81%E3%82%8B-%E9%9F%B3%E3%81%AE%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E3%82%B3%E3%83%B3%E3%83%94%E3%83%A5%E3%83%BC%E3%82%BF%E3%83%9F%E3%83%A5%E3%83%BC%E3%82%B8%E3%83%83%E3%82%AF%E3%81%AE%E4%BF%A1%E5%8F%B7%E5%87%A6%E7%90%86-%E9%9D%92%E6%9C%A8-%E7%9B%B4%E5%8F%B2/dp/4274228991"
             target="_blank"
             rel="noopener noreferrer"
-            >Pythonではじめる 音のプログラミング: コンピュータミュージックの信号処理</a>
+            >Pythonではじめる 音のプログラミング: コンピュータミュージックの信号処理</a
+          >
         </li>
         <li>
           <a
             href="https://www.amazon.co.jp/%E3%83%93%E3%82%B8%E3%83%A5%E3%82%A2%E3%83%AB%E3%81%A7%E3%82%8F%E3%81%8B%E3%82%8B-%E4%BF%A1%E5%8F%B7%E5%87%A6%E7%90%86%E5%85%A5%E9%96%80-%E4%BA%95%E6%BE%A4-%E8%A3%95%E5%8F%B8/dp/4297137690"
             target="_blank"
             rel="noopener noreferrer"
-            >ビジュアルでわかる 信号処理入門</a>
+            >ビジュアルでわかる 信号処理入門</a
+          >
         </li>
         <li><a href="https://www.g200kg.com/" target="_blank" rel="noopener noreferrer">g200kg | Music &amp; Software</a></li>
         <li><a href="https://www.wizard-notes.com/" target="_blank" rel="noopener noreferrer">Wizard Notes</a></li>
@@ -25780,7 +25941,7 @@ navigator.requestMIDIAccess({ sysex: false, software: false })
 
       document.getElementById("copyright-end-year").textContent = date.getFullYear().toString(10);
     </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script id="MathJax-script" async defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>
       MathJax = {
         tex: {
