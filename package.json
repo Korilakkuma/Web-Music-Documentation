@@ -28,7 +28,11 @@
   "keywords": [
     "Web Music",
     "Web Audio API",
-    "Web Audio"
+    "Web Audio",
+    "Audio Signal Processing",
+    "Web MIDI API",
+    "Web MIDI",
+    "MIDI"
   ],
   "author": "Korilakkuma <rilakkuma.san.xjapan@gmail.com>",
   "license": "MIT",
