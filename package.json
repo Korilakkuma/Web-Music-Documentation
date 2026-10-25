@@ -4,7 +4,7 @@
   "engines": {
     "node": ">=22.0.0 <=24.22.x"
   },
-  "description": "Web Music Documentation for Web Audio API, Web MIDI API ... etc",
+  "description": "Web Music Documentation for Web Audio API, Web MIDI API, Audio Signal Processing, MIDI ... etc",
   "main": "docs/index.html",
   "scripts": {
     "lint:html": "markuplint 'docs/**/*.html'",
