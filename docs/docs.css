@@ -226,6 +226,15 @@ input[type="range"] {
   -webkit-touch-callout: none;
 }
 
+input[type="number"] {
+  padding-left: 8px;
+  cursor: ns-resize;
+  user-select: none;
+  border: 1px solid var(--gray-lighter);
+  border-radius: 4px;
+  -webkit-touch-callout: none;
+}
+
 input[type="checkbox"] {
   padding: 0;
   margin: 0;

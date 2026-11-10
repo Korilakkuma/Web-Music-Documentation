@@ -12287,6 +12287,270 @@ oscillator.stop(context.currentTime + 5);</code></pre>
             <a href="#section-effectors-amp-simulator-and-effectors-distortion">アンプシミュレーターと歪み系エフェクターによるディストーションサウンド</a
             >のセクションで記載しています.
           </p>
+          <article id="section-effectors-distortion-actual-device">
+            <h4>実機の歪み系エフェクター</h4>
+            <p>
+              BOSS OD-1 に限らず, 歪みエフェクターのほとんどはクリッピングだけではなく, プリアンプと同じように<b>前後にフィルタ処理</b>があります. 逆に言うと,
+              クリッピング処理だけで実際の歪み系エフェクターのようなサウンドを得るのは難しいです. 例えば,
+              <a href="https://www.boss.info/jp/products/mt-2/" target="_blank" rel="noopener noreferrer">BOSS MT-2 (Boss Metal Zone),</a> や
+              <a href="https://www.zikinf.com/manuels/digitech-grunge-manuel-utilisateur-en-44238.pdf" target="_blank" rel="noopener noreferrer"
+                >DigiTech Grunge</a
+              >
+              のようなメタル系の歪みでは, 前段にフィルタ, 後段にイコライザーを接続しています. 以下にその実装例 (モデリング例なので,
+              完全に再現しているわけではありません) を記載します.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">function createDistortionCurve(amount = 500, numberOfSamples = 48000) {
+  const curves = new Float32Array(numberOfSamples);
+
+  const radianPerDegree = Math.PI / 180;
+
+  for (let n = 0; n &lt; numberOfSamples; n++) {
+    const x = ((n * 2) / numberOfSamples) - 1;
+
+    curves[n] = ((3 + amount) * x * 20 * radianPerDegree) / (Math.PI + (amount * Math.abs(x)));
+  }
+
+  return curves;
+}
+
+const context = new AudioContext();
+
+let driveValue = 0;
+
+const shaper = new WaveShaperNode(context, { curve: createDistortionCurve(1000 * driveValue), oversample: &apos;4x&apos; });
+
+const drive = new GainNode(context, { gain: 10 * driveValue });
+const level = new GainNode(context, { gain: 1 });
+
+const preLowCut = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 150 });
+const preMiddle = new BiquadFilterNode(context, { type: &apos;peaking&apos;,  frequency: 1000, Q: 1.0, gain: 12 });
+
+const postBass    = new BiquadFilterNode(context, { type: &apos;lowshelf&apos;,  frequency: 100,         gain: 0 });
+const postMiddle  = new BiquadFilterNode(context, { type: &apos;peaking&apos;,   frequency: 500, Q: 1.5, gain: 0 });
+const postTreble  = new BiquadFilterNode(context, { type: &apos;highshelf&apos;, frequency: 5000,        gain: 0 });
+const postHighCut = new BiquadFilterNode(context, { type: &apos;lowpass&apos;,   frequency: 6500 });
+
+const buttonElement = document.getElementById(&apos;button-boss-mt-2&apos;);
+
+const numberDriveElement = document.getElementById(&apos;number-boss-mt-2-drive&apos;);
+const numberLevelElement = document.getElementById(&apos;number-boss-mt-2-level&apos;);
+
+const numberBassElement   = document.getElementById(&apos;number-boss-mt-2-bass&apos;);
+const numberMiddleElement = document.getElementById(&apos;number-boss-mt-2-middle&apos;);
+const numberTrebleElement = document.getElementById(&apos;number-boss-mt-2-treble&apos;);
+
+let audioBuffer = null;
+
+const onDown = () =&gt; {
+  if (audioBuffer === null) {
+    return;
+  }
+
+  const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
+
+  if (driveValue &gt; 0) {
+    // AudioBufferSourceNode (Input) -&gt; BiquadFilterNode (Low Cut) -&gt; BiquadFilterNode (Pre Middle Booster) -&gt; GainNode (Drive) -&gt; WaveShaperNode (Distortion) -&gt; BiquadFilterNode (Bass) -&gt; BiquadFilterNode (Middle) -&gt; BiquadFilterNode (Treble) -&gt; BiquadFilterNode (High Cut) -&gt; GainNode (Level) -&gt; AudioDestinationNode (Output)
+    source.connect(preLowCut);
+    preLowCut.connect(preMiddle);
+    preMiddle.connect(drive);
+    drive.connect(shaper);
+    shaper.connect(postBass);
+    postBass.connect(postMiddle);
+    postMiddle.connect(postTreble);
+    postTreble.connect(postHighCut);
+    postHighCut.connect(level);
+    level.connect(context.destination);
+  } else {
+    // AudioBufferSourceNode (Input) -&gt; AudioDestinationNode (Output)
+    source.connect(context.destination);
+  }
+
+  source.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;
+};
+
+const onUp = () =&gt; {
+  buttonElement.textContent = &apos;start&apos;
+};
+
+fetch(&apos;./assets/one-shots/electric-guitar-clean-chord.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then((arrayBuffer) =&gt; {
+    const successCallback = (buffer) =&gt; {
+      audioBuffer = buffer;
+    };
+
+    const errorCallback = (error) =&gt; {
+      // error handling
+    };
+
+    context.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+
+    buttonElement.removeAttribute(&apos;disabled&apos;);
+
+    buttonElement.addEventListener(&apos;mousedown&apos;, onDown);
+    buttonElement.addEventListener(&apos;mouseup&apos;, onUp);
+
+    numberDriveElement.addEventListener(&apos;input&apos;, () =&gt; {
+      driveValue = numberDriveElement.valueAsNumber;
+
+      drive.gain.value = 10 * driveValue;
+
+      shaper.curve = createDistortionCurve(1000 * driveValue);
+    });
+
+    numberLevelElement.addEventListener(&apos;input&apos;, () =&gt; {
+      level.gain.value = numberLevelElement.valueAsNumber;
+    });
+
+    numberBassElement.addEventListener(&apos;input&apos;, () =&gt; {
+      postBass.gain.value = numberBassElement.valueAsNumber;
+    });
+
+    numberMiddleElement.addEventListener(&apos;input&apos;, () =&gt; {
+      postMiddle.gain.value = numberMiddleElement.valueAsNumber;
+    });
+
+    numberTrebleElement.addEventListener(&apos;input&apos;, () =&gt; {
+      postTreble.gain.value = numberTrebleElement.valueAsNumber;
+    });
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <p>
+              Drive とエフェクトレベル, そして, ポストイコライザーをコントロールできるようにしました. ポストイコライザーの設定をドンシャリにすると
+              (中音域をカットして, 低音域と高音域をブーストすると)
+              <a href="https://www.boss.info/jp/products/ml-2/" target="_blank" rel="noopener noreferrer">BOSS Metal Core (ML-2)</a> のような歪みになります.
+            </p>
+            <div class="app-container flexbox">
+              <button type="button" id="button-boss-mt-2" disabled>start</button>
+              <label class="flexbox"><span>Drive</span><input type="number" id="number-boss-mt-2-drive" value="0" min="0" max="1" step="0.05" /></label>
+              <label class="flexbox"><span>Level</span><input type="number" id="number-boss-mt-2-level" value="1" min="0" max="5" step="0.05" /></label>
+              <label class="flexbox"><span>Bass</span><input type="number" id="number-boss-mt-2-bass" value="0" min="-18" max="18" step="1" /></label>
+              <label class="flexbox"><span>Middle</span><input type="number" id="number-boss-mt-2-middle" value="0" min="-18" max="18" step="1" /></label>
+              <label class="flexbox"><span>Treble</span><input type="number" id="number-boss-mt-2-treble" value="0" min="-18" max="18" step="1" /></label>
+            </div>
+            <p>ちなみに, BOSS OD-1 のモデリングは以下のような実装が考えられます. Drive とエフェクトレベルのみのシンプルなコントロールが実装にも表れています.</p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">function createOverDriveCurve(amount = 500, numberOfSamples = 48000) {
+  const curves = new Float32Array(numberOfSamples);
+
+  const radianPerDegree = Math.PI / 180;
+
+  for (let n = 0; n &lt; numberOfSamples; n++) {
+    const x = ((n * 2) / numberOfSamples) - 1;
+
+    if (x &gt;= 0) {
+      curves[n] = ((3 + amount) * x * 20 * radianPerDegree) / (Math.PI + (amount * Math.abs(x)));
+    } else {
+      const k = 1.4 * amount;
+      const y = ((3 + k) * x * 20 * radianPerDegree) / (Math.PI + (k * Math.abs(x)));
+
+      curves[n] = 0.88 * y;
+    }
+  }
+
+  return curves;
+}
+
+const context = new AudioContext();
+
+let driveValue = 0;
+
+const shaper = new WaveShaperNode(context, { curve: createOverDriveCurve(10 * driveValue), oversample: &apos;4x&apos; });
+
+const drive = new GainNode(context, { gain: 10 * driveValue });
+const level = new GainNode(context, { gain: 1 });
+
+const lowCut  = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 300  });
+const highCut = new BiquadFilterNode(context, { type: &apos;lowpass&apos;,  frequency: 3800 });
+
+const buttonElement = document.getElementById(&apos;button-boss-od-1&apos;);
+
+const numberDriveElement = document.getElementById(&apos;number-boss-od-1-drive&apos;);
+const numberLevelElement = document.getElementById(&apos;number-boss-od-1-level&apos;);
+
+let audioBuffer = null;
+
+const onDown = () =&gt; {
+  if (audioBuffer === null) {
+    return;
+  }
+
+  const source = new AudioBufferSourceNode(context, { buffer: audioBuffer });
+
+  if (driveValue &gt; 0) {
+    // AudioBufferSourceNode (Input) -&gt; BiquadFilterNode (Low Cut) -&gt; BiquadFilterNode (Pre Middle Booster) -&gt; GainNode (Drive) -&gt; WaveShaperNode (Distortion) -&gt; BiquadFilterNode (High Cut) -&gt; GainNode (Level) -&gt; AudioDestinationNode (Output)
+    source.connect(lowCut);
+    lowCut.connect(drive);
+    drive.connect(shaper);
+    shaper.connect(highCut);
+    highCut.connect(level);
+    level.connect(context.destination);
+  } else {
+    // AudioBufferSourceNode (Input) -&gt; AudioDestinationNode (Output)
+    source.connect(context.destination);
+  }
+
+  source.start(0);
+
+  buttonElement.textContent = &apos;stop&apos;
+};
+
+const onUp = () =&gt; {
+  buttonElement.textContent = &apos;start&apos;
+};
+
+fetch(&apos;./assets/one-shots/electric-guitar-clean-chord.mp3&apos;)
+  .then((response) =&gt; {
+    return response.arrayBuffer();
+  })
+  .then((arrayBuffer) =&gt; {
+    const successCallback = (buffer) =&gt; {
+      audioBuffer = buffer;
+    };
+
+    const errorCallback = (error) =&gt; {
+      // error handling
+    };
+
+    context.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+
+    buttonElement.removeAttribute(&apos;disabled&apos;);
+
+    buttonElement.addEventListener(&apos;mousedown&apos;, onDown);
+    buttonElement.addEventListener(&apos;mouseup&apos;, onUp);
+
+    numberDriveElement.addEventListener(&apos;input&apos;, () =&gt; {
+      driveValue = numberDriveElement.valueAsNumber;
+
+      drive.gain.value = 10 * driveValue;
+
+      shaper.curve = createOverDriveCurve(10 * driveValue);
+    });
+
+    numberLevelElement.addEventListener(&apos;input&apos;, () =&gt; {
+      level.gain.value = numberLevelElement.valueAsNumber;
+    });
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <div class="app-container flexbox">
+              <button type="button" id="button-boss-od-1" disabled>start</button>
+              <label class="flexbox"><span>Drive</span><input type="number" id="number-boss-od-1-drive" value="0" min="0" max="1" step="0.05" /></label>
+              <label class="flexbox"><span>Level</span><input type="number" id="number-boss-od-1-level" value="1" min="0" max="5" step="0.05" /></label>
+            </div>
+          </article>
         </section>
         <section id="section-effectors-amp-simulator">
           <h3>アンプシミュレーター</h3>

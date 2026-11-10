@@ -12559,6 +12559,226 @@ const createFuzz = (svg) => {
   renderRectifier(innerWidth / 2 + padding, false);
 };
 
+const bossMetalZone = () => {
+  function createDistortionCurve(amount = 500, numberOfSamples = 48000) {
+    const curves = new Float32Array(numberOfSamples);
+
+    const radianPerDegree = Math.PI / 180;
+
+    for (let n = 0; n < numberOfSamples; n++) {
+      const x = (n * 2) / numberOfSamples - 1;
+
+      curves[n] = ((3 + amount) * x * 20 * radianPerDegree) / (Math.PI + amount * Math.abs(x));
+    }
+
+    return curves;
+  }
+
+  let driveValue = 0;
+
+  const shaper = new WaveShaperNode(audiocontext, { curve: createDistortionCurve(1000 * driveValue), oversample: '4x' });
+
+  const drive = new GainNode(audiocontext, { gain: 10 * driveValue });
+  const level = new GainNode(audiocontext, { gain: 1 });
+
+  const preLowCut = new BiquadFilterNode(audiocontext, { type: 'highpass', frequency: 150 });
+  const preMiddle = new BiquadFilterNode(audiocontext, { type: 'peaking', frequency: 1000, Q: 1.0, gain: 12 });
+
+  const postBass = new BiquadFilterNode(audiocontext, { type: 'lowshelf', frequency: 100, gain: 0 });
+  const postMiddle = new BiquadFilterNode(audiocontext, { type: 'peaking', frequency: 500, Q: 1.5, gain: 0 });
+  const postTreble = new BiquadFilterNode(audiocontext, { type: 'highshelf', frequency: 5000, gain: 0 });
+  const postHighCut = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: 6500 });
+
+  const buttonElement = document.getElementById('button-boss-mt-2');
+
+  const numberDriveElement = document.getElementById('number-boss-mt-2-drive');
+  const numberLevelElement = document.getElementById('number-boss-mt-2-level');
+
+  const numberBassElement = document.getElementById('number-boss-mt-2-bass');
+  const numberMiddleElement = document.getElementById('number-boss-mt-2-middle');
+  const numberTrebleElement = document.getElementById('number-boss-mt-2-treble');
+
+  let audioBuffer = null;
+
+  const onDown = () => {
+    if (audioBuffer === null) {
+      return;
+    }
+
+    const source = new AudioBufferSourceNode(audiocontext, { buffer: audioBuffer });
+
+    if (driveValue > 0) {
+      source.connect(preLowCut);
+      preLowCut.connect(preMiddle);
+      preMiddle.connect(drive);
+      drive.connect(shaper);
+      shaper.connect(postBass);
+      postBass.connect(postMiddle);
+      postMiddle.connect(postTreble);
+      postTreble.connect(postHighCut);
+      postHighCut.connect(level);
+      level.connect(audiocontext.destination);
+    } else {
+      source.connect(audiocontext.destination);
+    }
+
+    source.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    buttonElement.textContent = 'start';
+  };
+
+  fetch('./assets/one-shots/electric-guitar-clean-chord.mp3')
+    .then((response) => {
+      return response.arrayBuffer();
+    })
+    .then((arrayBuffer) => {
+      const successCallback = (buffer) => {
+        audioBuffer = buffer;
+      };
+
+      const errorCallback = (error) => {
+        console.error(error);
+      };
+
+      audiocontext.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+
+      buttonElement.removeAttribute('disabled');
+
+      buttonElement.addEventListener('mousedown', onDown);
+      buttonElement.addEventListener('mouseup', onUp);
+
+      numberDriveElement.addEventListener('input', () => {
+        driveValue = numberDriveElement.valueAsNumber;
+
+        drive.gain.value = 10 * driveValue;
+
+        shaper.curve = createDistortionCurve(1000 * driveValue);
+      });
+
+      numberLevelElement.addEventListener('input', () => {
+        level.gain.value = numberLevelElement.valueAsNumber;
+      });
+
+      numberBassElement.addEventListener('input', () => {
+        postBass.gain.value = numberBassElement.valueAsNumber;
+      });
+
+      numberMiddleElement.addEventListener('input', () => {
+        postMiddle.gain.value = numberMiddleElement.valueAsNumber;
+      });
+
+      numberTrebleElement.addEventListener('input', () => {
+        postTreble.gain.value = numberTrebleElement.valueAsNumber;
+      });
+    })
+    .catch(console.error);
+};
+
+const bossOD1 = () => {
+  function createOverDriveCurve(amount = 500, numberOfSamples = 48000) {
+    const curves = new Float32Array(numberOfSamples);
+
+    const radianPerDegree = Math.PI / 180;
+
+    for (let n = 0; n < numberOfSamples; n++) {
+      const x = (n * 2) / numberOfSamples - 1;
+
+      if (x >= 0) {
+        curves[n] = ((3 + amount) * x * 20 * radianPerDegree) / (Math.PI + amount * Math.abs(x));
+      } else {
+        const k = 1.4 * amount;
+        const y = ((3 + k) * x * 20 * radianPerDegree) / (Math.PI + k * Math.abs(x));
+
+        curves[n] = 0.88 * y;
+      }
+    }
+
+    return curves;
+  }
+
+  let driveValue = 0;
+
+  const shaper = new WaveShaperNode(audiocontext, { curve: createOverDriveCurve(10 * driveValue), oversample: '4x' });
+
+  const drive = new GainNode(audiocontext, { gain: 10 * driveValue });
+  const level = new GainNode(audiocontext, { gain: 1 });
+
+  const lowCut = new BiquadFilterNode(audiocontext, { type: 'highpass', frequency: 300 });
+  const highCut = new BiquadFilterNode(audiocontext, { type: 'lowpass', frequency: 3800 });
+
+  const buttonElement = document.getElementById('button-boss-od-1');
+
+  const numberDriveElement = document.getElementById('number-boss-od-1-drive');
+  const numberLevelElement = document.getElementById('number-boss-od-1-level');
+
+  let audioBuffer = null;
+
+  const onDown = () => {
+    if (audioBuffer === null) {
+      return;
+    }
+
+    const source = new AudioBufferSourceNode(audiocontext, { buffer: audioBuffer });
+
+    if (driveValue > 0) {
+      source.connect(lowCut);
+      lowCut.connect(drive);
+      drive.connect(shaper);
+      shaper.connect(highCut);
+      highCut.connect(level);
+      level.connect(audiocontext.destination);
+    } else {
+      source.connect(audiocontext.destination);
+    }
+
+    source.start(0);
+
+    buttonElement.textContent = 'stop';
+  };
+
+  const onUp = () => {
+    buttonElement.textContent = 'start';
+  };
+
+  fetch('./assets/one-shots/electric-guitar-clean-chord.mp3')
+    .then((response) => {
+      return response.arrayBuffer();
+    })
+    .then((arrayBuffer) => {
+      const successCallback = (buffer) => {
+        audioBuffer = buffer;
+      };
+
+      const errorCallback = (error) => {
+        console.error(error);
+      };
+
+      audiocontext.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+
+      buttonElement.removeAttribute('disabled');
+
+      buttonElement.addEventListener('mousedown', onDown);
+      buttonElement.addEventListener('mouseup', onUp);
+
+      numberDriveElement.addEventListener('input', () => {
+        driveValue = numberDriveElement.valueAsNumber;
+
+        drive.gain.value = 10 * driveValue;
+
+        shaper.curve = createOverDriveCurve(10 * driveValue);
+      });
+
+      numberLevelElement.addEventListener('input', () => {
+        level.gain.value = numberLevelElement.valueAsNumber;
+      });
+    })
+    .catch(console.error);
+};
+
 const createNodeConnectionsForAmpSimulator = (svg, withSpeakerSimulator) => {
   const g = document.createElementNS(xmlns, 'g');
 
@@ -25520,6 +25740,9 @@ createSoftAndHardClipping(document.getElementById('svg-figure-soft-and-hard-clip
 
 createRectification(document.getElementById('svg-figure-rectification'));
 createFuzz(document.getElementById('svg-figure-fuzz'));
+
+bossMetalZone();
+bossOD1();
 
 createNodeConnectionsForAmpSimulator(document.getElementById('svg-figure-node-connections-for-pre-amplifier'), false);
 createNodeConnectionsForAmpSimulator(document.getElementById('svg-figure-node-connections-for-amp-simulator'), true);
