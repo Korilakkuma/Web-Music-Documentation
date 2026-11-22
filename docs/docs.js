@@ -239,15 +239,15 @@ const createSquareFunctionPath = (svg) => {
 
   let d = '';
 
-  for (let i = 0, len = f * sampleRate; i < len; i++) {
+  for (let n = 0, len = f * sampleRate; n < len; n++) {
     const t = sampleRate / f;
-    const n = i < t ? i : i % t;
-    const v = a * (n < t / 2 ? 1 : -1);
+    const m = n < t ? n : n % t;
+    const v = a * (m < t / 2 ? 1 : -1);
 
-    const x = (i / len) * innerWidth + padding;
+    const x = (n / len) * innerWidth + padding;
     const y = (1 - v) * (innerHeight / 2) + padding;
 
-    if (i === 0) {
+    if (n === 0) {
       d += `M${x + lineWidth / 2} ${y}`;
     } else {
       d += ` L${x} ${y}`;
@@ -299,16 +299,16 @@ const createSawtoothFunctionPath = (svg) => {
 
   let d = '';
 
-  for (let i = 0, len = f * sampleRate; i < len; i++) {
+  for (let n = 0, len = f * sampleRate; n < len; n++) {
     const t = sampleRate / f;
-    const n = i < t ? i : i % t;
-    const s = (2 * n) / t;
+    const m = n < t ? n : n % t;
+    const s = (2 * m) / t;
     const v = a * (s - 1);
 
-    const x = (i / len) * innerWidth + padding;
+    const x = (n / len) * innerWidth + padding;
     const y = (1 - v) * (innerHeight / 2) + padding;
 
-    if (i === 0) {
+    if (n === 0) {
       d += `M${x + lineWidth / 2} ${y}`;
     } else {
       d += ` L${x} ${y}`;
@@ -360,16 +360,16 @@ const createTriangleFunctionPath = (svg) => {
 
   let d = '';
 
-  for (let i = 0, len = f * sampleRate; i < len; i++) {
+  for (let n = 0, len = f * sampleRate; n < len; n++) {
     const t = sampleRate / f;
-    const n = i < t ? i : i % t;
-    const s = (4 * n) / t;
-    const v = a * (n < t / 2 ? -1 + s : 3 - s);
+    const m = n < t ? n : n % t;
+    const s = (4 * m) / t;
+    const v = a * (m < t / 2 ? -1 + s : 3 - s);
 
-    const x = (i / len) * innerWidth + padding;
+    const x = (n / len) * innerWidth + padding;
     const y = (1 - v) * (innerHeight / 2) + padding;
 
-    if (i === 0) {
+    if (n === 0) {
       d += `M${x + lineWidth / 2} ${y}`;
     } else {
       d += ` L${x} ${y}`;
@@ -6420,13 +6420,13 @@ const createConvolution = (svg) => {
   const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
   const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
 
-  for (let i = 1; i <= 3; i++) {
+  for (let n = 1; n <= 3; n++) {
     const g = document.createElementNS(xmlns, 'g');
 
     const xRect = document.createElementNS(xmlns, 'rect');
 
     xRect.setAttribute('x', (padding / 2).toString(10));
-    xRect.setAttribute('y', (padding * i - 1 + (innerHeight / 4) * i).toString(10));
+    xRect.setAttribute('y', (padding * n - 1 + (innerHeight / 4) * n).toString(10));
     xRect.setAttribute('width', (innerWidth + padding).toString(10));
     xRect.setAttribute('height', lineWidth.toString(10));
     xRect.setAttribute('stroke', 'none');
@@ -6435,7 +6435,7 @@ const createConvolution = (svg) => {
     const yRect = document.createElementNS(xmlns, 'rect');
 
     yRect.setAttribute('x', (padding - 1).toString(10));
-    yRect.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1)).toString(10));
+    yRect.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1)).toString(10));
     yRect.setAttribute('width', lineWidth.toString(10));
     yRect.setAttribute('height', (innerHeight / 4).toString(10));
     yRect.setAttribute('stroke', 'none');
@@ -6443,7 +6443,7 @@ const createConvolution = (svg) => {
 
     const xText = document.createElementNS(xmlns, 'text');
 
-    switch (i) {
+    switch (n) {
       case 1: {
         xText.textContent = 'Time (n - m)';
         break;
@@ -6461,7 +6461,7 @@ const createConvolution = (svg) => {
     }
 
     xText.setAttribute('x', (innerWidth + padding).toString(10));
-    xText.setAttribute('y', (padding * i + (innerHeight / 4) * i - 8).toString(10));
+    xText.setAttribute('y', (padding * n + (innerHeight / 4) * n - 8).toString(10));
 
     xText.setAttribute('text-anchor', 'middle');
     xText.setAttribute('stroke', 'none');
@@ -6473,7 +6473,7 @@ const createConvolution = (svg) => {
     yText.textContent = 'Amplitude';
 
     yText.setAttribute('x', padding.toString(10));
-    yText.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1) - 8).toString(10));
+    yText.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1) - 8).toString(10));
 
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
@@ -6482,14 +6482,14 @@ const createConvolution = (svg) => {
 
     const amplitudeTexts = document.createElementNS(xmlns, 'g');
 
-    if (i < 3) {
+    if (n < 3) {
       ['1.0', '0.5', '0.0'].forEach((amplitude) => {
         const amplitudeText = document.createElementNS(xmlns, 'text');
 
         amplitudeText.textContent = amplitude;
 
         amplitudeText.setAttribute('x', (padding - 16).toString(10));
-        amplitudeText.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1) + (innerHeight / 4) * (1 - Number(amplitude)) + 16).toString(10));
+        amplitudeText.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1) + (innerHeight / 4) * (1 - Number(amplitude)) + 16).toString(10));
 
         amplitudeText.setAttribute('text-anchor', 'middle');
         amplitudeText.setAttribute('stroke', 'none');
@@ -6505,7 +6505,7 @@ const createConvolution = (svg) => {
         amplitudeText.textContent = amplitude;
 
         amplitudeText.setAttribute('x', (padding - 16).toString(10));
-        amplitudeText.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1) + (innerHeight / 4) * (1 - Number(amplitude) / 3) + 16).toString(10));
+        amplitudeText.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1) + (innerHeight / 4) * (1 - Number(amplitude) / 3) + 16).toString(10));
 
         amplitudeText.setAttribute('text-anchor', 'middle');
         amplitudeText.setAttribute('stroke', 'none');
@@ -6587,13 +6587,13 @@ const animateConvolution = (svg) => {
 
   let time = 0;
 
-  for (let i = 1; i <= 3; i++) {
+  for (let n = 1; n <= 3; n++) {
     const g = document.createElementNS(xmlns, 'g');
 
     const xRect = document.createElementNS(xmlns, 'rect');
 
     xRect.setAttribute('x', (padding / 2).toString(10));
-    xRect.setAttribute('y', (padding * i - 1 + (innerHeight / 4) * i).toString(10));
+    xRect.setAttribute('y', (padding * n - 1 + (innerHeight / 4) * n).toString(10));
     xRect.setAttribute('width', (innerWidth + padding).toString(10));
     xRect.setAttribute('height', lineWidth.toString(10));
     xRect.setAttribute('stroke', 'none');
@@ -6602,7 +6602,7 @@ const animateConvolution = (svg) => {
     const yRect = document.createElementNS(xmlns, 'rect');
 
     yRect.setAttribute('x', (padding - 1).toString(10));
-    yRect.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1)).toString(10));
+    yRect.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1)).toString(10));
     yRect.setAttribute('width', lineWidth.toString(10));
     yRect.setAttribute('height', (innerHeight / 4).toString(10));
     yRect.setAttribute('stroke', 'none');
@@ -6610,7 +6610,7 @@ const animateConvolution = (svg) => {
 
     const xText = document.createElementNS(xmlns, 'text');
 
-    switch (i) {
+    switch (n) {
       case 1: {
         xText.textContent = 'Time (n - m)';
         break;
@@ -6628,7 +6628,7 @@ const animateConvolution = (svg) => {
     }
 
     xText.setAttribute('x', (innerWidth + padding).toString(10));
-    xText.setAttribute('y', (padding * i + (innerHeight / 4) * i - 8).toString(10));
+    xText.setAttribute('y', (padding * n + (innerHeight / 4) * n - 8).toString(10));
 
     xText.setAttribute('text-anchor', 'middle');
     xText.setAttribute('stroke', 'none');
@@ -6640,7 +6640,7 @@ const animateConvolution = (svg) => {
     yText.textContent = 'Amplitude';
 
     yText.setAttribute('x', padding.toString(10));
-    yText.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1) - 8).toString(10));
+    yText.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1) - 8).toString(10));
 
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
@@ -6649,14 +6649,14 @@ const animateConvolution = (svg) => {
 
     const amplitudeTexts = document.createElementNS(xmlns, 'g');
 
-    if (i < 3) {
+    if (n < 3) {
       ['1.0', '0.5', '0.0'].forEach((amplitude) => {
         const amplitudeText = document.createElementNS(xmlns, 'text');
 
         amplitudeText.textContent = amplitude;
 
         amplitudeText.setAttribute('x', (padding - 16).toString(10));
-        amplitudeText.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1) + (innerHeight / 4) * (1 - Number(amplitude)) + 16).toString(10));
+        amplitudeText.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1) + (innerHeight / 4) * (1 - Number(amplitude)) + 16).toString(10));
 
         amplitudeText.setAttribute('text-anchor', 'middle');
         amplitudeText.setAttribute('stroke', 'none');
@@ -6672,7 +6672,7 @@ const animateConvolution = (svg) => {
         amplitudeText.textContent = amplitude;
 
         amplitudeText.setAttribute('x', (padding - 16).toString(10));
-        amplitudeText.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1) + (innerHeight / 4) * (1 - Number(amplitude) / 3) + 16).toString(10));
+        amplitudeText.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1) + (innerHeight / 4) * (1 - Number(amplitude) / 3) + 16).toString(10));
 
         amplitudeText.setAttribute('text-anchor', 'middle');
         amplitudeText.setAttribute('stroke', 'none');
@@ -6858,13 +6858,13 @@ const createConvolutionSize = (svg) => {
   const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
   const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
 
-  for (let i = 1; i <= 3; i++) {
+  for (let n = 1; n <= 3; n++) {
     const g = document.createElementNS(xmlns, 'g');
 
     const xRect = document.createElementNS(xmlns, 'rect');
 
     xRect.setAttribute('x', (padding / 2).toString(10));
-    xRect.setAttribute('y', (padding * i - 1 + (innerHeight / 4) * i).toString(10));
+    xRect.setAttribute('y', (padding * n - 1 + (innerHeight / 4) * n).toString(10));
     xRect.setAttribute('width', (innerWidth + padding).toString(10));
     xRect.setAttribute('height', lineWidth.toString(10));
     xRect.setAttribute('stroke', 'none');
@@ -6873,7 +6873,7 @@ const createConvolutionSize = (svg) => {
     const yRect = document.createElementNS(xmlns, 'rect');
 
     yRect.setAttribute('x', (padding - 1).toString(10));
-    yRect.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1)).toString(10));
+    yRect.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1)).toString(10));
     yRect.setAttribute('width', lineWidth.toString(10));
     yRect.setAttribute('height', (innerHeight / 4).toString(10));
     yRect.setAttribute('stroke', 'none');
@@ -6881,7 +6881,7 @@ const createConvolutionSize = (svg) => {
 
     const xText = document.createElementNS(xmlns, 'text');
 
-    switch (i) {
+    switch (n) {
       case 1: {
         xText.textContent = 'Time (n - m)';
         break;
@@ -6899,7 +6899,7 @@ const createConvolutionSize = (svg) => {
     }
 
     xText.setAttribute('x', (innerWidth + padding).toString(10));
-    xText.setAttribute('y', (padding * i + (innerHeight / 4) * i - 8).toString(10));
+    xText.setAttribute('y', (padding * n + (innerHeight / 4) * n - 8).toString(10));
 
     xText.setAttribute('text-anchor', 'middle');
     xText.setAttribute('stroke', 'none');
@@ -6911,7 +6911,7 @@ const createConvolutionSize = (svg) => {
     yText.textContent = 'Amplitude';
 
     yText.setAttribute('x', padding.toString(10));
-    yText.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1) - 8).toString(10));
+    yText.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1) - 8).toString(10));
 
     yText.setAttribute('text-anchor', 'middle');
     yText.setAttribute('stroke', 'none');
@@ -6920,14 +6920,14 @@ const createConvolutionSize = (svg) => {
 
     const amplitudeTexts = document.createElementNS(xmlns, 'g');
 
-    if (i < 3) {
+    if (n < 3) {
       ['1.0', '0.5', '0.0'].forEach((amplitude) => {
         const amplitudeText = document.createElementNS(xmlns, 'text');
 
         amplitudeText.textContent = amplitude;
 
         amplitudeText.setAttribute('x', (padding - 16).toString(10));
-        amplitudeText.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1) + (innerHeight / 4) * (1 - Number(amplitude)) + 16).toString(10));
+        amplitudeText.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1) + (innerHeight / 4) * (1 - Number(amplitude)) + 16).toString(10));
 
         amplitudeText.setAttribute('text-anchor', 'middle');
         amplitudeText.setAttribute('stroke', 'none');
@@ -6943,7 +6943,7 @@ const createConvolutionSize = (svg) => {
         amplitudeText.textContent = amplitude;
 
         amplitudeText.setAttribute('x', (padding - 16).toString(10));
-        amplitudeText.setAttribute('y', (padding * i + (innerHeight / 4) * (i - 1) + (innerHeight / 4) * (1 - Number(amplitude) / 3) + 16).toString(10));
+        amplitudeText.setAttribute('y', (padding * n + (innerHeight / 4) * (n - 1) + (innerHeight / 4) * (1 - Number(amplitude) / 3) + 16).toString(10));
 
         amplitudeText.setAttribute('text-anchor', 'middle');
         amplitudeText.setAttribute('stroke', 'none');
@@ -7327,26 +7327,26 @@ const createFIRFilter = (svg) => {
   multiplierText0.setAttribute('fill', baseColor);
   multiplierText0.setAttribute('font-size', '16px');
 
-  for (let i = 1; i <= 3; i++) {
+  for (let n = 1; n <= 3; n++) {
     const g = document.createElementNS(xmlns, 'g');
 
-    const busDown = createBus(padding + 128, padding + 128 * (i - 1) + (i > 1 ? 12 : 0), padding + 128, padding + 128 * i);
-    const bus = createBus(padding + 128, padding + 128 * i, padding + innerWidth - 84, padding + 128 * i);
-    const busUp = createBus(padding + innerWidth - 84, padding + 128 * i, padding + innerWidth - 84, padding + 128 * (i - 1) + 12);
+    const busDown = createBus(padding + 128, padding + 128 * (n - 1) + (n > 1 ? 12 : 0), padding + 128, padding + 128 * n);
+    const bus = createBus(padding + 128, padding + 128 * n, padding + innerWidth - 84, padding + 128 * n);
+    const busUp = createBus(padding + innerWidth - 84, padding + 128 * n, padding + innerWidth - 84, padding + 128 * (n - 1) + 12);
 
-    const arrowDown = createBusArrow(padding + 128, padding + 128 * i - 24, 'down');
-    const arrow = createBusArrow(padding + innerWidth - 84 - 24, padding + 128 * i, 'right');
+    const arrowDown = createBusArrow(padding + 128, padding + 128 * n - 24, 'down');
+    const arrow = createBusArrow(padding + innerWidth - 84 - 24, padding + 128 * n, 'right');
 
-    const delayElement = createDelayElement(padding + 128 - 20, padding + 128 * i - 12);
+    const delayElement = createDelayElement(padding + 128 - 20, padding + 128 * n - 12);
 
-    const multiplier = createMultiplyElement(padding + innerWidth / 2, padding + 128 * i);
+    const multiplier = createMultiplyElement(padding + innerWidth / 2, padding + 128 * n);
 
     const multiplierText = document.createElementNS(xmlns, 'text');
 
-    multiplierText.textContent = `h(${i})`;
+    multiplierText.textContent = `h(${n})`;
 
     multiplierText.setAttribute('x', (padding + innerWidth / 2 + 8).toString(10));
-    multiplierText.setAttribute('y', (padding + 128 * i + 36).toString(10));
+    multiplierText.setAttribute('y', (padding + 128 * n + 36).toString(10));
     multiplierText.setAttribute('text-anchor', 'middle');
     multiplierText.setAttribute('stroke', 'none');
     multiplierText.setAttribute('fill', baseColor);
@@ -7354,16 +7354,16 @@ const createFIRFilter = (svg) => {
 
     const outputText = document.createElementNS(xmlns, 'text');
 
-    outputText.textContent = `x(n - ${i})h(${i})`;
+    outputText.textContent = `x(n - ${n})h(${n})`;
 
     outputText.setAttribute('x', (padding + innerWidth - 128).toString(10));
-    outputText.setAttribute('y', (padding + 128 * i + 36).toString(10));
+    outputText.setAttribute('y', (padding + 128 * n + 36).toString(10));
     outputText.setAttribute('text-anchor', 'middle');
     outputText.setAttribute('stroke', 'none');
     outputText.setAttribute('fill', baseColor);
     outputText.setAttribute('font-size', '16px');
 
-    const adder = createAddElement(padding + innerWidth - 84, padding + 128 * i);
+    const adder = createAddElement(padding + innerWidth - 84, padding + 128 * n);
 
     g.appendChild(busDown);
     g.appendChild(arrowDown);
@@ -8855,8 +8855,8 @@ const phaser = () => {
 
     oscillator.connect(allpasses[0]);
 
-    for (let i = 0; i < numberOfStages - 1; i++) {
-      allpasses[i].connect(allpasses[i + 1]);
+    for (let n = 0; n < numberOfStages - 1; n++) {
+      allpasses[n].connect(allpasses[n + 1]);
     }
 
     allpasses[numberOfStages - 1].connect(wet);
@@ -8864,8 +8864,8 @@ const phaser = () => {
 
     lfo.connect(depth);
 
-    for (let i = 0; i < numberOfStages; i++) {
-      depth.connect(allpasses[i].frequency);
+    for (let n = 0; n < numberOfStages; n++) {
+      depth.connect(allpasses[n].frequency);
     }
 
     oscillator.start(0);
@@ -8891,35 +8891,35 @@ const phaser = () => {
   selectPhaserStagesElement.addEventListener('change', () => {
     numberOfStages = Number(selectPhaserStagesElement.value);
 
-    for (let i = 0, len = allpasses.length; i < len; i++) {
-      allpasses[i].disconnect(0);
+    for (let n = 0, len = allpasses.length; n < len; n++) {
+      allpasses[n].disconnect(0);
     }
 
-    for (let i = 0; i < numberOfStages; i++) {
-      allpasses[i] = new BiquadFilterNode(audiocontext, { type: 'allpass', frequency: baseFrequency });
+    for (let n = 0; n < numberOfStages; n++) {
+      allpasses[n] = new BiquadFilterNode(audiocontext, { type: 'allpass', frequency: baseFrequency });
     }
 
     if (oscillator !== null) {
       oscillator.connect(allpasses[0]);
     }
 
-    for (let i = 0; i < numberOfStages - 1; i++) {
-      allpasses[i].connect(allpasses[i + 1]);
+    for (let n = 0; n < numberOfStages - 1; n++) {
+      allpasses[n].connect(allpasses[n + 1]);
     }
 
     allpasses[numberOfStages - 1].connect(wet);
     wet.connect(audiocontext.destination);
 
-    for (let i = 0; i < numberOfStages; i++) {
-      depth.connect(allpasses[i].frequency);
+    for (let n = 0; n < numberOfStages; n++) {
+      depth.connect(allpasses[n].frequency);
     }
   });
 
   rangeFrequencyElement.addEventListener('input', () => {
     baseFrequency = rangeFrequencyElement.valueAsNumber;
 
-    for (let i = 0; i < numberOfStages; i++) {
-      allpasses[i].frequency.value = baseFrequency;
+    for (let n = 0; n < numberOfStages; n++) {
+      allpasses[n].frequency.value = baseFrequency;
     }
 
     outputFrequencyElement.textContent = `${Math.trunc(baseFrequency)} Hz`;
@@ -8946,8 +8946,8 @@ const phaser = () => {
   rangeResonanceElement.addEventListener('input', () => {
     resonance = rangeResonanceElement.valueAsNumber;
 
-    for (let i = 0; i < numberOfStages; i++) {
-      allpasses[i].Q.value = resonance;
+    for (let n = 0; n < numberOfStages; n++) {
+      allpasses[n].Q.value = resonance;
     }
 
     outputResonanceElement.textContent = resonance.toFixed(2);
@@ -9559,14 +9559,14 @@ const renderFrequencyResponse = (svg, type) => {
   const max = Math.log(20000);
   const diff = max - min;
 
-  for (let i = 0, len = frequencies.length; i < len; i++) {
-    const ratio = i / (len - 1);
+  for (let n = 0, len = frequencies.length; n < len; n++) {
+    const ratio = n / (len - 1);
 
-    frequencies[i] = Math.exp(diff * ratio + min);
+    frequencies[n] = Math.exp(diff * ratio + min);
   }
 
-  for (let i = 0; i < 10; i++) {
-    const x = i * (innerWidth / 9) + padding;
+  for (let n = 0; n < 10; n++) {
+    const x = n * (innerWidth / 9) + padding;
 
     const rect = document.createElementNS(xmlns, 'rect');
 
@@ -9581,7 +9581,7 @@ const renderFrequencyResponse = (svg, type) => {
 
     const text = document.createElementNS(xmlns, 'text');
 
-    text.textContent = `${Math.trunc(frequencies[i < 9 ? (i + 1) * 800 : 7999])} Hz`;
+    text.textContent = `${Math.trunc(frequencies[n < 9 ? (n + 1) * 800 : 7999])} Hz`;
 
     text.setAttribute('x', x.toString(10));
     text.setAttribute('y', (padding + innerHeight + 16).toString(10));
@@ -9597,8 +9597,8 @@ const renderFrequencyResponse = (svg, type) => {
   if (type === 'allpass') {
     const rads = ['π', 'π/2', '0', '-π/2', '-π'];
 
-    for (let i = 0; i < 5; i++) {
-      const y = i * (innerHeight / 4) + padding;
+    for (let n = 0; n < 5; n++) {
+      const y = n * (innerHeight / 4) + padding;
 
       const rect = document.createElementNS(xmlns, 'rect');
 
@@ -9613,7 +9613,7 @@ const renderFrequencyResponse = (svg, type) => {
 
       const text = document.createElementNS(xmlns, 'text');
 
-      text.textContent = `${rads[i]} rad`;
+      text.textContent = `${rads[n]} rad`;
 
       text.setAttribute('x', (padding - 8).toString(10));
       text.setAttribute('y', (y + 4).toString(10));
@@ -9672,10 +9672,10 @@ const renderFrequencyResponse = (svg, type) => {
     let d = '';
 
     if (type === 'allpass') {
-      for (let i = 0, len = frequencies.length; i < len; i++) {
-        const f = frequencies[i];
+      for (let n = 0, len = frequencies.length; n < len; n++) {
+        const f = frequencies[n];
         const x = (Math.log10(f / 20) / Math.log10(1000)) * innerWidth + padding - 3;
-        const p = phaseResponses[i];
+        const p = phaseResponses[n];
         const y = -1 * (p / (2 * Math.PI)) * innerHeight + innerHeight / 2 + padding;
 
         if (x < padding) {
@@ -9693,10 +9693,10 @@ const renderFrequencyResponse = (svg, type) => {
         }
       }
     } else {
-      for (let i = 0, len = frequencies.length; i < len; i++) {
-        const f = frequencies[i];
+      for (let n = 0, len = frequencies.length; n < len; n++) {
+        const f = frequencies[n];
         const x = (Math.log10(f / 20) / Math.log10(1000)) * innerWidth + padding - 3;
-        const dB = 20 * Math.log10(magResponses[i]);
+        const dB = 20 * Math.log10(magResponses[n]);
         const y = ((-1 * dB) / 48) * innerHeight + innerHeight / 2 + padding;
 
         if (x < padding) {
@@ -9838,26 +9838,26 @@ const createIIRFilter = (svg) => {
     multiplierText0.setAttribute('fill', baseColor);
     multiplierText0.setAttribute('font-size', '16px');
 
-    for (let i = 1; i <= 2; i++) {
+    for (let n = 1; n <= 2; n++) {
       const g = document.createElementNS(xmlns, 'g');
 
-      const busDown = createBus(inputX, padding + 128 * (i - 1) + (i > 1 ? 12 : 0), inputX, padding + 128 * i);
-      const bus = createBus(inputX, padding + 128 * i, inputAdderX, padding + 128 * i);
-      const busUp = createBus(inputAdderX, padding + 128 * i, inputAdderX, padding + 128 * (i - 1) + 12);
+      const busDown = createBus(inputX, padding + 128 * (n - 1) + (n > 1 ? 12 : 0), inputX, padding + 128 * n);
+      const bus = createBus(inputX, padding + 128 * n, inputAdderX, padding + 128 * n);
+      const busUp = createBus(inputAdderX, padding + 128 * n, inputAdderX, padding + 128 * (n - 1) + 12);
 
-      const arrowDown = createBusArrow(inputX, padding + 128 * i - 24, 'down');
-      const arrow = createBusArrow(inputAdderX - 24, padding + 128 * i, 'right');
+      const arrowDown = createBusArrow(inputX, padding + 128 * n - 24, 'down');
+      const arrow = createBusArrow(inputAdderX - 24, padding + 128 * n, 'right');
 
-      const delayElement = createDelayElement(inputX - 20, padding + 128 * i - 12);
+      const delayElement = createDelayElement(inputX - 20, padding + 128 * n - 12);
 
-      const multiplier = createMultiplyElement(padding + innerWidth / 3, padding + 128 * i);
+      const multiplier = createMultiplyElement(padding + innerWidth / 3, padding + 128 * n);
 
       const multiplierText = document.createElementNS(xmlns, 'text');
 
-      multiplierText.textContent = `b(${i})`;
+      multiplierText.textContent = `b(${n})`;
 
       multiplierText.setAttribute('x', (padding + innerWidth / 3 + 8).toString(10));
-      multiplierText.setAttribute('y', (padding + 128 * i + 36).toString(10));
+      multiplierText.setAttribute('y', (padding + 128 * n + 36).toString(10));
       multiplierText.setAttribute('text-anchor', 'middle');
       multiplierText.setAttribute('stroke', 'none');
       multiplierText.setAttribute('fill', baseColor);
@@ -9865,16 +9865,16 @@ const createIIRFilter = (svg) => {
 
       const outputText = document.createElementNS(xmlns, 'text');
 
-      outputText.textContent = `b(${i})x(n - ${i})`;
+      outputText.textContent = `b(${n})x(n - ${n})`;
 
       outputText.setAttribute('x', (inputAdderX - 48).toString(10));
-      outputText.setAttribute('y', (padding + 128 * i - 24).toString(10));
+      outputText.setAttribute('y', (padding + 128 * n - 24).toString(10));
       outputText.setAttribute('text-anchor', 'middle');
       outputText.setAttribute('stroke', 'none');
       outputText.setAttribute('fill', baseColor);
       outputText.setAttribute('font-size', '16px');
 
-      const adder = createAddElement(inputAdderX, padding + 128 * i);
+      const adder = createAddElement(inputAdderX, padding + 128 * n);
 
       g.appendChild(busDown);
       g.appendChild(arrowDown);
@@ -9902,26 +9902,26 @@ const createIIRFilter = (svg) => {
 
     const adder0 = createAddElement(feedbackAdderX, padding);
 
-    for (let i = 1; i <= 2; i++) {
+    for (let n = 1; n <= 2; n++) {
       const g = document.createElementNS(xmlns, 'g');
 
-      const busDown = createBus(feedbackX, padding + 128 * (i - 1) + (i > 1 ? 12 : 0), feedbackX, padding + 128 * i);
-      const bus = createBus(feedbackX, padding + 128 * i, feedbackAdderX, padding + 128 * i);
-      const busUp = createBus(feedbackAdderX, padding + 128 * i, feedbackAdderX, padding + 128 * (i - 1) + 12);
+      const busDown = createBus(feedbackX, padding + 128 * (n - 1) + (n > 1 ? 12 : 0), feedbackX, padding + 128 * n);
+      const bus = createBus(feedbackX, padding + 128 * n, feedbackAdderX, padding + 128 * n);
+      const busUp = createBus(feedbackAdderX, padding + 128 * n, feedbackAdderX, padding + 128 * (n - 1) + 12);
 
-      const arrowDown = createBusArrow(feedbackX, padding + 128 * i - 24, 'down');
-      const arrow = createBusArrow(feedbackAdderX + 24, padding + 128 * i, 'left');
+      const arrowDown = createBusArrow(feedbackX, padding + 128 * n - 24, 'down');
+      const arrow = createBusArrow(feedbackAdderX + 24, padding + 128 * n, 'left');
 
-      const delayElement = createDelayElement(feedbackX - 20, padding + 128 * i - 12);
+      const delayElement = createDelayElement(feedbackX - 20, padding + 128 * n - 12);
 
-      const multiplier = createMultiplyElement(feedbackX - 80, padding + 128 * i, 'left');
+      const multiplier = createMultiplyElement(feedbackX - 80, padding + 128 * n, 'left');
 
       const multiplierText = document.createElementNS(xmlns, 'text');
 
-      multiplierText.textContent = `-a(${i})`;
+      multiplierText.textContent = `-a(${n})`;
 
       multiplierText.setAttribute('x', (feedbackAdderX + 80).toString(10));
-      multiplierText.setAttribute('y', (padding + 128 * i + 36).toString(10));
+      multiplierText.setAttribute('y', (padding + 128 * n + 36).toString(10));
       multiplierText.setAttribute('text-anchor', 'middle');
       multiplierText.setAttribute('stroke', 'none');
       multiplierText.setAttribute('fill', baseColor);
@@ -9929,16 +9929,16 @@ const createIIRFilter = (svg) => {
 
       const outputText = document.createElementNS(xmlns, 'text');
 
-      outputText.textContent = `-a(${i})y(n - ${i})`;
+      outputText.textContent = `-a(${n})y(n - ${n})`;
 
       outputText.setAttribute('x', (feedbackAdderX + 48).toString(10));
-      outputText.setAttribute('y', (padding + 128 * i - 24).toString(10));
+      outputText.setAttribute('y', (padding + 128 * n - 24).toString(10));
       outputText.setAttribute('text-anchor', 'middle');
       outputText.setAttribute('stroke', 'none');
       outputText.setAttribute('fill', baseColor);
       outputText.setAttribute('font-size', '16px');
 
-      const adder = createAddElement(feedbackAdderX, padding + 128 * i);
+      const adder = createAddElement(feedbackAdderX, padding + 128 * n);
 
       g.appendChild(busDown);
       g.appendChild(arrowDown);
@@ -10042,14 +10042,14 @@ const renderFrequencyResponse3BandsEqualizer = (svg) => {
   const max = Math.log(20000);
   const diff = max - min;
 
-  for (let i = 0, len = frequencies.length; i < len; i++) {
-    const ratio = i / (len - 1);
+  for (let n = 0, len = frequencies.length; n < len; n++) {
+    const ratio = n / (len - 1);
 
-    frequencies[i] = Math.exp(diff * ratio + min);
+    frequencies[n] = Math.exp(diff * ratio + min);
   }
 
-  for (let i = 0; i < 10; i++) {
-    const x = i * (innerWidth / 9) + padding;
+  for (let n = 0; n < 10; n++) {
+    const x = n * (innerWidth / 9) + padding;
 
     const rect = document.createElementNS(xmlns, 'rect');
 
@@ -10064,7 +10064,7 @@ const renderFrequencyResponse3BandsEqualizer = (svg) => {
 
     const text = document.createElementNS(xmlns, 'text');
 
-    text.textContent = `${Math.trunc(frequencies[i < 9 ? (i + 1) * 800 : 7999])} Hz`;
+    text.textContent = `${Math.trunc(frequencies[n < 9 ? (n + 1) * 800 : 7999])} Hz`;
 
     text.setAttribute('x', x.toString(10));
     text.setAttribute('y', (padding + innerHeight + 16).toString(10));
@@ -10145,10 +10145,10 @@ const renderFrequencyResponse3BandsEqualizer = (svg) => {
 
     let d = '';
 
-    for (let i = 0, len = frequencies.length; i < len; i++) {
-      const f = frequencies[i];
+    for (let n = 0, len = frequencies.length; n < len; n++) {
+      const f = frequencies[n];
       const x = (Math.log10(f / 20) / Math.log10(1000)) * innerWidth + padding - 3;
-      const dB = 20 * Math.log10(magResponses[i]);
+      const dB = 20 * Math.log10(magResponses[n]);
       const y = ((-1 * dB) / 48) * innerHeight + innerHeight / 2 + padding;
 
       if (x < padding) {
@@ -10416,14 +10416,14 @@ const renderFrequencyResponseGraphicEqualizer = (svg) => {
   const max = Math.log(20000);
   const diff = max - min;
 
-  for (let i = 0, len = frequencies.length; i < len; i++) {
-    const ratio = i / (len - 1);
+  for (let n = 0, len = frequencies.length; n < len; n++) {
+    const ratio = n / (len - 1);
 
-    frequencies[i] = Math.exp(diff * ratio + min);
+    frequencies[n] = Math.exp(diff * ratio + min);
   }
 
-  for (let i = 0; i < 10; i++) {
-    const x = i * (innerWidth / 9) + padding;
+  for (let n = 0; n < 10; n++) {
+    const x = n * (innerWidth / 9) + padding;
 
     const rect = document.createElementNS(xmlns, 'rect');
 
@@ -10438,7 +10438,7 @@ const renderFrequencyResponseGraphicEqualizer = (svg) => {
 
     const text = document.createElementNS(xmlns, 'text');
 
-    text.textContent = `${Math.trunc(frequencies[i < 9 ? (i + 1) * 800 : 7999])} Hz`;
+    text.textContent = `${Math.trunc(frequencies[n < 9 ? (n + 1) * 800 : 7999])} Hz`;
 
     text.setAttribute('x', x.toString(10));
     text.setAttribute('y', (padding + innerHeight + 16).toString(10));
@@ -10492,10 +10492,10 @@ const renderFrequencyResponseGraphicEqualizer = (svg) => {
 
     let d = '';
 
-    for (let i = 0, len = frequencies.length; i < len; i++) {
-      const f = frequencies[i];
+    for (let n = 0, len = frequencies.length; n < len; n++) {
+      const f = frequencies[n];
       const x = (Math.log10(f / 20) / Math.log10(1000)) * innerWidth + padding - 3;
-      const dB = 20 * Math.log10(magResponses[i]);
+      const dB = 20 * Math.log10(magResponses[n]);
       const y = ((-1 * dB) / 48) * innerHeight + innerHeight / 2 + padding;
 
       if (x < padding) {
@@ -10573,8 +10573,8 @@ const equalizerGraphic = () => {
     if (checkboxElement.checked) {
       oscillator.connect(peakingFilters[0]);
 
-      for (let i = 0, len = peakingFilters.length - 1; i < len; i++) {
-        peakingFilters[i].connect(peakingFilters[i + 1]);
+      for (let n = 0, len = peakingFilters.length - 1; n < len; n++) {
+        peakingFilters[n].connect(peakingFilters[n + 1]);
       }
 
       peakingFilters[peakingFilters.length - 1].connect(audiocontext.destination);
@@ -10627,8 +10627,8 @@ const equalizerGraphic = () => {
     if (checkboxElement.checked) {
       oscillator.connect(peakingFilters[0]);
 
-      for (let i = 0, len = peakingFilters.length - 1; i < len; i++) {
-        peakingFilters[i].connect(peakingFilters[i + 1]);
+      for (let n = 0, len = peakingFilters.length - 1; n < len; n++) {
+        peakingFilters[n].connect(peakingFilters[n + 1]);
       }
 
       peakingFilters[peakingFilters.length - 1].connect(audiocontext.destination);
@@ -10670,14 +10670,14 @@ const renderWahPrinciple = (svg) => {
   const max = Math.log(20000);
   const diff = max - min;
 
-  for (let i = 0, len = frequencies.length; i < len; i++) {
-    const ratio = i / (len - 1);
+  for (let n = 0, len = frequencies.length; n < len; n++) {
+    const ratio = n / (len - 1);
 
-    frequencies[i] = Math.exp(diff * ratio + min);
+    frequencies[n] = Math.exp(diff * ratio + min);
   }
 
-  for (let i = 0; i < 10; i++) {
-    const x = i * (innerWidth / 9) + padding;
+  for (let n = 0; n < 10; n++) {
+    const x = n * (innerWidth / 9) + padding;
 
     const rect = document.createElementNS(xmlns, 'rect');
 
@@ -10692,7 +10692,7 @@ const renderWahPrinciple = (svg) => {
 
     const text = document.createElementNS(xmlns, 'text');
 
-    text.textContent = `${Math.trunc(frequencies[i < 9 ? (i + 1) * 800 : 7999])} Hz`;
+    text.textContent = `${Math.trunc(frequencies[n < 9 ? (n + 1) * 800 : 7999])} Hz`;
 
     text.setAttribute('x', x.toString(10));
     text.setAttribute('y', (padding + innerHeight + 16).toString(10));
@@ -10752,10 +10752,10 @@ const renderWahPrinciple = (svg) => {
 
     let d = '';
 
-    for (let i = 0, len = frequencies.length; i < len; i++) {
-      const f = frequencies[i];
+    for (let n = 0, len = frequencies.length; n < len; n++) {
+      const f = frequencies[n];
       const x = (Math.log10(f / 20) / Math.log10(1000)) * innerWidth + padding - 3;
-      const dB = 20 * Math.log10(magResponses[i]);
+      const dB = 20 * Math.log10(magResponses[n]);
       const y = ((-1 * dB) / 48) * innerHeight + innerHeight / 2 + padding;
 
       if (x < padding) {
@@ -12943,9 +12943,9 @@ const distortion = () => {
       peak = -15.5 * c + 16.52;
     }
 
-    for (let i = 0; i < index; i++) {
-      curves[index + i] = peak * (+1 - c ** -i + (i * c ** -index) / index);
-      curves[index - i] = peak * (-1 + c ** -i - (i * c ** -index) / index);
+    for (let n = 0; n < index; n++) {
+      curves[index + n] = peak * (+1 - c ** -n + (n * c ** -index) / index);
+      curves[index - n] = peak * (-1 + c ** -n - (n * c ** -index) / index);
     }
 
     curves[index] = 0;

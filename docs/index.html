@@ -8106,9 +8106,9 @@ const oscillator = new OscillatorNode(context, { type: &apos;sawtooth&apos; });
 oscillator.connect(context.destination);
 
 // OscillatorNode (Input) -&gt; Comb Filter (4 parallel) -&gt; GainNode (Mix) -&gt; All-Pass Filter -&gt; GainNode (Mix) -&gt; All-Pass Filter -&gt; GainNode (Mix) -&gt; AudioDestinationNode (Output)
-for (let i = 0; i &lt; 4; i++) {
-  oscillator.connect(combFilters[i]);
-  combFilters[i].connect(mix0);
+for (let n = 0; n &lt; 4; n++) {
+  oscillator.connect(combFilters[n]);
+  combFilters[n].connect(mix0);
 }
 
 mix2.connect(context.destination);
@@ -8931,8 +8931,8 @@ dry.connect(context.destination);
 // OscillatorNode (Input) -&gt; BiquadFilterNode (All-Pass Filter) x 4 -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
 oscillator.connect(allpasses[0]);
 
-for (let i = 0; i &lt; 3; i++) {
-  allpasses[i].connect(allpasses[i + 1]);
+for (let n = 0; n &lt; 3; n++) {
+  allpasses[n].connect(allpasses[n + 1]);
 }
 
 allpasses[3].connect(wet);
@@ -8942,8 +8942,8 @@ wet.connect(context.destination);
 // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
 lfo.connect(depth);
 
-for (let i = 0; i &lt; 4; i++) {
-  depth.connect(allpasses[i].frequency);
+for (let n = 0; n &lt; 4; n++) {
+  depth.connect(allpasses[n].frequency);
 }
 
 // Start oscillator and LFO immediately
@@ -9061,8 +9061,8 @@ buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
   // OscillatorNode (Input) -&gt; BiquadFilterNode (All-Pass Filter) x N -&gt; GainNode (Wet) -&gt; AudioDestinationNode (Output)
   oscillator.connect(allpasses[0]);
 
-  for (let i = 0; i &lt; (numberOfStages - 1); i++) {
-    allpasses[i].connect(allpasses[i + 1]);
+  for (let n = 0; n &lt; (numberOfStages - 1); n++) {
+    allpasses[n].connect(allpasses[n + 1]);
   }
 
   allpasses[numberOfStages - 1].connect(wet);
@@ -9072,8 +9072,8 @@ buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
   // OscillatorNode (LFO) -&gt; GainNode (Depth) -&gt; frequency (AudioParam)
   lfo.connect(depth);
 
-  for (let i = 0; i &lt; numberOfStages; i++) {
-    depth.connect(allpasses[i].frequency);
+  for (let n = 0; n &lt; numberOfStages; n++) {
+    depth.connect(allpasses[n].frequency);
   }
 
   // Start oscillator and LFO immediately
@@ -9102,35 +9102,35 @@ buttonElement.addEventListener(&apos;mouseup&apos;, () =&gt; {
 selectPhaserStagesElement.addEventListener(&apos;change&apos;, () =&gt; {
   numberOfStages = Number(selectPhaserStagesElement.value);
 
-  for (let i = 0, len = allpasses.length; i &lt; len; i++) {
-    allpasses[i].disconnect(0);
+  for (let n = 0, len = allpasses.length; n &lt; len; n++) {
+    allpasses[n].disconnect(0);
   }
 
-  for (let i = 0; i &lt; numberOfStages; i++) {
-    allpasses[i] = new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency });
+  for (let n = 0; n &lt; numberOfStages; n++) {
+    allpasses[n] = new BiquadFilterNode(context, { type: &apos;allpass&apos;, frequency: baseFrequency });
   }
 
   if (oscillator !== null) {
     oscillator.connect(allpasses[0]);
   }
 
-  for (let i = 0; i &lt; (numberOfStages - 1); i++) {
-    allpasses[i].connect(allpasses[i + 1]);
+  for (let n = 0; n &lt; (numberOfStages - 1); n++) {
+    allpasses[n].connect(allpasses[n + 1]);
   }
 
   allpasses[numberOfStages - 1].connect(wet);
   wet.connect(context.destination);
 
-  for (let i = 0; i &lt; numberOfStages; i++) {
-    depth.connect(allpasses[i].frequency);
+  for (let n = 0; n &lt; numberOfStages; n++) {
+    depth.connect(allpasses[n].frequency);
   }
 });
 
 rangeFrequencyElement.addEventListener(&apos;input&apos;, () =&gt; {
   baseFrequency = rangeFrequencyElement.valueAsNumber;
 
-  for (let i = 0; i &lt; numberOfStages; i++) {
-    allpasses[i].frequency.value = baseFrequency;
+  for (let n = 0; n &lt; numberOfStages; n++) {
+    allpasses[n].frequency.value = baseFrequency;
   }
 
   outputFrequencyElement.textContent = `${Math.trunc(baseFrequency)} Hz`;
@@ -9157,8 +9157,8 @@ rangeRateElement.addEventListener(&apos;input&apos;, () =&gt; {
 rangeResonanceElement.addEventListener(&apos;input&apos;, () =&gt; {
   resonance = rangeResonanceElement.valueAsNumber;
 
-  for (let i = 0; i &lt; numberOfStages; i++) {
-    allpasses[i].Q.value = resonance;
+  for (let n = 0; n &lt; numberOfStages; n++) {
+    allpasses[n].Q.value = resonance;
   }
 
   outputResonanceElement.textContent = resonance.toFixed(2);
@@ -10943,8 +10943,8 @@ checkboxElement.addEventListener(&apos;click&apos;, () =&gt; {
   if (checkboxElement.checked) {
     oscillator.connect(peakingFilters[0]);
 
-    for (let i = 0, len = peakingFilters.length - 1; i &lt; len; i++) {
-      peakingFilters[i].connect(peakingFilters[i + 1]);
+    for (let n = 0, len = peakingFilters.length - 1; n &lt; len; n++) {
+      peakingFilters[n].connect(peakingFilters[n + 1]);
     }
 
     peakingFilters[peakingFilters.length - 1].connect(context.destination);
@@ -10967,8 +10967,8 @@ buttonElement.addEventListener(&apos;mousedown&apos;, async () =&gt; {
     oscillator.connect(peakingFilters[0]);
 
     // BiquadFilterNode (Peaking Filter) -&gt; BiquadFilterNode (Peaking Filter)
-    for (let i = 0, len = peakingFilters.length - 1; i &lt; len; i++) {
-      peakingFilters[i].connect(peakingFilters[i + 1]);
+    for (let n = 0, len = peakingFilters.length - 1; n &lt; len; n++) {
+      peakingFilters[n].connect(peakingFilters[n + 1]);
     }
 
     // BiquadFilterNode (Peaking Filter) -&gt; AudioDestinationNode (Output)
@@ -12636,12 +12636,9 @@ highTrebleGain.connect(preHighpass3);
     peak = (-15.5 * c) + 16.52;
   }
 
-  for (let i = 0; i &lt; index; i++) {<!--
-    curves[index + i] = peak * ( 1 - c ** (-i) + i * (c ** (-index)) / index );
-    curves[index - i] = peak * (-1 + c ** (-i) - i * (c ** (-index)) / index );
--->
-    curves[index + i] = peak * (((+1) - (c ** (-i))) + ((i * (c ** (-index))) / index));
-    curves[index - i] = peak * (((-1) + (c ** (-i))) - ((i * (c ** (-index))) / index));
+  for (let n = 0; n &lt; index; n++) {
+    curves[index + n] = peak * (((+1) - (c ** (-n))) + ((n * (c ** (-index))) / index));
+    curves[index - n] = peak * (((-1) + (c ** (-n))) - ((n * (c ** (-index))) / index));
   }
 
   curves[index] = 0;
@@ -12719,9 +12716,9 @@ treble.connect(context.destination);</code></pre>
     peak = (-15.5 * c) + 16.52;
   }
 
-  for (let i = 0; i &lt; index; i++) {
-    curves[index + i] = peak * (((+1) - (c ** (-i))) + ((i * (c ** (-index))) / index));
-    curves[index - i] = peak * (((-1) + (c ** (-i))) - ((i * (c ** (-index))) / index));
+  for (let n = 0; n &lt; index; n++) {
+    curves[index + n] = peak * (((+1) - (c ** (-n))) + ((n * (c ** (-index))) / index));
+    curves[index - n] = peak * (((-1) + (c ** (-n))) - ((n * (c ** (-index))) / index));
   }
 
   curves[index] = 0;
@@ -12808,9 +12805,9 @@ treble.connect(context.destination);</code></pre>
     peak = (-15.5 * c) + 16.52;
   }
 
-  for (let i = 0; i &lt; index; i++) {
-    curves[index + i] = peak * (((+1) - (c ** (-i))) + ((i * (c ** (-index))) / index));
-    curves[index - i] = peak * (((-1) + (c ** (-i))) - ((i * (c ** (-index))) / index));
+  for (let n = 0; n &lt; index; n++) {
+    curves[index + n] = peak * (((+1) - (c ** (-n))) + ((n * (c ** (-index))) / index));
+    curves[index - n] = peak * (((-1) + (c ** (-n))) - ((n * (c ** (-index))) / index));
   }
 
   curves[index] = 0;
@@ -12953,9 +12950,9 @@ speakerSimulatorNotch.connect(speakerSimulatorLowpass);</code></pre>
     peak = (-15.5 * c) + 16.52;
   }
 
-  for (let i = 0; i &lt; index; i++) {
-    curves[index + i] = peak * (((+1) - (c ** (-i))) + ((i * (c ** (-index))) / index));
-    curves[index - i] = peak * (((-1) + (c ** (-i))) - ((i * (c ** (-index))) / index));
+  for (let n = 0; n &lt; index; n++) {
+    curves[index + n] = peak * (((+1) - (c ** (-n))) + ((n * (c ** (-index))) / index));
+    curves[index - n] = peak * (((-1) + (c ** (-n))) - ((n * (c ** (-index))) / index));
   }
 
   curves[index] = 0;
@@ -13094,9 +13091,9 @@ fetch(&apos;./assets/one-shots/electric-guitar-clean-chord.mp3&apos;)
     peak = (-15.5 * c) + 16.52;
   }
 
-  for (let i = 0; i &lt; index; i++) {
-    curves[index + i] = peak * (((+1) - (c ** (-i))) + ((i * (c ** (-index))) / index));
-    curves[index - i] = peak * (((-1) + (c ** (-i))) - ((i * (c ** (-index))) / index));
+  for (let n = 0; n &lt; index; n++) {
+    curves[index + n] = peak * (((+1) - (c ** (-n))) + ((n * (c ** (-index))) / index));
+    curves[index - n] = peak * (((-1) + (c ** (-n))) - ((n * (c ** (-index))) / index));
   }
 
   curves[index] = 0;
@@ -13255,9 +13252,9 @@ mastervolume.connect(context.destination);</code></pre>
     peak = (-15.5 * c) + 16.52;
   }
 
-  for (let i = 0; i &lt; index; i++) {
-    curves[index + i] = peak * (((+1) - (c ** (-i))) + ((i * (c ** (-index))) / index));
-    curves[index - i] = peak * (((-1) + (c ** (-i))) - ((i * (c ** (-index))) / index));
+  for (let n = 0; n &lt; index; n++) {
+    curves[index + n] = peak * (((+1) - (c ** (-n))) + ((n * (c ** (-index))) / index));
+    curves[index - n] = peak * (((-1) + (c ** (-n))) - ((n * (c ** (-index))) / index));
   }
 
   curves[index] = 0;
