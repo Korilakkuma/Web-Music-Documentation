@@ -22915,6 +22915,8 @@ oscillator.stop(context.currentTime + 10);</code></pre>
               </dd>
               <dt>グラニュラー (Granular) 合成</dt>
               <dd>原音をグレイン (音の粒) と呼ばれる, <code>10 msec</code> - <code>50 msec</code> に分解して, グレインを加工して, 再度合成する音合成</dd>
+              <dt>物理モデル合成</dt>
+              <dd>楽器など実際の発音媒体をモデリングする合成. 後述するカープラス・ストロングによる撥弦楽器の合成など</dd>
             </dl>
             <p>
               波形テーブル合成は, グラニュラー合成に比較的近い音合成と言えます. 大きく異なるのは, 分解の処理がなく, コンピュータにごく短時間の (厳密には, 1
@@ -22926,6 +22928,302 @@ oscillator.stop(context.currentTime + 10);</code></pre>
                 >合成の種類</a
               >などによくまとめられているので参考にしてください.
             </p>
+          </article>
+          <article id="section-sound-visualization-periodic-wave-karplus-strong">
+            <h4>カーブラス・ストロング (Karplus-Strong) 合成</h4>
+            <p>
+              <b>カーブラス・ストロング合成</b>は, 物理モデル合成の 1 つで, ギターなどの<b>撥弦楽器</b>の音をコンピュータでモデリングする音合成です
+              (ややこしいですが, バイオリンなどは<b>擦弦楽器</b>です). 撥弦楽器の特徴としては, アタック音の瞬間, 周波数成分が低域から高域まで含まれますが,
+              時間経過とともに高域の成分からしだいに減衰していき, 最後は基本周波数の成分だけになるのが特徴です.
+            </p>
+            <p>
+              カープラス・ストロング合成は, 以下のブロックのように, ノイズを音源として, 遅延器とフィルター (Low-Pass Filter), そして,
+              フィードバックによって実装することができます.
+            </p>
+            <figure>
+              <svg id="svg-figure-karplus-strong" width="720" height="240" />
+              <figcaption>カープラス・ストロング合成</figcaption>
+            </figure>
+            <!--
+            <p>
+              ちなみに, 波形テーブル合成では, 波形テーブルのサイズを <span class="math-inline">$s$</span> として, カーブラス・ストロング合成による音信号を
+              <span class="math-inline">$y\left(n\right)$</span> とすると, 以下のように定義できます.
+            </p>
+            <div class="math-block">
+              $
+                \begin{flalign}
+                  &y\left(n\right) = \frac{1}{2}\left\{y\left(n - s\right) + y\left(n - s - 1\right)\right\} \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              これはつまり, 2 周期以降の信号は, 1 周期前の信号と 1 周期前の信号の 1 つ前のサンプルの移動平均 (すなわち,
+              波形テーブルにおいて隣り合うサンプルの平均であり, 単純な Low-Pass Filter) が現在の信号となることを意味しています. そして, 波形テーブルの値 (音源)
+              はノイズです.
+            </p>
+            -->
+            <p>
+              カープラス・ストロング合成は, 一般的には以下のように定義されます. <span class="math-inline">$x\left(n\right)$</span> は音源となるノイズ信号です.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &y\left(n\right) = \frac{1}{2}\left\{x\left(n\right) + x\left(n - 1\right)\right\} \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              これはつまり, 現在の信号と現在の信号の 1 つ前のサンプルの移動平均 (すなわち, 隣り合うサンプルの平均であり, 単純な Low-Pass Filter)
+              が現在の信号となることを意味しています.
+            </p>
+            <p>
+              もっとも, 上記の式による合成では, 音の高さによって音の長さが変わってしまうという問題があります. 低い音では,
+              フィルタの通過回数が減って音が減衰する時間が長くなり, 逆に, 高い音では, フィルタの通過回数が増えて音が減衰する時間が短くなります.
+            </p>
+            <p>この問題を解決するために, カーブラス・ストロング合成では, より一般化した定義式があります.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &y\left(n\right) = c \cdot \left\{\left(1 - d\right)x\left(n\right) + d \cdot x\left(n - 1\right)\right\} \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              ここで, <span class="math-inline">$c$</span> は減衰の時間を短くするパラメータ,
+              <span class="math-inline">$d$</span> は減衰の時間を長くするパラメータです.
+            </p>
+            <p>
+              音の長さはフィルタのゲインによって決まります. 基本周波数を <span class="math-inline">$f_{0}$</span>, サンプリング周波数を
+              <span class="math-inline">$f_{s}$</span> とすると, フィルタのゲインを <span class="math-inline">$g_{f}$</span> は, 以下のように定義できます.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &g_{f} = c \cdot \sqrt{\left(1 - d\right)^{2} + 2d \cdot \left(1 - d\right) \cdot \cos\left(\frac{2 \pi f_{0}}{f_{s}}\right) + d^{2}} \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              一方で, 音の長さを <span class="math-inline">$\mathrm{decay}$</span>, サンプリング周期を <span class="math-inline">$T$</span> とすると,
+              フィルタのゲインを以下のようにも定義できます.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &g_{f} = 10^{\frac{-3T}{\mathrm{decay}}}
+                \end{flalign}
+              $
+            </div>
+            <p>したがって, 以下の関係式が成立します。</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &c \cdot \sqrt{\left(1 - d\right)^{2} + 2d \cdot \left(1 - d\right) \cdot \cos\left(\frac{2 \pi f_{0}}{f_{s}}\right) + d^{2}} = 10^{\frac{-3T}{decay}}
+                \end{flalign}
+              $
+            </div>
+            <p>
+              高域の周波数成分の音が減衰する時間は <span class="math-inline">$d$</span> が大きく影響します. <span class="math-inline">$d$</span> を小さくすると,
+              かたいような音色になります. そこで, 1 つのアプローチとして, <span class="math-inline">$d$</span> を適切な値に決定してから, パラメータ
+              <span class="math-inline">$c$</span> を決定します.
+            </p>
+            <p>
+              カープラス・ストロング合成では, ディレイタイムによって基本周期を設定します. 一般的なオーディオ API では, 設定された基本周期が,
+              サンプリング周期の整数倍になっている場合は問題はありませんが, そうでない場合. デイレイタイムは非整数になってしまうので,
+              <b>非整数ディレイ</b>を実装する必要があります. Web Audio API では, <code>DelayNode</code> で抽象化されているので意識することは少ないでしょう.
+            </p>
+            <p>
+              <span class="math-inline">$d$</span> をフィルタの応答による遅延とすると, ディレイタイムの整数部 <span class="math-inline">$D$</span> と小数部
+              <span class="math-inline">$e$</span> は以下のように定義できます.
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &D = \lfloor T \cdot f_{s} - d \rfloor \\
+                  &e = \left(T \cdot f_{s} - d\right) - D \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              デジタル信号は離散的な時刻しか値を設定できないので, ディレイタイムが非整数倍 (<span class="math-inline">$e \neq 0$</span>) の場合,
+              間の値を補間する処理が必要になります.
+            </p>
+            <p>
+              一般的なオーディオ API や AudioWorklet で実装する場合, 非整数ディレイを実装するには, All-Pass Filter を適用することが 1 つのアプローチです (他に,
+              線形補間などのアプローチがあります). この仕組みは, Schroeder Reverberator で適用した All-Pass Filter と同じです.
+            </p>
+            <figure>
+              <svg id="svg-figure-all-pass-filter-in-karplus-strong" width="720" height="240" />
+              <figcaption>オールパスフィルタ</figcaption>
+            </figure>
+            <p>All-Pass Filter によってディレイを実装した場合, カープラス・ストロング合成における非整数ディレイは以下のように定義できます.</p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &y\left(n\right) = -g \cdot y\left(n - 1\right) + g \cdot x\left(n - D\right) + x\left(n - D - 1\right) \\
+                \end{flalign}
+              $
+            </div>
+            <p>
+              <span class="math-inline">g</span> は All-Pass Filter のゲインで, 以下のように定義できます (つまり, Web Audio API の All-Pass Filter
+              はゲインを設定できないので使えません).
+            </p>
+            <div class="math-block">
+              <!-- prettier-ignore -->
+              $
+                \begin{flalign}
+                  &g = \frac{1 - e}{1 + e}
+                \end{flalign}
+              $
+            </div>
+            <p>
+              Web Audio API で実装する場合, 非整数ディレイも <code>DelayNode</code> が抽象化しているので, 実装はかなりシンプルです. <code>DelayNode</code> と 1
+              次の Low-Pass Filter のために <code>IIRFilterNode</code> をフィードバック接続して, 減衰時間 (decay) の制御をすれば実装できます. また,
+              必須ではありませんが, High-Pass Filter で可聴範囲外の周波数成分 (下記のコード例では, <code>20 Hz</code> 以下の周波数成分)
+              を遮断してしまうのもちょっとしたポイントです.
+            </p>
+            <pre
+              data-prismjs-copy="クリップボードにコピー"
+              data-prismjs-copy-success="コピーしました"
+            ><code class="language-js line-numbers">const context = new AudioContext();
+
+const sampleRate = context.sampleRate;
+
+const delayElement = new DelayNode(context);
+
+const adsr  = new GainNode(context, { gain: 0 });
+
+const cutoff = 4000;
+
+const b = (cutoff / context.sampleRate) * Math.PI;
+
+const b0 = b;
+const b1 = b;
+const a0 =  1 + b;
+const a1 = -1 + b;
+
+const feedforward = new Float64Array([b0, b1]);
+const feedback    = new Float64Array([a0, a1]);
+
+const filter = new IIRFilterNode(context, { feedforward, feedback });
+
+const lowcut = new BiquadFilterNode(context, { type: &apos;highpass&apos;, frequency: 20 });
+
+context.audioWorklet
+  .addModule(&apos;./audio-worklets/white-noise.js&apos;)
+  .then(() =&gt; {
+    let processor = null;
+
+    let decay = 0.005;
+
+    const onDown = async () =&gt; {
+      if (context.state !== &apos;running&apos;) {
+        await context.resume();
+      }
+
+      if (processor === null) {
+        processor = new AudioWorkletNode(context, 'WhiteNoiseGeneratorProcessor');
+      }
+
+      // AudioWorkletNode (White Noise) -&gt; GainNode(ADSR) -&gt; DelayNode -&gt; BiquadFilterNode (High-Pass Filter) -&gt; AudioDestinationNode (Output)
+      processor.connect(adsr);
+      adsr.connect(delayElement);
+      delayElement.connect(lowcut);
+      lowcut.connect(context.destination);
+
+      // (AudioWorkletNode (White Noise) -&gt; GainNode(ADSR) -&gt;) DelayNode -&gt; IIRFilterNode (Low-Pass Filter) -&gt; DelayNode -&gt; IIRFilterNode -&gt; ...
+      delayElement.connect(filter);
+      filter.connect(delayElement);
+
+      const t0 = context.currentTime;
+
+      adsr.gain.cancelScheduledValues(t0);
+      adsr.gain.setValueAtTime(0, t0);
+      adsr.gain.linearRampToValueAtTime(1, t0);
+      adsr.gain.setTargetAtTime(0, t0, decay);
+
+      processor.port.postMessage({ processing: true });
+
+      buttonElement.textContent = &apos;stop&apos;;
+    };
+
+    const onUp = () =&gt; {
+      if (processor) {
+        processor.port.postMessage({ processing: false });
+        processor.disconnect(0);
+      }
+
+      adsr.gain.cancelScheduledValues(context.currentTime);
+
+      buttonElement.textContent = &apos;start&apos;;
+    };
+
+    const buttonElement = document.getElementById(&apos;button-karplus-strong&apos;);
+
+    buttonElement.removeAttribute(&apos;disabled&apos;);
+
+    buttonElement.addEventListener(&apos;mousedown&apos;, onDown);
+    buttonElement.addEventListener(&apos;touchstart&apos;, onDown);
+    buttonElement.addEventListener(&apos;mouseup&apos;, onUp);
+    buttonElement.addEventListener(&apos;touchend&apos;, onUp);
+
+    const rangeDelayTime = document.getElementById(&apos;range-karplus-strong-delay-time&apos;);
+    const rangeDecay     = document.getElementById(&apos;range-karplus-strong-decay&apos;);
+
+    const outputDelayTime = document.getElementById(&apos;output-karplus-strong-delay-time&apos;);
+    const outputDecay     = document.getElementById(&apos;output-karplus-strong-decay&apos;);
+
+    rangeDelayTime.addEventListener(&apos;input&apos;, () =&gt; {
+      const delayTime = rangeDelayTime.valueAsNumber;
+
+      delayElement.delayTime.value = delayTime;
+
+      outputDelayTime.textContent = `${delayTime.toFixed(3)} sec`;
+    });
+
+    rangeDecay.addEventListener(&apos;input&apos;, () =&gt; {
+      decay = rangeDecay.valueAsNumber;
+
+      outputDecay.textContent = decay.toFixed(3);
+    });
+  })
+  .catch((error) =&gt; {
+    // error handling
+  });</code></pre>
+            <p>
+              ディレイタイムや減衰時間を変化させることで, ギターのような音色からドラムのシンバルのような音色まで様々な撥弦楽器 (あるいは, 打楽器)
+              の音色を合成できます.
+            </p>
+            <p>
+              また, 撥弦楽器のスペクトルの特徴である, アタック音の瞬間は周波数成分が低域から高域まで含まれ, 時間経過とともに高域の成分からしだいに減衰していき,
+              最後は基本周波数の成分だけになることも視覚化しています.
+            </p>
+            <div class="app-container">
+              <div class="flexbox">
+                <div>
+                  <button type="button" id="button-karplus-strong" disabled>start</button>
+                </div>
+                <div class="flexbox">
+                  <label for="range-karplus-strong-delay-time">delayTime</label>
+                  <input type="range" id="range-karplus-strong-delay-time" value="0" min="0" max="0.1" step="0.005" />
+                  <output id="output-karplus-strong-delay-time" for="range-karplus-strong-delay-time">0.000 sec</output>
+                  <label for="range-karplus-strong-decay">decay</label>
+                  <input type="range" id="range-karplus-strong-decay" value="0.005" min="0" max="0.5" step="0.005" />
+                  <output id="output-karplus-strong-decay" for="range-karplus-strong-decay">0.005</output>
+                </div>
+                <figure>
+                  <svg id="svg-animation-karplus-strong-spectrum" width="720" height="240" />
+                  <figcaption>カープラス・ストロング合成の振幅スペクトラム</figcaption>
+                </figure>
+              </div>
+            </div>
           </article>
         </section>
       </section>

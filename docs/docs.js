@@ -23441,6 +23441,458 @@ const animatePeriodicWave = (svg) => {
   renderSpectrumGraph(offset, width);
 };
 
+const createKarplusStrong = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const renderBox = (y, textContent) => {
+    const g = document.createElementNS(xmlns, 'g');
+
+    const rect = document.createElementNS(xmlns, 'rect');
+
+    rect.setAttribute('x', (padding + innerWidth / 2 - 60).toString(10));
+    rect.setAttribute('y', (y - 30).toString(10));
+    rect.setAttribute('width', (120).toString(10));
+    rect.setAttribute('height', (60).toString(10));
+    rect.setAttribute('fill', white);
+    rect.setAttribute('stroke', baseColor);
+    rect.setAttribute('stroke-width', lineWidth.toString(10));
+    rect.setAttribute('stroke-linecap', lineCap);
+    rect.setAttribute('stroke-linejoin', lineJoin);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = textContent;
+
+    text.setAttribute('x', (padding + innerWidth / 2).toString(10));
+    text.setAttribute('y', (y + 4).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '18px');
+
+    g.appendChild(rect);
+    g.appendChild(text);
+
+    svg.appendChild(g);
+  };
+
+  const renderAdder = () => {
+    const g = document.createElementNS(xmlns, 'g');
+
+    const circle = document.createElementNS(xmlns, 'circle');
+
+    circle.setAttribute('cx', (padding + innerWidth / 4).toString(10));
+    circle.setAttribute('cy', padding.toString(10));
+    circle.setAttribute('r', '12');
+    circle.setAttribute('stroke', baseColor);
+    circle.setAttribute('stroke-width', lineWidth.toString(10));
+    circle.setAttribute('stroke-linecap', lineCap);
+    circle.setAttribute('stroke-linejoin', lineJoin);
+    circle.setAttribute('fill', white);
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = '+';
+
+    text.setAttribute('x', (padding + innerWidth / 4).toString(10));
+    text.setAttribute('y', (padding + 6).toString(10));
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '24px');
+    text.setAttribute('font-weight', '24px');
+
+    g.appendChild(circle);
+    g.appendChild(text);
+
+    svg.appendChild(g);
+  };
+
+  const noiseText = document.createElementNS(xmlns, 'text');
+
+  noiseText.textContent = 'Noise';
+
+  noiseText.setAttribute('x', '0');
+  noiseText.setAttribute('y', (padding + 4).toString(10));
+  noiseText.setAttribute('text-anchor', 'start');
+  noiseText.setAttribute('stroke', 'none');
+  noiseText.setAttribute('fill', baseColor);
+  noiseText.setAttribute('font-size', '18px');
+
+  const directPath = document.createElementNS(xmlns, 'path');
+
+  directPath.setAttribute(
+    'd',
+    `M${padding} ${padding} L${padding + innerWidth} ${padding} L${padding + innerWidth - 8} ${padding - 4} L${padding + innerWidth - 8} ${padding + 4} L${padding + innerWidth} ${padding}`
+  );
+
+  directPath.setAttribute('stroke', baseColor);
+  directPath.setAttribute('fill', baseColor);
+  directPath.setAttribute('stroke-width', '4');
+  directPath.setAttribute('stroke-linecap', lineCap);
+  directPath.setAttribute('stroke-linejoin', lineJoin);
+
+  const feedbackPath = document.createElementNS(xmlns, 'path');
+
+  feedbackPath.setAttribute(
+    'd',
+    `M${padding + 0.75 * innerWidth} ${padding} L${padding + 0.75 * innerWidth} ${padding + 0.75 * innerHeight} L${padding + 0.25 * innerWidth} ${padding + 0.75 * innerHeight} L${padding + 0.25 * innerWidth} ${padding + 14} L${padding + 0.25 * innerWidth - 4} ${padding + 22} L${padding + 0.25 * innerWidth + 4} ${padding + 22} L${padding + 0.25 * innerWidth} ${padding + 14}`
+  );
+  feedbackPath.setAttribute('stroke', baseColor);
+  feedbackPath.setAttribute('fill', 'none');
+  feedbackPath.setAttribute('stroke-width', '4');
+  feedbackPath.setAttribute('stroke-linecap', lineCap);
+  feedbackPath.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(noiseText);
+  svg.appendChild(directPath);
+  svg.appendChild(feedbackPath);
+
+  renderBox(padding, 'Delay');
+  renderBox(padding + 0.75 * innerHeight, 'Filter');
+  renderAdder();
+};
+
+const createAllPassFilterInKarplusStrong = (svg) => {
+  const innerWidth = Number(svg.getAttribute('width')) - padding * 2;
+  const innerHeight = Number(svg.getAttribute('height')) - padding * 2;
+
+  const offset = 0;
+
+  const bus0 = createBus(padding + offset, padding + innerHeight / 2, padding + offset + innerWidth, padding + innerHeight / 2);
+  const arrow0 = createBusArrow(padding + offset + innerWidth - 8, padding + innerHeight / 2, 'right');
+
+  const adder0 = createAddElement(padding + offset + 48, padding + innerHeight / 2);
+
+  const feedback = createMultiplyElement(padding + offset + innerWidth / 2 - 8, padding + innerHeight, 'left');
+
+  const feedbackText = document.createElementNS(xmlns, 'text');
+
+  feedbackText.textContent = 'g';
+
+  feedbackText.setAttribute('x', (padding + offset + innerWidth / 2 - 16).toString(10));
+  feedbackText.setAttribute('y', (padding + innerHeight + 24).toString(10));
+  feedbackText.setAttribute('text-anchor', 'middle');
+  feedbackText.setAttribute('stroke', 'none');
+  feedbackText.setAttribute('fill', baseColor);
+  feedbackText.setAttribute('font-size', '16px');
+
+  const delayElement = createDelayElement(padding + offset + innerWidth / 2 - 35, padding + innerHeight / 2 - 12, 'd');
+
+  const feedbackBus0 = createBus(offset + innerWidth - 24, padding + innerHeight / 2, offset + innerWidth - 24, padding + innerHeight);
+  const feedbackBus1 = createBus(padding + offset + 48, padding + innerHeight, offset + innerWidth - 24, padding + innerHeight);
+  const feedbackBus2 = createBus(padding + offset + 48, padding + innerHeight, padding + offset + 48, padding + innerHeight / 2 + 24);
+  const feedbackArrow = createBusArrow(padding + offset + 48, padding + innerHeight / 2 + 24, 'up');
+
+  const adder1 = createAddElement(innerWidth, padding + innerHeight / 2);
+
+  const feedforward = createMultiplyElement(padding + innerWidth / 2, padding, 'right');
+
+  const feedforwardText = document.createElementNS(xmlns, 'text');
+
+  feedforwardText.textContent = '-g';
+
+  feedforwardText.setAttribute('x', (padding + innerWidth / 2).toString(10));
+  feedforwardText.setAttribute('y', (padding + 24).toString(10));
+  feedforwardText.setAttribute('text-anchor', 'middle');
+  feedforwardText.setAttribute('stroke', 'none');
+  feedforwardText.setAttribute('fill', baseColor);
+  feedforwardText.setAttribute('font-size', '16px');
+
+  const feedforwardBus0 = createBus(padding + 80, padding + innerHeight / 2, padding + 80, padding);
+  const feedforwardBus1 = createBus(padding + 80, padding, innerWidth, padding);
+  const feedforwardBus2 = createBus(innerWidth, padding, innerWidth, padding + innerHeight / 2 - 24);
+  const feedforwardArrow = createBusArrow(innerWidth, padding + innerHeight / 2 - 24, 'down');
+
+  svg.appendChild(bus0);
+  svg.appendChild(arrow0);
+  svg.appendChild(feedbackBus0);
+  svg.appendChild(feedbackBus1);
+  svg.appendChild(feedbackBus2);
+  svg.appendChild(feedbackArrow);
+  svg.appendChild(feedback);
+  svg.appendChild(feedbackText);
+  svg.appendChild(adder0);
+  svg.appendChild(delayElement);
+
+  svg.appendChild(feedforwardBus0);
+  svg.appendChild(feedforwardBus1);
+  svg.appendChild(feedforwardBus2);
+  svg.appendChild(feedforwardArrow);
+  svg.appendChild(feedforward);
+  svg.appendChild(feedforwardText);
+  svg.appendChild(adder1);
+};
+
+const karplusStrong = () => {
+  const sampleRate = audiocontext.sampleRate;
+
+  const delay = new DelayNode(audiocontext);
+  const adsr = new GainNode(audiocontext, { gain: 0 });
+
+  const cutoff = 4000;
+
+  const b = (cutoff / audiocontext.sampleRate) * Math.PI;
+
+  const b0 = b;
+  const b1 = b;
+  const a0 = 1 + b;
+  const a1 = -1 + b;
+
+  const feedforward = new Float64Array([b0, b1]);
+  const feedback = new Float64Array([a0, a1]);
+
+  const filter = new IIRFilterNode(audiocontext, { feedforward, feedback });
+
+  const lowcut = new BiquadFilterNode(audiocontext, { type: 'highpass', frequency: 20 });
+
+  const analyser = new AnalyserNode(audiocontext, { fftSize: 16384 });
+
+  const svg = document.getElementById('svg-animation-karplus-strong-spectrum');
+
+  const frequencies = [32, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+
+  const minFrequency = frequencies[0];
+  const maxFrequency = frequencies[frequencies.length - 1];
+
+  const ratio = maxFrequency / minFrequency;
+  const log10Ratio = Math.log10(ratio);
+
+  const frequencyResolution = sampleRate / analyser.fftSize;
+
+  const width = Number(svg.getAttribute('width') ?? '0');
+  const height = Number(svg.getAttribute('height') ?? '0');
+
+  const innerWidth = width - 48;
+  const innerHeight = height - 48;
+  const translateX = 48;
+  const translateY = 24;
+
+  const maxDecibels = 0;
+  const minDecibels = -60;
+
+  const path = document.createElementNS(xmlns, 'path');
+
+  path.setAttribute('stroke', alphaWaveColor);
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-width', lineWidth.toString(10));
+  path.setAttribute('stroke-linecap', lineCap);
+  path.setAttribute('stroke-linejoin', lineJoin);
+
+  svg.appendChild(path);
+
+  const xRect = document.createElementNS(xmlns, 'rect');
+
+  xRect.setAttribute('x', translateX.toString(10));
+  xRect.setAttribute('y', (height - translateY - 1).toString(10));
+  xRect.setAttribute('width', (width - translateX).toString(10));
+  xRect.setAttribute('height', lineWidth.toString(10));
+  xRect.setAttribute('stroke', 'none');
+  xRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(xRect);
+
+  const yRect = document.createElementNS(xmlns, 'rect');
+
+  yRect.setAttribute('x', translateX.toString(10));
+  yRect.setAttribute('y', translateY.toString(10));
+  yRect.setAttribute('width', lineWidth.toString(10));
+  yRect.setAttribute('height', (height - translateX).toString(10));
+  yRect.setAttribute('stroke', 'none');
+  yRect.setAttribute('fill', baseColor);
+
+  svg.appendChild(yRect);
+
+  const g = document.createElementNS(xmlns, 'g');
+
+  [0, -10, -20, -30, -40, -50, -60].forEach((dB, index) => {
+    const text = document.createElementNS(xmlns, 'text');
+
+    text.textContent = `${dB} dB`;
+
+    text.setAttribute('x', '44');
+    text.setAttribute('y', (index * (innerHeight / 6) + translateY).toString(10));
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  });
+
+  frequencies.forEach((frequency, index) => {
+    const x = index * (innerWidth / frequencies.length) + translateX;
+    const y = height - 8;
+
+    const text = document.createElementNS(xmlns, 'text');
+
+    if (frequency >= 1000) {
+      text.textContent = `${Math.trunc(frequency / 1000)} kHz`;
+    } else {
+      text.textContent = `${frequency} Hz`;
+    }
+
+    text.setAttribute('x', x.toString(10));
+    text.setAttribute('y', y.toString(10));
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('stroke', 'none');
+    text.setAttribute('fill', baseColor);
+    text.setAttribute('font-size', '12px');
+
+    g.appendChild(text);
+  });
+
+  svg.appendChild(g);
+
+  const xLabel = document.createElementNS(xmlns, 'text');
+
+  xLabel.textContent = 'Frequency (Hz)';
+
+  xLabel.setAttribute('x', width.toString(10));
+  xLabel.setAttribute('y', (height - translateY - 8).toString(10));
+  xLabel.setAttribute('text-anchor', 'end');
+  xLabel.setAttribute('stroke', 'none');
+  xLabel.setAttribute('fill', baseColor);
+  xLabel.setAttribute('font-size', '14px');
+
+  const yLabel = document.createElementNS(xmlns, 'text');
+
+  yLabel.textContent = 'Amplitude (dB)';
+
+  yLabel.setAttribute('x', translateY.toString(10));
+  yLabel.setAttribute('y', '12');
+  yLabel.setAttribute('text-anchor', 'start');
+  yLabel.setAttribute('stroke', 'none');
+  yLabel.setAttribute('fill', baseColor);
+  yLabel.setAttribute('font-size', '14px');
+
+  svg.appendChild(xLabel);
+  svg.appendChild(yLabel);
+
+  const analyse = () => {
+    const data = new Float32Array(analyser.frequencyBinCount);
+
+    analyser.getFloatFrequencyData(data);
+
+    path.removeAttribute('d');
+
+    let d = '';
+
+    for (let k = 0; k < analyser.frequencyBinCount; k++) {
+      if (k === 0) {
+        continue;
+      }
+
+      // for Chrome
+      if (!Number.isFinite(data[k])) {
+        continue;
+      }
+
+      const frequency = k * frequencyResolution;
+
+      const x = (Math.log10(frequency / minFrequency) / log10Ratio) * innerWidth + translateX;
+      // const y = (1 - data[k] / 255) * innerHeight + translateY;
+      const y = Math.min((0 - data[k]) * (innerHeight / (maxDecibels - minDecibels)) - translateY, height - translateY);
+
+      if (x < translateX) {
+        continue;
+      }
+
+      if (d === '') {
+        d += `M${translateX} ${translateY + innerHeight}`;
+      } else {
+        d += ` L${x} ${y}`;
+      }
+    }
+
+    path.setAttribute('d', d);
+  };
+
+  audiocontext.audioWorklet
+    .addModule('./audio-worklets/white-noise.js')
+    .then(() => {
+      let processor = null;
+
+      let decay = 0.005;
+
+      const onDown = async () => {
+        if (audiocontext.state !== 'running') {
+          await audiocontext.resume();
+        }
+
+        if (processor === null) {
+          processor = new AudioWorkletNode(audiocontext, 'WhiteNoiseGeneratorProcessor');
+        }
+
+        processor.connect(adsr);
+        adsr.connect(delay);
+        delay.connect(lowcut);
+        lowcut.connect(analyser);
+        analyser.connect(audiocontext.destination);
+
+        delay.connect(filter);
+        filter.connect(delay);
+
+        const t0 = audiocontext.currentTime;
+
+        adsr.gain.cancelScheduledValues(t0);
+        adsr.gain.setValueAtTime(0, t0);
+        adsr.gain.linearRampToValueAtTime(1, t0);
+        adsr.gain.setTargetAtTime(0, t0, decay);
+
+        processor.port.postMessage({ processing: true });
+
+        processor.port.onmessage = () => {
+          analyse();
+        };
+
+        buttonElement.textContent = 'stop';
+      };
+
+      const onUp = () => {
+        if (processor) {
+          processor.port.postMessage({ processing: false });
+          processor.disconnect(0);
+        }
+
+        adsr.gain.cancelScheduledValues(audiocontext.currentTime);
+
+        buttonElement.textContent = 'start';
+      };
+
+      const buttonElement = document.getElementById('button-karplus-strong');
+
+      buttonElement.removeAttribute('disabled');
+
+      buttonElement.addEventListener('mousedown', onDown);
+      buttonElement.addEventListener('touchstart', onDown);
+      buttonElement.addEventListener('mouseup', onUp);
+      buttonElement.addEventListener('touchend', onUp);
+
+      const rangeDelayTime = document.getElementById('range-karplus-strong-delay-time');
+      const rangeDecay = document.getElementById('range-karplus-strong-decay');
+
+      const outputDelayTime = document.getElementById('output-karplus-strong-delay-time');
+      const outputDecay = document.getElementById('output-karplus-strong-decay');
+
+      rangeDelayTime.addEventListener('input', () => {
+        const delayTime = rangeDelayTime.valueAsNumber;
+
+        delay.delayTime.value = delayTime;
+
+        outputDelayTime.textContent = `${delayTime.toFixed(3)} sec`;
+      });
+
+      rangeDecay.addEventListener('input', () => {
+        decay = rangeDecay.valueAsNumber;
+
+        outputDecay.textContent = decay.toFixed(3);
+      });
+    })
+    .catch(console.error);
+};
+
 const mediaRecorder = () => {
   const destination = new MediaStreamAudioDestinationNode(audiocontext);
 
@@ -25954,6 +26406,11 @@ animateLogarithmicScaleAmplitudeSpectrumToSVG(document.getElementById('svg-anima
 animateTimeOverviewAudioData();
 
 animatePeriodicWave(document.getElementById('svg-animation-periodic-wave'));
+
+createKarplusStrong(document.getElementById('svg-figure-karplus-strong'));
+createAllPassFilterInKarplusStrong(document.getElementById('svg-figure-all-pass-filter-in-karplus-strong'));
+
+karplusStrong();
 
 mediaRecorder();
 
